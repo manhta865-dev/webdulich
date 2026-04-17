@@ -1,0 +1,72 @@
+﻿@model webdulich.Models.DatTours
+
+@{
+    ViewData["Title"] = "Sửa đơn đặt tour";
+    var tours = ViewBag.Tours as List<webdulich.Models.Tour>;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Sửa đơn đặt tour</h2>
+
+    <form asp-action="SuaDonDatTour" method="post" class="shadow p-4 rounded bg-white">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Tên khách</label>
+            <input asp-for="TenKhach" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Điện thoại</label>
+            <input asp-for="DienThoai" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Số người</label>
+            <input asp-for="SoNguoi" class="form-control" type="number" min="1" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Ngày đi</label>
+            <input asp-for="NgayDi" class="form-control" type="date" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tour</label>
+            <select asp-for="TourId" class="form-control">
+                @if (tours != null)
+                {
+                    @foreach (var tour in tours)
+                    {
+                        <option value="@tour.Id" selected="@(tour.Id == Model.TourId)">
+                            @tour.TenTour
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="confirmSave()">
+            Lưu thay đổi
+        </button>
+        <a asp-action="DonDatTour" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>
+<script>
+    function confirmSave() {
+        Swal.fire({
+            title: 'Lưu thay đổi?',
+            text: "Bạn có chắc chắn muốn cập nhật không?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d6efd',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Lưu',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector("form").submit();
+            }
+        });
+    }
+</script>

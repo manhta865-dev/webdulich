@@ -1,0 +1,15 @@
+﻿@foreach (var tour in Model)
+{
+    <div class="card">
+
+        <h4>@tour.TenTour</h4>
+
+        <a asp-controller="DatTour"
+           asp-action="DatTour"
+           asp-route-id="@tour.Id"
+           class="btn btn-success">
+           Đặt tour
+        </a>
+
+    </div>
+}

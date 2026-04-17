@@ -1,0 +1,120 @@
+﻿@model webdulich.Models.GoiYTourPageViewModel
+
+@{
+    ViewData["Title"] = "Gợi ý tour";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">🎯 Gợi ý tour cho bạn</h2>
+        <p class="text-muted fs-5">Trả lời vài câu hỏi nhỏ để hệ thống tìm chuyến đi hợp với bạn nhé</p>
+    </div>
+
+    <div class="card shadow border-0 rounded-4 p-4 mb-5">
+        <form asp-controller="GoiYTour" asp-action="Index" method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="TieuChi.LoaiDiaHinh" class="form-label fw-semibold"></label>
+                    <select asp-for="TieuChi.LoaiDiaHinh" asp-items="Model.LoaiDiaHinhOptions" class="form-select form-select-lg">
+                        <option value="">-- Chọn kiểu địa điểm --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="TieuChi.PhongCach" class="form-label fw-semibold"></label>
+                    <select asp-for="TieuChi.PhongCach" asp-items="Model.PhongCachOptions" class="form-select form-select-lg">
+                        <option value="">-- Chọn phong cách du lịch --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="TieuChi.NganSachToiDa" class="form-label fw-semibold"></label>
+                    <input asp-for="TieuChi.NganSachToiDa" class="form-control form-control-lg" placeholder="Ví dụ: 3000000" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="TieuChi.SoNgay" class="form-label fw-semibold"></label>
+                    <select asp-for="TieuChi.SoNgay" asp-items="Model.SoNgayOptions" class="form-select form-select-lg">
+                        <option value="">-- Chọn số ngày --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="TieuChi.DiaDiemId" class="form-label fw-semibold"></label>
+                    <select asp-for="TieuChi.DiaDiemId" asp-items="Model.DiaDiemOptions" class="form-select form-select-lg">
+                        <option value="">-- Không chọn cụ thể --</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check mt-2">
+                        <input asp-for="TieuChi.UuTienTourHot" class="form-check-input" />
+                        <label asp-for="TieuChi.UuTienTourHot" class="form-check-label fw-semibold"></label>
+                    </div>
+                </div>
+
+                <div class="col-12 text-center mt-3">
+                    <button type="submit" class="btn btn-warning btn-lg px-5 rounded-pill fw-bold">
+                        Gợi ý cho tôi
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (Model.KetQua != null && Model.KetQua.Any())
+    {
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">✨ Tour phù hợp với bạn</h3>
+            <p class="text-muted">Dựa trên các lựa chọn bạn vừa nhập</p>
+        </div>
+
+        <div class="row">
+            @foreach (var item in Model.KetQua)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                        @if (!string.IsNullOrEmpty(item.Tour.HinhAnh))
+                        {
+                            <img src="~/images/dulich/@item.Tour.HinhAnh" class="card-img-top" style="height: 230px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light" style="height:230px;">
+                                <span class="text-muted">Chưa có hình ảnh</span>
+                            </div>
+                        }
+
+                        <div class="card-body">
+                            <h4 class="card-title fw-bold">@item.Tour.TenTour</h4>
+
+                            <p class="mb-2"><strong>📍 Địa điểm:</strong> @item.TenDiaDiemHienThi</p>
+                            <p class="mb-2"><strong>💰 Giá:</strong> @item.Tour.Gia.ToString("N0") VNĐ</p>
+                            <p class="mb-2"><strong>🗓️ Số ngày:</strong> @(item.Tour.SoNgay.HasValue? item.Tour.SoNgay + " ngày" : "Chưa cập nhật")</p>
+                            <p class="mb-2"><strong>🌄 Loại địa hình:</strong> @item.Tour.LoaiDiaHinh</p>
+                            <p class="mb-2"><strong>❤️ Phong cách:</strong> @item.Tour.PhongCach</p>
+                            <p class="mb-2"><strong>🔥 Lượt đặt:</strong> @item.SoLuotDat</p>
+                            <p class="mb-2 text-success fw-bold"><strong>Điểm gợi ý:</strong> @item.DiemGoiY</p>
+
+                            <div class="bg-light rounded-3 p-3 mt-3">
+                                <small><strong>Vì sao gợi ý tour này?</strong><br />@item.LyDoGoiY</small>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 pb-3">
+                            <a asp-controller="DatTour" asp-action="DatTour" asp-route-id="@item.Tour.Id" class="btn btn-primary w-100 rounded-pill">
+                                Đặt tour ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning text-center rounded-4 shadow-sm">
+            Không tìm thấy tour phù hợp. Bạn thử nới ngân sách hoặc đổi vài lựa chọn nhé.
+        </div>
+    }
+</div>

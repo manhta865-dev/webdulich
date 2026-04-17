@@ -1,0 +1,42 @@
+﻿@model List<webdulich.Models.DatTours>
+
+@{
+    ViewData["Title"] = "Lịch sử đặt tour";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">📋 Lịch sử đặt tour của bạn</h2>
+
+    <table class="table table-bordered table-hover shadow">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên khách</th>
+                <th>Điện thoại</th>
+                <th>Số người</th>
+                <th>Ngày đi</th>
+                <th>Tên tour</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Count > 0)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TenKhach</td>
+                        <td>@item.DienThoai</td>
+                        <td>@item.SoNguoi</td>
+                        <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Tour?.TenTour</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Bạn chưa đặt tour nào.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

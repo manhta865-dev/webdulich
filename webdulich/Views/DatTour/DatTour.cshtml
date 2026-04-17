@@ -1,0 +1,51 @@
+﻿@model webdulich.Models.DatTours
+
+@{
+    ViewData["Title"] = "Đặt tour";
+    var tour = ViewBag.Tour as webdulich.Models.Tour;
+}
+
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h2 class="text-center mb-4">📝 Đặt tour</h2>
+
+        @if (tour != null)
+        {
+            <div class="mb-4">
+                <h4>@tour.TenTour</h4>
+                <p><strong>Địa điểm:</strong> @tour.DiaDiem</p>
+                <p><strong>Giá:</strong> @tour.Gia VNĐ</p>
+            </div>
+        }
+
+        <form asp-controller="DatTour" asp-action="DatTour" method="post">
+            <input type="hidden" asp-for="TourId" />
+
+            <div class="mb-3">
+                <label class="form-label">Tên khách</label>
+                <input asp-for="TenKhach" class="form-control" readonly />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DienThoai" class="form-label">Điện thoại</label>
+                <input asp-for="DienThoai" class="form-control" />
+                <span asp-validation-for="DienThoai" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="SoNguoi" class="form-label">Số người</label>
+                <input asp-for="SoNguoi" class="form-control" />
+                <span asp-validation-for="SoNguoi" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NgayDi" class="form-label">Ngày đi</label>
+                <input asp-for="NgayDi" type="date" class="form-control" />
+                <span asp-validation-for="NgayDi" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-success">Xác nhận đặt tour</button>
+            <a asp-controller="TrangChu" asp-action="Index" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>

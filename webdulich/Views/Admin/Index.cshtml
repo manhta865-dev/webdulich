@@ -1,0 +1,66 @@
+﻿@model List<webdulich.Models.Tour>
+
+@{
+    ViewData["Title"] = "Quản lý Tour";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">⚙️ Quản lý Tour Du Lịch</h2>
+
+    <a asp-controller="Admin" asp-action="Create" class="btn btn-success mb-3">
+        ➕ Thêm Tour
+    </a>
+
+    <table class="table table-bordered table-hover shadow">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên Tour</th>
+                <th>Địa điểm</th>
+                <th>Giá</th>
+                <th>Hình</th>
+                <th width="260">Hành động</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model != null && Model.Count > 0)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TenTour</td>
+                        <td>@item.DiaDiem</td>
+                        <td class="fw-bold text-success">
+                            @item.Gia.ToString("N0") VNĐ
+                        </td>
+                        <td>
+                            <img src="~/images/dulich/@item.HinhAnh" width="120" height="80" style="object-fit:cover;" alt="Hình tour" />
+                        </td>
+
+                        <td>
+                            <a asp-controller="Admin" asp-action="DonDatTourTheoTour" asp-route-id="@item.Id" class="btn btn-primary btn-sm mb-1">
+                                Xem khách đặt tour
+                            </a>
+
+                            <a asp-controller="Admin" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm mb-1">
+                                Sửa
+                            </a>
+
+                            <a asp-controller="Admin" asp-action="Delete" asp-route-id="@item.Id"
+                               class="btn btn-danger btn-sm mb-1"
+                               onclick="return confirm('Bạn chắc chắn muốn xóa?')">
+                                Xóa
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Chưa có tour nào.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

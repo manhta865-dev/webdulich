@@ -1,0 +1,677 @@
+﻿@model List<webdulich.Models.Tour>
+
+<style>
+    body {
+        background: #f4f6fb;
+    }
+
+    .home-wrapper {
+        max-width: 1280px;
+        margin: 25px auto 0 auto;
+        padding: 0 12px;
+    }
+
+    .top-layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr) 220px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .side-box {
+        background: white;
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .side-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 18px;
+    }
+
+    .side-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 12px 10px;
+        margin-bottom: 12px;
+        transition: 0.3s;
+    }
+
+        .side-item:hover {
+            background: #eef6ff;
+            transform: translateX(4px);
+        }
+
+    .rank {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #ff9800, #ff5722);
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .side-name {
+        flex: 1;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    .fire {
+        color: #ef4444;
+        font-weight: 700;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .small-note {
+        font-size: 0.85rem;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 8px;
+    }
+
+    .hero-section {
+        position: relative;
+        min-height: 340px;
+        border-radius: 24px;
+        overflow: hidden;
+        background: linear-gradient(rgba(0,0,0,0.40), rgba(0,0,0,0.40)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px;
+        color: white;
+    }
+
+    .hero-content h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .hero-content p {
+        font-size: 1.15rem;
+        margin-bottom: 18px;
+    }
+
+    .hero-search {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+        .hero-search input {
+            width: 320px;
+            padding: 11px 16px;
+            border: none;
+            outline: none;
+            border-radius: 999px;
+        }
+
+        .hero-search button {
+            border: none;
+            border-radius: 999px;
+            padding: 11px 22px;
+            background: #ff9800;
+            color: white;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+
+            .hero-search button:hover {
+                background: #ff5722;
+            }
+
+    .hero-btn {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 12px 26px;
+        border-radius: 999px;
+        text-decoration: none;
+        background: linear-gradient(45deg, #ff9800, #ff5722);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgba(255, 87, 34, 0.35);
+        transition: 0.3s;
+    }
+
+        .hero-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    .marquee-container {
+        margin-top: 14px;
+        width: 100%;
+        overflow: hidden;
+        background: linear-gradient(45deg, #ff9800, #ff5722);
+        color: white;
+        border-radius: 12px;
+        padding: 10px 0;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .marquee-text {
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 100%;
+        animation: marquee 14s linear infinite;
+        font-weight: 700;
+    }
+
+        .marquee-text:hover {
+            animation-play-state: paused;
+        }
+
+    @@keyframes marquee {
+        0% {
+            transform: translateX(0%);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin: 40px 0 22px;
+    }
+
+    .tour-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .tour-card {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+        transition: 0.3s;
+        height: 100%;
+    }
+
+        .tour-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .tour-card img {
+            width: 100%;
+            height: 210px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .tour-body {
+        padding: 16px;
+    }
+
+    .tour-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .tour-desc {
+        color: #6b7280;
+        min-height: 42px;
+        font-size: 0.95rem;
+    }
+
+    .tour-price {
+        color: #ef4444;
+        font-weight: 800;
+        font-size: 1.05rem;
+        margin: 10px 0 14px;
+    }
+
+    .btn-book {
+        background: linear-gradient(45deg, #ffc107, #ff9800);
+        color: #212529;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-book:hover {
+            color: #212529;
+            opacity: 0.95;
+        }
+
+    .empty-box {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+        color: #6b7280;
+    }
+
+    .popular-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .popular-card {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        transition: 0.3s;
+        height: 100%;
+    }
+
+        .popular-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .popular-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .popular-name {
+        padding: 14px 10px;
+        text-align: center;
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .info-grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .feature-box {
+        background: white;
+        border-radius: 18px;
+        padding: 24px 18px;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
+        }
+
+    .feature-icon {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .feature-box h4 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 10px;
+    }
+
+    .feature-box p {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .cta-box {
+        margin-top: 45px;
+        background: linear-gradient(45deg,#ff9800,#ff5722);
+        border-radius: 20px;
+        color: white;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        text-align: center;
+        padding: 42px 20px;
+    }
+
+        .cta-box h2 {
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .cta-box p {
+            margin-bottom: 20px;
+        }
+
+    .cta-btn {
+        background: white;
+        color: #1f2937;
+        padding: 10px 24px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+        .cta-btn:hover {
+            color: #1f2937;
+            opacity: 0.95;
+        }
+
+    .footer-custom {
+        margin-top: 60px;
+        background: #1f1f1f;
+        color: white;
+        text-align: center;
+        padding: 26px 10px;
+    }
+
+        .footer-custom h5 {
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .footer-custom p {
+            margin: 4px 0;
+            color: #e5e7eb;
+        }
+
+    @@media (max-width: 1100px) {
+        .top-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-content h1 {
+            font-size: 2.2rem;
+        }
+
+        .tour-grid,
+        .popular-grid,
+        .info-grid,
+        .info-grid-4 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .tour-grid,
+        .popular-grid,
+        .info-grid,
+        .info-grid-4 {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-search input {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="home-wrapper">
+    <div class="top-layout">
+
+        <!-- LEFT -->
+        <div class="side-box">
+            <div class="side-title">🏆 Khách hàng thân thiết</div>
+
+            <div class="side-item">
+                <span class="rank">1</span>
+                <span class="side-name">Nguyễn Hoài An</span>
+                <span class="fire">🔥 12 lần</span>
+            </div>
+
+            <div class="side-item">
+                <span class="rank">2</span>
+                <span class="side-name">Tạ Thanh Mạnh</span>
+                <span class="fire">🔥 10 lần</span>
+            </div>
+
+            <div class="side-item">
+                <span class="rank">3</span>
+                <span class="side-name">Thắng Quân</span>
+                <span class="fire">🔥 8 lần</span>
+            </div>
+
+            <p class="small-note">Top khách đặt tour nhiều nhất</p>
+        </div>
+
+        <!-- CENTER -->
+        <div>
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1>🌍 Khám phá Việt Nam cùng TravelVN</h1>
+                    <p>Đặt tour nhanh chóng, trải nghiệm trọn vẹn</p>
+
+                    <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="hero-search">
+                        <input type="text" name="keyword" placeholder="🔍 Tìm tour, địa điểm..." />
+                        <button type="submit">Tìm ngay</button>
+                    </form>
+                    <a asp-controller="GoiYTour" asp-action="Index" class="btn btn-warning btn-lg rounded-pill px-4">
+                        Gợi ý tour cho tôi
+                    </a>
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="hero-btn">
+                        Khám phá ngay
+                    </a>
+                </div>
+            </div>
+
+            <div class="marquee-container">
+                <div class="marquee-text">
+                    🔥 FLASH SALE 30% - ĐẶT TOUR NGAY ✈️ | 🌍 TRAVELVN - KHÁM PHÁ VIỆT NAM | 🎁 TẶNG VOUCHER 500K CHO KHÁCH MỚI |
+                </div>
+            </div>
+
+            <!-- TOUR NOI BAT -->
+            <h2 class="section-title">✨ Tour nổi bật</h2>
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="tour-grid">
+                    @foreach (var item in Model)
+                    {
+                        <div class="tour-card">
+                            <img src="~/images/dulich/@item.HinhAnh" alt="@item.TenTour" />
+                            <div class="tour-body">
+                                <div class="tour-title">@item.TenTour</div>
+                                <div class="tour-desc">@item.MoTa</div>
+                                <div class="tour-price">@item.Gia VNĐ</div>
+
+                                @if (Context.Session.GetString("role") != "admin")
+                                {
+                                    <a asp-controller="DatTour"
+                                       asp-action="DatTour"
+                                       asp-route-id="@item.Id"
+                                       class="btn-book">
+                                        Đặt Tour
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-box">
+                    <h4>Chưa có tour nổi bật</h4>
+                    <p>Hiện tại chưa có dữ liệu tour để hiển thị.</p>
+                </div>
+            }
+
+            <!-- DIEM DEN PHO BIEN -->
+            <h2 class="section-title">🏝 Điểm đến phổ biến</h2>
+
+            <div class="popular-grid">
+                <div class="popular-card">
+                    <img src="https://bloganchoi.com/wp-content/uploads/2021/11/review-da-lat-toan-canh-dat-lat-trong-suong-mu-som-mai-1.jpg" alt="Đà Lạt" />
+                    <div class="popular-name">Đà Lạt</div>
+                </div>
+
+                <div class="popular-card">
+                    <img src="https://vietnamtravelmart.com.vn/wp-content/uploads/images1248012-unnamed-1468255588101.jpg" alt="Đà Nẵng" />
+                    <div class="popular-name">Đà Nẵng</div>
+                </div>
+
+                <div class="popular-card">
+                    <img src="https://static.vinwonders.com/production/kinh-nghiem-du-lich-phu-quoc-banner.jpg" alt="Phú Quốc" />
+                    <div class="popular-name">Phú Quốc</div>
+                </div>
+
+                <div class="popular-card">
+                    <img src="https://static.vinwonders.com/2022/06/quang-truong-2-4-nha-trang.jpg" alt="Nha Trang" />
+                    <div class="popular-name">Nha Trang</div>
+                </div>
+            </div>
+
+            <!-- KHACH HANG NOI GI -->
+            <h2 class="section-title">💬 Khách hàng nói gì</h2>
+
+            <div class="info-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">😊</div>
+                    <h4>Minh Anh</h4>
+                    <p>"Tour rất tuyệt vời, hướng dẫn viên nhiệt tình, mình rất hài lòng!"</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">😍</div>
+                    <h4>Lan Chi</h4>
+                    <p>"Đặt tour nhanh, giá hợp lý, chuyến đi rất đáng nhớ."</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">👍</div>
+                    <h4>Thành Mạnh</h4>
+                    <p>"Mình sẽ tiếp tục đặt tour ở đây cho những chuyến đi tiếp theo."</p>
+                </div>
+            </div>
+
+            <!-- THONG KE -->
+            <h2 class="section-title">📊 Thống kê TravelVN</h2>
+
+            <div class="info-grid-4">
+                <div class="feature-box">
+                    <div class="feature-icon">🧳</div>
+                    <h4>100+</h4>
+                    <p>Tour hấp dẫn</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                    <h4>500+</h4>
+                    <p>Khách hàng</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">📍</div>
+                    <h4>50+</h4>
+                    <p>Điểm đến nổi bật</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">⏰</div>
+                    <h4>24/7</h4>
+                    <p>Hỗ trợ khách hàng</p>
+                </div>
+            </div>
+
+            <!-- TAI SAO CHON -->
+            <h2 class="section-title">💎 Tại sao chọn TravelVN</h2>
+
+            <div class="info-grid">
+                <div class="feature-box">
+                    <div class="feature-icon">🌍</div>
+                    <h4>Nhiều điểm đến</h4>
+                    <p>Hàng trăm tour du lịch khắp Việt Nam và nhiều địa điểm hấp dẫn.</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">💰</div>
+                    <h4>Giá tốt</h4>
+                    <p>Chi phí hợp lý, nhiều ưu đãi phù hợp cho sinh viên và gia đình.</p>
+                </div>
+
+                <div class="feature-box">
+                    <div class="feature-icon">⭐</div>
+                    <h4>Dịch vụ tốt</h4>
+                    <p>Hỗ trợ nhanh chóng, tư vấn tận tình và đồng hành suốt chuyến đi.</p>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="cta-box">
+                <h2>🔥 Sẵn sàng cho chuyến đi của bạn?</h2>
+                <p>Đặt tour ngay hôm nay để nhận nhiều ưu đãi hấp dẫn từ TravelVN</p>
+
+                <a asp-controller="DiaDiem" asp-action="DanhSach" class="cta-btn">
+                    Khám phá ngay
+                </a>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="side-box">
+            <div class="side-title">🔥 Tour hot nhất</div>
+
+            <div class="side-item">
+                <span class="rank">1</span>
+                <span class="side-name">An Giang</span>
+                <span class="fire">⭐ 15 lượt</span>
+            </div>
+
+            <div class="side-item">
+                <span class="rank">2</span>
+                <span class="side-name">Hà Giang</span>
+                <span class="fire">⭐ 12 lượt</span>
+            </div>
+
+            <div class="side-item">
+                <span class="rank">3</span>
+                <span class="side-name">Đà Lạt</span>
+                <span class="fire">⭐ 10 lượt</span>
+            </div>
+
+            <p class="small-note">Tour được quan tâm nhiều nhất</p>
+        </div>
+
+    </div>
+</div>
+
+<footer class="footer-custom">
+    <h5>TravelVN</h5>
+    <p>Website đặt tour du lịch trực tuyến</p>
+    <p>📞 0123 456 789 | 📧 jurnitravel@gmail.com</p>
+    <p>© 2026 TravelVN</p>
+</footer>

@@ -1,0 +1,39 @@
+﻿@model webdulich.Models.Tour
+
+<div class="container mt-4">
+    <div style="display:flex; gap:30px; align-items:flex-start;">
+
+        <div style="flex:1">
+            <img src="~/images/dulich/@Model.HinhAnh"
+                 style="width:100%; border-radius:10px;">
+        </div>
+
+        <div style="flex:1">
+            <h2>@Model.TenTour</h2>
+            <h4 style="color:red">Giá: @Model.Gia VNĐ</h4>
+
+            <p>@Model.MoTa</p>
+
+            <hr>
+
+            <h4>Thông tin tour</h4>
+            <ul>
+                <li>📍 Địa điểm: @Model.DiaDiem</li>
+                <li>🕒 Thời gian: 3 ngày 2 đêm</li>
+                <li>🚗 Phương tiện: Xe du lịch</li>
+                <li>🏨 Khách sạn: 3 sao</li>
+            </ul>
+
+            @if (Context.Session.GetString("role") != "admin")
+            {
+                <a asp-controller="DatTour" asp-action="DatTour" asp-route-id="@Model.Id" class="btn btn-success">
+                    Đặt tour ngay
+                </a>
+            }
+
+            <a asp-controller="DiaDiem" asp-action="DanhSach" class="btn btn-secondary">
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="row justify-content-center">
+
+    <div class="col-md-4">
+
+        <div class="card shadow-lg p-4">
+
+            <h3 class="text-center mb-4">📝 Đăng ký tài khoản</h3>
+
+           <form asp-action="DangKy" method="post">
+
+                <div class="mb-3">
+                    <label>Họ và tên</label>
+                    <input name="hoten" class="form-control" placeholder="Nhập họ tên">
+                </div>
+
+                <div class="mb-3">
+                    <label>Email hoặc Số điện thoại</label>
+                    <input name="taikhoan" class="form-control" placeholder="Nhập email hoặc số điện thoại">
+                </div>
+
+                <div class="mb-3">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="matkhau" class="form-control" placeholder="Nhập mật khẩu">
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">
+                    Đăng ký
+                </button>
+
+            </form>
+
+            <div class="text-center mt-3">
+                Đã có tài khoản?
+                <a asp-controller="TaiKhoan" asp-action="DangNhap">
+                    Đăng nhập
+                </a>
+            </div>
+
+            @if (ViewBag.Loi != null)
+            {
+                <p class="text-danger text-center mt-2">@ViewBag.Loi</p>
+            }
+
+        </div>
+
+    </div>
+
+</div>

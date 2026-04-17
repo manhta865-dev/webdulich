@@ -1,0 +1,92 @@
+﻿@model List<webdulich.Models.DatTours>
+
+@{
+    ViewData["Title"] = "Danh sách khách đặt tour";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Danh sách khách đặt tour</h2>
+
+    <table class="table table-bordered table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Khách hàng</th>
+                <th>Điện thoại</th>
+                <th>Số người</th>
+                <th>Ngày đi</th>
+                <th>Tour</th>
+                <th width="160">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Count > 0)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TenKhach</td>
+                        <td>@item.DienThoai</td>
+                        <td>@item.SoNguoi</td>
+                        <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Tour?.TenTour</td>
+                        <td>
+                            <a asp-action="SuaDonDatTour"
+                               asp-route-id="@item.Id"
+                               class="btn btn-warning btn-sm">
+                                Sửa
+                            </a>
+
+                            <form id="form-delete-@item.Id"
+                                  asp-action="XoaDonDatTour"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  style="display:inline;">
+
+                                <button type="button"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="confirmDelete(@item.Id)">
+                                    Xóa
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">Chưa có khách đặt tour</td>
+                </tr>
+            }
+        </tbody>
+        @if (TempData["success"] != null)
+        {
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: '@TempData["success"]',
+                    confirmButtonColor: '#ff9800'
+                });
+            </script>
+        }
+    </table>
+</div>
+<script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Xóa đơn đặt tour?',
+            text: "Bạn có chắc chắn muốn xóa không?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff5722',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Xóa luôn!',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-delete-' + id).submit();
+            }
+        });
+    }
+</script>

@@ -1,0 +1,70 @@
+﻿@model webdulich.Models.Tour
+
+@{
+    ViewData["Title"] = "Sửa Tour";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width: 900px;">
+        <div class="card-header bg-warning text-dark rounded-top-4">
+            <h2 class="mb-0 text-center">✏️ Sửa Tour</h2>
+        </div>
+
+        <div class="card-body p-4">
+            <form asp-controller="Admin" asp-action="Edit" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="HinhAnh" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TenTour" class="form-label fw-bold">Tên tour</label>
+                        <input asp-for="TenTour" class="form-control" />
+                        <span asp-validation-for="TenTour" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DiaDiem" class="form-label fw-bold">Địa điểm</label>
+                        <input asp-for="DiaDiem" class="form-control" />
+                        <span asp-validation-for="DiaDiem" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Gia" class="form-label fw-bold">Giá</label>
+                        <input asp-for="Gia" class="form-control" />
+                        <span asp-validation-for="Gia" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HinhFile" class="form-label fw-bold">Chọn hình mới</label>
+                        <input asp-for="HinhFile" type="file" class="form-control" />
+                        <span asp-validation-for="HinhFile" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label asp-for="MoTa" class="form-label fw-bold">Mô tả</label>
+                        <textarea asp-for="MoTa" class="form-control" rows="5"></textarea>
+                        <span asp-validation-for="MoTa" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 mb-4 text-center">
+                        <label class="form-label fw-bold d-block">Hình hiện tại</label>
+                        <img src="~/images/dulich/@Model.HinhAnh"
+                             alt="Hình tour"
+                             class="img-fluid rounded-3 shadow-sm border"
+                             style="max-width: 320px; max-height: 220px; object-fit: cover;" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="submit" class="btn btn-primary px-4">
+                        💾 Lưu thay đổi
+                    </button>
+
+                    <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary px-4">
+                        ↩ Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
