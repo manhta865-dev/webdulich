@@ -33,6 +33,7 @@ Hoặc import database từ SQL Server.
 Nhấn F5 để chạy.
 
 Tài khoản test
-- Username: admin
-- Password: 123
+- Username: manhta865@gmail.com
+- Password: Manhta@280405
+  
 
