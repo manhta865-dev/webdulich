@@ -1,0 +1,578 @@
+﻿@model List<webdulich.Models.DatTours>
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Doanh thu";
+
+    int thangChon = ViewBag.ThangChon ?? DateTime.Today.Month;
+    int namChon = ViewBag.NamChon ?? DateTime.Today.Year;
+    var namOptions = ViewBag.NamOptions as List<int> ?? new List<int>();
+
+    decimal tongDoanhThu = ViewBag.TongDoanhThu ?? 0;
+    int soDonDaThanhToan = ViewBag.SoDonDaThanhToan ?? 0;
+    decimal trungBinhDon = ViewBag.TrungBinhDon ?? 0;
+    decimal doanhThuNam = ViewBag.DoanhThuNam ?? 0;
+    string tourBanChay = ViewBag.TourBanChay ?? "Chưa có dữ liệu";
+
+    var bieuDoNhan = ViewBag.BieuDoNhan as List<string> ?? new List<string>();
+    var bieuDoDoanhThu = ViewBag.BieuDoDoanhThu as List<decimal> ?? new List<decimal>();
+    var bieuDoSoDon = ViewBag.BieuDoSoDon as List<int> ?? new List<int>();
+
+    string bieuDoNhanJson = JsonSerializer.Serialize(bieuDoNhan);
+    string bieuDoDoanhThuJson = JsonSerializer.Serialize(bieuDoDoanhThu);
+    string bieuDoSoDonJson = JsonSerializer.Serialize(bieuDoSoDon);
+}
+
+<style>
+    .revenue-page {
+        max-width: 1450px;
+        margin: 0 auto;
+        color: #0f172a;
+    }
+
+    .revenue-header {
+        margin-bottom: 22px;
+    }
+
+        .revenue-header h1 {
+            margin: 0 0 6px;
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .revenue-header p {
+            margin: 0;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+    .filter-panel,
+    .chart-card,
+    .table-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+    }
+
+    .filter-panel {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        font-weight: 800;
+    }
+
+    .form-select-custom {
+        width: 100%;
+        min-height: 46px;
+        padding: 0 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-weight: 650;
+        outline: none;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-filter,
+    .btn-reset,
+    .btn-export {
+        min-height: 46px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .btn-filter {
+        background: #0f2a5f;
+        color: #fff;
+    }
+
+    .btn-reset {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        min-height: 145px;
+        padding: 22px;
+        border-radius: 8px;
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
+
+        .stat-card.navy {
+            background: #0f2a5f;
+        }
+
+        .stat-card.gold {
+            background: #a77c19;
+        }
+
+        .stat-card.green {
+            background: #08783f;
+        }
+
+        .stat-card.orange {
+            background: #d65a1f;
+        }
+
+    .stat-label {
+        margin-bottom: 14px;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.86rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 950;
+        line-height: 1.15;
+    }
+
+    .stat-note {
+        margin-top: 10px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.86rem;
+        font-weight: 650;
+    }
+
+    .chart-card {
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+        .chart-header h2 {
+            margin: 0 0 5px;
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        .chart-header p {
+            margin: 0;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+    .chart-legend-note {
+        padding: 8px 12px;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .chart-wrap {
+        position: relative;
+        width: 100%;
+        height: 390px;
+    }
+
+    .table-panel {
+        overflow: hidden;
+    }
+
+    .table-toolbar {
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .table-toolbar h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+    .export-actions {
+        display: flex;
+        gap: 9px;
+    }
+
+    .btn-export.excel {
+        min-height: 40px;
+        background: #15803d;
+        color: #fff;
+    }
+
+    .btn-export.pdf {
+        min-height: 40px;
+        background: #dc2626;
+        color: #fff;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .revenue-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .revenue-table th {
+            padding: 14px 12px;
+            background: #0b1735;
+            color: #f5c94f;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .revenue-table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            font-weight: 600;
+        }
+
+        .revenue-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+    .money {
+        color: #dc4c1b;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status-paid {
+        display: inline-flex;
+        padding: 6px 10px;
+        border: 1px solid #86efac;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 0.82rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .empty-row {
+        padding: 40px !important;
+        color: #64748b;
+        text-align: center;
+    }
+
+    @@media (max-width: 1100px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 700px) {
+        .filter-form,
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions,
+        .export-actions {
+            flex-wrap: wrap;
+        }
+
+        .chart-header,
+        .table-toolbar {
+            flex-direction: column;
+        }
+
+        .chart-wrap {
+            height: 320px;
+        }
+    }
+</style>
+
+<div class="revenue-page">
+    <div class="revenue-header">
+        <h1>Báo cáo doanh thu</h1>
+        <p>Thống kê các đơn đặt tour đã thanh toán theo tháng và năm.</p>
+    </div>
+
+    <div class="filter-panel">
+        <form asp-controller="Admin" asp-action="DoanhThu" method="get" class="filter-form">
+            <div class="form-group">
+                <label for="thang">Tháng</label>
+                <select id="thang" name="thang" class="form-select-custom">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i" selected="@(i == thangChon)">
+                            Tháng @i
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="nam">Năm</label>
+                <select id="nam" name="nam" class="form-select-custom">
+                    @foreach (var item in namOptions)
+                    {
+                        <option value="@item" selected="@(item == namChon)">
+                            @item
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">Xem báo cáo</button>
+                <a asp-controller="Admin" asp-action="DoanhThu" class="btn-reset">Làm mới</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card navy">
+            <div class="stat-label">Doanh thu tháng @thangChon</div>
+            <div class="stat-value">@tongDoanhThu.ToString("N0") VNĐ</div>
+            <div class="stat-note">@soDonDaThanhToan đơn đã thanh toán</div>
+        </div>
+
+        <div class="stat-card gold">
+            <div class="stat-label">Doanh thu năm @namChon</div>
+            <div class="stat-value">@doanhThuNam.ToString("N0") VNĐ</div>
+            <div class="stat-note">Tổng doanh thu của 12 tháng</div>
+        </div>
+
+        <div class="stat-card green">
+            <div class="stat-label">Trung bình mỗi đơn</div>
+            <div class="stat-value">@trungBinhDon.ToString("N0") VNĐ</div>
+            <div class="stat-note">Tính trên tháng đang chọn</div>
+        </div>
+
+        <div class="stat-card orange">
+            <div class="stat-label">Tour bán chạy</div>
+            <div class="stat-value" style="font-size:1.18rem">@tourBanChay</div>
+            <div class="stat-note">Theo số đơn trong tháng</div>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <div>
+                <h2>Biểu đồ doanh thu hàng tháng (@namChon)</h2>
+                <p>Doanh thu thực tế từ các đơn đã thanh toán trong từng tháng.</p>
+            </div>
+
+            <div class="chart-legend-note">
+                Tổng năm: @doanhThuNam.ToString("N0") VNĐ
+            </div>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-panel">
+        <div class="table-toolbar">
+            <h2>Chi tiết đơn đã thanh toán</h2>
+
+            <div class="export-actions">
+                <a asp-controller="Admin"
+                   asp-action="XuatDoanhThuExcel"
+                   asp-route-thang="@ViewBag.ThangChon"
+                   asp-route-nam="@ViewBag.NamChon"
+                   class="btn btn-success">
+                    Xuất Excel
+                </a>
+
+                <a asp-controller="Admin"
+                   asp-action="BaoCaoDoanhThuPdf"
+                   asp-route-thang="@ViewBag.ThangChon"
+                   asp-route-nam="@ViewBag.NamChon"
+                   target="_blank"
+                   class="btn btn-danger">
+                    Xuất PDF
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="revenue-table">
+                <thead>
+                    <tr>
+                        <th>Mã chuyến</th>
+                        <th>Khách hàng</th>
+                        <th>Tour</th>
+                        <th>Ngày đi</th>
+                        <th>Số người</th>
+                        <th>Phương thức</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.MaChuyenDi</td>
+                                <td>@item.TenKhach</td>
+                                <td>@(item.Tour?.TenTour ?? "Chưa cập nhật")</td>
+                                <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
+                                <td>@item.SoNguoi</td>
+                                <td>@item.PhuongThucThanhToan</td>
+                                <td class="money">@item.TongTien.ToString("N0") VNĐ</td>
+                                <td><span class="status-paid">@item.TrangThaiThanhToan</span></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="empty-row">
+                                Chưa có đơn đã thanh toán trong tháng @thangChon/@namChon.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const canvas = document.getElementById("revenueChart");
+
+            if (!canvas || typeof Chart === "undefined") {
+                return;
+            }
+
+            const labels = @Html.Raw(bieuDoNhanJson);
+            const revenueData = @Html.Raw(bieuDoDoanhThuJson);
+            const orderData = @Html.Raw(bieuDoSoDonJson);
+
+            const context = canvas.getContext("2d");
+            const gradient = context.createLinearGradient(0, 0, 0, 360);
+            gradient.addColorStop(0, "rgba(15, 42, 95, 0.34)");
+            gradient.addColorStop(1, "rgba(15, 42, 95, 0.02)");
+
+            new Chart(context, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Doanh thu",
+                            data: revenueData,
+                            borderColor: "#0f2a5f",
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: "#f4c542",
+                            pointBorderColor: "#0f2a5f",
+                            pointBorderWidth: 2,
+                            fill: true,
+                            tension: 0.32
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "top",
+                            align: "end",
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 9,
+                                font: {
+                                    weight: "700"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const money = new Intl.NumberFormat("vi-VN")
+                                        .format(context.parsed.y);
+                                    const orders = orderData[context.dataIndex] || 0;
+                                    return " " + money + " VNĐ - " + orders + " đơn";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    weight: "700"
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: "rgba(148, 163, 184, 0.22)"
+                            },
+                            ticks: {
+                                callback: function (value) {
+                                    return new Intl.NumberFormat("vi-VN", {
+                                        notation: "compact",
+                                        maximumFractionDigits: 1
+                                    }).format(value) + "đ";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

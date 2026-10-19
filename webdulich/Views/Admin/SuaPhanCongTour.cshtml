@@ -1,0 +1,220 @@
+﻿@model webdulich.Models.PhanCongTour
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Sửa phân công tour";
+
+    var lichList = ViewBag.LichKhoiHanhList as List<SelectListItem> ?? new List<SelectListItem>();
+    var hdvList = ViewBag.HuongDanVienList as List<SelectListItem> ?? new List<SelectListItem>();
+    var taiXeList = ViewBag.TaiXeList as List<SelectListItem> ?? new List<SelectListItem>();
+}
+
+<style>
+    .admin-soft-page {
+        padding: 40px 16px;
+    }
+
+    .admin-soft-card {
+        max-width: 1050px;
+        margin: 0 auto;
+        background: #fffdf8;
+        border-radius: 26px;
+        border: 1px solid rgba(214, 170, 63, 0.25);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
+    }
+
+    .admin-soft-header {
+        padding: 30px 34px 22px;
+        text-align: center;
+        background: radial-gradient(circle at top left, rgba(232,201,109,.22), transparent 34%), #fffaf0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .admin-soft-title {
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+        font-size: 2.1rem;
+        font-weight: 950;
+        color: #071633;
+    }
+
+    .admin-soft-subtitle {
+        margin: 10px 0 0;
+        color: #64748b;
+        font-weight: 750;
+    }
+
+    .admin-soft-body {
+        padding: 28px 32px 34px;
+    }
+
+    .assign-form-panel {
+        border-radius: 20px;
+        border: 1px solid #dbe3ef;
+        background: #ffffff;
+        padding: 24px;
+    }
+
+    .form-label {
+        color: #071633;
+        font-weight: 950;
+        margin-bottom: 8px;
+    }
+
+    .form-select,
+    .form-control {
+        min-height: 50px;
+        border-radius: 14px;
+        border: 1px solid #dbe3ef;
+        font-weight: 750;
+        color: #071633;
+    }
+
+        .form-select:focus,
+        .form-control:focus {
+            border-color: #d6aa3f;
+            box-shadow: 0 0 0 .18rem rgba(214,170,63,.18);
+        }
+
+    .btn-soft-save {
+        border: none;
+        border-radius: 14px;
+        padding: 13px 24px;
+        background: linear-gradient(135deg, #f6d365, #fda085);
+        color: #071633;
+        font-weight: 950;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 14px 28px rgba(214,170,63,.25);
+    }
+
+    .btn-soft-back {
+        border: none;
+        border-radius: 14px;
+        padding: 13px 24px;
+        background: #0f172a;
+        color: #f8fafc !important;
+        font-weight: 950;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 8px;
+    }
+
+    .text-danger {
+        font-weight: 800;
+        font-size: .9rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    @@media (max-width: 768px) {
+        .admin-soft-body {
+            padding: 20px 16px 24px;
+        }
+
+        .admin-soft-title {
+            font-size: 1.65rem;
+        }
+
+        .btn-soft-back {
+            margin-left: 0;
+            margin-top: 10px;
+        }
+    }
+</style>
+
+<div class="admin-soft-page">
+    <div class="admin-soft-card">
+        <div class="admin-soft-header">
+            <h2 class="admin-soft-title">✏️ Sửa phân công tour</h2>
+            <p class="admin-soft-subtitle">
+                Cập nhật lịch khởi hành, hướng dẫn viên, tài xế và ghi chú phân công.
+            </p>
+        </div>
+
+        <div class="admin-soft-body">
+            <div class="assign-form-panel">
+                <form asp-controller="Admin" asp-action="SuaPhanCongTour" method="post" class="row g-3">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="col-md-4">
+                        <label asp-for="LichKhoiHanhTourId" class="form-label">Lịch khởi hành</label>
+                        <select asp-for="LichKhoiHanhTourId"
+                                class="form-select"
+                                asp-items="lichList">
+                            <option value="">-- Chọn lịch --</option>
+                        </select>
+                        <span asp-validation-for="LichKhoiHanhTourId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="HuongDanVienId" class="form-label">Hướng dẫn viên</label>
+                        <select asp-for="HuongDanVienId"
+                                class="form-select"
+                                asp-items="hdvList">
+                            <option value="">-- Chọn hướng dẫn viên --</option>
+                        </select>
+                        <span asp-validation-for="HuongDanVienId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="TaiXeId" class="form-label">Tài xế</label>
+
+                        <select asp-for="TaiXeId"
+                                class="form-select">
+                            <option value="">-- Không cần tài xế --</option>
+
+                            @foreach (var tx in taiXeList)
+                            {
+                                if (!string.IsNullOrWhiteSpace(tx.Value))
+                                {
+                                    if (Model.TaiXeId.HasValue && Model.TaiXeId.Value.ToString() == tx.Value)
+                                    {
+                                        <option value="@tx.Value" selected>@tx.Text</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@tx.Value">@tx.Text</option>
+                                    }
+                                }
+                            }
+                        </select>
+
+                        <span asp-validation-for="TaiXeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+                        <input asp-for="GhiChu"
+                               class="form-control"
+                               placeholder="Ví dụ: tour nước ngoài không cần tài xế..." />
+                        <span asp-validation-for="GhiChu" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn-soft-save">
+                            💾 Cập nhật phân công
+                        </button>
+
+                        <a asp-controller="Admin"
+                           asp-action="PhanCongTour"
+                           class="btn-soft-back">
+                            ← Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

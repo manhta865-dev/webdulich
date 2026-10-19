@@ -2,91 +2,504 @@
 
 @{
     ViewData["Title"] = "Danh sách khách đặt tour";
+
+    var tongDon = Model != null ? Model.Count : 0;
+    var dangKiemTra = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra") : 0;
+    var chuaThanhToan = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Chưa thanh toán") : 0;
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Danh sách khách đặt tour</h2>
-
-    <table class="table table-bordered table-striped mt-3">
-        <thead>
-            <tr>
-                <th>Khách hàng</th>
-                <th>Điện thoại</th>
-                <th>Số người</th>
-                <th>Ngày đi</th>
-                <th>Tour</th>
-                <th width="160">Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model != null && Model.Count > 0)
-            {
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.TenKhach</td>
-                        <td>@item.DienThoai</td>
-                        <td>@item.SoNguoi</td>
-                        <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
-                        <td>@item.Tour?.TenTour</td>
-                        <td>
-                            <a asp-action="SuaDonDatTour"
-                               asp-route-id="@item.Id"
-                               class="btn btn-warning btn-sm">
-                                Sửa
-                            </a>
-
-                            <form id="form-delete-@item.Id"
-                                  asp-action="XoaDonDatTour"
-                                  asp-route-id="@item.Id"
-                                  method="post"
-                                  style="display:inline;">
-
-                                <button type="button"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="confirmDelete(@item.Id)">
-                                    Xóa
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="6" class="text-center">Chưa có khách đặt tour</td>
-                </tr>
-            }
-        </tbody>
-        @if (TempData["success"] != null)
-        {
-            <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công',
-                    text: '@TempData["success"]',
-                    confirmButtonColor: '#ff9800'
-                });
-            </script>
-        }
-    </table>
-</div>
-<script>
-    function confirmDelete(id) {
-        Swal.fire({
-            title: 'Xóa đơn đặt tour?',
-            text: "Bạn có chắc chắn muốn xóa không?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ff5722',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Xóa luôn!',
-            cancelButtonText: 'Hủy'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('form-delete-' + id).submit();
-            }
-        });
+<style>
+    body {
+        background: radial-gradient(circle at top left, rgba(214,170,63,0.12), transparent 30%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
     }
-</script>
+
+    .order-page {
+        max-width: 1580px;
+        margin: 36px auto 70px;
+        padding: 0 16px;
+    }
+
+    .order-panel {
+        background: rgba(255,253,248,0.96);
+        border: 1px solid rgba(214,170,63,0.26);
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(13,27,62,0.11);
+        padding: 30px 28px;
+        margin-bottom: 24px;
+    }
+
+    .order-title {
+        text-align: center;
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem, 3vw, 2.7rem);
+        font-weight: 900;
+        color: #0d1b3e;
+        margin-bottom: 8px;
+    }
+
+    .order-subtitle {
+        text-align: center;
+        color: #6b6252;
+        font-weight: 700;
+        margin-bottom: 26px;
+    }
+
+    .summary-boxes {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .summary-item {
+        border-radius: 18px;
+        padding: 20px;
+        color: white;
+        font-weight: 800;
+        box-shadow: 0 14px 30px rgba(13,27,62,0.13);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .summary-item::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            right: -38px;
+            top: -42px;
+            background: rgba(255,255,255,0.14);
+        }
+
+        .summary-item h5 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: 900;
+            position: relative;
+            z-index: 1;
+        }
+
+        .summary-item .number {
+            font-size: 2.05rem;
+            font-weight: 950;
+            position: relative;
+            z-index: 1;
+        }
+
+    .bg-blue {
+        background: linear-gradient(135deg, #0d1b3e, #173a7a);
+    }
+
+    .bg-orange {
+        background: linear-gradient(135deg, #d6aa3f, #f2c75c);
+        color: #0d1b3e;
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #15803d, #16a34a);
+    }
+
+    .order-tools {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0;
+        margin-bottom: 18px;
+    }
+
+    .order-search-input {
+        min-height: 48px;
+        border: 1px solid rgba(214,170,63,0.36);
+        border-right: none;
+        border-radius: 12px 0 0 12px;
+        padding: 0 16px;
+        outline: none;
+        background: #fffdf8;
+        color: #0d1b3e;
+        font-weight: 700;
+    }
+
+        .order-search-input:focus {
+            border-color: #d6aa3f;
+            box-shadow: 0 0 0 0.2rem rgba(214,170,63,0.15);
+        }
+
+    .btn-search {
+        border: none;
+        min-height: 48px;
+        padding: 0 22px;
+        background: linear-gradient(135deg, #d6aa3f, #edc85d);
+        color: #0d1b3e;
+        font-weight: 900;
+    }
+
+    .btn-reset {
+        min-height: 48px;
+        padding: 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1b3e;
+        color: #f5e6b8 !important;
+        text-decoration: none;
+        font-weight: 900;
+        border-radius: 0 12px 12px 0;
+    }
+
+    .order-table-card {
+        background: rgba(255,253,248,0.98);
+        border: 1px solid rgba(214,170,63,0.24);
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(13,27,62,0.1);
+        padding: 16px;
+    }
+
+    .order-table-wrap {
+        border-radius: 16px;
+        overflow: auto;
+        border: 1px solid #d8dce5;
+        background: white;
+    }
+
+    .order-table {
+        min-width: 1880px;
+        margin-bottom: 0;
+        border-color: #d8dce5;
+    }
+
+        .order-table thead th {
+            background: #0d1b3e;
+            color: #f2c75c;
+            vertical-align: middle;
+            text-align: center;
+            padding: 17px 12px;
+            font-weight: 950;
+            border-color: rgba(255,255,255,0.14);
+            white-space: nowrap;
+        }
+
+        .order-table tbody td {
+            vertical-align: middle;
+            padding: 18px 12px;
+            border-color: #dde2ea;
+            color: #0f172a;
+            font-weight: 750;
+            background: #ffffff;
+        }
+
+        .order-table tbody tr:nth-child(even) td {
+            background: #fbf6e9;
+        }
+
+        .order-table tbody tr:hover td {
+            background: #fff2c9;
+        }
+
+    .ma-chuyen-di {
+        font-weight: 950;
+        color: #0d1b3e;
+        white-space: nowrap;
+    }
+
+    .customer-name {
+        font-weight: 950;
+        color: #0d1b3e;
+    }
+
+    .phone-cell,
+    .date-cell {
+        white-space: nowrap;
+    }
+
+    .email-cell {
+        min-width: 210px;
+    }
+
+    .tour-name {
+        font-weight: 950;
+        color: #0d1b3e;
+        text-transform: uppercase;
+    }
+
+    .money {
+        font-weight: 950;
+        color: #087a42;
+        white-space: nowrap;
+    }
+
+    .payment-method-text {
+        font-weight: 900;
+        color: #0d1b3e;
+    }
+
+    .time-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 104px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #eaf6ff;
+        color: #075985;
+        border: 1px solid #bfdbfe;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+
+    .badge-status {
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 0.88rem;
+        font-weight: 950;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 138px;
+        text-align: center;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .status-unpaid {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .status-checking {
+        background: #fff7ed;
+        color: #c2410c;
+        border-color: #fed7aa;
+    }
+
+    .status-paid {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #bbf7d0;
+    }
+
+    .action-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-width: 120px;
+    }
+
+    .btn-action {
+        border-radius: 10px;
+        font-weight: 900;
+        font-size: 0.88rem;
+        padding: 8px 13px;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #d6aa3f, #edc85d);
+        color: #0d1b3e !important;
+    }
+
+    .btn-delete {
+        background: #c81e1e;
+        color: white !important;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        filter: brightness(0.98);
+    }
+
+    .empty-box {
+        padding: 34px !important;
+        text-align: center;
+        color: #64748b !important;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 992px) {
+        .summary-boxes {
+            grid-template-columns: 1fr;
+        }
+
+        .order-tools {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .order-search-input,
+        .btn-search,
+        .btn-reset {
+            border-radius: 12px;
+            border-right: 1px solid rgba(214,170,63,0.36);
+        }
+    }
+</style>
+
+<div class="order-page">
+    <div class="order-panel">
+        <div class="order-title">📋 Danh sách khách đặt tour</div>
+        <div class="order-subtitle">
+            Quản lý đơn đặt tour, theo dõi mã chuyến đi, ngày giờ khởi hành và trạng thái thanh toán.
+        </div>
+
+        <div class="summary-boxes">
+            <div class="summary-item bg-blue">
+                <h5>Tổng đơn đặt tour</h5>
+                <div class="number">@tongDon</div>
+            </div>
+
+            <div class="summary-item bg-orange">
+                <h5>Đang kiểm tra</h5>
+                <div class="number">@dangKiemTra</div>
+            </div>
+
+            <div class="summary-item bg-green">
+                <h5>Chưa thanh toán</h5>
+                <div class="number">@chuaThanhToan</div>
+            </div>
+        </div>
+
+        <form asp-controller="Admin" asp-action="DonDatTour" method="get" class="order-tools">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="order-search-input"
+                   placeholder="Tìm theo mã chuyến đi, khách hàng, SĐT, email, tour, trạng thái..." />
+
+            <button class="btn-search" type="submit">
+                🔍 Tìm kiếm
+            </button>
+
+            <a asp-controller="Admin" asp-action="DonDatTour" class="btn-reset">
+                Làm mới
+            </a>
+        </form>
+    </div>
+
+    <div class="order-table-card">
+        <div class="table-responsive order-table-wrap">
+            <table class="table table-bordered table-hover align-middle order-table">
+                <thead>
+                    <tr>
+                        <th>Mã chuyến đi</th>
+                        <th>Khách hàng</th>
+                        <th>Điện thoại</th>
+                        <th>Email</th>
+                        <th>Số người</th>
+                        <th>Ngày đi</th>
+                        <th>Giờ đi</th>
+                        <th>Tour</th>
+                        <th>Giá tiền</th>
+                        <th>Khuyến mãi</th>
+                        <th>Đã giảm</th>
+                        <th>Thanh toán bằng</th>
+                        <th>Trạng thái thanh toán</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var item in Model)
+                        {
+                            var cssStatus = "status-unpaid";
+
+                            if (item.TrangThaiThanhToan == "Đang kiểm tra")
+                            {
+                                cssStatus = "status-checking";
+                            }
+                            else if (item.TrangThaiThanhToan == "Đã thanh toán")
+                            {
+                                cssStatus = "status-paid";
+                            }
+
+                            var gioDi = item.LichKhoiHanhTour?.GioKhoiHanh;
+
+                            <tr>
+                                <td class="ma-chuyen-di">
+                                    @(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có" : item.MaChuyenDi)
+                                </td>
+
+                                <td class="customer-name">@item.TenKhach</td>
+                                <td class="phone-cell">@item.DienThoai</td>
+                                <td class="email-cell">@item.Email</td>
+                                <td>@item.SoNguoi</td>
+                                <td class="date-cell">@item.NgayDi.ToString("dd/MM/yyyy")</td>
+
+                                <td>
+                                    <span class="time-pill">
+                                        🕒 @(gioDi.HasValue? gioDi.Value.ToString(@"hh\:mm") : "Chưa cập nhật")
+                                    </span>
+                                </td>
+
+                                <td class="tour-name">@item.Tour?.TenTour</td>
+                                <td class="money">@item.TongTien.ToString("N0") VNĐ</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.MaKhuyenMai))
+                                    {
+                                        <span class="ma-chuyen-di">@item.MaKhuyenMai</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#94a3b8;">Không có</span>
+                                    }
+                                </td>
+
+                                <td class="money">
+                                    @if (item.SoTienGiam > 0)
+                                    {
+                                        <span>-@item.SoTienGiam.ToString("N0") VNĐ</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#94a3b8;">0 VNĐ</span>
+                                    }
+                                </td>
+
+                                <td class="payment-method-text">@item.PhuongThucThanhToan</td>
+
+                                <td>
+                                    <span class="badge-status @cssStatus">
+                                        @item.TrangThaiThanhToan
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="action-group">
+                                        <a asp-controller="Admin"
+                                           asp-action="SuaDonDatTour"
+                                           asp-route-id="@item.Id"
+                                           class="btn-action btn-edit">
+                                            Sửa
+                                        </a>
+
+                                        <a asp-controller="Admin"
+                                           asp-action="XoaDonDatTour"
+                                           asp-route-id="@item.Id"
+                                           class="btn-action btn-delete"
+                                           onclick="return confirm('Bạn chắc chắn muốn xóa đơn này?')">
+                                            Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="14" class="empty-box">
+                                Chưa có đơn đặt tour nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

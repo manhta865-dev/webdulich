@@ -1,0 +1,24 @@
+﻿@model webdulich.Models.Tour
+
+<h2>Thêm Tour</h2>
+
+<form method="post">
+
+Tên tour
+<input asp-for="TenTour"/>
+
+Địa điểm
+<input asp-for="DiaDiem"/>
+
+Giá
+<input asp-for="Gia"/>
+
+Hình ảnh
+<input asp-for="HinhAnh"/>
+
+Mô tả
+<textarea asp-for="MoTa"></textarea>
+
+<button type="submit">Thêm</button>
+
+</form>

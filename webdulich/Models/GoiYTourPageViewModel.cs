@@ -15,5 +15,8 @@ namespace webdulich.Models
         public List<SelectListItem> PhongCachOptions { get; set; } = new List<SelectListItem>();
 
         public List<SelectListItem> SoNgayOptions { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> LoaiTourOptions { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> PhuongTienOptions { get; set; } = new List<SelectListItem>();
+
     }
 }

@@ -1,0 +1,618 @@
+@{
+    ViewData["Title"] = "Thanh toán";
+    var tour = ViewBag.Tour as webdulich.Models.Tour;
+    var lichKhoiHanh = ViewBag.LichKhoiHanh as webdulich.Models.LichKhoiHanhTour;
+
+    int soNguoi = ViewBag.SoNguoi != null ? (int)ViewBag.SoNguoi : 1;
+    int soNguoiLon = ViewBag.SoNguoiLon != null ? (int)ViewBag.SoNguoiLon : 1;
+    int soTreNho = ViewBag.SoTreNho != null ? (int)ViewBag.SoTreNho : 0;
+
+    decimal giaNguoiLon = tour != null ? (lichKhoiHanh?.GiaNguoiLon ?? tour.Gia) : 0;
+    decimal giaTreEm = tour != null ? (lichKhoiHanh?.GiaTreEm ?? giaNguoiLon * 0.5m) : 0;
+
+    decimal tongTienTamTinh = (soNguoiLon * giaNguoiLon) + (soTreNho * giaTreEm);
+    decimal tongTienTruocGiam = ViewBag.TongTienTruocGiam != null ? (decimal)ViewBag.TongTienTruocGiam : tongTienTamTinh;
+    decimal soTienGiam = ViewBag.SoTienGiam != null ? (decimal)ViewBag.SoTienGiam : 0;
+    decimal tongTien = ViewBag.TongTienSauGiam != null ? (decimal)ViewBag.TongTienSauGiam : Math.Max(0, tongTienTruocGiam - soTienGiam);
+    string maKhuyenMai = ViewBag.MaKhuyenMai != null ? ViewBag.MaKhuyenMai.ToString() : "";
+
+
+
+    string tenKhach = ViewBag.TenKhach != null ? ViewBag.TenKhach.ToString() : "KHACH";
+    string tenTour = tour != null ? tour.TenTour : "TOUR";
+    string ngayDiText = ViewBag.NgayDi != null ? ((DateTime)ViewBag.NgayDi).ToString("ddMMyyyy") : DateTime.Now.ToString("ddMMyyyy");
+
+    string noiDungCK = $"{tenKhach}-{tenTour}-{ngayDiText}";
+    noiDungCK = noiDungCK.Replace(" ", "").ToUpper();
+}
+
+<style>
+    body {
+        background: radial-gradient(circle at top left, rgba(201,168,76,0.16), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
+    }
+
+    .payment-page {
+        max-width: 1240px;
+        margin: 34px auto 60px;
+        padding: 0 12px;
+    }
+
+    .payment-title {
+        text-align: center;
+        font-family: 'Playfair Display', serif;
+        font-size: 2.45rem;
+        font-weight: 900;
+        color: #0d1b3e;
+        margin-bottom: 24px;
+        letter-spacing: 0.04em;
+    }
+
+        .payment-title::after {
+            content: "";
+            display: block;
+            width: 90px;
+            height: 2px;
+            margin: 12px auto 0;
+            background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+        }
+
+    .booking-steps {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 22px;
+        margin-bottom: 34px;
+        flex-wrap: wrap;
+    }
+
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: #8a8170;
+        font-weight: 800;
+        min-width: 120px;
+        font-size: 0.92rem;
+    }
+
+    .step-circle {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #fffaf0;
+        border: 1px solid rgba(201,168,76,0.28);
+        color: #0d1b3e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        box-shadow: 0 8px 20px rgba(13,27,62,0.08);
+    }
+
+    .step-item.active {
+        color: #0d1b3e;
+    }
+
+        .step-item.active .step-circle {
+            background: linear-gradient(135deg, #c9a84c, #e8c96d);
+            color: #0a0f1e;
+            box-shadow: 0 10px 28px rgba(201,168,76,0.35);
+        }
+
+    .step-line {
+        width: 64px;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(201,168,76,0.25), rgba(13,27,62,0.18));
+        border-radius: 999px;
+    }
+
+    .payment-layout {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .payment-card {
+        background: rgba(255,253,248,0.96);
+        border: 1px solid rgba(201,168,76,0.24);
+        border-radius: 18px;
+        box-shadow: 0 18px 44px rgba(13,27,62,0.12);
+        padding: 26px;
+    }
+
+        .payment-card h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            margin-bottom: 18px;
+            color: #0d1b3e;
+            font-size: 1.35rem;
+        }
+
+    .info-row {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(201,168,76,0.2);
+        color: #1f2937;
+        line-height: 1.5;
+    }
+
+        .info-row strong {
+            color: #0d1b3e;
+        }
+
+    .payment-method {
+        border: 1px solid rgba(201,168,76,0.26);
+        border-radius: 12px;
+        padding: 15px 16px;
+        margin-bottom: 14px;
+        cursor: pointer;
+        transition: 0.22s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        background: #fffdf8;
+        color: #0d1b3e;
+        font-weight: 700;
+    }
+
+        .payment-method:hover {
+            border-color: #c9a84c;
+            background: #fff7df;
+            transform: translateY(-1px);
+        }
+
+        .payment-method input {
+            accent-color: #c9a84c;
+        }
+
+    .pay-box {
+        display: none;
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fffdf8, #f8f1df);
+        border: 1px solid rgba(201,168,76,0.26);
+    }
+
+        .pay-box.active {
+            display: block;
+        }
+
+    .qr-wrap {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+
+        .qr-wrap img {
+            width: 260px;
+            max-width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(201,168,76,0.28);
+            background: white;
+            padding: 8px;
+            box-shadow: 0 12px 28px rgba(13,27,62,0.12);
+        }
+
+    .pay-info {
+        background: rgba(255,255,255,0.72);
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid rgba(201,168,76,0.2);
+    }
+
+        .pay-info p {
+            margin-bottom: 8px;
+            font-size: 0.97rem;
+            color: #263142;
+        }
+
+        .pay-info strong {
+            color: #0d1b3e;
+        }
+
+    .copy-box {
+        background: #fff7df;
+        border: 1px dashed #c9a84c;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-weight: 900;
+        color: #0d1b3e;
+        margin-top: 8px;
+        word-break: break-word;
+    }
+
+    .note-box {
+        margin-top: 14px;
+        background: #fff3d2;
+        border: 1px solid rgba(201,168,76,0.38);
+        color: #6b4c00;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        font-weight: 650;
+    }
+
+    .total-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.65rem;
+        font-weight: 900;
+        color: #b88b19;
+        margin-top: 14px;
+    }
+
+    .payment-card hr {
+        border-color: rgba(201,168,76,0.35);
+        opacity: 1;
+    }
+
+    .payment-card p {
+        color: #1f2937;
+        margin-bottom: 13px;
+        line-height: 1.5;
+    }
+
+        .payment-card p strong {
+            color: #0d1b3e;
+        }
+
+    .btn-pay {
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        padding: 13px 20px;
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+        color: #0a0f1e;
+        font-size: 1.02rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        box-shadow: 0 10px 26px rgba(201,168,76,0.28);
+        transition: 0.25s;
+        margin-top: 18px;
+    }
+
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 34px rgba(201,168,76,0.42);
+        }
+
+    .btn-back {
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        background: #0d1b3e;
+        color: #f5e6b8 !important;
+        text-decoration: none;
+        font-weight: 800;
+        transition: 0.25s;
+    }
+
+        .btn-back:hover {
+            color: #e8c96d !important;
+            transform: translateY(-2px);
+        }
+
+    @@media (max-width: 992px) {
+        .payment-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .payment-page {
+            padding: 0 10px;
+        }
+
+        .payment-card {
+            padding: 20px 16px;
+        }
+
+        .step-line {
+            display: none;
+        }
+    }
+
+    .promo-pay-box {
+        margin: 20px 0 24px;
+        padding: 18px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #fff8e4, #ffffff);
+        border: 1px solid rgba(201,168,76,0.34);
+    }
+
+        .promo-pay-box label {
+            color: #0d1b3e;
+            font-weight: 950;
+            margin-bottom: 9px;
+            display: block;
+        }
+
+    .promo-pay-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+    }
+
+        .promo-pay-row input {
+            min-height: 48px;
+            border: 1px solid #d8c99d;
+            border-radius: 12px;
+            padding: 0 14px;
+            font-weight: 850;
+            color: #0d1b3e;
+            text-transform: uppercase;
+            outline: none;
+        }
+
+            .promo-pay-row input:focus {
+                border-color: #c9a84c;
+                box-shadow: 0 0 0 0.18rem rgba(201,168,76,0.18);
+            }
+
+        .promo-pay-row button {
+            min-height: 48px;
+            border: none;
+            border-radius: 12px;
+            padding: 0 18px;
+            background: linear-gradient(135deg, #0d1b3e, #1d4ed8);
+            color: #ffffff;
+            font-weight: 950;
+        }
+
+    .promo-message {
+        margin-top: 10px;
+        font-weight: 850;
+        color: #64748b;
+    }
+
+        .promo-message.success {
+            color: #15803d;
+        }
+
+        .promo-message.error {
+            color: #b91c1c;
+        }
+
+    .summary-line-discount {
+        color: #15803d !important;
+        font-weight: 900;
+    }
+
+    @@media (max-width: 576px) {
+        .promo-pay-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+
+
+<div class="payment-page">
+    <h2 class="payment-title">THANH TOÁN</h2>
+
+    <div class="booking-steps">
+        <div class="step-item">
+            <div class="step-circle">📝</div>
+            <div>NHẬP THÔNG TIN</div>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step-item active">
+            <div class="step-circle">💳</div>
+            <div>THANH TOÁN</div>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step-item">
+            <div class="step-circle">✅</div>
+            <div>HOÀN TẤT</div>
+        </div>
+    </div>
+
+    <div class="payment-layout">
+        <div class="payment-card">
+            <h4>Thông tin khách hàng</h4>
+
+            <div class="info-row"><strong>Họ tên:</strong> @ViewBag.TenKhach</div>
+            <div class="info-row"><strong>Điện thoại:</strong> @ViewBag.DienThoai</div>
+            <div class="info-row"><strong>Email:</strong> @ViewBag.Email</div>
+            <div class="info-row"><strong>Địa chỉ:</strong> @ViewBag.DiaChi</div>
+            <div class="info-row"><strong>Ngày đi:</strong> @(((DateTime)ViewBag.NgayDi).ToString("dd/MM/yyyy"))</div>
+            <div class="info-row"><strong>Số người:</strong> @soNguoi</div>
+            <div class="info-row"><strong>Ghi chú:</strong> @(string.IsNullOrEmpty(ViewBag.GhiChu) ? "Không có" : ViewBag.GhiChu)</div>
+            <div class="promo-pay-box">
+                <label>🏷️ Mã khuyến mãi</label>
+                <div class="promo-pay-row">
+                    <input type="text"
+                           id="promoCodeInput"
+                           value="@maKhuyenMai"
+                           placeholder="Nhập mã khuyến mãi, ví dụ SUMMER2026" />
+                    <button type="button" onclick="applyPromoCode()">Áp dụng</button>
+                </div>
+                <div id="promoMessage" class="promo-message">
+                    @if (!string.IsNullOrWhiteSpace(maKhuyenMai))
+                    {
+                        <span>Đang áp dụng mã @maKhuyenMai.</span>
+                    }
+                    else
+                    {
+                        <span>Copy mã ở trang chủ rồi nhập tại đây để được giảm giá.</span>
+                    }
+                </div>
+            </div>
+
+            <h4 class="mt-4">Chọn phương thức thanh toán</h4>
+
+            <form asp-controller="DatTour" asp-action="XacNhanThanhToan" method="post">
+                @Html.AntiForgeryToken()
+
+                <label class="payment-method">
+                    <input type="radio" name="phuongThucThanhToan" value="Tiền mặt" onclick="showPaymentBox('cashBox')" />
+                    💵 Thanh toán tiền mặt
+                </label>
+
+                <label class="payment-method">
+                    <input type="radio" name="phuongThucThanhToan" value="Chuyển khoản ACB" checked onclick="showPaymentBox('bankBox')" />
+                    🏦 Chuyển khoản ngân hàng ACB
+                </label>
+
+                <label class="payment-method">
+                    <input type="radio" name="phuongThucThanhToan" value="Ví điện tử MoMo" onclick="showPaymentBox('momoBox')" />
+                    📱 Ví điện tử MoMo
+                </label>
+
+                <div id="cashBox" class="pay-box">
+                    <div class="pay-info">
+                        <p><strong>Hình thức:</strong> Thanh toán tiền mặt</p>
+                        <p>Bạn sẽ thanh toán trực tiếp khi nhân viên xác nhận đơn hoặc trước ngày khởi hành.</p>
+                    </div>
+                </div>
+
+                <div id="bankBox" class="pay-box active">
+                    <div class="qr-wrap">
+                        <img src="https://img.vietqr.io/image/acb-26877677-compact2.png?addInfo=@noiDungCK&accountName=TA%20THANH%20MANH"
+                             alt="QR Chuyển khoản ACB" />
+                    </div>
+
+                    <div class="pay-info">
+                        <p><strong>Ngân hàng:</strong> ACB</p>
+                        <p><strong>Số tài khoản:</strong> 26877677</p>
+                        <p><strong>Chủ tài khoản:</strong> TA THANH MANH</p>
+                        <span class="js-final-total">@tongTien.ToString("N0") VNĐ</span>
+                        <p><strong>Nội dung chuyển khoản:</strong></p>
+                        <div class="copy-box">@noiDungCK</div>
+                    </div>
+
+                    <div class="note-box">
+                        Vui lòng chuyển đúng số tiền<strong><span class="js-final-total">@tongTien.ToString("N0") VNĐ</span></strong> và ghi đúng nội dung:
+                        <strong>@noiDungCK</strong>
+                    </div>
+                </div>
+
+                <div id="momoBox" class="pay-box">
+                    <div class="qr-wrap">
+                        <img src="~/images/payment/momo-qr.jpg" alt="QR MoMo" />
+                    </div>
+
+                    <div class="pay-info">
+                        <p><strong>Ví điện tử:</strong> MoMo</p>
+                        <p><strong>Số điện thoại ví:</strong> 0342500619</p>
+                        <p><strong>Chủ ví:</strong> TA THANH MANH</p>
+                        <span class="js-final-total">@tongTien.ToString("N0") VNĐ</span>
+                        <p><strong>Nội dung chuyển khoản:</strong></p>
+                        <div class="copy-box">@noiDungCK</div>
+                    </div>
+
+                    <div class="note-box">
+                        Bạn quét QR MoMo bên trên hoặc chuyển đến số <strong>0342500619</strong> số tiền
+                        <strong><span class="js-final-total">@tongTien.ToString("N0") VNĐ</span></strong> và ghi đúng nội dung:
+                        <strong>@noiDungCK</strong>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-pay">
+                    Xác nhận thanh toán
+                </button>
+
+                <a asp-controller="DatTour" asp-action="DatTour" asp-route-id="@tour?.Id" class="btn-back">
+                    Quay lại bước nhập thông tin
+                </a>
+            </form>
+        </div>
+
+        <div class="payment-card">
+            <h4>Tóm tắt chuyến đi</h4>
+
+            @if (tour != null)
+            {
+                <p><strong>Tên tour:</strong> @tour.TenTour</p>
+                <p><strong>Địa điểm:</strong> @tour.TenDiaDiemHienThi</p>
+                <p><strong>Giá / người lớn:</strong> @giaNguoiLon.ToString("N0") VNĐ</p>
+                <p><strong>Giá trẻ nhỏ:</strong> @giaTreEm.ToString("N0") VNĐ</p>
+                <p><strong>Người lớn:</strong> @soNguoiLon</p>
+                <p><strong>Trẻ nhỏ:</strong> @soTreNho</p>
+                <p><strong>Tổng số người:</strong> @soNguoi</p>
+                <p><strong>Mã chuyến đi:</strong> @ViewBag.MaChuyenDi</p>
+                <p><strong>Tạm tính:</strong> <span id="subtotalText">@tongTienTruocGiam.ToString("N0") VNĐ</span></p>
+                <p class="summary-line-discount"><strong>Giảm giá:</strong> <span id="discountText">-@soTienGiam.ToString("N0") VNĐ</span></p>
+                <p><strong>Mã khuyến mãi:</strong> <span id="promoCodeSummary">@(string.IsNullOrWhiteSpace(maKhuyenMai) ? "Chưa áp dụng" : maKhuyenMai)</span></p>
+                <hr />
+                <div class="total-price">
+                    Tổng tiền: <span id="finalTotalText">@tongTien.ToString("N0") VNĐ</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function showPaymentBox(boxId) {
+        document.querySelectorAll(".pay-box").forEach(box => {
+            box.classList.remove("active");
+        });
+
+        document.getElementById(boxId).classList.add("active");
+    }
+
+    function setPromoMessage(message, success) {
+        const el = document.getElementById("promoMessage");
+        if (!el) return;
+
+        el.textContent = message;
+        el.classList.remove("success", "error");
+        el.classList.add(success ? "success" : "error");
+    }
+
+    function updateMoneyText(data) {
+        document.querySelectorAll(".js-final-total").forEach(function (item) {
+            item.textContent = data.tongTien;
+        });
+
+        const subtotalText = document.getElementById("subtotalText");
+        const discountText = document.getElementById("discountText");
+        const finalTotalText = document.getElementById("finalTotalText");
+        const promoCodeSummary = document.getElementById("promoCodeSummary");
+
+        if (subtotalText) subtotalText.textContent = data.tongTienTruocGiam;
+        if (discountText) discountText.textContent = "-" + data.soTienGiam;
+        if (finalTotalText) finalTotalText.textContent = data.tongTien;
+        if (promoCodeSummary) promoCodeSummary.textContent = data.maKhuyenMai ? data.maKhuyenMai : "Chưa áp dụng";
+    }
+
+    function applyPromoCode() {
+        const input = document.getElementById("promoCodeInput");
+        const token = document.querySelector('input[name="__RequestVerificationToken"]');
+
+        if (!input || !token) {
+            setPromoMessage("Không tìm thấy form thanh toán, vui lòng tải lại trang.", false);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("maKhuyenMai", input.value.trim());
+        formData.append("__RequestVerificationToken", token.value);
+
+        fetch('@Url.Action("ApDungKhuyenMaiAjax", "DatTour")', {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                setPromoMessage(data.message, true);
+                updateMoneyText(data);
+            } else {
+                setPromoMessage(data.message, false);
+            }
+        })
+        .catch(() => {
+            setPromoMessage("Không áp dụng được mã, vui lòng thử lại.", false);
+        });
+    }
+</script>

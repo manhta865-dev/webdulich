@@ -1,0 +1,563 @@
+﻿@model List<webdulich.Models.TaiKhoan>
+
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+
+    var tongTaiKhoan = Model != null ? Model.Count : 0;
+    var tongAdmin = Model != null ? Model.Count(x => x.VaiTro == "admin") : 0;
+    var tongUser = Model != null ? Model.Count(x => x.VaiTro == "user") : 0;
+    var tongNhanSu = Model != null ? Model.Count(x => x.VaiTro == "huongdanvien" || x.VaiTro == "taixe") : 0;
+}
+
+<style>
+    body {
+        background: radial-gradient(circle at top left, rgba(214,170,63,0.12), transparent 30%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
+    }
+
+    .account-page {
+        max-width: 1500px;
+        margin: 36px auto 70px;
+        padding: 0 16px;
+    }
+
+    .account-panel {
+        background: rgba(255,253,248,0.96);
+        border: 1px solid rgba(214,170,63,0.26);
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(13,27,62,0.11);
+        padding: 30px 28px;
+        margin-bottom: 24px;
+    }
+
+    .account-title {
+        text-align: center;
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem, 3vw, 2.65rem);
+        font-weight: 900;
+        color: #0d1b3e;
+        margin-bottom: 8px;
+    }
+
+    .account-subtitle {
+        text-align: center;
+        color: #6b6252;
+        font-weight: 700;
+        margin-bottom: 26px;
+    }
+
+    .summary-boxes {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .summary-item {
+        border-radius: 18px;
+        padding: 20px;
+        color: white;
+        font-weight: 800;
+        box-shadow: 0 14px 30px rgba(13,27,62,0.13);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .summary-item::after {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            right: -38px;
+            top: -42px;
+            background: rgba(255,255,255,0.14);
+        }
+
+        .summary-item h5 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: 900;
+            position: relative;
+            z-index: 1;
+        }
+
+        .summary-item .number {
+            font-size: 2.05rem;
+            font-weight: 950;
+            position: relative;
+            z-index: 1;
+        }
+
+    .bg-navy {
+        background: linear-gradient(135deg, #0d1b3e, #173a7a);
+    }
+
+    .bg-gold {
+        background: linear-gradient(135deg, #d6aa3f, #f2c75c);
+        color: #0d1b3e;
+    }
+
+    .bg-green {
+        background: linear-gradient(135deg, #15803d, #16a34a);
+    }
+
+    .account-tools {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0;
+    }
+
+    .account-search-input {
+        min-height: 48px;
+        border: 1px solid rgba(214,170,63,0.36);
+        border-right: none;
+        border-radius: 12px 0 0 12px;
+        padding: 0 16px;
+        outline: none;
+        background: #fffdf8;
+        color: #0d1b3e;
+        font-weight: 700;
+    }
+
+        .account-search-input:focus {
+            border-color: #d6aa3f;
+            box-shadow: 0 0 0 0.2rem rgba(214,170,63,0.15);
+        }
+
+    .btn-search {
+        border: none;
+        min-height: 48px;
+        padding: 0 22px;
+        background: linear-gradient(135deg, #d6aa3f, #edc85d);
+        color: #0d1b3e;
+        font-weight: 900;
+    }
+
+    .btn-reset {
+        min-height: 48px;
+        padding: 0 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1b3e;
+        color: #f5e6b8 !important;
+        text-decoration: none;
+        font-weight: 900;
+        border-radius: 0 12px 12px 0;
+    }
+
+    .account-table-card {
+        background: rgba(255,253,248,0.98);
+        border: 1px solid rgba(214,170,63,0.24);
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(13,27,62,0.1);
+        padding: 16px;
+    }
+
+    .account-table-wrap {
+        border-radius: 16px;
+        overflow: auto;
+        border: 1px solid #d8dce5;
+        background: white;
+    }
+
+    .account-table {
+        min-width: 1120px;
+        margin-bottom: 0;
+        border-color: #d8dce5;
+    }
+
+        .account-table thead th {
+            background: #0d1b3e;
+            color: #f2c75c;
+            vertical-align: middle;
+            text-align: center;
+            padding: 17px 14px;
+            font-weight: 950;
+            border-color: rgba(255,255,255,0.14);
+            white-space: nowrap;
+        }
+
+        .account-table tbody td {
+            vertical-align: middle;
+            padding: 17px 14px;
+            border-color: #dde2ea;
+            color: #0f172a;
+            font-weight: 750;
+            background: #ffffff;
+        }
+
+        .account-table tbody tr:nth-child(even) td {
+            background: #fbf6e9;
+        }
+
+        .account-table tbody tr:hover td {
+            background: #fff2c9;
+        }
+
+    .name-cell {
+        font-weight: 950;
+        color: #0d1b3e;
+        min-width: 180px;
+    }
+
+    .login-cell {
+        color: #1e293b;
+        font-weight: 800;
+        min-width: 230px;
+        white-space: nowrap;
+    }
+
+    .password-cell {
+        max-width: 410px;
+    }
+
+    .password-code {
+        display: block;
+        max-width: 390px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #dbe3ef;
+        color: #475569;
+        font-size: 0.86rem;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 76px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 950;
+        font-size: 0.86rem;
+        border: 1px solid transparent;
+    }
+
+    .role-admin {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .role-user {
+        background: #eaf6ff;
+        color: #075985;
+        border-color: #bfdbfe;
+    }
+
+    .role-staff {
+        background: #f3e8ff;
+        color: #6b21a8;
+        border-color: #d8b4fe;
+    }
+
+    .role-driver {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .date-cell {
+        white-space: nowrap;
+        color: #334155;
+        font-weight: 800;
+        min-width: 145px;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        min-width: 120px;
+    }
+
+    .btn-action {
+        border: none;
+        border-radius: 10px;
+        font-weight: 900;
+        font-size: 0.88rem;
+        padding: 8px 13px;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #d6aa3f, #edc85d);
+        color: #0d1b3e !important;
+    }
+
+    .btn-delete {
+        background: #c81e1e;
+        color: white !important;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        filter: brightness(0.98);
+    }
+
+    .empty-box {
+        padding: 36px !important;
+        text-align: center;
+        color: #64748b !important;
+        font-weight: 800;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 22px;
+        overflow: hidden;
+    }
+
+    .modal-header-custom {
+        background: #0d1b3e;
+        color: #f2c75c;
+        border: none;
+        padding: 18px 22px;
+    }
+
+    .modal-body-custom {
+        padding: 28px 24px;
+    }
+
+    .btn-modal-cancel {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 22px;
+        background: #e5e7eb;
+        color: #111827;
+        font-weight: 900;
+    }
+
+    .btn-modal-delete {
+        border-radius: 999px;
+        padding: 10px 22px;
+        background: #c81e1e;
+        color: white !important;
+        font-weight: 900;
+        text-decoration: none !important;
+    }
+
+    @@media (max-width: 992px) {
+        .summary-boxes {
+            grid-template-columns: 1fr;
+        }
+
+        .account-tools {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .account-search-input,
+        .btn-search,
+        .btn-reset {
+            border-radius: 12px;
+            border-right: 1px solid rgba(214,170,63,0.36);
+        }
+    }
+</style>
+ // Trang quản lý tài khoản người dùng và quản trị viên trong hệ thống TravelVN.
+<div class="account-page">
+    <div class="account-panel">
+        <div class="account-title">👤 Quản lý tài khoản</div>
+        <div class="account-subtitle">
+            Danh sách tài khoản người dùng và quản trị viên trong hệ thống TravelVN.
+        </div>
+        // 
+        <div class="summary-boxes">
+            <div class="summary-item bg-navy">
+                <h5>Tổng tài khoản</h5>
+                <div class="number">@tongTaiKhoan</div>
+            </div>
+
+            <div class="summary-item bg-gold">
+                <h5>Quản trị viên</h5>
+                <div class="number">@tongAdmin</div>
+            </div>
+
+            <div class="summary-item bg-green">
+                <h5>Người dùng</h5>
+                <div class="number">@tongUser</div>
+            </div>
+        </div>
+
+        <form asp-controller="Admin" asp-action="TaiKhoan" method="get" class="account-tools">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="account-search-input"
+                   placeholder="Tìm theo họ tên, email/sđt, vai trò..." />
+
+            <button class="btn-search" type="submit">
+                🔍 Tìm kiếm
+            </button>
+
+            <a asp-controller="Admin" asp-action="TaiKhoan" class="btn-reset">
+                Làm mới
+            </a>
+        </form>
+    </div>
+
+    <div class="account-table-card">
+        <div class="table-responsive account-table-wrap">
+            <table class="table table-bordered table-hover align-middle account-table">
+                <thead>
+                    <tr>
+                        <th>Họ tên</th>
+                        <th>Tài khoản</th>
+                        <th>Mật khẩu</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="name-cell">@item.HoTen</td>
+
+                                <td class="login-cell">@item.TaiKhoanDangNhap</td>
+
+                                <td class="password-cell">
+                                    <code class="password-code" title="@item.MatKhau">
+                                        @item.MatKhau
+                                    </code>
+                                </td>
+
+                                <td class="text-center">
+                                    @{
+                                        var vaiTro = (item.VaiTro ?? "").Trim().ToLower();
+                                    }
+
+                                    @if (vaiTro == "admin")
+                                    {
+                                        <span class="role-badge role-admin">Admin</span>
+                                    }
+                                    else if (vaiTro == "huongdanvien")
+                                    {
+                                        <span class="role-badge role-staff">Nhân sự - HDV</span>
+                                    }
+                                    else if (vaiTro == "taixe")
+                                    {
+                                        <span class="role-badge role-driver">Nhân sự - Tài xế</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="role-badge role-user">User</span>
+                                    }
+                        </td>
+
+                        <td class="date-cell">
+                            @(item.NgayTao == DateTime.MinValue
+                                                        ? "Chưa cập nhật"
+                                                        : item.NgayTao.ToString("dd/MM/yyyy HH:mm"))
+                        </td>
+
+                                <td>
+                                    <div class="action-group">
+                                        <button type="button"
+                                                class="btn-action btn-delete btn-xoa"
+                                                data-id="@item.Id">
+                                            Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="empty-box">
+                                Chưa có tài khoản nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalXoa" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title fw-bold">
+                    Xác nhận xóa tài khoản
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <form asp-controller="Admin"
+                  asp-action="XoaTaiKhoan"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       id="taiKhoanCanXoaId"
+                       name="id" />
+
+                <div class="modal-body modal-body-custom text-center">
+                    <p class="fs-5 mb-2 fw-bold">
+                        Bạn có chắc chắn muốn xóa tài khoản này?
+                    </p>
+
+                    <small class="text-muted">
+                        Hành động này không thể hoàn tác.
+                    </small>
+                </div>
+
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button"
+                            class="btn-modal-cancel"
+                            data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+
+                    <button type="submit" class="btn-modal-delete">
+                        Xóa tài khoản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modalElement = document.getElementById("modalXoa");
+            const modalXoa = new bootstrap.Modal(modalElement);
+            const taiKhoanCanXoaId =
+                document.getElementById("taiKhoanCanXoaId");
+
+            document.querySelectorAll(".btn-xoa").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    taiKhoanCanXoaId.value =
+                        this.getAttribute("data-id");
+
+                    modalXoa.show();
+                });
+            });
+        });
+    </script>
+}

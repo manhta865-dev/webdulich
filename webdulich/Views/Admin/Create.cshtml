@@ -1,64 +1,296 @@
 ﻿@model webdulich.Models.Tour
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Thêm Tour";
+
+    var danhMucList = ViewBag.DanhMucList as List<SelectListItem> ?? new List<SelectListItem>();
+    var phuongTienList = ViewBag.PhuongTienList as List<SelectListItem> ?? new List<SelectListItem>();
+    var soNgayList = ViewBag.SoNgayList as List<SelectListItem> ?? new List<SelectListItem>();
+    var loaiDiaHinhList = ViewBag.LoaiDiaHinhList as List<SelectListItem> ?? new List<SelectListItem>();
+    var phongCachList = ViewBag.PhongCachList as List<SelectListItem> ?? new List<SelectListItem>();
+
+    var loaiDiaHinhDaChon = Model?.LoaiDiaHinhDaChon ?? new List<string>();
+    var phongCachDaChon = Model?.PhongCachDaChon ?? new List<string>();
 }
 
-<div class="container mt-5">
-    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width: 900px;">
-        <div class="card-header bg-success text-white rounded-top-4">
-            <h2 class="mb-0 text-center">➕ Thêm Tour Mới</h2>
+<style>
+    body {
+        background: radial-gradient(circle at top left, rgba(201,168,76,0.14), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
+    }
+
+    .create-tour-page {
+        max-width: 1050px;
+        margin: 38px auto 70px;
+        padding: 0 14px;
+    }
+
+    .create-tour-card {
+        background: #fffdf8;
+        border: 1px solid rgba(201,168,76,0.28);
+        border-radius: 22px;
+        box-shadow: 0 20px 52px rgba(13,27,62,0.14);
+        overflow: hidden;
+    }
+
+    .create-tour-header {
+        padding: 26px;
+        background: linear-gradient(135deg, #0d1b3e, #122455);
+        color: #f5e6b8;
+        text-align: center;
+        border-bottom: 3px solid #c9a84c;
+    }
+
+        .create-tour-header h2 {
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            letter-spacing: 0.03em;
+        }
+
+        .create-tour-header p {
+            margin: 8px 0 0;
+            color: rgba(245,230,184,0.78);
+            font-weight: 650;
+        }
+
+    .create-tour-body {
+        padding: 28px;
+    }
+
+    .form-label {
+        color: #0d1b3e;
+        font-weight: 850;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid #d8c99d;
+        background: #fffdf8;
+        color: #0a0f1e;
+        font-weight: 650;
+    }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #c9a84c;
+            box-shadow: 0 0 0 0.22rem rgba(201,168,76,0.18);
+        }
+
+    .option-box {
+        min-height: 156px;
+        border: 1px solid rgba(201,168,76,0.35);
+        border-radius: 14px;
+        padding: 14px;
+        background: linear-gradient(180deg, #fffdf8, #f8f1df);
+    }
+
+    .form-check {
+        margin-bottom: 9px;
+    }
+
+    .form-check-input:checked {
+        background-color: #c9a84c;
+        border-color: #c9a84c;
+    }
+
+    .preview-box {
+        min-height: 230px;
+        border-radius: 16px;
+        border: 1px dashed rgba(201,168,76,0.45);
+        background: linear-gradient(180deg, #fffaf0, #f8f1df);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #7a6a42;
+        font-weight: 850;
+        text-align: center;
+        overflow: hidden;
+    }
+
+        .preview-box img {
+            width: 100%;
+            max-height: 230px;
+            object-fit: cover;
+            display: none;
+        }
+
+    .btn-create-tour {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+        color: #0a0f1e;
+        font-weight: 950;
+        box-shadow: 0 10px 26px rgba(201,168,76,0.28);
+        transition: 0.2s;
+    }
+
+    .btn-back-tour {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 28px;
+        background: #0d1b3e;
+        color: #f5e6b8 !important;
+        font-weight: 900;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+        .btn-create-tour:hover,
+        .btn-back-tour:hover {
+            transform: translateY(-2px);
+            filter: brightness(0.98);
+        }
+
+    .text-danger {
+        font-weight: 650;
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 768px) {
+        .create-tour-body {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="create-tour-page">
+    <div class="create-tour-card">
+        <div class="create-tour-header">
+            <h2>➕ Thêm Tour Mới</h2>
+            <p>Nhập thông tin tour, địa điểm mới và các tiêu chí hiển thị cho người dùng.</p>
         </div>
 
-        <div class="card-body p-4">
+        <div class="create-tour-body">
             <form asp-controller="Admin" asp-action="Create" method="post" enctype="multipart/form-data">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="TenTour" class="form-label fw-bold">Tên tour</label>
+                        <label asp-for="TenTour" class="form-label">Tên tour</label>
                         <input asp-for="TenTour" class="form-control" placeholder="Nhập tên tour" />
                         <span asp-validation-for="TenTour" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="DiaDiem" class="form-label fw-bold">Địa điểm</label>
-                        <input asp-for="DiaDiem" class="form-control" placeholder="Nhập địa điểm" />
+                        <label asp-for="DiaDiem" class="form-label">Địa điểm</label>
+                        <input asp-for="DiaDiem"
+                               class="form-control"
+                               placeholder="Nhập địa điểm mới, ví dụ: Huế, Quy Nhơn, Singapore..." />
                         <span asp-validation-for="DiaDiem" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Gia" class="form-label fw-bold">Giá</label>
+                        <label asp-for="Gia" class="form-label">Giá</label>
                         <input asp-for="Gia" class="form-control" placeholder="Nhập giá tour" />
                         <span asp-validation-for="Gia" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="HinhFile" class="form-label fw-bold">Chọn hình ảnh</label>
+                        <label asp-for="DanhMucId" class="form-label">Loại tour</label>
+                        <select asp-for="DanhMucId" class="form-select" asp-items="danhMucList">
+                            <option value="">-- Chọn loại tour --</option>
+                        </select>
+                        <span asp-validation-for="DanhMucId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PhuongTien" class="form-label">Phương tiện di chuyển</label>
+                        <select asp-for="PhuongTien" class="form-select" asp-items="phuongTienList">
+                            <option value="">-- Chọn phương tiện --</option>
+                        </select>
+                        <span asp-validation-for="PhuongTien" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SoNgay" class="form-label">Số ngày</label>
+                        <select asp-for="SoNgay" class="form-select" asp-items="soNgayList">
+                            <option value="">-- Chọn số ngày --</option>
+                        </select>
+                        <span asp-validation-for="SoNgay" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Loại địa hình</label>
+                        <div class="option-box">
+                            @for (int i = 0; i < loaiDiaHinhList.Count; i++)
+                            {
+                                var item = loaiDiaHinhList[i];
+                                var value = item.Value ?? item.Text;
+
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="LoaiDiaHinhDaChon"
+                                           value="@value"
+                                           id="ldh_@i"
+                                           @(loaiDiaHinhDaChon.Contains(value) ? "checked" : null) />
+                                    <label class="form-check-label" for="ldh_@i">
+                                        @item.Text
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <span asp-validation-for="LoaiDiaHinh" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Phong cách</label>
+                        <div class="option-box">
+                            @for (int i = 0; i < phongCachList.Count; i++)
+                            {
+                                var item = phongCachList[i];
+                                var value = item.Value ?? item.Text;
+
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="PhongCachDaChon"
+                                           value="@value"
+                                           id="pc_@i"
+                                           @(phongCachDaChon.Contains(value) ? "checked" : null) />
+                                    <label class="form-check-label" for="pc_@i">
+                                        @item.Text
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                        <span asp-validation-for="PhongCach" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HinhFile" class="form-label">Chọn hình ảnh</label>
                         <input asp-for="HinhFile" type="file" class="form-control" id="imgInput" accept="image/*" />
                         <span asp-validation-for="HinhFile" class="text-danger"></span>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HinhPhuFiles" class="form-label">&#7842;nh ph&#7909; c&#7911;a tour</label>
+                        <input asp-for="HinhPhuFiles" type="file" class="form-control" accept="image/*" multiple />
+                        <small class="text-muted">C&#243; th&#7875; ch&#7885;n nhi&#7873;u &#7843;nh &#273;&#7875; hi&#7875;n th&#7883; trong trang chi ti&#7871;t tour.</small>
+                    </div>
 
-                    <div class="col-12 mb-3">
-                        <label asp-for="MoTa" class="form-label fw-bold">Mô tả</label>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Xem trước hình ảnh</label>
+                        <div class="preview-box">
+                            <span id="previewText">Chưa có hình ảnh</span>
+                            <img id="preview" alt="Xem trước ảnh" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-4">
+                        <label asp-for="MoTa" class="form-label">Mô tả</label>
                         <textarea asp-for="MoTa" class="form-control" rows="5" placeholder="Nhập mô tả tour"></textarea>
                         <span asp-validation-for="MoTa" class="text-danger"></span>
                     </div>
-
-                    <div class="col-12 mb-4 text-center">
-                        <label class="form-label fw-bold d-block">Xem trước hình ảnh</label>
-                        <img id="preview"
-                             src="https://via.placeholder.com/320x220?text=Ch%C6%B0a+c%C3%B3+h%C3%ACnh"
-                             alt="Xem trước ảnh"
-                             class="img-fluid rounded-3 shadow-sm border"
-                             style="max-width: 320px; max-height: 220px; object-fit: cover;" />
-                    </div>
                 </div>
 
-                <div class="d-flex justify-content-center gap-3">
-                    <button type="submit" class="btn btn-success px-4">
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <button type="submit" class="btn-create-tour">
                         ➕ Thêm tour
                     </button>
 
-                    <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary px-4">
+                    <a asp-controller="Admin" asp-action="Index" class="btn-back-tour">
                         ↩ Quay lại
                     </a>
                 </div>
@@ -68,10 +300,23 @@
 </div>
 
 <script>
-    document.getElementById("imgInput").addEventListener("change", function (e) {
+    const imgInput = document.getElementById("imgInput");
+    const preview = document.getElementById("preview");
+    const previewText = document.getElementById("previewText");
+
+    imgInput.addEventListener("change", function (e) {
         const file = e.target.files[0];
+
         if (file) {
-            document.getElementById("preview").src = URL.createObjectURL(file);
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+            previewText.style.display = "none";
         }
     });
 </script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

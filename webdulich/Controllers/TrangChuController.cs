@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webdulich.Models;
-using System.Linq;
 
 namespace webdulich.Controllers
 {
@@ -13,14 +12,44 @@ namespace webdulich.Controllers
         {
             _context = context;
         }
-
+        // Dùng để nhận DuLichDbContext, tức là kết nối database.(trên)
+        // Hàm này tạo truy vấn lấy tour kèm đầy đủ dữ liệu liên quan.
+        private IQueryable<Tour> LayQueryTourDayDu()
+        {
+            return _context.Tours
+                .Include(x => x.DiaDiemInfo)
+                .Include(x => x.DanhMuc)
+                .Include(x => x.PhuongTienInfo)
+                .Include(x => x.TourLoaiDiaHinhs)
+                    .ThenInclude(x => x.LoaiDiaHinh)
+                .Include(x => x.TourPhongCachs)
+                    .ThenInclude(x => x.PhongCach);
+        }
+        //Đây là action mở trang chủ.
         public IActionResult Index()
         {
-            // Tour nổi bật ở giữa trang
-            var tours = _context.Tours.Take(3).ToList();
 
-            // Top khách hàng đặt tour nhiều nhất
-            var topKhach = _context.DatTours
+            //Nếu người đăng nhập là admin thì tự chuyển về trang quản trị.
+            if (HttpContext.Session.GetString("role") == "admin")
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+            // Lấy 3 tour đầu tiên để hiển thị ở trang chủ.
+            var tours = LayQueryTourDayDu()
+                .Take(3)
+                .ToList();
+            //Lấy tối đa 6 tour có danh mục:
+            ViewBag.TourTrongNuoc = LayQueryTourDayDu()
+      .Where(x => x.DanhMuc != null && x.DanhMuc.TenDanhMuc == "Trong nước")
+      .Take(6)
+      .ToList();
+
+            ViewBag.TourNgoaiNuoc = LayQueryTourDayDu()
+                .Where(x => x.DanhMuc != null && x.DanhMuc.TenDanhMuc == "Ngoài nước")
+                .Take(6)
+                .ToList();
+
+            ViewBag.TopKhach = _context.DatTours
                 .GroupBy(x => x.TenKhach)
                 .Select(g => new
                 {
@@ -31,8 +60,7 @@ namespace webdulich.Controllers
                 .Take(5)
                 .ToList();
 
-            // Top tour được đặt nhiều nhất
-            var topTour = _context.DatTours
+            ViewBag.TopTour = _context.DatTours
                 .Include(x => x.Tour)
                 .GroupBy(x => x.Tour!.TenTour)
                 .Select(g => new
@@ -43,10 +71,19 @@ namespace webdulich.Controllers
                 .OrderByDescending(x => x.SoLan)
                 .Take(5)
                 .ToList();
-
-            ViewBag.TopKhach = topKhach;
-            ViewBag.TopTour = topTour;
-
+            // 10. Lấy khuyến mãi đang hoạt động
+            var homNay = DateTime.Today;
+            ViewBag.KhuyenMais = _context.KhuyenMais
+                .Where(x =>
+                    x.TrangThai == "DangHienThi" &&
+                    x.NgayBatDau <= homNay &&
+                    x.NgayKetThuc >= homNay &&
+                    (!x.SoLuotDungToiDa.HasValue || x.SoLuotDaDung < x.SoLuotDungToiDa.Value))
+                .OrderBy(x => x.ThuTu)
+                .ThenByDescending(x => x.Id)
+                .Take(8)
+                .ToList();
+            //Sắp xếp khuyến mãi theo thứ tự hiển thị, nếu trùng thì ưu tiên mã mới hơn.
             return View(tours);
         }
     }

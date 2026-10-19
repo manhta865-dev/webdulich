@@ -1,0 +1,339 @@
+﻿@model List<webdulich.Models.DatTours>
+
+@{
+    Layout = null;
+    decimal tongDoanhThu = ViewBag.TongDoanhThu ?? 0;
+    int soDon = ViewBag.SoDonDaThanhToan ?? 0;
+    int thang = ViewBag.ThangChon ?? DateTime.Today.Month;
+    int nam = ViewBag.NamChon ?? DateTime.Today.Year;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Báo cáo doanh thu</title>
+
+    <style>
+        @@page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef3f8;
+            color: #0a0f1e;
+        }
+
+        .print-actions {
+            padding: 16px;
+            text-align: right;
+        }
+
+        .btn-print {
+            border: none;
+            border-radius: 10px;
+            background: #0d1b3e;
+            color: #f5e6b8;
+            padding: 11px 20px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .report-page {
+            max-width: 980px;
+            margin: 0 auto 30px;
+            background: #fffdf8;
+            border: 1px solid #e2c878;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(13,27,62,0.14);
+        }
+
+        .report-hero {
+            background: linear-gradient(135deg, #0a0f1e, #0d1b3e 60%, #243c68);
+            color: white;
+            padding: 28px 34px;
+            border-bottom: 4px solid #c9a84c;
+        }
+
+        .brand {
+            color: #e8c96d;
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+
+        .report-hero h1 {
+            margin: 0;
+            font-size: 34px;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .report-hero p {
+            margin: 8px 0 0;
+            color: #f5e6b8;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .report-body {
+            padding: 28px 34px 34px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 26px;
+        }
+
+        .summary-card {
+            border-radius: 14px;
+            padding: 16px;
+            color: white;
+            min-height: 92px;
+        }
+
+            .summary-card span {
+                display: block;
+                font-size: 13px;
+                font-weight: 800;
+                margin-bottom: 8px;
+            }
+
+            .summary-card strong {
+                font-size: 21px;
+                font-weight: 950;
+            }
+
+        .green {
+            background: linear-gradient(135deg, #159447, #16a34a);
+        }
+
+        .navy {
+            background: linear-gradient(135deg, #0d1b3e, #173b77);
+        }
+
+        .gold {
+            background: linear-gradient(135deg, #c9a84c, #f0c85a);
+            color: #0a0f1e;
+        }
+
+        .orange {
+            background: linear-gradient(135deg, #f97316, #fb923c);
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 22px;
+            color: #0d1b3e;
+            font-weight: 950;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border: 1px solid #d8c99d;
+            border-radius: 14px;
+            font-size: 13px;
+        }
+
+        th {
+            background: #0d1b3e;
+            color: #e8c96d;
+            padding: 12px 10px;
+            border-right: 1px solid rgba(255,255,255,0.14);
+            text-align: center;
+        }
+
+        td {
+            padding: 11px 10px;
+            border-right: 1px solid #e5dcc2;
+            border-bottom: 1px solid #e5dcc2;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fff6df;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        .money {
+            color: #15803d;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .time-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eaf6ff;
+            color: #0369a1;
+            border: 1px solid #bfdbfe;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .paid-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .footer-note {
+            margin-top: 26px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            color: #5b6472;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        @@media print {
+            body {
+                background: white;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .report-page {
+                margin: 0;
+                box-shadow: none;
+                border-radius: 0;
+                border: none;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-actions">
+        <button class="btn-print" onclick="window.print()">In / Lưu PDF</button>
+    </div>
+
+    <div class="report-page">
+        <div class="report-hero">
+            <div class="brand">✦ TravelVN Luxury Journeys</div>
+            <h1>BÁO CÁO DOANH THU</h1>
+            <p>Tháng @thang / @nam - Chỉ tính các đơn đã thanh toán</p>
+        </div>
+
+        <div class="report-body">
+            <div class="summary-grid">
+                <div class="summary-card green">
+                    <span>Tổng doanh thu</span>
+                    <strong>@tongDoanhThu.ToString("N0") VNĐ</strong>
+                </div>
+
+                <div class="summary-card navy">
+                    <span>Số đơn</span>
+                    <strong>@soDon đơn</strong>
+                </div>
+
+                <div class="summary-card gold">
+                    <span>Tháng báo cáo</span>
+                    <strong>@thang/@nam</strong>
+                </div>
+
+                <div class="summary-card orange">
+                    <span>Ngày xuất</span>
+                    <strong>@DateTime.Now.ToString("dd/MM/yyyy")</strong>
+                </div>
+            </div>
+
+            <h2 class="section-title">Chi tiết doanh thu</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Khách hàng</th>
+                        <th>Tour</th>
+                        <th>Ngày đi</th>
+                        <th>Giờ đi</th>
+                        <th>Phương tiện</th>
+                        <th>Phương thức</th>
+                        <th>Trạng thái</th>
+                        <th>Doanh thu</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        int stt = 1;
+
+                        foreach (var item in Model)
+                        {
+                            var gioDi = item.LichKhoiHanhTour?.GioKhoiHanh.HasValue == true
+                            ? item.LichKhoiHanhTour.GioKhoiHanh.Value.ToString(@"hh\:mm")
+                            : "Chưa cập nhật";
+
+                            <tr>
+                                <td style="text-align:center;">@stt</td>
+                                <td>@item.TenKhach</td>
+                                <td>@item.Tour?.TenTour</td>
+                                <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
+                                <td><span class="time-badge">@gioDi</span></td>
+                                <td>@(item.Tour?.PhuongTienHienThi ?? "Chưa cập nhật")</td>
+                                <td>@item.PhuongThucThanhToan</td>
+                                <td><span class="paid-badge">@item.TrangThaiThanhToan</span></td>
+                                <td class="money">@item.TongTien.ToString("N0") VNĐ</td>
+                            </tr>
+
+                            stt++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" style="text-align:center; padding: 24px;">
+                                Không có dữ liệu doanh thu trong tháng này.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="footer-note">
+                <div>Người lập báo cáo: Quản trị viên TravelVN</div>
+                <div>Hệ thống website đặt tour du lịch TravelVN</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(function () {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

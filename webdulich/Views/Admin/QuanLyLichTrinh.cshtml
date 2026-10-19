@@ -1,0 +1,286 @@
+﻿
+@model List<webdulich.Models.Tour>
+
+@{
+    ViewData["Title"] = "Quản lý lịch trình";
+    var soLichTrinhTheoTour = ViewBag.SoLichTrinhTheoTour as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<style>
+    .admin-soft-page {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 18px 12px 36px;
+    }
+
+    .admin-soft-card {
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 26px;
+        background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
+    }
+
+    .admin-soft-header {
+        padding: 30px 32px 18px;
+        text-align: center;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        background: radial-gradient(circle at top left, rgba(232, 201, 109, 0.18), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fffaf0 100%);
+    }
+
+    .admin-soft-title {
+        margin: 0;
+        color: #071633;
+        font-family: 'Playfair Display', serif;
+        font-size: 2.05rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .admin-soft-subtitle {
+        margin: 8px 0 0;
+        color: #64748b;
+        font-weight: 650;
+    }
+
+    .admin-soft-body {
+        padding: 24px 30px 30px;
+    }
+
+    .admin-search-bar {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 0;
+        margin-bottom: 22px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+    }
+
+        .admin-search-bar .form-control {
+            border: none;
+            min-height: 52px;
+            padding: 0 18px;
+            font-weight: 650;
+            color: #0f172a;
+            background: #ffffff;
+        }
+
+            .admin-search-bar .form-control:focus {
+                box-shadow: none;
+                background: #ffffff;
+            }
+
+    .btn-soft-search {
+        border: none;
+        min-width: 126px;
+        background: linear-gradient(135deg, #e8c96d, #f5d76e);
+        color: #071633;
+        font-weight: 950;
+        padding: 0 20px;
+    }
+
+    .btn-soft-refresh {
+        border: none;
+        min-width: 110px;
+        background: #0f172a;
+        color: #ffffff !important;
+        font-weight: 900;
+        padding: 0 18px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-table-wrap {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+    }
+
+    .admin-soft-table {
+        margin: 0;
+    }
+
+        .admin-soft-table thead th {
+            background: #0f172a;
+            color: #f8fafc;
+            border-color: rgba(255,255,255,0.12);
+            padding: 15px 16px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .admin-soft-table tbody td {
+            padding: 15px 16px;
+            vertical-align: middle;
+            border-color: #e5e7eb;
+            color: #0f172a;
+            font-weight: 650;
+        }
+
+        .admin-soft-table tbody tr:nth-child(even) {
+            background: #fffaf0;
+        }
+
+        .admin-soft-table tbody tr:hover {
+            background: #f8fbff;
+        }
+
+    .tour-name {
+        font-weight: 950;
+        color: #071633;
+        text-transform: uppercase;
+    }
+
+    .badge-soft-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-weight: 900;
+    }
+
+    .btn-soft-action {
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ff7a1a, #ff5f00);
+        color: #ffffff !important;
+        font-weight: 950;
+        padding: 8px 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 10px 20px rgba(255, 95, 0, 0.22);
+    }
+
+        .btn-soft-action:hover {
+            transform: translateY(-1px);
+            color: #ffffff !important;
+        }
+
+    .empty-row {
+        color: #64748b !important;
+        font-weight: 700;
+        padding: 30px !important;
+    }
+
+    @@media (max-width: 768px) {
+        .admin-soft-page {
+            padding: 10px 8px 26px;
+        }
+
+        .admin-soft-header {
+            padding: 24px 16px 16px;
+        }
+
+        .admin-soft-title {
+            font-size: 1.55rem;
+        }
+
+        .admin-soft-body {
+            padding: 18px 14px 20px;
+        }
+
+        .admin-search-bar {
+            grid-template-columns: 1fr;
+            border-radius: 14px;
+        }
+
+        .btn-soft-search,
+        .btn-soft-refresh {
+            width: 100%;
+            min-height: 46px;
+        }
+
+        .admin-soft-table thead th,
+        .admin-soft-table tbody td {
+            padding: 12px;
+            font-size: 0.92rem;
+        }
+
+        .btn-soft-action {
+            width: max-content;
+            white-space: nowrap;
+        }
+    }
+</style>
+
+<div class="admin-soft-page">
+    <div class="admin-soft-card">
+        <div class="admin-soft-header">
+            <h2 class="admin-soft-title">🧭 Quản lý lịch trình</h2>
+            <p class="admin-soft-subtitle">Chọn tour để nhập lịch trình từng ngày cho khách xem.</p>
+        </div>
+
+        <div class="admin-soft-body">
+            <form asp-controller="Admin" asp-action="QuanLyLichTrinh" method="get" class="admin-search-bar">
+                <input type="text"
+                       name="search"
+                       value="@ViewBag.Search"
+                       class="form-control"
+                       placeholder="Tìm tour hoặc địa điểm..." />
+
+                <button class="btn-soft-search" type="submit">🔍 Tìm kiếm</button>
+
+                <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="btn-soft-refresh">
+                    Làm mới
+                </a>
+            </form>
+
+            <div class="table-responsive admin-table-wrap">
+                <table class="table table-bordered align-middle admin-soft-table">
+                    <thead>
+                        <tr>
+                            <th>Tên tour</th>
+                            <th>Địa điểm</th>
+                            <th>Số ngày</th>
+                            <th>Số mục lịch trình</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            int soLichTrinh = soLichTrinhTheoTour.ContainsKey(item.Id) ? soLichTrinhTheoTour[item.Id] : 0;
+
+                            <tr>
+                                <td class="tour-name">@item.TenTour</td>
+                                <td>@item.TenDiaDiemHienThi</td>
+                                <td>@(item.SoNgay.HasValue? item.SoNgay + " ngày" : "Chưa cập nhật")</td>
+                                <td>
+                                    <span class="badge-soft-success">@soLichTrinh mục</span>
+                                </td>
+                                <td>
+                                    <a asp-controller="Admin"
+                                       asp-action="LichTrinh"
+                                       asp-route-id="@item.Id"
+                                       class="btn-soft-action">
+                                        Soạn lịch trình
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center empty-row">
+                                    Chưa có tour nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+```

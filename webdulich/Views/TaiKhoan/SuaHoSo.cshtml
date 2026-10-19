@@ -1,0 +1,321 @@
+```cshtml
+@model webdulich.Models.TaiKhoan
+
+@{
+    ViewData["Title"] = "Sửa hồ sơ";
+    var coAnhDaiDien = !string.IsNullOrWhiteSpace(Model?.AnhDaiDien);
+}
+
+<style>
+    :root {
+        --blue-main: #0b74ff;
+        --blue-dark: #073b78;
+        --blue-soft: #eaf6ff;
+        --orange-main: #ff6b2c;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --line-soft: #dbeafe;
+        --white: #ffffff;
+    }
+
+    body {
+        background: #f5f8fc !important;
+    }
+
+    .profile-page {
+        min-height: calc(100vh - 86px);
+        padding: 28px 12px 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-shell {
+        width: 100%;
+        max-width: 1060px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--white);
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 22px 52px rgba(15,23,42,0.10);
+    }
+
+    .profile-left {
+        position: relative;
+        min-height: 560px;
+        padding: 30px;
+        background: linear-gradient(180deg, rgba(11,116,255,0.52), rgba(7,59,120,0.84)), url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .left-content h3 {
+        color: #ffffff;
+        margin: 0 0 8px;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .left-content p {
+        color: rgba(255,255,255,0.92);
+        margin: 0;
+        line-height: 1.6;
+        font-weight: 600;
+    }
+
+    .profile-right {
+        padding: 34px 36px;
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-form-wrap {
+        width: 100%;
+    }
+
+    .profile-title {
+        margin: 0 0 6px;
+        font-size: 2.1rem;
+        font-weight: 950;
+        color: var(--text-main);
+    }
+
+    .profile-subtitle {
+        margin: 0 0 22px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .success-box {
+        margin-bottom: 14px;
+        border-radius: 12px;
+        border: 1px solid #86efac;
+        background: #ecfdf5;
+        color: #166534;
+        padding: 10px 12px;
+        font-weight: 700;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 7px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .form-input {
+        width: 100%;
+        height: 52px;
+        border-radius: 14px;
+        border: 1px solid var(--line-soft);
+        background: #ffffff;
+        padding: 0 14px;
+        font-size: 1rem;
+        color: var(--text-main);
+        font-weight: 650;
+        transition: all .2s ease;
+    }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 0.2rem rgba(11,116,255,0.12);
+        }
+
+    .password-wrap {
+        position: relative;
+    }
+
+        .password-wrap .form-input {
+            padding-right: 84px;
+        }
+
+    .toggle-password {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        height: 40px;
+        min-width: 68px;
+        border: none;
+        border-radius: 10px;
+        background: var(--blue-soft);
+        color: var(--blue-main);
+        font-weight: 900;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .toggle-password:hover {
+            background: var(--blue-main);
+            color: #fff;
+        }
+
+    .profile-submit {
+        width: 100%;
+        height: 52px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--blue-main), #1d4ed8);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        box-shadow: 0 14px 30px rgba(11,116,255,0.24);
+        transition: .22s;
+        margin-top: 4px;
+    }
+
+        .profile-submit:hover {
+            transform: translateY(-1px);
+        }
+
+    .profile-back {
+        display: inline-block;
+        width: 100%;
+        margin-top: 10px;
+        text-align: center;
+        text-decoration: none;
+        padding: 12px 16px;
+        border-radius: 14px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #0f172a;
+        font-weight: 800;
+        transition: .2s;
+    }
+
+        .profile-back:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+    @@media (max-width: 900px) {
+        .profile-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-left {
+            min-height: 220px;
+        }
+
+        .profile-right {
+            padding: 24px 16px;
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+        }
+    }
+
+    .avatar-edit-box {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+
+    .avatar-preview {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #d8b84f;
+        box-shadow: 0 10px 26px rgba(13, 27, 62, 0.16);
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="profile-page">
+    <div class="profile-shell">
+        <div class="profile-left">
+            <div class="left-content">
+                <h3>TravelVN</h3>
+                <p>Cập nhật hồ sơ để hệ thống hỗ trợ đặt tour và chăm sóc bạn nhanh hơn.</p>
+            </div>
+        </div>
+
+        <div class="profile-right">
+            <div class="profile-form-wrap">
+                <h1 class="profile-title">Sửa hồ sơ</h1>
+                <p class="profile-subtitle">Cập nhật thông tin tài khoản của bạn</p>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="success-box">@TempData["Success"]</div>
+                }
+
+                <form asp-action="SuaHoSo" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Id" />
+
+                    @{
+                        var anhDaiDien = string.IsNullOrEmpty(Model.AnhDaiDien)
+                        ? Url.Content("~/images/default-avatar.png")
+                        : Url.Content("~/images/avatar/" + Model.AnhDaiDien);
+                    }
+
+                    <div class="avatar-edit-box">
+                        <img id="avatarPreview" src="@anhDaiDien" class="avatar-preview" alt="Ảnh cá nhân" />
+
+                        <div>
+                            <label asp-for="AnhDaiDienFile" class="form-label fw-bold">Ảnh cá nhân</label>
+                            <input asp-for="AnhDaiDienFile"
+                                   type="file"
+                                   class="form-control"
+                                   accept="image/*"
+                                   onchange="previewAvatar(this)" />
+                            <small class="text-muted">Ảnh này dùng để hiển thị hồ sơ của bạn.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Họ tên</label>
+                        <input asp-for="HoTen" class="form-input" placeholder="Nhập họ tên..." />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <div class="password-wrap">
+                            <input asp-for="MatKhau" type="password" id="profilePassword" class="form-input" placeholder="Để trống nếu không đổi mật khẩu" />
+                            <button type="button" class="toggle-password" onclick="togglePassword('profilePassword', this)">Hiện</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="profile-submit">Lưu thay đổi</button>
+
+                    <a asp-controller="TrangChu" asp-action="Index" class="profile-back">
+                        Quay lại trang chủ
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassword(inputId, btn) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+
+        if (input.type === "password") {
+            input.type = "text";
+            btn.textContent = "Ẩn";
+        } else {
+            input.type = "password";
+            btn.textContent = "Hiện";
+        }
+    }
+
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById("avatarPreview").src = URL.createObjectURL(input.files[0]);
+        }
+    }
+</script>
+```

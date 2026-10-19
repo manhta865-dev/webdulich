@@ -1,52 +1,416 @@
-﻿@{
-    ViewData["Title"] = "Đăng ký";
+﻿@model webdulich.Models.TaiKhoan
+
+@{
+    var actionName = ViewContext.RouteData.Values["action"]?.ToString();
+    bool moDangKy = actionName == "DangKy";
+    ViewData["Title"] = moDangKy ? "Đăng ký" : "Đăng nhập";
 }
 
-<div class="row justify-content-center">
+<style>
+    body {
+        background: radial-gradient(circle at 20% 20%, rgba(232, 201, 109, 0.18), transparent 26%), radial-gradient(circle at 80% 70%, rgba(11, 116, 255, 0.16), transparent 28%), linear-gradient(135deg, #081226 0%, #0d1b3e 48%, #050816 100%) !important;
+    }
 
-    <div class="col-md-4">
+    .auth-slide-page {
+        min-height: calc(100vh - 86px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 56px 14px;
+    }
 
-        <div class="card shadow-lg p-4">
+    .auth-slide-box {
+        position: relative;
+        width: 980px;
+        max-width: 100%;
+        min-height: 560px;
+        background: rgba(255, 253, 248, 0.96);
+        border-radius: 30px;
+        overflow: hidden;
+        border: 1px solid rgba(232, 201, 109, 0.38);
+        box-shadow: 0 34px 90px rgba(0, 0, 0, 0.38);
+    }
 
-            <h3 class="text-center mb-4">📝 Đăng ký tài khoản</h3>
+    .auth-form-panel {
+        position: absolute;
+        top: 0;
+        width: 50%;
+        height: 100%;
+        padding: 55px 54px;
+        background: linear-gradient(160deg, #fffdf8, #f8f2df);
+        transition: 0.75s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        z-index: 2;
+    }
 
-           <form asp-action="DangKy" method="post">
+    .signin-panel {
+        left: 0;
+    }
 
-                <div class="mb-3">
-                    <label>Họ và tên</label>
-                    <input name="hoten" class="form-control" placeholder="Nhập họ tên">
-                </div>
+    .signup-panel {
+        left: 0;
+        opacity: 0;
+        z-index: 1;
+    }
 
-                <div class="mb-3">
-                    <label>Email hoặc Số điện thoại</label>
-                    <input name="taikhoan" class="form-control" placeholder="Nhập email hoặc số điện thoại">
-                </div>
+    .auth-slide-box.active .signin-panel {
+        transform: translateX(100%);
+        opacity: 0;
+        z-index: 1;
+    }
 
-                <div class="mb-3">
-                    <label>Mật khẩu</label>
-                    <input type="password" name="matkhau" class="form-control" placeholder="Nhập mật khẩu">
-                </div>
+    .auth-slide-box.active .signup-panel {
+        transform: translateX(100%);
+        opacity: 1;
+        z-index: 3;
+    }
 
-                <button type="submit" class="btn btn-success w-100">
-                    Đăng ký
-                </button>
+    .auth-title {
+        text-align: center;
+        color: #071638;
+        font-size: 2rem;
+        font-weight: 950;
+        margin-bottom: 14px;
+    }
 
-            </form>
+    .auth-desc {
+        text-align: center;
+        color: #6b5b2e;
+        font-weight: 800;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+    }
 
-            <div class="text-center mt-3">
-                Đã có tài khoản?
-                <a asp-controller="TaiKhoan" asp-action="DangNhap">
-                    Đăng nhập
-                </a>
+    .auth-socials {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+        .auth-socials span {
+            width: 36px;
+            height: 36px;
+            background: #071638;
+            color: #f5d76e;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 950;
+            box-shadow: 0 10px 22px rgba(7, 22, 56, 0.18);
+        }
+
+    .auth-input {
+        width: 100%;
+        height: 50px;
+        border: none;
+        outline: none;
+        border-radius: 14px;
+        background: #ffffff;
+        color: #071638;
+        padding: 0 16px;
+        margin-bottom: 13px;
+        font-weight: 800;
+        border: 1px solid rgba(201, 168, 76, 0.34);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    }
+
+        .auth-input:focus {
+            border-color: #c9a84c;
+            box-shadow: 0 0 0 0.22rem rgba(201, 168, 76, 0.18);
+        }
+
+    .auth-submit-btn {
+        width: 170px;
+        height: 48px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #071638, #12306b);
+        color: #f5d76e;
+        font-weight: 950;
+        display: block;
+        margin: 14px auto 0;
+        transition: 0.25s;
+        box-shadow: 0 14px 30px rgba(7, 22, 56, 0.26);
+    }
+
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #c9a84c, #f5d76e);
+            color: #071638;
+        }
+
+    .forgot-text {
+        text-align: center;
+        color: #7c6a35;
+        font-size: 0.9rem;
+        font-weight: 800;
+        margin-top: 2px;
+    }
+
+    .auth-cover {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(7, 22, 56, 0.90), rgba(13, 27, 62, 0.86)), url('/images/dulich/dalat.jpg') center/cover no-repeat;
+        transition: 0.75s ease-in-out;
+        z-index: 6;
+        overflow: hidden;
+    }
+
+    .auth-slide-box.active .auth-cover {
+        transform: translateX(-100%);
+    }
+
+    .auth-cover-panel {
+        position: absolute;
+        inset: 0;
+        padding: 58px 46px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: white;
+    }
+
+        .auth-cover-panel h2 {
+            color: #f5d76e;
+            font-size: 2.15rem;
+            font-weight: 950;
+            margin-bottom: 12px;
+            text-shadow: 0 8px 28px rgba(0,0,0,0.32);
+        }
+
+        .auth-cover-panel p {
+            color: rgba(255,255,255,0.86);
+            font-weight: 750;
+            line-height: 1.55;
+            margin-bottom: 24px;
+            max-width: 310px;
+        }
+
+    .switch-btn {
+        height: 46px;
+        padding: 0 36px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 215, 110, 0.9);
+        background: rgba(255,255,255,0.08);
+        color: #f5d76e;
+        font-weight: 950;
+        transition: 0.25s;
+    }
+
+        .switch-btn:hover {
+            background: #f5d76e;
+            color: #071638;
+        }
+
+    .cover-signup {
+        opacity: 1;
+        transition: 0.35s;
+    }
+
+    .cover-signin {
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.35s;
+    }
+
+    .auth-slide-box.active .cover-signup {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .auth-slide-box.active .cover-signin {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .error-box {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fee2e2;
+        color: #991b1b;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .success-box {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #dcfce7;
+        color: #166534;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .text-danger,
+    .field-validation-error {
+        color: #b91c1c !important;
+        font-weight: 800;
+        font-size: 0.82rem;
+        margin-top: -8px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    @@media (max-width: 768px) {
+        .auth-slide-box {
+            min-height: auto;
+            overflow: visible;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+        }
+
+        .auth-form-panel {
+            position: relative;
+            width: 100%;
+            min-height: auto;
+            border-radius: 24px;
+            padding: 34px 24px;
+        }
+
+        .signup-panel {
+            display: none;
+            opacity: 1;
+        }
+
+        .auth-slide-box.active .signin-panel {
+            display: none;
+        }
+
+        .auth-slide-box.active .signup-panel {
+            display: flex;
+            transform: none;
+        }
+
+        .auth-cover {
+            display: none;
+        }
+    }
+</style>
+
+<div class="auth-slide-page">
+    <div class="auth-slide-box @(moDangKy ? "active" : "")" id="authBox">
+
+        <div class="auth-form-panel signin-panel">
+            <h2 class="auth-title">Sign in to Website</h2>
+
+            <div class="auth-socials">
+                <span>f</span>
+                <span>in</span>
+                <span>x</span>
             </div>
 
-            @if (ViewBag.Loi != null)
+            <p class="auth-desc">Đăng nhập bằng email hoặc số điện thoại</p>
+
+            <form asp-controller="TaiKhoan" asp-action="DangNhap" method="post">
+                @Html.AntiForgeryToken()
+
+                <input name="taiKhoanDangNhap"
+                       class="auth-input"
+                       placeholder="Email hoặc số điện thoại" />
+
+                <input name="matKhau"
+                       type="password"
+                       class="auth-input"
+                       placeholder="Mật khẩu" />
+
+                <div class="forgot-text">Forgot your password?</div>
+
+                <button type="submit" class="auth-submit-btn">SIGN IN</button>
+            </form>
+
+            @if (TempData["ThanhCong"] != null)
             {
-                <p class="text-danger text-center mt-2">@ViewBag.Loi</p>
+                <div class="success-box">@TempData["ThanhCong"]</div>
             }
 
+            @if (ViewBag.Loi != null && !moDangKy)
+            {
+                <div class="error-box">@ViewBag.Loi</div>
+            }
         </div>
 
-    </div>
+        <div class="auth-form-panel signup-panel">
+            <h2 class="auth-title">Create Account</h2>
 
+            <div class="auth-socials">
+                <span>f</span>
+                <span>in</span>
+                <span>x</span>
+            </div>
+
+            <p class="auth-desc">Tạo tài khoản để đặt tour và nhận ưu đãi</p>
+
+            <form asp-controller="TaiKhoan" asp-action="DangKy" method="post">
+                @Html.AntiForgeryToken()
+
+                <input asp-for="HoTen"
+                       class="auth-input"
+                       placeholder="Họ và tên" />
+                <span asp-validation-for="HoTen" class="text-danger"></span>
+
+                <input asp-for="TaiKhoanDangNhap"
+                       class="auth-input"
+                       placeholder="Email hoặc số điện thoại" />
+                <span asp-validation-for="TaiKhoanDangNhap" class="text-danger"></span>
+
+                <input asp-for="MatKhau"
+                       type="password"
+                       class="auth-input"
+                       placeholder="Mật khẩu" />
+                <span asp-validation-for="MatKhau" class="text-danger"></span>
+
+                <button type="submit" class="auth-submit-btn">SIGN UP</button>
+            </form>
+
+            @if (ViewBag.Loi != null && moDangKy)
+            {
+                <div class="error-box">@ViewBag.Loi</div>
+            }
+        </div>
+
+        <div class="auth-cover">
+            <div class="auth-cover-panel cover-signup">
+                <h2>Hello Friend!</h2>
+                <p>Nhập thông tin cá nhân để bắt đầu hành trình cùng TravelVN.</p>
+                <button type="button" class="switch-btn" onclick="showSignUp()">SIGN UP</button>
+            </div>
+
+            <div class="auth-cover-panel cover-signin">
+                <h2>Welcome Back!</h2>
+                <p>Đăng nhập để tiếp tục đặt tour và xem lịch sử chuyến đi.</p>
+                <button type="button" class="switch-btn" onclick="showSignIn()">SIGN IN</button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    const authBox = document.getElementById("authBox");
+
+    function showSignUp() {
+        authBox.classList.add("active");
+        history.replaceState(null, "", "/TaiKhoan/DangKy");
+    }
+
+    function showSignIn() {
+        authBox.classList.remove("active");
+        history.replaceState(null, "", "/TaiKhoan/DangNhap");
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

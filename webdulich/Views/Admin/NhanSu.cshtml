@@ -1,0 +1,336 @@
+﻿```cshtml
+@model List<webdulich.Models.NhanVien>
+
+@{
+    ViewData["Title"] = "Quản lý nhân sự";
+}
+
+<style>
+    .admin-soft-page {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 18px 12px 36px;
+    }
+
+    .admin-soft-card {
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        border-radius: 26px;
+        background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10);
+        overflow: hidden;
+    }
+
+    .admin-soft-header {
+        padding: 30px 32px 18px;
+        text-align: center;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        background: radial-gradient(circle at top left, rgba(232, 201, 109, 0.18), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fffaf0 100%);
+    }
+
+    .admin-soft-title {
+        margin: 0;
+        color: #071633;
+        font-family: 'Playfair Display', serif;
+        font-size: 2.05rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+
+    .admin-soft-subtitle {
+        margin: 8px 0 0;
+        color: #64748b;
+        font-weight: 650;
+    }
+
+    .admin-soft-body {
+        padding: 24px 30px 30px;
+    }
+
+    .soft-alert {
+        border-radius: 14px;
+        border: none;
+        font-weight: 800;
+        padding: 13px 16px;
+        margin-bottom: 18px;
+    }
+
+    .soft-alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .soft-alert-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .staff-form-panel {
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 22px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+        margin-bottom: 24px;
+    }
+
+        .staff-form-panel .form-label {
+            color: #0f172a;
+            font-weight: 900;
+            margin-bottom: 7px;
+        }
+
+        .staff-form-panel .form-control,
+        .staff-form-panel .form-select {
+            min-height: 48px;
+            border-radius: 13px;
+            border: 1px solid #dbe4f0;
+            color: #0f172a;
+            font-weight: 650;
+            background-color: #ffffff;
+        }
+
+            .staff-form-panel .form-control:focus,
+            .staff-form-panel .form-select:focus {
+                border-color: #e8c96d;
+                box-shadow: 0 0 0 0.2rem rgba(232, 201, 109, 0.18);
+            }
+
+    .btn-soft-add {
+        border: none;
+        border-radius: 13px;
+        background: linear-gradient(135deg, #e8c96d, #f5d76e);
+        color: #071633 !important;
+        font-weight: 950;
+        padding: 12px 24px;
+        box-shadow: 0 10px 22px rgba(232, 201, 109, 0.28);
+    }
+
+        .btn-soft-add:hover {
+            transform: translateY(-1px);
+        }
+
+    .admin-table-wrap {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+    }
+
+    .admin-soft-table {
+        margin: 0;
+    }
+
+        .admin-soft-table thead th {
+            background: #0f172a;
+            color: #f8fafc;
+            border-color: rgba(255,255,255,0.12);
+            padding: 15px 16px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .admin-soft-table tbody td {
+            padding: 15px 16px;
+            vertical-align: middle;
+            border-color: #e5e7eb;
+            color: #0f172a;
+            font-weight: 650;
+        }
+
+        .admin-soft-table tbody tr:nth-child(even) {
+            background: #fffaf0;
+        }
+
+        .admin-soft-table tbody tr:hover {
+            background: #f8fbff;
+        }
+
+    .staff-name {
+        font-weight: 950;
+        color: #071633;
+    }
+
+    .badge-soft-working {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-weight: 900;
+    }
+
+    .badge-soft-off {
+        background: #e2e8f0;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-weight: 900;
+    }
+
+    .btn-soft-action {
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ff7a1a, #ff5f00);
+        color: #ffffff !important;
+        font-weight: 950;
+        padding: 8px 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 10px 20px rgba(255, 95, 0, 0.22);
+        white-space: nowrap;
+    }
+
+        .btn-soft-action:hover {
+            transform: translateY(-1px);
+            color: #ffffff !important;
+        }
+
+    @@media (max-width: 768px) {
+        .admin-soft-page {
+            padding: 10px 8px 26px;
+        }
+
+        .admin-soft-header {
+            padding: 24px 16px 16px;
+        }
+
+        .admin-soft-title {
+            font-size: 1.55rem;
+        }
+
+        .admin-soft-body {
+            padding: 18px 14px 20px;
+        }
+
+        .staff-form-panel {
+            padding: 16px;
+        }
+
+        .admin-soft-table thead th,
+        .admin-soft-table tbody td {
+            padding: 12px;
+            font-size: 0.92rem;
+        }
+
+        .btn-soft-add {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="admin-soft-page">
+    <div class="admin-soft-card">
+        <div class="admin-soft-header">
+            <h2 class="admin-soft-title">👥 Quản lý nhân sự</h2>
+            <p class="admin-soft-subtitle">Thêm tài khoản nhân viên, phân loại hướng dẫn viên hoặc tài xế.</p>
+        </div>
+
+        <div class="admin-soft-body">
+            @if (TempData["error"] != null)
+            {
+                <div class="soft-alert soft-alert-danger">@TempData["error"]</div>
+            }
+
+            @if (TempData["success"] != null)
+            {
+                <div class="soft-alert soft-alert-success">@TempData["success"]</div>
+            }
+
+            <div class="staff-form-panel">
+                <form asp-controller="Admin" asp-action="ThemNhanVien" method="post" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Họ tên</label>
+                        <input name="hoTen" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Số điện thoại</label>
+                        <input name="soDienThoai" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Loại nhân viên</label>
+                        <select name="loaiNhanVien" class="form-select" required>
+                            <option value="HuongDanVien">Hướng dẫn viên</option>
+                            <option value="TaiXe">Tài xế</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Tài khoản đăng nhập</label>
+                        <input name="taiKhoanDangNhap" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Mật khẩu</label>
+                        <input name="matKhau" type="password" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Ghi chú</label>
+                        <input name="ghiChu" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn-soft-add">➕ Thêm nhân viên</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-responsive admin-table-wrap">
+                <table class="table table-bordered align-middle admin-soft-table">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Tài khoản</th>
+                            <th>SĐT</th>
+                            <th>Loại</th>
+                            <th>Trạng thái</th>
+                            <th>Ghi chú</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="staff-name">@item.HoTen</td>
+                                <td>@item.TaiKhoan?.TaiKhoanDangNhap</td>
+                                <td>@item.SoDienThoai</td>
+                                <td>
+                                    @(item.LoaiNhanVien == "HuongDanVien" ? "Hướng dẫn viên" : "Tài xế")
+                                </td>
+                                <td>
+                                    @if (item.DangLamViec)
+                                    {
+                                        <span class="badge-soft-working">Đang làm</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-soft-off">Tạm nghỉ</span>
+                                    }
+                                </td>
+                                <td>@item.GhiChu</td>
+                                <td>
+                                    <a asp-controller="Admin"
+                                       asp-action="DoiTrangThaiNhanVien"
+                                       asp-route-id="@item.Id"
+                                       class="btn-soft-action">
+                                        Đổi trạng thái
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+```

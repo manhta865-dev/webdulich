@@ -1,22 +1,460 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Http
+@using webdulich.Models
+@inject DuLichDbContext ChatDb
+
+@{
+    var currentUser = Context.Session.GetString("user");
+    var currentRole = Context.Session.GetString("role");
+    var avatarFile = Context.Session.GetString("avatar");
+
+    if (string.IsNullOrWhiteSpace(avatarFile))
+    {
+        avatarFile = Context.Session.GetString("anhDaiDien");
+    }
+
+    var hasAvatar = !string.IsNullOrWhiteSpace(avatarFile);
+    var firstLetter = !string.IsNullOrWhiteSpace(currentUser)
+        ? currentUser.Trim().Substring(0, 1).ToUpper()
+        : "U";
+    var controllerName = ViewContext.RouteData.Values["controller"]?.ToString();
+    var actionName = ViewContext.RouteData.Values["action"]?.ToString();
+    var laTrangChu = controllerName == "TrangChu" && actionName == "Index";
+}
+
+<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Travel Website</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <style>
+
+    /* Loader TravelVN - không dùng keyframes để tránh lỗi Razor */
+    .travel-loader {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 999999;
+        background: linear-gradient(135deg, #0a0f1e 0%, #0d1b3e 50%, #122455 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity .45s ease, visibility .45s ease;
+    }
+
+        .travel-loader.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+    .loader-card {
+        width: 420px;
+        max-width: calc(100vw - 40px);
+        padding: 34px 28px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(232, 201, 109, 0.28);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+        text-align: center;
+        color: #ffffff;
+    }
+
+    .loader-card-inner {
+        position: relative;
+        z-index: 2;
+    }
+
+    .loader-logo {
+        width: 86px;
+        height: 86px;
+        border-radius: 50%;
+        margin: 0 auto 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+        color: #0a0f1e;
+        font-size: 2.4rem;
+        box-shadow: 0 18px 38px rgba(232, 201, 109, 0.32);
+    }
+
+    .loader-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 900;
+        color: #e8c96d;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+
+    .loader-text {
+        color: #f5e6b8;
+        font-weight: 700;
+        margin-bottom: 22px;
+    }
+
+    .loader-progress {
+        width: 100%;
+        height: 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+    }
+
+        .loader-progress span {
+            display: block;
+            width: 70%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #c9a84c, #e8c96d, #f5e6b8);
+        }
+
+    .loader-small {
+        margin-top: 14px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.9rem;
+        font-weight: 650;
+    }
+
+    :root {
+        --navy-deep: #0a0f1e;
+        --navy-mid: #0d1b3e;
+        --navy-light: #122455;
+        --gold-primary: #c9a84c;
+        --gold-bright: #e8c96d;
+        --gold-pale: #f5e6b8;
+        --white-soft: #f0ede8;
+    }
+
     body {
         background: #f4f6fb;
-        font-family: Arial;
+        font-family: 'Inter', Arial, sans-serif;
+        margin: 0;
     }
 
-    .navbar {
-        background: #0d6efd;
+    .navbar-luxury {
+        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 60%, var(--navy-light) 100%);
+        border-bottom: 2px solid var(--gold-primary);
+        box-shadow: 0 4px 32px rgba(0,0,0,0.45);
+        padding-top: 0;
+        padding-bottom: 0;
+        min-height: 68px;
+        position: relative;
     }
 
-    .navbar-brand {
-        font-weight: bold;
+        .navbar-luxury::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold-bright), var(--gold-primary), var(--gold-bright), transparent);
+        }
+
+        .navbar-luxury .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--gold-bright) !important;
+            text-shadow: 0 0 18px rgba(201,168,76,0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 0;
+        }
+
+    .brand-icon {
+        font-size: 1.35rem;
+        filter: drop-shadow(0 0 6px rgba(201,168,76,0.6));
+    }
+
+    .brand-divider {
+        width: 1px;
+        height: 28px;
+        background: linear-gradient(to bottom, transparent, var(--gold-primary), transparent);
+        margin: 0 12px;
+        flex-shrink: 0;
+    }
+
+    .brand-tagline {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold-primary);
+        opacity: 0.85;
+        line-height: 1.2;
+    }
+
+    .navbar-luxury .nav-link {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--white-soft) !important;
+        padding: 22px 16px !important;
+        position: relative;
+    }
+
+        .navbar-luxury .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            right: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold-primary), var(--gold-bright));
+            transition: left 0.3s, right 0.3s;
+        }
+
+        .navbar-luxury .nav-link:hover {
+            color: var(--gold-bright) !important;
+        }
+
+            .navbar-luxury .nav-link:hover::after {
+                left: 12px;
+                right: 12px;
+            }
+
+    .nav-sep {
+        color: var(--gold-primary);
+        opacity: 0.5;
+        align-self: center;
+        font-size: 0.4rem;
+        padding: 0 2px;
+    }
+
+    .nav-user-box {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--gold-pale);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.88rem;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+    }
+
+        .nav-user-box strong {
+            color: var(--gold-bright);
+        }
+
+    .nav-avatar,
+    .nav-avatar-letter {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px solid rgba(232,201,109,0.9);
+        box-shadow: 0 0 16px rgba(201,168,76,0.32);
+        flex-shrink: 0;
+    }
+
+    .nav-avatar {
+        object-fit: cover;
+        background: #ffffff;
+    }
+
+    .nav-avatar-letter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #26c6da, #0ea5e9);
+        color: #ffffff;
+        font-weight: 900;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold-primary), var(--gold-bright));
+        color: var(--navy-deep) !important;
+        border: none;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 2px;
+    }
+
+    .btn-navy-outline {
+        background: transparent;
+        color: var(--white-soft) !important;
+        border: 1px solid rgba(201,168,76,0.5);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 5px 14px;
+        border-radius: 2px;
+    }
+
+    .btn-login-luxury {
+        background: transparent;
+        color: var(--gold-bright) !important;
+        border: 1px solid var(--gold-primary);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        padding: 7px 22px;
+        border-radius: 2px;
+    }
+
+    .admin-layout {
+        min-height: 100vh;
+        display: flex;
+        background: #f4f6fb;
+    }
+
+    .admin-sidebar {
+        width: 80px;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #26384d 0%, #2f4359 55%, #233447 100%);
+        color: #fff;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        overflow: hidden;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.16);
+        transition: all .35s ease;
+        z-index: 1000;
+    }
+
+        .admin-sidebar:hover {
+            width: 270px;
+        }
+    .sidebar-logo {
+        height: 82px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 22px;
+        font-size: 1.55rem;
+        font-weight: 900;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+        .sidebar-logo span {
+            color: #26c6da;
+            font-size: 1.8rem;
+        }
+
+    .sidebar-section-title {
+        padding: 22px 24px 10px;
+        color: rgba(255,255,255,0.38);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 15px 24px;
+        color: rgba(255,255,255,0.9) !important;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        border-left: 4px solid transparent;
+        transition: 0.2s;
+    }
+
+    .sidebar-link {
+        white-space: nowrap;
+    }
+
+    .menu-text {
+        opacity: 0;
+        transition: .3s;
+    }
+
+    .admin-sidebar:hover .menu-text {
+        opacity: 1;
+    }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.08);
+            border-left-color: #26c6da;
+            color: #ffffff !important;
+        }
+
+        .sidebar-link.logout-link {
+            margin-top: 18px;
+            color: #ffd7d7 !important;
+        }
+
+    .admin-main {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+        min-height: 100vh;
+        transition: all .35s ease;
+    }
+
+    .admin-topbar {
+        height: 82px;
+        background: #ffffff;
+        border-bottom: 1px solid #e8edf3;
+        box-shadow: 0 4px 18px rgba(15,23,42,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 34px;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+    }
+
+    .admin-topbar-title {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: #111827;
+    }
+
+    .admin-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #111827;
+        font-weight: 800;
+    }
+
+    .admin-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #26c6da, #0ea5e9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 900;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+        .admin-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .admin-content {
+        padding: 26px;
     }
 
     .card {
@@ -45,65 +483,1054 @@
         padding: 15px;
         margin-top: 50px;
     }
+
+    @@media (max-width: 992px) {
+        .admin-sidebar {
+            width: 230px;
+        }
+
+        .admin-main {
+            margin-left: 230px;
+            width: calc(100% - 230px);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .admin-layout {
+            display: block;
+        }
+
+        .admin-sidebar {
+            position: relative;
+            width: 100%;
+            min-height: auto;
+        }
+
+        .admin-main {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .admin-topbar {
+            height: auto;
+            padding: 18px;
+            align-items: flex-start;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        .admin-content {
+            padding: 16px;
+        }
+
+        .nav-user-box {
+            margin-top: 10px;
+        }
+
+        .navbar-luxury {
+            margin-bottom: 0 !important;
+        }
+
+        .home-modern,
+        .modern-hero {
+            margin-top: 0 !important;
+        }
+
+        .page-full {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
 </style>
 
 <body>
+    <div id="travelLoader" class="travel-loader">
+        <div class="loader-card">
+            <div class="loader-card-inner">
+                <div class="loader-logo">✈️</div>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" asp-controller="TrangChu" asp-action="Index">🌍 TravelVN</a>
+                <div class="loader-brand">TravelVN</div>
 
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="TrangChu" asp-action="Index">Trang chủ</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-light" asp-controller="GoiYTour" asp-action="Index">Gợi ý tour</a>
-                </li>
-
-                @if (Context.Session.GetString("user") != null && Context.Session.GetString("role") != "admin")
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="DatTour" asp-action="LichSu">Lịch sử đặt tour</a>
-                    </li>
-                }
-
-                @if (Context.Session.GetString("role") == "admin")
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Admin" asp-action="Index">Quản lý Tour</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Admin" asp-action="DonDatTour">Đơn đặt Tour</a>
-                    </li>
-                }
-            </ul>
-
-            @if (Context.Session.GetString("user") != null)
-            {
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-white fw-bold">
-                        Xin chào, @Context.Session.GetString("user")
-                    </span>
-
-                    <a asp-controller="TaiKhoan" asp-action="DangXuat" class="btn btn-light btn-sm">
-                        Đăng xuất
-                    </a>
+                <div class="loader-text">
+                    Đang chuẩn bị hành trình cho bạn...
                 </div>
-            }
-            else
-            {
-                <a asp-controller="TaiKhoan" asp-action="DangNhap" class="btn btn-light">
-                    Đăng nhập
-                </a>
-            }
-        </div>
-    </nav>
 
-    <div class="container mt-4">
-        @RenderBody()
+                <div class="loader-progress">
+                    <span></span>
+                </div>
+
+                <div class="loader-small">
+                    Vui lòng chờ trong giây lát
+                </div>
+            </div>
+        </div>
     </div>
+
+    @if (currentRole == "admin")
+    {
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                <div class="sidebar-logo">
+                    <span>✈</span>
+                    TravelVN
+                </div>
+
+                <div class="sidebar-section-title">Vận hành</div>
+
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   class="sidebar-link">
+                    <span>📦</span>
+                    <span class="menu-text">Quản lý Tour</span>
+                </a>
+                <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="sidebar-link">
+                    <span>🗓️</span>
+                    <span class="menu-text">Lịch đi</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="sidebar-link">
+                    <span>🧭</span>
+                    <span class="menu-text">Lịch trình</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="DonDatTour" class="sidebar-link">
+                    <span>🧾</span>
+                    <span class="menu-text">Đơn đặt Tour</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="KhuyenMai" class="sidebar-link">
+                    <span>🏷️</span>
+                    <span class="menu-text">Khuyến mãi</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="TinNhan" class="sidebar-link">
+                    <span>✉️</span>
+                    <span class="menu-text">Tin nhắn</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="NhanSu" class="sidebar-link">
+                    <span>👥</span>
+                    <span class="menu-text">Nhân sự</span>
+                </a>
+
+                <a asp-controller="Admin" asp-action="PhanCongTour" class="sidebar-link">
+                    <span>🚐</span>
+                    <span class="menu-text">Phân công tour</span>
+                </a>
+                <div class="sidebar-section-title">Quản trị hệ thống</div>
+
+                <a asp-controller="Admin" asp-action="TaiKhoan" class="sidebar-link">
+                    <span>👤</span>
+                    <span class="menu-text">Tài khoản</span>
+                </a>
+                <a asp-controller="Admin" asp-action="DoanhThu" class="sidebar-link">
+                    <span>💰</span>
+                    <span class="menu-text">Doanh thu</span>
+                </a>
+                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="sidebar-link">
+                    <span>🚪</span>
+                    <span class="menu-text">Đăng xuất</span>
+                </a>
+            </aside>
+
+            <main class="admin-main">
+                <div class="admin-topbar">
+                    <div class="admin-topbar-title">Tổng Quan</div>
+
+                    <div class="admin-user">
+                        <div class="admin-avatar">
+                            @if (hasAvatar)
+                            {
+                                <img src="~/images/avatar/@avatarFile" alt="Avatar" />
+                            }
+                            else
+                            {
+                                @firstLetter
+                            }
+                        </div>
+
+                        <div>
+                            Xin chào,
+                            <strong>@currentUser</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-content">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    }
+
+    else if (currentRole == "huongdanvien" || currentRole == "taixe")
+    {
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                <div class="sidebar-logo">
+                    <span>👨‍💼</span>
+                    Nhân viên
+                </div>
+
+                <div class="sidebar-section-title">Công việc</div>
+
+                <a asp-controller="NhanVien"
+                   asp-action="LichLamViec"
+                   class="sidebar-link">
+                    📅 Lịch làm việc
+                </a>
+
+                <a asp-controller="TaiKhoan"
+                   asp-action="DangXuat"
+                   class="sidebar-link logout-link">
+                    🚪 Đăng xuất
+                </a>
+            </aside>
+
+            <main class="admin-main">
+                <div class="admin-topbar">
+                    <div class="admin-topbar-title">Lịch làm việc</div>
+
+                    <div class="admin-user">
+                        <div class="admin-avatar">
+                            @if (hasAvatar)
+                            {
+                                <img src="~/images/avatar/@avatarFile" alt="Avatar" />
+                            }
+                            else
+                            {
+                                @firstLetter
+                            }
+                        </div>
+
+                        <div>
+                            Xin chào,
+                            <strong>@currentUser</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-content">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    }
+    else
+    {
+        <nav class="navbar navbar-expand-lg navbar-luxury">
+            <div class="container d-flex align-items-center">
+                <a class="navbar-brand d-flex align-items-center" asp-controller="TrangChu" asp-action="Index">
+                    <span class="brand-icon">✦</span>
+                    TravelVN
+                    <span class="brand-divider"></span>
+                    <span class="brand-tagline">Luxury<br>Journeys</span>
+                </a>
+
+                <ul class="navbar-nav me-auto d-flex align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TrangChu" asp-action="Index">Trang chủ</a>
+                    </li>
+
+                    <li class="nav-sep d-none d-lg-block">◆</li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="GoiYTour" asp-action="Index">Gợi ý tour</a>
+                    </li>
+
+                    @if (currentUser != null)
+                    {
+                        <li class="nav-sep d-none d-lg-block">◆</li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="DatTour" asp-action="LichSu">Lịch sử đặt tour</a>
+                        </li>
+                    }
+                </ul>
+
+                @if (currentUser != null)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="nav-user-box">
+                            @if (hasAvatar)
+                            {
+                                <img class="nav-avatar" src="~/images/avatar/@avatarFile" alt="Avatar" />
+                            }
+                            else
+                            {
+                                <span class="nav-avatar-letter">@firstLetter</span>
+                            }
+
+                            <span>Xin chào, <strong>@currentUser</strong></span>
+                        </div>
+
+                        <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="btn btn-gold btn-sm">
+                            Sửa hồ sơ
+                        </a>
+
+                        <a asp-controller="TaiKhoan" asp-action="DangXuat" class="btn btn-navy-outline btn-sm">
+                            Đăng xuất
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="TaiKhoan" asp-action="DangNhap" class="btn btn-login-luxury">
+                        Đăng nhập
+                    </a>
+                }
+            </div>
+        </nav>
+
+
+
+        <div class="@(laTrangChu ? "page-full" : "container mt-4")">
+            @RenderBody()
+        </div>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @if (currentUser != null && currentRole != "admin" && currentRole != "huongdanvien" && currentRole != "taixe")
+    {
+        var chatTaiKhoanId = Context.Session.GetInt32("taiKhoanId");
+        var chatTinNhans = chatTaiKhoanId.HasValue
+        ? ChatDb.TinNhanLienHes
+        .Where(x => x.TaiKhoanId == chatTaiKhoanId.Value)
+        .OrderBy(x => x.NgayGui)
+        .ToList()
+        : new List<TinNhanLienHe>();
+
+        var chatSuccess = TempData["ChatSuccess"] as string;
+        var chatError = TempData["ChatError"] as string;
+        var moChat = !string.IsNullOrWhiteSpace(chatSuccess) || !string.IsNullOrWhiteSpace(chatError);
+
+        <style>
+            .chat-widget {
+                position: fixed;
+                right: 112px;
+                bottom: 28px;
+                z-index: 2000;
+                font-family: 'Inter', Arial, sans-serif;
+            }
+
+            .chat-toggle {
+                width: 62px;
+                height: 62px;
+                border-radius: 50%;
+                border: none;
+                background: linear-gradient(135deg, #0d1b3e, #1d4ed8);
+                color: #fff;
+                font-size: 1.65rem;
+                box-shadow: 0 18px 38px rgba(13,27,62,0.32);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+
+            .chat-box {
+                width: 380px;
+                background: rgba(255,253,248,0.98);
+                border: 1px solid rgba(201,168,76,0.35);
+                border-radius: 20px;
+                box-shadow: 0 24px 58px rgba(13,27,62,0.22);
+                overflow: hidden;
+                display: none;
+                margin-bottom: 14px;
+            }
+
+                .chat-box.active {
+                    display: block;
+                }
+
+            .chat-header {
+                background: linear-gradient(135deg, #0d1b3e, #122455);
+                color: #f5e6b8;
+                padding: 16px 18px;
+                border-bottom: 3px solid #c9a84c;
+            }
+
+                .chat-header h4 {
+                    margin: 0;
+                    font-size: 1.05rem;
+                    font-weight: 900;
+                }
+
+                .chat-header p {
+                    margin: 4px 0 0;
+                    color: rgba(245,230,184,0.78);
+                    font-size: 0.86rem;
+                    font-weight: 650;
+                }
+
+            .chat-close {
+                float: right;
+                border: none;
+                background: transparent;
+                color: #f5e6b8;
+                font-size: 1.1rem;
+                cursor: pointer;
+            }
+
+            .chat-status {
+                margin: 12px 14px 0;
+                padding: 10px 12px;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 0.9rem;
+            }
+
+                .chat-status.success {
+                    background: #dcfce7;
+                    color: #166534;
+                    border: 1px solid #86efac;
+                }
+
+                .chat-status.error {
+                    background: #fee2e2;
+                    color: #b91c1c;
+                    border: 1px solid #fecaca;
+                }
+
+            .chat-messages-user {
+                height: 330px;
+                overflow-y: auto;
+                padding: 14px;
+                background: linear-gradient(180deg, #f8fbff, #fffdf8);
+            }
+
+            .chat-empty {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                color: #64748b;
+                font-weight: 700;
+                padding: 20px;
+            }
+
+            .chat-row {
+                display: flex;
+                margin-bottom: 12px;
+            }
+
+                .chat-row.user {
+                    justify-content: flex-end;
+                }
+
+                .chat-row.admin {
+                    justify-content: flex-start;
+                }
+
+            .chat-bubble {
+                max-width: 78%;
+                padding: 10px 12px;
+                border-radius: 16px;
+                white-space: pre-line;
+                line-height: 1.45;
+                font-weight: 650;
+                font-size: 0.92rem;
+            }
+
+            .chat-row.user .chat-bubble {
+                background: linear-gradient(135deg, #0d1b3e, #1d4ed8);
+                color: #fff;
+                border-bottom-right-radius: 5px;
+            }
+
+            .chat-row.admin .chat-bubble {
+                background: #ffffff;
+                color: #0f172a;
+                border: 1px solid #dbeafe;
+                border-bottom-left-radius: 5px;
+            }
+
+            .chat-time {
+                margin-top: 5px;
+                font-size: 0.72rem;
+                opacity: 0.72;
+                font-weight: 800;
+            }
+
+            .chat-compose {
+                padding: 14px;
+                border-top: 1px solid rgba(201,168,76,0.22);
+                background: #fffdf8;
+            }
+
+            .chat-textarea {
+                width: 100%;
+                min-height: 86px;
+                border: 1px solid #d8c99d;
+                border-radius: 12px;
+                background: #fff;
+                padding: 11px 13px;
+                font-weight: 650;
+                color: #0d1b3e;
+                outline: none;
+                resize: vertical;
+                margin-bottom: 10px;
+            }
+
+                .chat-textarea:focus {
+                    border-color: #c9a84c;
+                    box-shadow: 0 0 0 0.18rem rgba(201,168,76,0.18);
+                }
+
+            .chat-submit {
+                width: 100%;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 16px;
+                background: linear-gradient(135deg, #c9a84c, #e8c96d);
+                color: #0a0f1e;
+                font-weight: 950;
+                cursor: pointer;
+            }
+
+            @@media (max-width: 768px) {
+                .chat-widget {
+                    right: 16px;
+                    bottom: 94px;
+                }
+
+                .chat-box {
+                    width: calc(100vw - 32px);
+                }
+            }
+        </style>
+
+        <div class="chat-widget">
+            <div class="chat-box @(moChat ? "active" : "")" id="chatBox">
+                <div class="chat-header">
+                    <button type="button" class="chat-close" onclick="toggleChatBox()">×</button>
+                    <h4>💬 Chat với admin</h4>
+                    <p>Admin TravelVN sẽ phản hồi tại đây.</p>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(chatSuccess))
+                {
+                    <div class="chat-status success">@chatSuccess</div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(chatError))
+                {
+                    <div class="chat-status error">@chatError</div>
+                }
+
+                <div class="chat-messages-user" id="chatMessagesUser">
+                    @if (chatTinNhans.Any())
+                    {
+                        foreach (var item in chatTinNhans)
+                        {
+                            var laUser = item.NguoiGui == "user";
+
+                            <div class="chat-row @(laUser ? "user" : "admin")">
+                                <div class="chat-bubble">
+                                    <div>@item.NoiDung</div>
+
+                                    <div class="chat-time">
+                                        @(laUser ? "Bạn" : "Admin") · @item.NgayGui.ToString("dd/MM HH:mm")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="chat-empty">
+                            Bạn chưa có tin nhắn nào. Hãy gửi câu hỏi để admin hỗ trợ nhé.
+                        </div>
+                    }
+                </div>
+
+                <div id="userChatForm" class="chat-compose">
+                    @Html.AntiForgeryToken()
+
+                    <textarea name="noiDung"
+                          id="userChatInput"
+                          class="chat-textarea"
+                          required
+                          placeholder="Nhập tin nhắn của bạn..."></textarea>
+
+                    <button type="button" id="userChatSendBtn" class="chat-submit">
+                        Gửi tin nhắn
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="chat-toggle" onclick="toggleChatBox()">
+                💬
+            </button>
+        </div>
+
+        <script>
+            function toggleChatBox() {
+                const chatBox = document.getElementById("chatBox");
+
+                if (chatBox) {
+                    chatBox.classList.toggle("active");
+                    setTimeout(scrollUserChatToBottom, 80);
+                }
+            }
+
+            function scrollUserChatToBottom() {
+                const box = document.getElementById("chatMessagesUser");
+
+                if (box) {
+                    box.scrollTop = box.scrollHeight;
+                }
+            }
+
+            function renderUserMessages(messages) {
+                const box = document.getElementById("chatMessagesUser");
+
+                if (!box) {
+                    return;
+                }
+
+                if (!messages || messages.length === 0) {
+                    box.innerHTML =
+                        '<div class="chat-empty">Bạn chưa có tin nhắn nào. Hãy gửi câu hỏi để admin hỗ trợ nhé.</div>';
+                    return;
+                }
+
+                box.innerHTML = "";
+
+                messages.forEach(function (item) {
+                    const laUser = item.nguoiGui === "user";
+
+                    const row = document.createElement("div");
+                    row.className = "chat-row " + (laUser ? "user" : "admin");
+
+                    const bubble = document.createElement("div");
+                    bubble.className = "chat-bubble";
+
+                    const content = document.createElement("div");
+                    content.textContent = item.noiDung;
+
+                    const time = document.createElement("div");
+                    time.className = "chat-time";
+                    time.textContent = (laUser ? "Bạn" : "Admin") + " · " + item.thoiGian;
+
+                    bubble.appendChild(content);
+                    bubble.appendChild(time);
+                    row.appendChild(bubble);
+                    box.appendChild(row);
+                });
+
+                scrollUserChatToBottom();
+            }
+
+            function loadUserMessages() {
+                fetch('@Url.Action("LayTinNhan", "LienHe")', {
+                    cache: "no-store"
+                })
+                    .then(function (res) {
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        renderUserMessages(data);
+                    })
+                    .catch(function () {
+                    });
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const userChatFormElement = document.getElementById("userChatForm");
+                const input = document.getElementById("userChatInput");
+                const sendBtn = document.getElementById("userChatSendBtn");
+
+                if (userChatFormElement && input && sendBtn) {
+                    sendBtn.addEventListener("click", function () {
+                        const noiDung = input.value.trim();
+
+                        if (!noiDung) {
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append("noiDung", noiDung);
+                        formData.append("__RequestVerificationToken", userChatFormElement.querySelector('input[name="__RequestVerificationToken"]')?.value ?? "");
+
+                        fetch('@Url.Action("GuiTinNhanAjax", "LienHe")', {
+                            method: "POST",
+                            body: formData
+                        })
+                            .then(function (res) {
+                                return res.json();
+                            })
+                            .then(function (data) {
+                                if (data.success) {
+                                    input.value = "";
+                                    loadUserMessages();
+                                }
+                            });
+                    });
+                }
+
+                loadUserMessages();
+                setInterval(loadUserMessages, 3000);
+            });
+        </script>
+    }
+
+    <script>
+        window.addEventListener("load", function () {
+            const loader = document.getElementById("travelLoader");
+
+            if (loader) {
+                setTimeout(function () {
+                    loader.classList.add("hide");
+                }, 650);
+            }
+        });
+    </script>
+    @if (Context.Session.GetString("role") != "admin" && Context.Session.GetString("role") != "huongdanvien" && Context.Session.GetString("role") != "taixe")
+    {
+        <style>
+            .ai-help-widget {
+                position: fixed;
+                right: 24px;
+                bottom: 166px;
+                z-index: 2100;
+                font-family: 'Inter', Arial, sans-serif;
+            }
+
+            .ai-help-toggle {
+                width: 62px;
+                height: 62px;
+                border-radius: 50%;
+                border: none;
+                background: linear-gradient(135deg, #7c3aed, #2563eb);
+                color: #fff;
+                font-size: 1.6rem;
+                box-shadow: 0 18px 38px rgba(37,99,235,0.35);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+
+            .ai-help-box {
+                width: 365px;
+                background: #ffffff;
+                border-radius: 20px;
+                overflow: hidden;
+                border: 1px solid #dbeafe;
+                box-shadow: 0 24px 58px rgba(15,23,42,0.22);
+                display: none;
+                margin-bottom: 14px;
+            }
+
+                .ai-help-box.active {
+                    display: block;
+                }
+
+            .ai-help-header {
+                background: linear-gradient(135deg, #6d28d9, #2563eb);
+                color: #fff;
+                padding: 16px 18px;
+            }
+
+            .ai-help-header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .ai-help-title {
+                font-weight: 950;
+                font-size: 1.02rem;
+            }
+
+            .ai-help-status {
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: #dbeafe;
+                margin-top: 4px;
+            }
+
+            .ai-help-close {
+                border: none;
+                background: rgba(255,255,255,0.16);
+                color: #fff;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-weight: 900;
+            }
+
+            .ai-help-messages {
+                height: 315px;
+                overflow-y: auto;
+                padding: 14px;
+                background: linear-gradient(180deg, #f8fbff, #ffffff);
+            }
+
+            .ai-help-row {
+                display: flex;
+                margin-bottom: 12px;
+            }
+
+                .ai-help-row.bot {
+                    justify-content: flex-start;
+                }
+
+                .ai-help-row.user {
+                    justify-content: flex-end;
+                }
+
+            .ai-help-bubble {
+                max-width: 82%;
+                padding: 10px 12px;
+                border-radius: 16px;
+                line-height: 1.45;
+                font-size: 0.92rem;
+                font-weight: 650;
+                white-space: pre-line;
+            }
+
+            .ai-help-row.bot .ai-help-bubble {
+                background: #eef2ff;
+                color: #0f172a;
+                border-bottom-left-radius: 5px;
+            }
+
+            .ai-help-row.user .ai-help-bubble {
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                color: #fff;
+                border-bottom-right-radius: 5px;
+            }
+
+            .ai-help-suggest {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 0 14px 12px;
+                background: #fff;
+            }
+
+            .ai-help-chip {
+                border: 1px solid #dbeafe;
+                background: #f8fbff;
+                color: #0f172a;
+                border-radius: 999px;
+                padding: 8px 11px;
+                font-size: 0.82rem;
+                font-weight: 800;
+                cursor: pointer;
+            }
+
+                .ai-help-chip:hover {
+                    background: #2563eb;
+                    color: #fff;
+                }
+
+            .ai-help-compose {
+                padding: 14px;
+                border-top: 1px solid #e2e8f0;
+                background: #fff;
+                display: flex;
+                gap: 10px;
+            }
+
+            .ai-help-input {
+                flex: 1;
+                min-height: 44px;
+                border: 1px solid #dbeafe;
+                border-radius: 14px;
+                padding: 0 13px;
+                outline: none;
+                font-weight: 650;
+            }
+
+                .ai-help-input:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 0.18rem rgba(37,99,235,0.14);
+                }
+
+            .ai-help-send {
+                width: 48px;
+                border: none;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #7c3aed, #2563eb);
+                color: #fff;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+
+            @@media (max-width: 576px) {
+                .ai-help-widget {
+                    right: 16px;
+                    bottom: 148px;
+                }
+
+                .ai-help-box {
+                    width: calc(100vw - 32px);
+                }
+            }
+        </style>
+
+        <div class="ai-help-widget">
+            <div class="ai-help-box" id="aiHelpBox">
+                <div class="ai-help-header">
+                    <div class="ai-help-header-top">
+                        <div>
+                            <div class="ai-help-title">🤖 Trợ lý ảo TravelVN</div>
+                            <div class="ai-help-status">Đang hỗ trợ khách hàng</div>
+                        </div>
+
+                        <button type="button" class="ai-help-close" onclick="toggleAiHelpBox()">×</button>
+                    </div>
+                </div>
+
+                <div class="ai-help-messages" id="aiHelpMessages"></div>
+
+                <div class="ai-help-suggest">
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn xem khuyến mãi')">🎁 Ưu đãi</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn hủy tour')">❌ Hủy tour</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn thanh toán')">💳 Thanh toán</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Hotline là gì')">📞 Hotline</button>
+                </div>
+
+                <div class="ai-help-compose">
+                    <input id="aiHelpInput"
+                           class="ai-help-input"
+                           type="text"
+                           placeholder="Nhập câu hỏi..." />
+
+                    <button type="button" class="ai-help-send" onclick="sendAiHelpMessage()">➤</button>
+                </div>
+            </div>
+
+            <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()">
+                🤖
+            </button>
+        </div>
+
+        <script>
+            function toggleAiHelpBox() {
+                const box = document.getElementById("aiHelpBox");
+                box.classList.toggle("active");
+                setTimeout(scrollAiHelpBottom, 80);
+            }
+
+            function scrollAiHelpBottom() {
+                const box = document.getElementById("aiHelpMessages");
+                if (box) {
+                    box.scrollTop = box.scrollHeight;
+                }
+            }
+
+            function addAiHelpMessage(text, sender) {
+                const box = document.getElementById("aiHelpMessages");
+                if (!box) return;
+
+                const row = document.createElement("div");
+                row.className = "ai-help-row " + sender;
+
+                const bubble = document.createElement("div");
+                bubble.className = "ai-help-bubble";
+                bubble.textContent = text;
+
+                row.appendChild(bubble);
+                box.appendChild(row);
+
+                scrollAiHelpBottom();
+            }
+
+            function normalizeAiText(text) {
+                return (text || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/đ/g, "d");
+            }
+
+            function getAiHelpAnswer(question) {
+                const q = normalizeAiText(question);
+
+                if (q.includes("khuyen mai") || q.includes("ma giam") || q.includes("voucher") || q.includes("uu dai")) {
+                    return "Bạn có thể xem các khuyến mãi hiện hành ở trang chủ. Khi đặt tour, nhập mã khuyến mãi ở bước thanh toán để hệ thống tự giảm giá.";
+                }
+
+                if (q.includes("huy") || q.includes("hoan tien") || q.includes("doi lich")) {
+                    return "Bạn vào mục Lịch sử đặt tour để xem đơn đã đặt. Nếu đơn chưa khởi hành hoặc chưa xử lý thanh toán, bạn có thể gửi yêu cầu hủy. Nếu đã thanh toán, bạn nên chat với admin để được kiểm tra nhanh hơn.";
+                }
+
+                if (q.includes("thanh toan") || q.includes("momo") || q.includes("chuyen khoan") || q.includes("vnpay")) {
+                    return "TravelVN hỗ trợ thanh toán qua chuyển khoản, ví điện tử và các phương thức đang hiển thị ở trang thanh toán. Sau khi thanh toán, admin sẽ kiểm tra và cập nhật trạng thái đơn.";
+                }
+
+                if (q.includes("dat tour") || q.includes("chon tour") || q.includes("chon ngay")) {
+                    return "Bạn chọn tour muốn đi, bấm Xem chi tiết, chọn ngày khởi hành còn chỗ, nhập thông tin hành khách rồi tiến hành thanh toán.";
+                }
+
+                if (q.includes("lich trinh") || q.includes("lich khoi hanh") || q.includes("ngay di")) {
+                    return "Trong trang chi tiết tour có phần Lịch trình và Chọn ngày khởi hành. Bạn có thể xem từng ngày đi, giờ đi, số chỗ còn và giá theo lịch.";
+                }
+
+                if (q.includes("bien")) {
+                    return "Bạn có thể bấm nút Du lịch biển ở trang chủ để lọc nhanh các tour biển như Phú Quốc, Vũng Tàu, Hạ Long hoặc Đà Nẵng.";
+                }
+
+                if (q.includes("nui") || q.includes("kham pha")) {
+                    return "Bạn có thể bấm Khám phá núi để xem các tour có địa hình núi như Đà Lạt, Hà Giang, Sapa hoặc Tây Ninh.";
+                }
+
+                if (q.includes("hotline") || q.includes("lien he") || q.includes("sdt") || q.includes("so dien thoai")) {
+                    return "Hotline TravelVN: 0342500619. Bạn cũng có thể dùng nút chat với admin để gửi yêu cầu hỗ trợ trực tiếp.";
+                }
+
+                if (q.includes("xin chao") || q.includes("hello") || q.includes("hi")) {
+                    return "Xin chào bạn, mình là trợ lý ảo TravelVN. Mình có thể hỗ trợ bạn về đặt tour, khuyến mãi, thanh toán, hủy tour và lịch trình.";
+                }
+
+                return "Mình chưa hiểu rõ câu hỏi này. Bạn có thể hỏi theo các mẫu như: cách đặt tour, mã khuyến mãi, hủy tour, thanh toán, lịch trình hoặc hotline.";
+            }
+
+            function sendAiHelpMessage(text) {
+                const input = document.getElementById("aiHelpInput");
+                const question = text || (input ? input.value.trim() : "");
+
+                if (!question) return;
+
+                addAiHelpMessage(question, "user");
+
+                if (input) {
+                    input.value = "";
+                }
+
+                setTimeout(function () {
+                    addAiHelpMessage(getAiHelpAnswer(question), "bot");
+                }, 350);
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const input = document.getElementById("aiHelpInput");
+                const box = document.getElementById("aiHelpMessages");
+
+                if (box && box.children.length === 0) {
+                    addAiHelpMessage("Xin chào! Tôi là trợ lý ảo TravelVN. Bạn cần hỗ trợ đặt tour, khuyến mãi, thanh toán hay hủy tour?", "bot");
+                }
+
+                if (input) {
+                    input.addEventListener("keydown", function (e) {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            sendAiHelpMessage();
+                        }
+                    });
+                }
+            });
+        </script>
+    }
+    @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
