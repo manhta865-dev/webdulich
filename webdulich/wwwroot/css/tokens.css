@@ -1,0 +1,93 @@
+/* TravelVN - token thiết kế dùng chung (xem docs/GIAO_DIEN_BRIEF.md).
+   Tiền tố --tv- để không đụng biến cục bộ của từng trang. */
+:root {
+    /* Màu */
+    --tv-nen: #F5F7F6;
+    --tv-be-mat: #FFFFFF;
+    --tv-chu: #17262E;
+    --tv-chu-phu: #5B6B73;
+    --tv-nhan: #0A6E8A;
+    --tv-nhan-dam: #085A72;
+    --tv-nhan-nhat: #E3F1F5;
+    --tv-gia: #E4572E;
+    --tv-thanh-cong: #1E8A5A;
+    --tv-canh-bao: #B7791F;
+    --tv-loi: #C0392B;
+    --tv-vien: #DCE3E6;
+
+    /* Chữ */
+    --tv-font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+    --tv-cs-nho: 0.8125rem;
+    --tv-cs-thuong: 0.9375rem;
+    --tv-cs-vua: 1.125rem;
+    --tv-cs-lon: 1.375rem;
+    --tv-cs-tieu-de: 1.75rem;
+    --tv-cs-hero: 2.25rem;
+
+    /* Khoảng cách (bội của 4px) */
+    --tv-k1: 4px;
+    --tv-k2: 8px;
+    --tv-k3: 12px;
+    --tv-k4: 16px;
+    --tv-k5: 24px;
+    --tv-k6: 32px;
+    --tv-k7: 48px;
+    --tv-k8: 64px;
+
+    /* Bo góc theo cấp */
+    --tv-bo-nut: 8px;
+    --tv-bo-khoi: 12px;
+    --tv-bo-anh: 16px;
+    --tv-bo-nhan: 999px;
+
+    /* Bóng: chỉ cho khối nổi */
+    --tv-bong-noi: 0 8px 24px rgba(23, 38, 46, 0.14);
+
+    /* Chuyển động */
+    --tv-nhanh: 160ms ease;
+}
+
+/* Nền và chữ mặc định.
+   Các trang chưa làm lại có CSS riêng, quy tắc nào của trang đó cụ thể hơn sẽ thắng. */
+body {
+    background: var(--tv-nen);
+    color: var(--tv-chu);
+    font-family: var(--tv-font);
+    margin: 0;
+}
+
+/* Nút chính của Bootstrap lấy màu nhấn của TravelVN (trước đây là cam #ff6600) */
+.btn-primary {
+    --bs-btn-bg: var(--tv-nhan);
+    --bs-btn-border-color: var(--tv-nhan);
+    --bs-btn-hover-bg: var(--tv-nhan-dam);
+    --bs-btn-hover-border-color: var(--tv-nhan-dam);
+    --bs-btn-active-bg: var(--tv-nhan-dam);
+    --bs-btn-active-border-color: var(--tv-nhan-dam);
+    --bs-btn-disabled-bg: var(--tv-nhan);
+    --bs-btn-disabled-border-color: var(--tv-nhan);
+}
+
+/* Bỏ hiệu ứng phóng to khi rê chuột lên mọi thẻ .card */
+.card {
+    border-radius: var(--tv-bo-khoi);
+}
+
+/* Vòng focus nhìn thấy được khi dùng bàn phím */
+:focus-visible {
+    outline: 2px solid var(--tv-nhan);
+    outline-offset: 2px;
+}
+
+/* Icon SVG (sprite trong Views/Shared/_Icons.cshtml) */
+.tv-icon {
+    width: 1.25em;
+    height: 1.25em;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -0.2em;
+}

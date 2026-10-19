@@ -19,644 +19,118 @@
     var controllerName = ViewContext.RouteData.Values["controller"]?.ToString();
     var actionName = ViewContext.RouteData.Values["action"]?.ToString();
     var laTrangChu = controllerName == "TrangChu" && actionName == "Index";
+    var tieuDeTrang = ViewData["Title"]?.ToString();
+    var tieuDeTab = string.IsNullOrWhiteSpace(tieuDeTrang) ? "TravelVN" : tieuDeTrang + " | TravelVN";
+    string Active(string controller, string? action = null) =>
+        string.Equals(controllerName, controller, StringComparison.OrdinalIgnoreCase)
+        && (action == null || string.Equals(actionName, action, StringComparison.OrdinalIgnoreCase))
+            ? "active" : "";
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Travel Website</title>
+    <title>@tieuDeTab</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    @* Be Vietnam Pro là phông mới. Hai phông cũ giữ tạm vì các trang chưa làm lại còn dùng; bỏ khi làm xong từng trang. *@
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/widgets.css" asp-append-version="true" />
 </head>
 
-<style>
-
-    /* Loader TravelVN - không dùng keyframes để tránh lỗi Razor */
-    .travel-loader {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 999999;
-        background: linear-gradient(135deg, #0a0f1e 0%, #0d1b3e 50%, #122455 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: opacity .45s ease, visibility .45s ease;
-    }
-
-        .travel-loader.hide {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-    .loader-card {
-        width: 420px;
-        max-width: calc(100vw - 40px);
-        padding: 34px 28px;
-        border-radius: 28px;
-        background: rgba(255, 255, 255, 0.10);
-        border: 1px solid rgba(232, 201, 109, 0.28);
-        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
-        text-align: center;
-        color: #ffffff;
-    }
-
-    .loader-card-inner {
-        position: relative;
-        z-index: 2;
-    }
-
-    .loader-logo {
-        width: 86px;
-        height: 86px;
-        border-radius: 50%;
-        margin: 0 auto 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e;
-        font-size: 2.4rem;
-        box-shadow: 0 18px 38px rgba(232, 201, 109, 0.32);
-    }
-
-    .loader-brand {
-        font-family: 'Playfair Display', serif;
-        font-size: 2rem;
-        font-weight: 900;
-        color: #e8c96d;
-        letter-spacing: 0.04em;
-        margin-bottom: 6px;
-    }
-
-    .loader-text {
-        color: #f5e6b8;
-        font-weight: 700;
-        margin-bottom: 22px;
-    }
-
-    .loader-progress {
-        width: 100%;
-        height: 9px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.14);
-        overflow: hidden;
-    }
-
-        .loader-progress span {
-            display: block;
-            width: 70%;
-            height: 100%;
-            border-radius: inherit;
-            background: linear-gradient(90deg, #c9a84c, #e8c96d, #f5e6b8);
-        }
-
-    .loader-small {
-        margin-top: 14px;
-        color: rgba(255, 255, 255, 0.72);
-        font-size: 0.9rem;
-        font-weight: 650;
-    }
-
-    :root {
-        --navy-deep: #0a0f1e;
-        --navy-mid: #0d1b3e;
-        --navy-light: #122455;
-        --gold-primary: #c9a84c;
-        --gold-bright: #e8c96d;
-        --gold-pale: #f5e6b8;
-        --white-soft: #f0ede8;
-    }
-
-    body {
-        background: #f4f6fb;
-        font-family: 'Inter', Arial, sans-serif;
-        margin: 0;
-    }
-
-    .navbar-luxury {
-        background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 60%, var(--navy-light) 100%);
-        border-bottom: 2px solid var(--gold-primary);
-        box-shadow: 0 4px 32px rgba(0,0,0,0.45);
-        padding-top: 0;
-        padding-bottom: 0;
-        min-height: 68px;
-        position: relative;
-    }
-
-        .navbar-luxury::before {
-            content: '';
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold-bright), var(--gold-primary), var(--gold-bright), transparent);
-        }
-
-        .navbar-luxury .navbar-brand {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.55rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            color: var(--gold-bright) !important;
-            text-shadow: 0 0 18px rgba(201,168,76,0.5);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 0;
-        }
-
-    .brand-icon {
-        font-size: 1.35rem;
-        filter: drop-shadow(0 0 6px rgba(201,168,76,0.6));
-    }
-
-    .brand-divider {
-        width: 1px;
-        height: 28px;
-        background: linear-gradient(to bottom, transparent, var(--gold-primary), transparent);
-        margin: 0 12px;
-        flex-shrink: 0;
-    }
-
-    .brand-tagline {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.7rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--gold-primary);
-        opacity: 0.85;
-        line-height: 1.2;
-    }
-
-    .navbar-luxury .nav-link {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.92rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--white-soft) !important;
-        padding: 22px 16px !important;
-        position: relative;
-    }
-
-        .navbar-luxury .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            right: 50%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--gold-primary), var(--gold-bright));
-            transition: left 0.3s, right 0.3s;
-        }
-
-        .navbar-luxury .nav-link:hover {
-            color: var(--gold-bright) !important;
-        }
-
-            .navbar-luxury .nav-link:hover::after {
-                left: 12px;
-                right: 12px;
-            }
-
-    .nav-sep {
-        color: var(--gold-primary);
-        opacity: 0.5;
-        align-self: center;
-        font-size: 0.4rem;
-        padding: 0 2px;
-    }
-
-    .nav-user-box {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        color: var(--gold-pale);
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.88rem;
-        letter-spacing: 0.06em;
-        white-space: nowrap;
-    }
-
-        .nav-user-box strong {
-            color: var(--gold-bright);
-        }
-
-    .nav-avatar,
-    .nav-avatar-letter {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 2px solid rgba(232,201,109,0.9);
-        box-shadow: 0 0 16px rgba(201,168,76,0.32);
-        flex-shrink: 0;
-    }
-
-    .nav-avatar {
-        object-fit: cover;
-        background: #ffffff;
-    }
-
-    .nav-avatar-letter {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #26c6da, #0ea5e9);
-        color: #ffffff;
-        font-weight: 900;
-        font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .btn-gold {
-        background: linear-gradient(135deg, var(--gold-primary), var(--gold-bright));
-        color: var(--navy-deep) !important;
-        border: none;
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 5px 14px;
-        border-radius: 2px;
-    }
-
-    .btn-navy-outline {
-        background: transparent;
-        color: var(--white-soft) !important;
-        border: 1px solid rgba(201,168,76,0.5);
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.78rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 5px 14px;
-        border-radius: 2px;
-    }
-
-    .btn-login-luxury {
-        background: transparent;
-        color: var(--gold-bright) !important;
-        border: 1px solid var(--gold-primary);
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 0.88rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        padding: 7px 22px;
-        border-radius: 2px;
-    }
-
-    .admin-layout {
-        min-height: 100vh;
-        display: flex;
-        background: #f4f6fb;
-    }
-
-    .admin-sidebar {
-        width: 80px;
-        min-height: 100vh;
-        background: linear-gradient(180deg, #26384d 0%, #2f4359 55%, #233447 100%);
-        color: #fff;
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        overflow: hidden;
-        box-shadow: 5px 0 25px rgba(0,0,0,0.16);
-        transition: all .35s ease;
-        z-index: 1000;
-    }
-
-        .admin-sidebar:hover {
-            width: 270px;
-        }
-    .sidebar-logo {
-        height: 82px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 0 22px;
-        font-size: 1.55rem;
-        font-weight: 900;
-        color: #ffffff;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
-    }
-
-        .sidebar-logo span {
-            color: #26c6da;
-            font-size: 1.8rem;
-        }
-
-    .sidebar-section-title {
-        padding: 22px 24px 10px;
-        color: rgba(255,255,255,0.38);
-        font-size: 0.82rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 800;
-    }
-
-    .sidebar-link {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 15px 24px;
-        color: rgba(255,255,255,0.9) !important;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 1rem;
-        border-left: 4px solid transparent;
-        transition: 0.2s;
-    }
-
-    .sidebar-link {
-        white-space: nowrap;
-    }
-
-    .menu-text {
-        opacity: 0;
-        transition: .3s;
-    }
-
-    .admin-sidebar:hover .menu-text {
-        opacity: 1;
-    }
-
-        .sidebar-link:hover {
-            background: rgba(255,255,255,0.08);
-            border-left-color: #26c6da;
-            color: #ffffff !important;
-        }
-
-        .sidebar-link.logout-link {
-            margin-top: 18px;
-            color: #ffd7d7 !important;
-        }
-
-    .admin-main {
-        margin-left: 80px;
-        width: calc(100% - 80px);
-        min-height: 100vh;
-        transition: all .35s ease;
-    }
-
-    .admin-topbar {
-        height: 82px;
-        background: #ffffff;
-        border-bottom: 1px solid #e8edf3;
-        box-shadow: 0 4px 18px rgba(15,23,42,0.05);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 34px;
-        position: sticky;
-        top: 0;
-        z-index: 900;
-    }
-
-    .admin-topbar-title {
-        font-size: 1.45rem;
-        font-weight: 900;
-        color: #111827;
-    }
-
-    .admin-user {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: #111827;
-        font-weight: 800;
-    }
-
-    .admin-avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #26c6da, #0ea5e9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 900;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-        .admin-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    .admin-content {
-        padding: 26px;
-    }
-
-    .card {
-        border-radius: 15px;
-        transition: 0.3s;
-    }
-
-        .card:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
-        }
-
-    .btn-primary {
-        background: #ff6600;
-        border: none;
-    }
-
-        .btn-primary:hover {
-            background: #ff8533;
-        }
-
-    footer {
-        background: #222;
-        color: white;
-        text-align: center;
-        padding: 15px;
-        margin-top: 50px;
-    }
-
-    @@media (max-width: 992px) {
-        .admin-sidebar {
-            width: 230px;
-        }
-
-        .admin-main {
-            margin-left: 230px;
-            width: calc(100% - 230px);
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .admin-layout {
-            display: block;
-        }
-
-        .admin-sidebar {
-            position: relative;
-            width: 100%;
-            min-height: auto;
-        }
-
-        .admin-main {
-            margin-left: 0;
-            width: 100%;
-        }
-
-        .admin-topbar {
-            height: auto;
-            padding: 18px;
-            align-items: flex-start;
-            gap: 12px;
-            flex-direction: column;
-        }
-
-        .admin-content {
-            padding: 16px;
-        }
-
-        .nav-user-box {
-            margin-top: 10px;
-        }
-
-        .navbar-luxury {
-            margin-bottom: 0 !important;
-        }
-
-        .home-modern,
-        .modern-hero {
-            margin-top: 0 !important;
-        }
-
-        .page-full {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-</style>
-
 <body>
-    <div id="travelLoader" class="travel-loader">
-        <div class="loader-card">
-            <div class="loader-card-inner">
-                <div class="loader-logo">✈️</div>
-
-                <div class="loader-brand">TravelVN</div>
-
-                <div class="loader-text">
-                    Đang chuẩn bị hành trình cho bạn...
-                </div>
-
-                <div class="loader-progress">
-                    <span></span>
-                </div>
-
-                <div class="loader-small">
-                    Vui lòng chờ trong giây lát
-                </div>
-            </div>
+    <div id="travelLoader" class="tv-loader" role="status" aria-live="polite">
+        <div class="tv-loader-brand">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
+            TravelVN
         </div>
+        <div class="tv-loader-bar"></div>
     </div>
+    <partial name="_Icons" />
 
     @if (currentRole == "admin")
     {
-        <div class="admin-layout">
-            <aside class="admin-sidebar">
-                <div class="sidebar-logo">
-                    <span>✈</span>
+        <div class="tv-admin" id="tvAdmin">
+            <aside class="tv-side" id="tvSide">
+                <div class="tv-side-brand">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
                     TravelVN
                 </div>
-
-                <div class="sidebar-section-title">Vận hành</div>
-
-                <a asp-controller="Admin"
-                   asp-action="Index"
-                   class="sidebar-link">
-                    <span>📦</span>
-                    <span class="menu-text">Quản lý Tour</span>
+                <div class="tv-side-title">Vận hành</div>
+                <a asp-controller="Admin" asp-action="Index" class="@Active("Admin", "Index")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
+                    <span>Quản lý tour</span>
                 </a>
-                <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="sidebar-link">
-                    <span>🗓️</span>
-                    <span class="menu-text">Lịch đi</span>
+                <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@Active("Admin", "QuanLyLichKhoiHanh")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+                    <span>Lịch đi</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="sidebar-link">
-                    <span>🧭</span>
-                    <span class="menu-text">Lịch trình</span>
+                <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@Active("Admin", "QuanLyLichTrinh")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>
+                    <span>Lịch trình</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="DonDatTour" class="sidebar-link">
-                    <span>🧾</span>
-                    <span class="menu-text">Đơn đặt Tour</span>
+                <a asp-controller="Admin" asp-action="DonDatTour" class="@Active("Admin", "DonDatTour")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                    <span>Đơn đặt tour</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="KhuyenMai" class="sidebar-link">
-                    <span>🏷️</span>
-                    <span class="menu-text">Khuyến mãi</span>
+                <a asp-controller="Admin" asp-action="KhuyenMai" class="@Active("Admin", "KhuyenMai")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg>
+                    <span>Khuyến mãi</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="TinNhan" class="sidebar-link">
-                    <span>✉️</span>
-                    <span class="menu-text">Tin nhắn</span>
+                <a asp-controller="Admin" asp-action="TinNhan" class="@Active("Admin", "TinNhan")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
+                    <span>Tin nhắn</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="NhanSu" class="sidebar-link">
-                    <span>👥</span>
-                    <span class="menu-text">Nhân sự</span>
+                <a asp-controller="Admin" asp-action="NhanSu" class="@Active("Admin", "NhanSu")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
+                    <span>Nhân sự</span>
                 </a>
-
-                <a asp-controller="Admin" asp-action="PhanCongTour" class="sidebar-link">
-                    <span>🚐</span>
-                    <span class="menu-text">Phân công tour</span>
+                <a asp-controller="Admin" asp-action="PhanCongTour" class="@Active("Admin", "PhanCongTour")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-truck" /></svg>
+                    <span>Phân công tour</span>
                 </a>
-                <div class="sidebar-section-title">Quản trị hệ thống</div>
-
-                <a asp-controller="Admin" asp-action="TaiKhoan" class="sidebar-link">
-                    <span>👤</span>
-                    <span class="menu-text">Tài khoản</span>
+                <div class="tv-side-title">Quản trị hệ thống</div>
+                <a asp-controller="Admin" asp-action="TaiKhoan" class="@Active("Admin", "TaiKhoan")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
+                    <span>Tài khoản</span>
                 </a>
-                <a asp-controller="Admin" asp-action="DoanhThu" class="sidebar-link">
-                    <span>💰</span>
-                    <span class="menu-text">Doanh thu</span>
+                <a asp-controller="Admin" asp-action="DoanhThu" class="@Active("Admin", "DoanhThu")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg>
+                    <span>Doanh thu</span>
                 </a>
-                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="sidebar-link">
-                    <span>🚪</span>
-                    <span class="menu-text">Đăng xuất</span>
+                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
+                    <span>Đăng xuất</span>
                 </a>
             </aside>
+            <div class="tv-scrim" id="tvScrim"></div>
 
-            <main class="admin-main">
-                <div class="admin-topbar">
-                    <div class="admin-topbar-title">Tổng Quan</div>
-
-                    <div class="admin-user">
-                        <div class="admin-avatar">
-                            @if (hasAvatar)
-                            {
-                                <img src="~/images/avatar/@avatarFile" alt="Avatar" />
-                            }
-                            else
-                            {
-                                @firstLetter
-                            }
-                        </div>
-
-                        <div>
-                            Xin chào,
-                            <strong>@currentUser</strong>
-                        </div>
+            <main class="tv-main">
+                <div class="tv-topbar">
+                    <button type="button" class="tv-side-toggle" id="tvSideToggle" aria-label="Mở menu">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-menu" /></svg>
+                    </button>
+                    <div class="tv-topbar-title">@(string.IsNullOrWhiteSpace(tieuDeTrang) ? "Quản trị" : tieuDeTrang)</div>
+                    <div class="tv-user">
+                        @if (hasAvatar)
+                        {
+                            <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
+                        }
+                        else
+                        {
+                            <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
+                        }
+                        <span class="tv-user-text">@currentUser</span>
                     </div>
                 </div>
 
-                <div class="admin-content">
+                <div class="tv-content">
                     @RenderBody()
                 </div>
             </main>
@@ -665,52 +139,44 @@
 
     else if (currentRole == "huongdanvien" || currentRole == "taixe")
     {
-        <div class="admin-layout">
-            <aside class="admin-sidebar">
-                <div class="sidebar-logo">
-                    <span>👨‍💼</span>
-                    Nhân viên
+        <div class="tv-admin" id="tvAdmin">
+            <aside class="tv-side" id="tvSide">
+                <div class="tv-side-brand">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
+                    TravelVN
                 </div>
-
-                <div class="sidebar-section-title">Công việc</div>
-
-                <a asp-controller="NhanVien"
-                   asp-action="LichLamViec"
-                   class="sidebar-link">
-                    📅 Lịch làm việc
+                <div class="tv-side-title">Công việc</div>
+                <a asp-controller="NhanVien" asp-action="LichLamViec" class="@Active("NhanVien", "LichLamViec")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+                    <span>Lịch làm việc</span>
                 </a>
-
-                <a asp-controller="TaiKhoan"
-                   asp-action="DangXuat"
-                   class="sidebar-link logout-link">
-                    🚪 Đăng xuất
+                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
+                    <span>Đăng xuất</span>
                 </a>
             </aside>
+            <div class="tv-scrim" id="tvScrim"></div>
 
-            <main class="admin-main">
-                <div class="admin-topbar">
-                    <div class="admin-topbar-title">Lịch làm việc</div>
-
-                    <div class="admin-user">
-                        <div class="admin-avatar">
-                            @if (hasAvatar)
-                            {
-                                <img src="~/images/avatar/@avatarFile" alt="Avatar" />
-                            }
-                            else
-                            {
-                                @firstLetter
-                            }
-                        </div>
-
-                        <div>
-                            Xin chào,
-                            <strong>@currentUser</strong>
-                        </div>
+            <main class="tv-main">
+                <div class="tv-topbar">
+                    <button type="button" class="tv-side-toggle" id="tvSideToggle" aria-label="Mở menu">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-menu" /></svg>
+                    </button>
+                    <div class="tv-topbar-title">@(string.IsNullOrWhiteSpace(tieuDeTrang) ? "Lịch làm việc" : tieuDeTrang)</div>
+                    <div class="tv-user">
+                        @if (hasAvatar)
+                        {
+                            <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
+                        }
+                        else
+                        {
+                            <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
+                        }
+                        <span class="tv-user-text">@currentUser</span>
                     </div>
                 </div>
 
-                <div class="admin-content">
+                <div class="tv-content">
                     @RenderBody()
                 </div>
             </main>
@@ -718,79 +184,79 @@
     }
     else
     {
-        <nav class="navbar navbar-expand-lg navbar-luxury">
-            <div class="container d-flex align-items-center">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="TrangChu" asp-action="Index">
-                    <span class="brand-icon">✦</span>
+        <nav class="tv-nav" id="tvNav">
+            <div class="tv-nav-inner">
+                <a class="tv-brand" asp-controller="TrangChu" asp-action="Index">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
                     TravelVN
-                    <span class="brand-divider"></span>
-                    <span class="brand-tagline">Luxury<br>Journeys</span>
                 </a>
 
-                <ul class="navbar-nav me-auto d-flex align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="TrangChu" asp-action="Index">Trang chủ</a>
-                    </li>
+                <button type="button" class="tv-nav-toggle" id="tvNavToggle" aria-label="Mở menu" aria-expanded="false">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-menu" /></svg>
+                </button>
 
-                    <li class="nav-sep d-none d-lg-block">◆</li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="GoiYTour" asp-action="Index">Gợi ý tour</a>
-                    </li>
-
+                <ul class="tv-nav-links">
+                    <li><a asp-controller="TrangChu" asp-action="Index" class="@Active("TrangChu", "Index")">Trang chủ</a></li>
+                    <li><a asp-controller="GoiYTour" asp-action="Index" class="@Active("GoiYTour")">Gợi ý tour</a></li>
                     @if (currentUser != null)
                     {
-                        <li class="nav-sep d-none d-lg-block">◆</li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="DatTour" asp-action="LichSu">Lịch sử đặt tour</a>
-                        </li>
+                        <li><a asp-controller="DatTour" asp-action="LichSu" class="@Active("DatTour", "LichSu")">Lịch sử đặt tour</a></li>
                     }
                 </ul>
 
-                @if (currentUser != null)
-                {
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="nav-user-box">
+                <div class="tv-nav-actions">
+                    @if (currentUser != null)
+                    {
+                        <div class="tv-user">
                             @if (hasAvatar)
                             {
-                                <img class="nav-avatar" src="~/images/avatar/@avatarFile" alt="Avatar" />
+                                <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
                             }
                             else
                             {
-                                <span class="nav-avatar-letter">@firstLetter</span>
+                                <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
                             }
-
-                            <span>Xin chào, <strong>@currentUser</strong></span>
+                            <span>@currentUser</span>
                         </div>
 
-                        <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="btn btn-gold btn-sm">
-                            Sửa hồ sơ
-                        </a>
-
-                        <a asp-controller="TaiKhoan" asp-action="DangXuat" class="btn btn-navy-outline btn-sm">
-                            Đăng xuất
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <a asp-controller="TaiKhoan" asp-action="DangNhap" class="btn btn-login-luxury">
-                        Đăng nhập
-                    </a>
-                }
+                        <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="tv-btn tv-btn-vien">Sửa hồ sơ</a>
+                        <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-btn tv-btn-vien">Đăng xuất</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="TaiKhoan" asp-action="DangNhap" class="tv-btn tv-btn-chinh">Đăng nhập</a>
+                    }
+                </div>
             </div>
         </nav>
 
-
-
-        <div class="@(laTrangChu ? "page-full" : "container mt-4")">
+        <div class="@(laTrangChu ? "page-full" : "container tv-page")">
             @RenderBody()
         </div>
     }
 
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (function () {
+            var nav = document.getElementById("tvNav");
+            var navBtn = document.getElementById("tvNavToggle");
+            if (nav && navBtn) {
+                navBtn.addEventListener("click", function () {
+                    var open = nav.classList.toggle("is-open");
+                    navBtn.setAttribute("aria-expanded", open ? "true" : "false");
+                });
+            }
+            var admin = document.getElementById("tvAdmin");
+            var sideBtn = document.getElementById("tvSideToggle");
+            var scrim = document.getElementById("tvScrim");
+            if (admin && sideBtn) {
+                sideBtn.addEventListener("click", function () { admin.classList.toggle("is-open"); });
+                if (scrim) { scrim.addEventListener("click", function () { admin.classList.remove("is-open"); }); }
+            }
+        })();
+    </script>
 
     @if (currentUser != null && currentRole != "admin" && currentRole != "huongdanvien" && currentRole != "taixe")
     {
@@ -806,208 +272,12 @@
         var chatError = TempData["ChatError"] as string;
         var moChat = !string.IsNullOrWhiteSpace(chatSuccess) || !string.IsNullOrWhiteSpace(chatError);
 
-        <style>
-            .chat-widget {
-                position: fixed;
-                right: 112px;
-                bottom: 28px;
-                z-index: 2000;
-                font-family: 'Inter', Arial, sans-serif;
-            }
-
-            .chat-toggle {
-                width: 62px;
-                height: 62px;
-                border-radius: 50%;
-                border: none;
-                background: linear-gradient(135deg, #0d1b3e, #1d4ed8);
-                color: #fff;
-                font-size: 1.65rem;
-                box-shadow: 0 18px 38px rgba(13,27,62,0.32);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-            }
-
-            .chat-box {
-                width: 380px;
-                background: rgba(255,253,248,0.98);
-                border: 1px solid rgba(201,168,76,0.35);
-                border-radius: 20px;
-                box-shadow: 0 24px 58px rgba(13,27,62,0.22);
-                overflow: hidden;
-                display: none;
-                margin-bottom: 14px;
-            }
-
-                .chat-box.active {
-                    display: block;
-                }
-
-            .chat-header {
-                background: linear-gradient(135deg, #0d1b3e, #122455);
-                color: #f5e6b8;
-                padding: 16px 18px;
-                border-bottom: 3px solid #c9a84c;
-            }
-
-                .chat-header h4 {
-                    margin: 0;
-                    font-size: 1.05rem;
-                    font-weight: 900;
-                }
-
-                .chat-header p {
-                    margin: 4px 0 0;
-                    color: rgba(245,230,184,0.78);
-                    font-size: 0.86rem;
-                    font-weight: 650;
-                }
-
-            .chat-close {
-                float: right;
-                border: none;
-                background: transparent;
-                color: #f5e6b8;
-                font-size: 1.1rem;
-                cursor: pointer;
-            }
-
-            .chat-status {
-                margin: 12px 14px 0;
-                padding: 10px 12px;
-                border-radius: 12px;
-                font-weight: 800;
-                font-size: 0.9rem;
-            }
-
-                .chat-status.success {
-                    background: #dcfce7;
-                    color: #166534;
-                    border: 1px solid #86efac;
-                }
-
-                .chat-status.error {
-                    background: #fee2e2;
-                    color: #b91c1c;
-                    border: 1px solid #fecaca;
-                }
-
-            .chat-messages-user {
-                height: 330px;
-                overflow-y: auto;
-                padding: 14px;
-                background: linear-gradient(180deg, #f8fbff, #fffdf8);
-            }
-
-            .chat-empty {
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-                color: #64748b;
-                font-weight: 700;
-                padding: 20px;
-            }
-
-            .chat-row {
-                display: flex;
-                margin-bottom: 12px;
-            }
-
-                .chat-row.user {
-                    justify-content: flex-end;
-                }
-
-                .chat-row.admin {
-                    justify-content: flex-start;
-                }
-
-            .chat-bubble {
-                max-width: 78%;
-                padding: 10px 12px;
-                border-radius: 16px;
-                white-space: pre-line;
-                line-height: 1.45;
-                font-weight: 650;
-                font-size: 0.92rem;
-            }
-
-            .chat-row.user .chat-bubble {
-                background: linear-gradient(135deg, #0d1b3e, #1d4ed8);
-                color: #fff;
-                border-bottom-right-radius: 5px;
-            }
-
-            .chat-row.admin .chat-bubble {
-                background: #ffffff;
-                color: #0f172a;
-                border: 1px solid #dbeafe;
-                border-bottom-left-radius: 5px;
-            }
-
-            .chat-time {
-                margin-top: 5px;
-                font-size: 0.72rem;
-                opacity: 0.72;
-                font-weight: 800;
-            }
-
-            .chat-compose {
-                padding: 14px;
-                border-top: 1px solid rgba(201,168,76,0.22);
-                background: #fffdf8;
-            }
-
-            .chat-textarea {
-                width: 100%;
-                min-height: 86px;
-                border: 1px solid #d8c99d;
-                border-radius: 12px;
-                background: #fff;
-                padding: 11px 13px;
-                font-weight: 650;
-                color: #0d1b3e;
-                outline: none;
-                resize: vertical;
-                margin-bottom: 10px;
-            }
-
-                .chat-textarea:focus {
-                    border-color: #c9a84c;
-                    box-shadow: 0 0 0 0.18rem rgba(201,168,76,0.18);
-                }
-
-            .chat-submit {
-                width: 100%;
-                border: none;
-                border-radius: 12px;
-                padding: 12px 16px;
-                background: linear-gradient(135deg, #c9a84c, #e8c96d);
-                color: #0a0f1e;
-                font-weight: 950;
-                cursor: pointer;
-            }
-
-            @@media (max-width: 768px) {
-                .chat-widget {
-                    right: 16px;
-                    bottom: 94px;
-                }
-
-                .chat-box {
-                    width: calc(100vw - 32px);
-                }
-            }
-        </style>
 
         <div class="chat-widget">
             <div class="chat-box @(moChat ? "active" : "")" id="chatBox">
                 <div class="chat-header">
-                    <button type="button" class="chat-close" onclick="toggleChatBox()">×</button>
-                    <h4>💬 Chat với admin</h4>
+                    <button type="button" class="chat-close" onclick="toggleChatBox()" aria-label="Đóng">×</button>
+                    <h4><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg> Chat với admin</h4>
                     <p>Admin TravelVN sẽ phản hồi tại đây.</p>
                 </div>
 
@@ -1062,8 +332,8 @@
                 </div>
             </div>
 
-            <button type="button" class="chat-toggle" onclick="toggleChatBox()">
-                💬
+            <button type="button" class="chat-toggle" onclick="toggleChatBox()" aria-label="Chat với admin">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg>
             </button>
         </div>
 
@@ -1185,217 +455,33 @@
             if (loader) {
                 setTimeout(function () {
                     loader.classList.add("hide");
-                }, 650);
+                }, 250);
             }
         });
     </script>
     @if (Context.Session.GetString("role") != "admin" && Context.Session.GetString("role") != "huongdanvien" && Context.Session.GetString("role") != "taixe")
     {
-        <style>
-            .ai-help-widget {
-                position: fixed;
-                right: 24px;
-                bottom: 166px;
-                z-index: 2100;
-                font-family: 'Inter', Arial, sans-serif;
-            }
-
-            .ai-help-toggle {
-                width: 62px;
-                height: 62px;
-                border-radius: 50%;
-                border: none;
-                background: linear-gradient(135deg, #7c3aed, #2563eb);
-                color: #fff;
-                font-size: 1.6rem;
-                box-shadow: 0 18px 38px rgba(37,99,235,0.35);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-            }
-
-            .ai-help-box {
-                width: 365px;
-                background: #ffffff;
-                border-radius: 20px;
-                overflow: hidden;
-                border: 1px solid #dbeafe;
-                box-shadow: 0 24px 58px rgba(15,23,42,0.22);
-                display: none;
-                margin-bottom: 14px;
-            }
-
-                .ai-help-box.active {
-                    display: block;
-                }
-
-            .ai-help-header {
-                background: linear-gradient(135deg, #6d28d9, #2563eb);
-                color: #fff;
-                padding: 16px 18px;
-            }
-
-            .ai-help-header-top {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .ai-help-title {
-                font-weight: 950;
-                font-size: 1.02rem;
-            }
-
-            .ai-help-status {
-                font-size: 0.8rem;
-                font-weight: 700;
-                color: #dbeafe;
-                margin-top: 4px;
-            }
-
-            .ai-help-close {
-                border: none;
-                background: rgba(255,255,255,0.16);
-                color: #fff;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                cursor: pointer;
-                font-weight: 900;
-            }
-
-            .ai-help-messages {
-                height: 315px;
-                overflow-y: auto;
-                padding: 14px;
-                background: linear-gradient(180deg, #f8fbff, #ffffff);
-            }
-
-            .ai-help-row {
-                display: flex;
-                margin-bottom: 12px;
-            }
-
-                .ai-help-row.bot {
-                    justify-content: flex-start;
-                }
-
-                .ai-help-row.user {
-                    justify-content: flex-end;
-                }
-
-            .ai-help-bubble {
-                max-width: 82%;
-                padding: 10px 12px;
-                border-radius: 16px;
-                line-height: 1.45;
-                font-size: 0.92rem;
-                font-weight: 650;
-                white-space: pre-line;
-            }
-
-            .ai-help-row.bot .ai-help-bubble {
-                background: #eef2ff;
-                color: #0f172a;
-                border-bottom-left-radius: 5px;
-            }
-
-            .ai-help-row.user .ai-help-bubble {
-                background: linear-gradient(135deg, #2563eb, #1d4ed8);
-                color: #fff;
-                border-bottom-right-radius: 5px;
-            }
-
-            .ai-help-suggest {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                padding: 0 14px 12px;
-                background: #fff;
-            }
-
-            .ai-help-chip {
-                border: 1px solid #dbeafe;
-                background: #f8fbff;
-                color: #0f172a;
-                border-radius: 999px;
-                padding: 8px 11px;
-                font-size: 0.82rem;
-                font-weight: 800;
-                cursor: pointer;
-            }
-
-                .ai-help-chip:hover {
-                    background: #2563eb;
-                    color: #fff;
-                }
-
-            .ai-help-compose {
-                padding: 14px;
-                border-top: 1px solid #e2e8f0;
-                background: #fff;
-                display: flex;
-                gap: 10px;
-            }
-
-            .ai-help-input {
-                flex: 1;
-                min-height: 44px;
-                border: 1px solid #dbeafe;
-                border-radius: 14px;
-                padding: 0 13px;
-                outline: none;
-                font-weight: 650;
-            }
-
-                .ai-help-input:focus {
-                    border-color: #2563eb;
-                    box-shadow: 0 0 0 0.18rem rgba(37,99,235,0.14);
-                }
-
-            .ai-help-send {
-                width: 48px;
-                border: none;
-                border-radius: 14px;
-                background: linear-gradient(135deg, #7c3aed, #2563eb);
-                color: #fff;
-                font-size: 1.2rem;
-                cursor: pointer;
-            }
-
-            @@media (max-width: 576px) {
-                .ai-help-widget {
-                    right: 16px;
-                    bottom: 148px;
-                }
-
-                .ai-help-box {
-                    width: calc(100vw - 32px);
-                }
-            }
-        </style>
 
         <div class="ai-help-widget">
             <div class="ai-help-box" id="aiHelpBox">
                 <div class="ai-help-header">
                     <div class="ai-help-header-top">
                         <div>
-                            <div class="ai-help-title">🤖 Trợ lý ảo TravelVN</div>
+                            <div class="ai-help-title"><svg class="tv-icon" aria-hidden="true"><use href="#i-help" /></svg> Trợ lý TravelVN</div>
                             <div class="ai-help-status">Đang hỗ trợ khách hàng</div>
                         </div>
 
-                        <button type="button" class="ai-help-close" onclick="toggleAiHelpBox()">×</button>
+                        <button type="button" class="ai-help-close" onclick="toggleAiHelpBox()" aria-label="Đóng">×</button>
                     </div>
                 </div>
 
                 <div class="ai-help-messages" id="aiHelpMessages"></div>
 
                 <div class="ai-help-suggest">
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn xem khuyến mãi')">🎁 Ưu đãi</button>
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn hủy tour')">❌ Hủy tour</button>
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn thanh toán')">💳 Thanh toán</button>
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Hotline là gì')">📞 Hotline</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn xem khuyến mãi')">Ưu đãi</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn hủy tour')">Hủy tour</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn thanh toán')">Thanh toán</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Hotline là gì')">Hotline</button>
                 </div>
 
                 <div class="ai-help-compose">
@@ -1404,12 +490,12 @@
                            type="text"
                            placeholder="Nhập câu hỏi..." />
 
-                    <button type="button" class="ai-help-send" onclick="sendAiHelpMessage()">➤</button>
+                    <button type="button" class="ai-help-send" onclick="sendAiHelpMessage()" aria-label="Gửi"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg></button>
                 </div>
             </div>
 
-            <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()">
-                🤖
+            <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()" aria-label="Hỏi nhanh trợ lý">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-help" /></svg>
             </button>
         </div>
 

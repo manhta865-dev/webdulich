@@ -1,0 +1,325 @@
+/* Khung chung của TravelVN: màn hình chờ, thanh menu khách, khung admin và nhân viên.
+   Dùng token trong tokens.css. */
+
+/* ---------- Màn hình chờ ---------- */
+.tv-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--tv-k4);
+    background: var(--tv-nen);
+    color: var(--tv-chu);
+    transition: opacity 240ms ease, visibility 240ms ease;
+}
+
+.tv-loader.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.tv-loader-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    font-size: var(--tv-cs-lon);
+    font-weight: 700;
+    color: var(--tv-nhan);
+}
+
+.tv-loader-bar {
+    width: 160px;
+    height: 4px;
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-vien);
+    overflow: hidden;
+}
+
+.tv-loader-bar::after {
+    content: "";
+    display: block;
+    width: 40%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--tv-nhan);
+    animation: tv-chay 900ms ease-in-out infinite;
+}
+
+@keyframes tv-chay {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tv-loader-bar::after { animation: none; width: 100%; }
+}
+
+/* ---------- Thanh menu của khách ---------- */
+.tv-nav {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background: var(--tv-be-mat);
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.tv-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k5);
+    min-height: 64px;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 var(--tv-k4);
+}
+
+.tv-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    font-size: var(--tv-cs-vua);
+    font-weight: 700;
+    color: var(--tv-nhan);
+    text-decoration: none;
+}
+
+.tv-brand:hover { color: var(--tv-nhan-dam); }
+
+.tv-nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    margin: 0 auto 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tv-nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 500;
+    color: var(--tv-chu-phu);
+    text-decoration: none;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh);
+}
+
+.tv-nav-links a:hover,
+.tv-nav-links a.active {
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+}
+
+.tv-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+}
+
+.tv-user {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+}
+
+.tv-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.tv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--tv-k2);
+    min-height: 40px;
+    padding: 0 var(--tv-k4);
+    border: 1px solid transparent;
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--tv-nhanh), border-color var(--tv-nhanh), color var(--tv-nhanh);
+}
+
+.tv-btn-chinh {
+    background: var(--tv-nhan);
+    color: #fff;
+}
+
+.tv-btn-chinh:hover { background: var(--tv-nhan-dam); color: #fff; }
+
+.tv-btn-vien {
+    background: var(--tv-be-mat);
+    border-color: var(--tv-vien);
+    color: var(--tv-chu);
+}
+
+.tv-btn-vien:hover { border-color: var(--tv-nhan); color: var(--tv-nhan-dam); }
+
+.tv-nav-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+@media (max-width: 860px) {
+    .tv-nav-inner { flex-wrap: wrap; gap: var(--tv-k2); padding-top: var(--tv-k2); padding-bottom: var(--tv-k2); }
+    .tv-nav-toggle { display: inline-flex; margin-left: auto; }
+    .tv-nav-links,
+    .tv-nav-actions { display: none; width: 100%; }
+    .tv-nav.is-open .tv-nav-links { display: flex; flex-direction: column; align-items: stretch; }
+    .tv-nav.is-open .tv-nav-actions { display: flex; flex-wrap: wrap; padding-bottom: var(--tv-k2); }
+    .tv-nav-links a { min-height: 44px; }
+}
+
+.tv-page { padding-top: var(--tv-k5); padding-bottom: var(--tv-k7); }
+
+/* ---------- Khung admin và nhân viên ---------- */
+.tv-admin {
+    display: flex;
+    min-height: 100vh;
+}
+
+.tv-side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    width: 248px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tv-k1);
+    padding: var(--tv-k4) var(--tv-k3);
+    background: var(--tv-be-mat);
+    border-right: 1px solid var(--tv-vien);
+    overflow-y: auto;
+    transition: transform 200ms ease;
+}
+
+.tv-side-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    padding: var(--tv-k2) var(--tv-k3) var(--tv-k4);
+    font-size: var(--tv-cs-vua);
+    font-weight: 700;
+    color: var(--tv-nhan);
+}
+
+.tv-side-title {
+    padding: var(--tv-k4) var(--tv-k3) var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    color: var(--tv-chu-phu);
+}
+
+.tv-side a {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    min-height: 42px;
+    padding: 0 var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 500;
+    color: var(--tv-chu);
+    text-decoration: none;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh);
+}
+
+.tv-side a:hover { background: var(--tv-nen); }
+
+.tv-side a.active {
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 600;
+}
+
+.tv-side a.tv-side-out { margin-top: auto; color: var(--tv-chu-phu); }
+
+.tv-main {
+    flex: 1;
+    min-width: 0;
+    margin-left: 248px;
+}
+
+.tv-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    min-height: 64px;
+    padding: 0 var(--tv-k5);
+    background: var(--tv-be-mat);
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.tv-topbar-title {
+    margin-right: auto;
+    font-size: var(--tv-cs-vua);
+    font-weight: 600;
+}
+
+.tv-side-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.tv-content { padding: var(--tv-k5); }
+
+.tv-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1035;
+    background: rgba(23, 38, 46, 0.4);
+}
+
+@media (max-width: 860px) {
+    .tv-side { transform: translateX(-100%); box-shadow: var(--tv-bong-noi); }
+    .tv-admin.is-open .tv-side { transform: none; }
+    .tv-admin.is-open .tv-scrim { display: block; }
+    .tv-main { margin-left: 0; }
+    .tv-side-toggle { display: inline-flex; }
+    .tv-topbar { padding: 0 var(--tv-k4); }
+    .tv-content { padding: var(--tv-k4); }
+    .tv-user-text { display: none; }
+}

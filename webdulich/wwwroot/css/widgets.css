@@ -1,0 +1,285 @@
+/* Hai khung chat nổi của khách: chat với admin (.chat-*) và trợ lý trả lời nhanh (.ai-help-*).
+   Tên lớp giữ nguyên để JavaScript trong _Layout.cshtml không phải đổi. */
+
+/* ---------- Nút mở chung ---------- */
+.chat-toggle,
+.ai-help-toggle {
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tv-nhan);
+    color: #fff;
+    box-shadow: var(--tv-bong-noi);
+    cursor: pointer;
+    transition: background var(--tv-nhanh);
+}
+
+.chat-toggle:hover,
+.ai-help-toggle:hover { background: var(--tv-nhan-dam); }
+
+.chat-toggle .tv-icon,
+.ai-help-toggle .tv-icon { width: 26px; height: 26px; }
+
+/* Nút trợ lý dùng màu phụ để phân biệt với chat admin */
+.ai-help-toggle {
+    background: var(--tv-be-mat);
+    color: var(--tv-nhan);
+    border: 1px solid var(--tv-vien);
+}
+
+.ai-help-toggle:hover { background: var(--tv-nhan-nhat); }
+
+/* ---------- Khung hộp thoại ---------- */
+.chat-widget {
+    position: fixed;
+    right: 112px;
+    bottom: 28px;
+    z-index: 2000;
+    font-family: var(--tv-font);
+}
+
+.ai-help-widget {
+    position: fixed;
+    right: 24px;
+    bottom: 166px;
+    z-index: 2100;
+    font-family: var(--tv-font);
+}
+
+.chat-box,
+.ai-help-box {
+    display: none;
+    width: 360px;
+    margin-bottom: var(--tv-k3);
+    overflow: hidden;
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    box-shadow: var(--tv-bong-noi);
+}
+
+.chat-box.active,
+.ai-help-box.active { display: block; }
+
+.chat-header,
+.ai-help-header {
+    position: relative;
+    padding: var(--tv-k4);
+    background: var(--tv-nhan);
+    color: #fff;
+}
+
+.chat-header h4,
+.ai-help-title {
+    margin: 0;
+    font-size: var(--tv-cs-vua);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+}
+
+.chat-header p,
+.ai-help-status {
+    margin: var(--tv-k1) 0 0;
+    font-size: var(--tv-cs-nho);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.ai-help-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.chat-close,
+.ai-help-close {
+    position: absolute;
+    top: var(--tv-k3);
+    right: var(--tv-k3);
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chat-close:hover,
+.ai-help-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+.ai-help-header-top .ai-help-close { position: static; }
+
+/* ---------- Danh sách tin ---------- */
+.chat-messages-user,
+.ai-help-messages {
+    height: 280px;
+    overflow-y: auto;
+    padding: var(--tv-k4);
+    background: var(--tv-nen);
+}
+
+.chat-empty {
+    padding: var(--tv-k5) var(--tv-k2);
+    text-align: center;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu-phu);
+}
+
+.chat-row,
+.ai-help-row {
+    display: flex;
+    margin-bottom: var(--tv-k3);
+}
+
+.chat-row.user,
+.ai-help-row.user { justify-content: flex-end; }
+
+.chat-row.admin,
+.ai-help-row.bot { justify-content: flex-start; }
+
+.chat-bubble,
+.ai-help-bubble {
+    max-width: 82%;
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-khoi);
+    font-size: var(--tv-cs-thuong);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.chat-row.user .chat-bubble,
+.ai-help-row.user .ai-help-bubble {
+    background: var(--tv-nhan);
+    color: #fff;
+    border-bottom-right-radius: var(--tv-k1);
+}
+
+.chat-row.admin .chat-bubble,
+.ai-help-row.bot .ai-help-bubble {
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    border: 1px solid var(--tv-vien);
+    border-bottom-left-radius: var(--tv-k1);
+}
+
+.chat-time {
+    margin-top: var(--tv-k1);
+    font-size: 0.75rem;
+    opacity: 0.75;
+}
+
+.chat-status {
+    padding: var(--tv-k2) var(--tv-k4);
+    font-size: var(--tv-cs-nho);
+    font-weight: 500;
+}
+
+.chat-status.success { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.chat-status.error { background: #FBE9E7; color: var(--tv-loi); }
+
+/* ---------- Ô nhập ---------- */
+.chat-compose,
+.ai-help-compose {
+    display: flex;
+    gap: var(--tv-k2);
+    padding: var(--tv-k3);
+    background: var(--tv-be-mat);
+    border-top: 1px solid var(--tv-vien);
+}
+
+.chat-compose { flex-direction: column; }
+
+.chat-textarea,
+.ai-help-input {
+    width: 100%;
+    padding: var(--tv-k2) var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+    background: var(--tv-be-mat);
+}
+
+.chat-textarea { min-height: 72px; resize: vertical; }
+
+.chat-textarea:focus,
+.ai-help-input:focus {
+    outline: none;
+    border-color: var(--tv-nhan);
+    box-shadow: 0 0 0 3px var(--tv-nhan-nhat);
+}
+
+.chat-submit,
+.ai-help-send {
+    min-height: 40px;
+    padding: 0 var(--tv-k4);
+    border: none;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nhan);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-submit:hover,
+.ai-help-send:hover { background: var(--tv-nhan-dam); }
+
+.ai-help-input { flex: 1; }
+.ai-help-send { width: 44px; padding: 0; }
+
+/* ---------- Câu hỏi gợi ý ---------- */
+.ai-help-suggest {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tv-k2);
+    padding: var(--tv-k3) var(--tv-k4) 0;
+    background: var(--tv-be-mat);
+    border-top: 1px solid var(--tv-vien);
+}
+
+.ai-help-chip {
+    min-height: 32px;
+    padding: 0 var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    font-family: inherit;
+    font-size: var(--tv-cs-nho);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+
+.ai-help-chip:hover {
+    background: var(--tv-nhan-nhat);
+    border-color: var(--tv-nhan);
+}
+
+/* ---------- Điện thoại ---------- */
+@media (max-width: 576px) {
+    .chat-widget { right: 84px; bottom: 16px; }
+    .ai-help-widget { right: 16px; bottom: 16px; }
+
+    .chat-box,
+    .ai-help-box {
+        position: fixed;
+        inset: auto 12px 84px 12px;
+        width: auto;
+        margin: 0;
+    }
+}
