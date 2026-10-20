@@ -189,7 +189,7 @@
     padding: var(--tv-k4);
     background: var(--tv-be-mat);
     border: 1px solid var(--tv-vien);
-    border-left: 4px solid var(--mau, var(--tv-nhan));
+    border-left: 4px solid var(--tv-nhan);
     border-radius: var(--tv-bo-khoi);
 }
 

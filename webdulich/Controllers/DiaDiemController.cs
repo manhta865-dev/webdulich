@@ -26,10 +26,25 @@ namespace webdulich.Controllers
                 .Include(x => x.TourPhongCachs)
                     .ThenInclude(x => x.PhongCach);
         }
+        // Truy vấn gọn cho trang danh sách: chỉ nạp những gì thẻ tour hiển thị (địa điểm, danh mục, phương tiện, loại địa hình, phong cách).
+        // Bỏ lịch trình và hình ảnh phụ vì danh sách không dùng; tách thành nhiều câu SQL nhỏ và không theo dõi thay đổi để SQL Server không phải xin nhiều bộ nhớ.
+        private IQueryable<Tour> LayQueryTourChoDanhSach()
+        {
+            return _context.Tours
+                .AsNoTracking()
+                .Include(x => x.DiaDiemInfo)
+                .Include(x => x.DanhMuc)
+                .Include(x => x.PhuongTienInfo)
+                .Include(x => x.TourLoaiDiaHinhs)
+                    .ThenInclude(x => x.LoaiDiaHinh)
+                .Include(x => x.TourPhongCachs)
+                    .ThenInclude(x => x.PhongCach)
+                .AsSplitQuery();
+        }
         // Phương thức này xử lý yêu cầu hiển thị danh sách tour. Nó nhận vào hai tham số: keyword để tìm kiếm theo tên tour, tên địa điểm, tên phương tiện, tên danh mục, tên loại địa hình hoặc tên phong cách; và loaiDiaHinh để lọc theo loại địa hình cụ thể. Kết quả được trả về dưới dạng một danh sách các tour đã được lọc và sắp xếp.
         public IActionResult DanhSach(string keyword, string loaiDiaHinh)
         {
-            var ds = LayQueryTourDayDu();
+            var ds = LayQueryTourChoDanhSach();
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {

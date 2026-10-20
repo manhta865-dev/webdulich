@@ -142,7 +142,7 @@
             <div class="promo-list">
                 @foreach (var km in khuyenMais)
                 {
-                    <div class="promo-card" style="@(string.IsNullOrWhiteSpace(km.MauNen) ? "" : $"--mau:{km.MauNen}")">
+                    <div class="promo-card" style="border-left-color: @km.MauNen">
                         <h3>@km.TenKhuyenMai</h3>
                         <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
                         <div class="promo-foot">
