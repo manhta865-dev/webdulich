@@ -1,0 +1,149 @@
+/* Bản in báo cáo doanh thu (Admin/BaoCaoDoanhThuPdf). Trang độc lập, không dùng khung chung.
+   Khổ A4 nằm ngang để đủ 9 cột. Dùng token trong tokens.css. */
+
+@page { size: A4 landscape; margin: 12mm; }
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: var(--tv-k5) var(--tv-k4);
+    background: var(--tv-nen);
+    font-family: var(--tv-font);
+    font-size: 13px;
+    color: var(--tv-chu);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.print-actions {
+    max-width: 1100px;
+    margin: 0 auto var(--tv-k4);
+    text-align: right;
+}
+
+.btn-print {
+    min-height: 40px;
+    padding: 0 var(--tv-k5);
+    border: 0;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nhan);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-print:hover { background: var(--tv-nhan-dam); }
+
+.report-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--tv-k6);
+    background: #fff;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+/* ---------- Đầu báo cáo ---------- */
+.report-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--tv-k5);
+    padding-bottom: var(--tv-k4);
+    border-bottom: 2px solid var(--tv-nhan);
+}
+
+.brand { font-size: 20px; font-weight: 700; color: var(--tv-nhan); }
+
+.report-head h1 { margin: var(--tv-k1) 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
+.report-head p { margin: var(--tv-k1) 0 0; color: var(--tv-chu-phu); }
+.report-date { text-align: right; color: var(--tv-chu-phu); font-size: 12px; }
+.report-date strong { display: block; font-size: 14px; color: var(--tv-chu); }
+
+/* ---------- Tóm tắt ---------- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--tv-k3);
+    margin: var(--tv-k5) 0;
+}
+
+.summary-card {
+    padding: var(--tv-k3) var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.summary-card span { display: block; font-size: 12px; color: var(--tv-chu-phu); }
+.summary-card strong { display: block; margin-top: 2px; font-size: 18px; font-weight: 700; }
+.summary-card.tien strong { color: var(--tv-gia); }
+
+.section-title { margin: 0 0 var(--tv-k3); font-size: 16px; font-weight: 700; }
+
+/* ---------- Bảng ---------- */
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+    padding: 8px 10px;
+    background: var(--tv-nhan-nhat);
+    border-bottom: 1px solid var(--tv-nhan);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--tv-nhan-dam);
+    text-align: left;
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--tv-vien);
+    vertical-align: top;
+}
+
+tbody tr { break-inside: avoid; }
+
+.col-giua { text-align: center; }
+.money { text-align: right; white-space: nowrap; font-weight: 600; }
+thead th.money { text-align: right; }
+.empty-cell { padding: var(--tv-k6) !important; text-align: center; color: var(--tv-chu-phu); }
+
+.paid-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #E4F4EC;
+    color: var(--tv-thanh-cong);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+tfoot td {
+    padding: 10px;
+    border-top: 2px solid var(--tv-chu);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* ---------- Chân báo cáo ---------- */
+.footer-note {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k5);
+    margin-top: var(--tv-k6);
+    padding-top: var(--tv-k3);
+    border-top: 1px solid var(--tv-vien);
+    font-size: 12px;
+    color: var(--tv-chu-phu);
+}
+
+/* ---------- Khi in ---------- */
+@media print {
+    body { padding: 0; background: #fff; font-size: 12px; }
+    .print-actions { display: none; }
+    .report-page { max-width: none; padding: 0; border: 0; border-radius: 0; }
+    thead { display: table-header-group; }
+}

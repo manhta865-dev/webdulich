@@ -479,3 +479,140 @@
 .ad-form-actions-trai { justify-content: flex-start; margin-top: var(--tv-k2); }
 .ad-inline-grid .ad-form-actions-trai { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
 .ad-khoang-tren { margin-top: var(--tv-k4); }
+
+/* =====================================================================
+   Lô D: đơn đặt tour, sửa đơn, doanh thu
+   ===================================================================== */
+
+/* Ô số liệu không phải liên kết */
+div.ad-kpi:hover { border-color: var(--tv-vien); }
+.ad-kpi-nho strong { font-size: var(--tv-cs-vua); }
+
+/* ---------- Nhãn trạng thái thanh toán ---------- */
+.badge-status {
+    display: inline-block;
+    padding: var(--tv-k1) var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-status.status-unpaid { background: #EEF1F2; color: var(--tv-chu-phu); }
+.badge-status.status-checking { background: #FBF1DC; color: var(--tv-canh-bao); }
+.badge-status.status-paid { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.badge-status.status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
+
+/* ---------- Ô nhiều dòng trong bảng ---------- */
+.ad-cell-stack { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ad-cell-stack strong { font-weight: 600; }
+.ad-sub { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); overflow-wrap: anywhere; }
+.ad-mono { font-family: ui-monospace, Consolas, monospace; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); overflow-wrap: anywhere; }
+.ad-giam { font-size: var(--tv-cs-nho); color: var(--tv-thanh-cong); }
+.ad-table td .badge-status { margin-top: var(--tv-k1); align-self: flex-start; }
+
+/* ---------- Sửa đơn ---------- */
+.ad-info-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--tv-k3);
+    margin-bottom: var(--tv-k4);
+}
+
+.ad-info-tile {
+    padding: var(--tv-k3) var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-info-tile span { display: block; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-info-tile strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+
+.ad-passengers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k3); }
+
+.ad-passenger {
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-nen);
+}
+
+.ad-passenger-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--tv-k3); margin-bottom: var(--tv-k3); }
+.ad-passenger-head strong { font-weight: 600; overflow-wrap: anywhere; }
+.ad-passenger-info { display: grid; grid-template-columns: 1fr 1fr; gap: var(--tv-k3); }
+.ad-passenger-info span { display: block; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-passenger-info strong { font-weight: 600; overflow-wrap: anywhere; }
+
+.ad-type {
+    flex-shrink: 0;
+    padding: 2px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}
+
+.ad-type.adult { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
+.ad-type.child { background: #FBF1DC; color: var(--tv-canh-bao); }
+
+.ad-form .ad-status-row { display: flex; align-items: center; gap: var(--tv-k3); }
+.ad-form .ad-status-row .form-select { flex: 1; }
+
+/* ---------- Doanh thu ---------- */
+.ad-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--tv-k3) var(--tv-k4);
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-filter label { display: block; margin-bottom: var(--tv-k1); font-size: var(--tv-cs-nho); font-weight: 600; color: var(--tv-chu-phu); }
+
+.ad-filter .form-select-custom {
+    min-width: 150px;
+    min-height: 44px;
+    padding: 0 var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+}
+
+.ad-filter .form-select-custom:focus { outline: none; border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+.ad-filter-actions { display: flex; gap: var(--tv-k2); }
+
+.ad-chart-wrap { position: relative; height: 340px; margin-top: var(--tv-k3); }
+
+.ad-table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k4) var(--tv-k5);
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.ad-table-toolbar h2 { margin: 0; font-size: var(--tv-cs-vua); font-weight: 700; }
+.ad-export { display: flex; gap: var(--tv-k2); }
+
+@media (max-width: 900px) {
+    .ad-info-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ad-passengers { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 576px) {
+    .ad-info-tiles { grid-template-columns: 1fr; }
+    .ad-passenger-info { grid-template-columns: 1fr; }
+    .ad-filter-actions { width: 100%; }
+    .ad-filter-actions .tv-btn { flex: 1; }
+    .ad-table-toolbar { padding: var(--tv-k4); }
+    .ad-chart-wrap { height: 260px; }
+}
