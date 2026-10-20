@@ -16,206 +16,77 @@
     var anhPhu = Model.TourHinhAnhs?.OrderBy(x => x.ThuTu).ToList() ?? new List<webdulich.Models.TourHinhAnh>();
 }
 
-<style>
-    body {
-        background: radial-gradient(circle at top left, rgba(201,168,76,0.14), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .edit-tour-page {
-        max-width: 1050px;
-        margin: 36px auto 70px;
-        padding: 0 14px;
-    }
-
-    .edit-tour-card {
-        background: #fffdf8;
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 22px;
-        box-shadow: 0 18px 46px rgba(13,27,62,0.14);
-        overflow: hidden;
-    }
-
-    .edit-tour-head {
-        padding: 24px;
-        background: linear-gradient(135deg, #0d1b3e, #122455);
-        color: #f5e6b8;
-        text-align: center;
-        border-bottom: 3px solid #c9a84c;
-    }
-
-        .edit-tour-head h2 {
-            margin: 0;
-            font-family: 'Playfair Display', serif;
-            font-weight: 900;
-            letter-spacing: 0.03em;
-        }
-
-    .edit-tour-body {
-        padding: 28px;
-    }
-
-    .form-label {
-        color: #0d1b3e;
-        font-weight: 800;
-    }
-
-    .form-control,
-    .form-select {
-        min-height: 48px;
-        border-radius: 12px;
-        border: 1px solid #d8c99d;
-        background: #fffdf8;
-        color: #0a0f1e;
-        font-weight: 650;
-    }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #c9a84c;
-            box-shadow: 0 0 0 0.22rem rgba(201,168,76,0.2);
-        }
-
-    .option-box {
-        min-height: 150px;
-        border: 1px solid rgba(201,168,76,0.3);
-        border-radius: 14px;
-        padding: 14px;
-        background: linear-gradient(180deg, #fffdf8, #f8f1df);
-    }
-
-    .form-check {
-        margin-bottom: 9px;
-    }
-
-    .form-check-input:checked {
-        background-color: #c9a84c;
-        border-color: #c9a84c;
-    }
-
-    .preview-img {
-        max-width: 340px;
-        max-height: 230px;
-        object-fit: cover;
-        border-radius: 16px;
-        border: 1px solid rgba(201,168,76,0.35);
-        box-shadow: 0 12px 28px rgba(13,27,62,0.15);
-    }
-
-    .btn-save-tour {
-        border: none;
-        border-radius: 12px;
-        padding: 12px 28px;
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e;
-        font-weight: 900;
-        box-shadow: 0 10px 26px rgba(201,168,76,0.28);
-    }
-
-    .btn-back-tour {
-        border-radius: 12px;
-        padding: 12px 28px;
-        background: #0d1b3e;
-        color: #f5e6b8 !important;
-        font-weight: 900;
-        text-decoration: none;
-    }
-
-    .text-danger {
-        font-weight: 650;
-        font-size: 0.9rem;
-    }
-
-    .extra-gallery {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 12px;
-    }
-
-    .extra-gallery-item {
-        width: 120px;
-        border: 1px solid #dbeafe;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #fff;
-        box-shadow: 0 8px 18px rgba(13,27,62,0.08);
-    }
-
-    .extra-gallery-item img {
-        width: 100%;
-        height: 82px;
-        object-fit: cover;
-        display: block;
-    }
-
-    .extra-gallery-item a {
-        display: block;
-        padding: 7px 8px;
-        text-align: center;
-        background: #dc2626;
-        color: #fff;
-        text-decoration: none;
-        font-weight: 800;
-        font-size: 0.82rem;
-    }
-</style>
-
-<div class="edit-tour-page">
-    <div class="edit-tour-card">
-        <div class="edit-tour-head">
-            <h2>✏️ Sửa Tour</h2>
+<div class="ad-page ad-form-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Sửa tour</h1>
+            <p>@Model.TenTour</p>
         </div>
+    </div>
 
-        <div class="edit-tour-body">
-            <form asp-controller="Admin" asp-action="Edit" method="post" enctype="multipart/form-data">
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="HinhAnh" />
+    <form asp-controller="Admin" asp-action="Edit" method="post" enctype="multipart/form-data" class="ad-form">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="HinhAnh" />
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="TenTour" class="form-label">Tên tour</label>
-                        <input asp-for="TenTour" class="form-control" placeholder="Nhập tên tour" />
-                        <span asp-validation-for="TenTour" class="text-danger"></span>
-                    </div>
+        <section class="ad-form-block">
+            <h2>Thông tin cơ bản</h2>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="DanhMucId" class="form-label">Loại tour</label>
-                        <select asp-for="DanhMucId" class="form-select" asp-items="danhMucList">
-                            <option value="">-- Chọn loại tour --</option>
-                        </select>
-                        <span asp-validation-for="DanhMucId" class="text-danger"></span>
-                    </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TenTour" class="form-label">Tên tour</label>
+                    <input asp-for="TenTour" class="form-control" placeholder="Nhập tên tour" />
+                    <span asp-validation-for="TenTour" class="text-danger"></span>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="DiaDiemId" class="form-label">Địa điểm</label>
-                        <select asp-for="DiaDiemId" class="form-select" asp-items="diaDiemList">
-                            <option value="">-- Chọn địa điểm --</option>
-                        </select>
-                        <span asp-validation-for="DiaDiemId" class="text-danger"></span>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DanhMucId" class="form-label">Loại tour</label>
+                    <select asp-for="DanhMucId" class="form-select" asp-items="danhMucList">
+                        <option value="">-- Chọn loại tour --</option>
+                    </select>
+                    <span asp-validation-for="DanhMucId" class="text-danger"></span>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Gia" class="form-label">Giá</label>
-                        <input asp-for="Gia" class="form-control" placeholder="Nhập giá tour" />
-                        <span asp-validation-for="Gia" class="text-danger"></span>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DiaDiemId" class="form-label">Địa điểm</label>
+                    <select asp-for="DiaDiemId" class="form-select" asp-items="diaDiemList">
+                        <option value="">-- Chọn địa điểm --</option>
+                    </select>
+                    <span asp-validation-for="DiaDiemId" class="text-danger"></span>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="PhuongTien" class="form-label">Phương tiện di chuyển</label>
-                        <select asp-for="PhuongTien" class="form-select" asp-items="phuongTienList">
-                            <option value="">-- Chọn phương tiện --</option>
-                        </select>
-                        <span asp-validation-for="PhuongTien" class="text-danger"></span>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Gia" class="form-label">Giá (VNĐ)</label>
+                    <input asp-for="Gia" class="form-control" placeholder="Nhập giá tour" />
+                    <span asp-validation-for="Gia" class="text-danger"></span>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="SoNgay" class="form-label">Số ngày</label>
-                        <select asp-for="SoNgay" class="form-select" asp-items="soNgayList">
-                            <option value="">-- Chọn số ngày --</option>
-                        </select>
-                        <span asp-validation-for="SoNgay" class="text-danger"></span>
-                    </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PhuongTien" class="form-label">Phương tiện di chuyển</label>
+                    <select asp-for="PhuongTien" class="form-select" asp-items="phuongTienList">
+                        <option value="">-- Chọn phương tiện --</option>
+                    </select>
+                    <span asp-validation-for="PhuongTien" class="text-danger"></span>
+                </div>
 
+                <div class="col-md-6 mb-3">
+                    <label asp-for="SoNgay" class="form-label">Số ngày</label>
+                    <select asp-for="SoNgay" class="form-select" asp-items="soNgayList">
+                        <option value="">-- Chọn số ngày --</option>
+                    </select>
+                    <span asp-validation-for="SoNgay" class="text-danger"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="ad-form-block">
+            <h2>Phân loại hiển thị</h2>
+
+            <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label d-block">Loại địa hình</label>
                         <div class="option-box">
@@ -261,68 +132,70 @@
                         </div>
                         <span asp-validation-for="PhongCach" class="text-danger"></span>
                     </div>
+            </div>
+        </section>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="HinhFile" class="form-label">Chọn hình mới</label>
-                        <input asp-for="HinhFile" type="file" class="form-control" id="imgInput" accept="image/*" />
-                        <span asp-validation-for="HinhFile" class="text-danger"></span>
-                    </div>
+        <section class="ad-form-block">
+            <h2>Hình ảnh</h2>
 
-                    <div class="col-md-6 mb-3 text-center">
-                        <label class="form-label d-block">Hình hiện tại</label>
-                        <img id="preview"
-                             src="~/images/dulich/@Model.HinhAnh"
-                             alt="Hình tour"
-                             class="img-fluid preview-img" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="HinhPhuFiles" class="form-label">Th&#234;m &#7843;nh ph&#7909;</label>
-                        <input asp-for="HinhPhuFiles" type="file" class="form-control" accept="image/*" multiple />
-                        <small class="text-muted">C&#243; th&#7875; ch&#7885;n nhi&#7873;u &#7843;nh, &#7843;nh c&#361; v&#7851;n &#273;&#432;&#7907;c gi&#7919; l&#7841;i.</small>
-                    </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="HinhFile" class="form-label">Chọn hình mới</label>
+                    <input asp-for="HinhFile" type="file" class="form-control" id="imgInput" accept="image/*" />
+                    <span asp-validation-for="HinhFile" class="text-danger"></span>
+                </div>
 
-                    @if (anhPhu.Any())
-                    {
-                        <div class="col-12 mb-4">
-                            <label class="form-label d-block">&#7842;nh ph&#7909; hi&#7879;n t&#7841;i</label>
-                            <div class="extra-gallery">
-                                @foreach (var anh in anhPhu)
-                                {
-                                    <div class="extra-gallery-item">
-                                        <img src="~/images/dulich/@anh.TenFile" alt="Anh phu tour" />
-                                        <a asp-controller="Admin"
-                                           asp-action="XoaHinhTour"
-                                           asp-route-id="@anh.Id"
-                                           asp-route-tourId="@Model.Id"
-                                           onclick="return confirm('Xoa anh phu nay?')">
-                                            X&#243;a
-                                        </a>
-                                    </div>
-                                }
-                            </div>
+                <div class="col-md-6 mb-3 text-center">
+                    <label class="form-label d-block">Hình hiện tại</label>
+                    <img id="preview"
+                         src="~/images/dulich/@Model.HinhAnh"
+                         alt="Hình tour"
+                         class="img-fluid preview-img" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="HinhPhuFiles" class="form-label">Thêm ảnh phụ</label>
+                    <input asp-for="HinhPhuFiles" type="file" class="form-control" accept="image/*" multiple />
+                    <small class="text-muted">Có thể chọn nhiều ảnh, ảnh cũ vẫn được giữ lại.</small>
+                </div>
+
+                @if (anhPhu.Any())
+                {
+                    <div class="col-12">
+                        <label class="form-label d-block">Ảnh phụ hiện tại</label>
+                        <div class="extra-gallery">
+                            @foreach (var anh in anhPhu)
+                            {
+                                <div class="extra-gallery-item">
+                                    <img src="~/images/dulich/@anh.TenFile" alt="Ảnh phụ của tour" />
+                                    <a asp-controller="Admin"
+                                       asp-action="XoaHinhTour"
+                                       asp-route-id="@anh.Id"
+                                       asp-route-tourId="@Model.Id"
+                                       onclick="return confirm('Xoa anh phu nay?')">
+                                        Xóa
+                                    </a>
+                                </div>
+                            }
                         </div>
-                    }
-
-
-                    <div class="col-12 mb-4">
-                        <label asp-for="MoTa" class="form-label">Mô tả</label>
-                        <textarea asp-for="MoTa" class="form-control" rows="5" placeholder="Nhập mô tả tour"></textarea>
-                        <span asp-validation-for="MoTa" class="text-danger"></span>
                     </div>
-                </div>
+                }
+            </div>
+        </section>
 
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <button type="submit" class="btn-save-tour">
-                        💾 Lưu thay đổi
-                    </button>
+        <section class="ad-form-block">
+            <h2>Mô tả</h2>
 
-                    <a asp-controller="Admin" asp-action="Index" class="btn-back-tour">
-                        ↩ Quay lại
-                    </a>
-                </div>
-            </form>
+            <label asp-for="MoTa" class="form-label">Mô tả tour</label>
+            <textarea asp-for="MoTa" class="form-control" rows="5" placeholder="Nhập mô tả tour"></textarea>
+            <span asp-validation-for="MoTa" class="text-danger"></span>
+        </section>
+
+        <div class="ad-form-actions">
+            <button type="submit" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
+            <a asp-controller="Admin" asp-action="Index" class="tv-btn tv-btn-vien">Quay lại</a>
         </div>
-    </div>
+    </form>
 </div>
 
 <script>

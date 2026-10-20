@@ -140,3 +140,222 @@
 @media (max-width: 576px) {
     .ad-kpi { flex-direction: column; gap: var(--tv-k2); padding: var(--tv-k3); }
 }
+
+/* =====================================================================
+   Thành phần dùng chung cho các trang quản lý (lô B trở đi)
+   ===================================================================== */
+
+/* ---------- Đầu trang ---------- */
+.ad-pagehead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3) var(--tv-k5);
+    margin-bottom: var(--tv-k5);
+}
+
+.ad-pagehead h1 { margin: 0; font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+.ad-pagehead p { margin: var(--tv-k1) 0 0; color: var(--tv-chu-phu); }
+
+/* ---------- Thanh tìm kiếm và lọc ---------- */
+.ad-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tv-k3);
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-search { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
+
+.ad-search .form-control {
+    flex: 1 1 260px;
+    min-width: 0;
+    min-height: 44px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+}
+
+.ad-search .form-control:focus { border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+
+.ad-count { margin-left: auto; align-self: center; color: var(--tv-chu-phu); }
+.ad-count strong { color: var(--tv-chu); }
+
+.ad-toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k3); }
+
+/* ---------- Bảng ---------- */
+.ad-table-card {
+    overflow: hidden;
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-table-wrap { overflow-x: auto; }
+
+.ad-table { width: 100%; border-collapse: collapse; font-size: var(--tv-cs-thuong); }
+
+.ad-table th {
+    padding: var(--tv-k3) var(--tv-k4);
+    background: var(--tv-nen);
+    border-bottom: 1px solid var(--tv-vien);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    color: var(--tv-chu-phu);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ad-table td {
+    padding: var(--tv-k3) var(--tv-k4);
+    border-bottom: 1px solid var(--tv-vien);
+    vertical-align: middle;
+}
+
+.ad-table tbody tr:last-child td { border-bottom: 0; }
+.ad-table tbody tr:hover { background: #FAFCFC; }
+.ad-empty-cell { padding: var(--tv-k7) var(--tv-k4) !important; text-align: center; color: var(--tv-chu-phu); }
+
+.ad-tour-cell { display: flex; align-items: center; gap: var(--tv-k3); min-width: 240px; }
+.ad-tour-cell strong { display: block; margin-bottom: var(--tv-k1); font-weight: 600; line-height: 1.35; }
+
+.ad-thumb {
+    flex-shrink: 0;
+    width: 72px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-vien);
+}
+
+.ad-tag {
+    display: inline-block;
+    padding: 2px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}
+
+.ad-tag.trong { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
+.ad-tag.ngoai { background: #FBF1DC; color: var(--tv-canh-bao); }
+
+.ad-price { font-weight: 700; color: var(--tv-gia); white-space: nowrap; }
+
+.ad-row-actions { display: flex; flex-wrap: wrap; gap: var(--tv-k2); min-width: 210px; }
+
+/* ---------- Biểu mẫu thêm, sửa ---------- */
+.ad-form-page { max-width: 980px; }
+
+.ad-form-block {
+    padding: var(--tv-k5);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-form-block + .ad-form-block { margin-top: var(--tv-k4); }
+.ad-form-block h2 { margin: 0 0 var(--tv-k4); font-size: var(--tv-cs-vua); font-weight: 700; }
+
+.ad-form .form-label {
+    margin-bottom: var(--tv-k1);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    color: var(--tv-chu);
+}
+
+.ad-form .form-control,
+.ad-form .form-select {
+    min-height: 44px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+}
+
+.ad-form textarea.form-control { min-height: 120px; }
+
+.ad-form .form-control:focus,
+.ad-form .form-select:focus {
+    border-color: var(--tv-nhan);
+    box-shadow: 0 0 0 3px var(--tv-nhan-nhat);
+}
+
+.ad-form .text-danger { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-loi) !important; }
+.ad-form .text-danger:empty { display: none; }
+.ad-form .text-muted { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu) !important; }
+
+.option-box {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tv-k1) var(--tv-k3);
+    max-height: 190px;
+    overflow-y: auto;
+    padding: var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+}
+
+.option-box .form-check { margin: 0; display: flex; align-items: center; gap: var(--tv-k2); padding-left: 0; }
+.option-box .form-check-input { float: none; margin: 0; width: 18px; height: 18px; accent-color: var(--tv-nhan); }
+.option-box .form-check-label { cursor: pointer; }
+
+/* Xem trước ảnh (trang Thêm: ảnh ẩn cho tới khi chọn file) */
+.preview-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+    overflow: hidden;
+    border: 1px dashed var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nen);
+    color: var(--tv-chu-phu);
+}
+
+.preview-box img { display: none; width: 100%; max-height: 240px; object-fit: cover; }
+
+.preview-img { max-height: 200px; width: auto; border-radius: var(--tv-bo-nut); }
+
+.extra-gallery { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
+
+.extra-gallery-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--tv-k1);
+    width: 110px;
+}
+
+.extra-gallery-item img { width: 110px; height: 80px; object-fit: cover; border-radius: var(--tv-bo-nut); }
+.extra-gallery-item a { font-size: var(--tv-cs-nho); color: var(--tv-loi); text-decoration: none; }
+.extra-gallery-item a:hover { text-decoration: underline; }
+
+.ad-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--tv-k3);
+    margin-top: var(--tv-k5);
+}
+
+.ad-form-actions .tv-btn { min-height: 48px; padding: 0 var(--tv-k6); }
+
+@media (max-width: 576px) {
+    .ad-form-block { padding: var(--tv-k4); }
+    .option-box { grid-template-columns: 1fr; }
+    .ad-form-actions .tv-btn { flex: 1 1 100%; }
+    .ad-pagehead h1 { font-size: var(--tv-cs-lon); }
+}
+
+/* Bảng danh sách tour: cột địa hình, phong cách đủ rộng; nút hành động nằm trên một dòng */
+.ad-table td:nth-child(3),
+.ad-table td:nth-child(4) { min-width: 150px; }
+.ad-row-actions { flex-wrap: nowrap; min-width: 0; }
+.ad-row-actions .tv-btn { white-space: nowrap; }

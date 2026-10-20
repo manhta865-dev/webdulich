@@ -178,6 +178,15 @@
 
 .tv-btn-vien:hover { border-color: var(--tv-nhan); color: var(--tv-nhan-dam); }
 
+/* Nút hủy, xóa */
+.tv-btn-huy {
+    background: var(--tv-be-mat);
+    border-color: var(--tv-loi);
+    color: var(--tv-loi);
+}
+
+.tv-btn-huy:hover { background: #FBE9E7; }
+
 .tv-nav-toggle {
     display: none;
     width: 44px;

@@ -107,6 +107,7 @@ Biểu mẫu chọn sở thích ở trên, kết quả là lưới thẻ tour d�
 Danh sách lịch làm việc theo ngày, mỗi mục một dòng: tour, ngày, giờ, số khách.
 
 ### Admin
+Lô B đã làm: Quản lý tour (danh sách dạng bảng gọn có tìm kiếm và chip lọc, Thêm tour, Sửa tour chia khối), dùng thành phần chung trong `admin.css`; `Views/Admin/Them.cshtml` là view cũ không còn action nào dùng, chưa xóa.
 Lô A đã làm: trang Tổng quan (`Admin/TongQuan`, chỉ đọc dữ liệu): năm ô số liệu (doanh thu tháng, đơn chờ xác nhận, lịch 30 ngày tới, số tour, tin nhắn chưa đọc), biểu đồ cột doanh thu 12 tháng bằng SVG, danh sách đơn chờ xác nhận, lịch sắp khởi hành và tour chưa có lịch khởi hành sắp tới. Là trang đầu của admin sau đăng nhập. Các lô B đến E (tour, vận hành, đơn và tiền, còn lại) dùng chung `admin.css`.
 
 ```

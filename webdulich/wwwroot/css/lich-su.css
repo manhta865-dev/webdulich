@@ -97,15 +97,6 @@
 .status-paid { background: #E4F4EC; color: var(--tv-thanh-cong); }
 .status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
 
-/* Nút hủy đơn */
-.tv-btn-huy {
-    background: var(--tv-be-mat);
-    border-color: var(--tv-loi);
-    color: var(--tv-loi);
-}
-
-.tv-btn-huy:hover { background: #FBE9E7; }
-
 .ls-empty-btn { margin-top: var(--tv-k4); }
 
 /* ---------- Máy tính bảng và điện thoại ---------- */

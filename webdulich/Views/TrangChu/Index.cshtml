@@ -8,71 +8,6 @@
     var tourTrongNuoc = ViewBag.TourTrongNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
     var tourNgoaiNuoc = ViewBag.TourNgoaiNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
     var coNhomTour = tourTrongNuoc.Any() || tourNgoaiNuoc.Any();
-    var laAdmin = Context.Session.GetString("role") == "admin";
-
-    async Task VeTheTour(webdulich.Models.Tour item)
-    {
-        var loaiDiaHinhText = item.LoaiDiaHinhHienThi;
-        var phongCachText = item.PhongCachHienThi;
-        var phuongTienText = item.PhuongTienHienThi;
-        var tags = new[] { loaiDiaHinhText, phongCachText, phuongTienText }
-            .Where(x => !string.IsNullOrWhiteSpace(x) && x != "Chưa cập nhật")
-            .Take(2)
-            .ToList();
-
-        <div class="tv-photo-card-wrap">
-            @if (laAdmin)
-            {
-                <div class="tv-photo-card">
-                    <img src="~/images/dulich/@item.HinhAnh" alt="@item.TenTour" loading="lazy" />
-                    <div class="tv-photo-top">
-                        @if (item.SoNgay.HasValue)
-                        {
-                            <span class="tv-pill-tren">@item.SoNgay ngày</span>
-                        }
-                    </div>
-                    <div class="tv-photo-body">
-                        <h3 class="tv-photo-title">@item.TenTour</h3>
-                        <div class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</div>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@item.Id" class="tv-photo-card" aria-label="Xem chi tiết @item.TenTour">
-                    <img src="~/images/dulich/@item.HinhAnh" alt="" loading="lazy" />
-                    <div class="tv-photo-top">
-                        @if (item.SoNgay.HasValue)
-                        {
-                            <span class="tv-pill-tren">
-                                <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
-                                @item.SoNgay ngày
-                            </span>
-                        }
-                    </div>
-                    <div class="tv-photo-body">
-                        @if (tags.Any())
-                        {
-                            <div class="tv-photo-tags">
-                                @foreach (var tag in tags)
-                                {
-                                    <span>@tag</span>
-                                }
-                            </div>
-                        }
-                        <h3 class="tv-photo-title">@item.TenTour</h3>
-                        <div class="tv-photo-foot">
-                            <div>
-                                <span class="tv-photo-nho">Giá trọn gói từ</span>
-                                <span class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</span>
-                            </div>
-                            <span class="tv-photo-mui" aria-hidden="true"><svg class="tv-icon"><use href="#i-arrow" /></svg></span>
-                        </div>
-                    </div>
-                </a>
-            }
-        </div>
-    }
 
     // Điểm đến ở phần đầu trang. Ảnh lấy trong wwwroot/images/dulich, chỉ dùng ảnh đủ nét để phủ kín màn hình.
     var diemDens = new[]
@@ -172,7 +107,7 @@
                 <div class="tv-grid-photo">
                     @foreach (var item in tourTrongNuoc)
                     {
-                        await VeTheTour(item);
+                        <partial name="_TheTour" model="item" />
                     }
                 </div>
             </section>
@@ -190,7 +125,7 @@
                 <div class="tv-grid-photo">
                     @foreach (var item in tourNgoaiNuoc)
                     {
-                        await VeTheTour(item);
+                        <partial name="_TheTour" model="item" />
                     }
                 </div>
             </section>
@@ -212,7 +147,7 @@
                 <div class="tv-grid-photo">
                     @foreach (var item in Model)
                     {
-                        await VeTheTour(item);
+                        <partial name="_TheTour" model="item" />
                     }
                 </div>
             }

@@ -5,355 +5,75 @@
     string loaiTourHienTai = ViewBag.LoaiTour as string;
 }
 
-<style>
-    body {
-        background: radial-gradient(circle at top left, rgba(201,168,76,0.14), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
-        min-height: 100vh;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .admin-page {
-        max-width: 1520px;
-        margin: 34px auto 60px;
-        padding: 0 14px;
-    }
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Quản lý tour</h1>
+            <p>Quản lý danh sách tour, giá, hình ảnh và đơn khách đặt tour.</p>
+        </div>
 
-    .admin-hero {
-        background: rgba(255,253,248,0.96);
-        border: 1px solid rgba(201,168,76,0.26);
-        border-radius: 18px;
-        box-shadow: 0 18px 44px rgba(13,27,62,0.12);
-        padding: 26px;
-        margin-bottom: 22px;
-    }
+        <a asp-controller="Admin" asp-action="Create" class="tv-btn tv-btn-chinh">Thêm tour</a>
+    </div>
 
-    .admin-title {
-        font-family: 'Playfair Display', serif;
-        text-align: center;
-        color: #0d1b3e;
-        font-size: 2.35rem;
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
+    <div class="ad-toolbar">
+        <form asp-controller="Admin" asp-action="Index" method="get" class="ad-search">
+            <input type="text"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   aria-label="Tìm tour"
+                   placeholder="Tìm theo tên tour, địa điểm, địa hình, phong cách..." />
 
-    .admin-subtitle {
-        text-align: center;
-        color: #6b6250;
-        margin-bottom: 22px;
-        font-weight: 600;
-    }
+            <input type="hidden" name="loaiTour" value="@ViewBag.LoaiTour" />
 
-    .admin-toolbar {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
+            <button class="tv-btn tv-btn-chinh" type="submit">Tìm kiếm</button>
 
-    .btn-add-tour,
-    .btn-search-admin {
-        border: none;
-        border-radius: 8px;
-        padding: 11px 18px;
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e !important;
-        font-weight: 900;
-        text-decoration: none;
-        box-shadow: 0 10px 24px rgba(201,168,76,0.25);
-    }
+            <a asp-controller="Admin" asp-action="Index" class="tv-btn tv-btn-vien">Làm mới</a>
+        </form>
 
-    .btn-reset-admin {
-        border-radius: 8px;
-        padding: 11px 18px;
-        background: #0d1b3e;
-        color: #f5e6b8 !important;
-        font-weight: 800;
-        text-decoration: none;
-    }
+        <div class="ad-toolbar-row">
+            <div class="tv-chips">
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   class="tv-chip @(string.IsNullOrEmpty(loaiTourHienTai) ? "active" : "")">Tất cả</a>
 
-    .admin-search {
-        flex: 1;
-        min-width: 360px;
-    }
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   asp-route-search="@ViewBag.Search"
+                   asp-route-loaiTour="Trong nước"
+                   class="tv-chip @(loaiTourHienTai == "Trong nước" ? "active" : "")">Tour trong nước</a>
 
-        .admin-search .form-control {
-            height: 48px;
-            border-radius: 8px 0 0 8px;
-            border: 1px solid rgba(201,168,76,0.34);
-            background: #fffdf8;
-        }
+                <a asp-controller="Admin"
+                   asp-action="Index"
+                   asp-route-search="@ViewBag.Search"
+                   asp-route-loaiTour="Ngoài nước"
+                   class="tv-chip @(loaiTourHienTai == "Ngoài nước" ? "active" : "")">Tour ngoài nước</a>
+            </div>
 
-            .admin-search .form-control:focus {
-                border-color: #c9a84c;
-                box-shadow: 0 0 0 0.2rem rgba(201,168,76,0.16);
-            }
-
-    .filter-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 18px;
-    }
-
-    .filter-btn {
-        border-radius: 999px;
-        padding: 9px 16px;
-        text-decoration: none;
-        font-weight: 850;
-        border: 1px solid rgba(201,168,76,0.28);
-        color: #0d1b3e;
-        background: #fffdf8;
-    }
-
-        .filter-btn.active,
-        .filter-btn:hover {
-            background: #0d1b3e;
-            color: #f5e6b8 !important;
-        }
-
-    .admin-table-card {
-        background: rgba(255,253,248,0.96);
-        border: 1px solid rgba(201,168,76,0.24);
-        border-radius: 18px;
-        box-shadow: 0 18px 44px rgba(13,27,62,0.12);
-        padding: 16px;
-    }
-
-    .admin-table-wrap {
-        border: 1px solid rgba(201,168,76,0.22);
-        border-radius: 14px;
-        overflow-x: auto;
-        overflow-y: hidden;
-    }
-
-
-    .admin-table {
-        margin-bottom: 0;
-        min-width: 1500px;
-    }
-
-
-        .admin-table thead th {
-            background: linear-gradient(135deg, #0a0f1e, #122455);
-            color: #e8c96d;
-            border-color: rgba(201,168,76,0.22);
-            padding: 16px 12px;
-            vertical-align: middle;
-            white-space: nowrap;
-            font-weight: 900;
-        }
-
-        .admin-table tbody td {
-            border-color: rgba(13,27,62,0.1);
-            padding: 14px 12px;
-            vertical-align: middle;
-            color: #111827;
-            font-weight: 600;
-        }
-
-        .admin-table tbody tr:nth-child(even) td {
-            background: #fbf7ed;
-        }
-
-        .admin-table tbody tr:hover td {
-            background: #fff3d2;
-        }
-
-    .tour-title-cell {
-        color: #0d1b3e;
-        font-weight: 900;
-        text-transform: uppercase;
-        line-height: 1.35;
-        min-width: 150px;
-    }
-
-    .tour-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        border-radius: 999px;
-        padding: 7px 11px;
-        font-size: 0.82rem;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .badge-local {
-        background: rgba(22,163,74,0.12);
-        color: #166534;
-        border: 1px solid rgba(22,163,74,0.25);
-    }
-
-    .badge-abroad {
-        background: rgba(14,165,233,0.12);
-        color: #075985;
-        border: 1px solid rgba(14,165,233,0.25);
-    }
-
-    .price-cell {
-        color: #a78328;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .tour-img {
-        width: 128px;
-        height: 84px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid rgba(201,168,76,0.28);
-        box-shadow: 0 8px 18px rgba(13,27,62,0.12);
-    }
-
-    .action-cell {
-        min-width: 210px;
-        white-space: normal;
-    }
-
-    .admin-action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        border-radius: 7px;
-        padding: 8px 11px;
-        margin: 3px 2px;
-        text-decoration: none !important;
-        font-size: 0.86rem;
-        font-weight: 850;
-        line-height: 1;
-        transition: 0.2s;
-        white-space: nowrap;
-    }
-
-        .admin-action-btn:hover,
-        .admin-action-btn:focus,
-        .admin-action-btn:active,
-        .admin-action-btn:visited {
-            text-decoration: none !important;
-        }
-
-
-        .admin-action-btn:hover {
-            transform: translateY(-1px);
-        }
-
-    .btn-view {
-        background: #0d1b3e;
-        color: #f5e6b8 !important;
-    }
-
-    .btn-edit {
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e !important;
-    }
-
-    .btn-delete {
-        background: #b91c1c;
-        color: #fff !important;
-    }
-
-    .empty-row {
-        text-align: center;
-        padding: 34px !important;
-        color: #6b6250 !important;
-        font-weight: 800;
-    }
-
-    @@media (max-width: 768px) {
-        .admin-title {
-            font-size: 1.9rem;
-        }
-
-        .admin-search {
-            min-width: 100%;
-        }
-
-        .admin-toolbar {
-            align-items: stretch;
-        }
-
-        .btn-add-tour {
-            width: 100%;
-            text-align: center;
-        }
-    }
-</style>
-
-<div class="admin-page">
-    <div class="admin-hero">
-        <h2 class="admin-title">⚙️ Quản lý Tour Du Lịch</h2>
-        <div class="admin-subtitle">Quản lý danh sách tour, giá, hình ảnh và đơn khách đặt tour.</div>
-
-        <div class="admin-toolbar">
-            <a asp-controller="Admin" asp-action="Create" class="btn-add-tour">
-                ➕ Thêm Tour
-            </a>
-
-            <form asp-controller="Admin" asp-action="Index" method="get" class="admin-search">
-                <div class="input-group">
-                    <input type="text"
-                           name="search"
-                           value="@ViewBag.Search"
-                           class="form-control"
-                           placeholder="Tìm theo tên tour, địa điểm, địa hình, phong cách..." />
-
-                    <input type="hidden" name="loaiTour" value="@ViewBag.LoaiTour" />
-
-                    <button class="btn-search-admin" type="submit">
-                        🔍 Tìm kiếm
-                    </button>
-
-                    <a asp-controller="Admin" asp-action="Index" class="btn-reset-admin">
-                        Làm mới
-                    </a>
-                </div>
-
-                <div class="filter-row">
-                    <a asp-controller="Admin"
-                       asp-action="Index"
-                       class="filter-btn @(string.IsNullOrEmpty(loaiTourHienTai) ? "active" : "")">
-                        Tất cả
-                    </a>
-
-                    <a asp-controller="Admin"
-                       asp-action="Index"
-                       asp-route-search="@ViewBag.Search"
-                       asp-route-loaiTour="Trong nước"
-                       class="filter-btn @(loaiTourHienTai == "Trong nước" ? "active" : "")">
-                        🇻🇳 Tour trong nước
-                    </a>
-
-                    <a asp-controller="Admin"
-                       asp-action="Index"
-                       asp-route-search="@ViewBag.Search"
-                       asp-route-loaiTour="Ngoài nước"
-                       class="filter-btn @(loaiTourHienTai == "Ngoài nước" ? "active" : "")">
-                        🌍 Tour ngoài nước
-                    </a>
-                </div>
-            </form>
+            <div class="ad-count"><strong>@(Model != null ? Model.Count : 0)</strong> tour</div>
         </div>
     </div>
 
-    <div class="admin-table-card">
-        <div class="table-responsive admin-table-wrap">
-            <table class="table table-bordered table-hover align-middle admin-table">
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table">
                 <thead>
                     <tr>
-                        <th>Tên Tour</th>
-                        <th>Loại tour</th>
+                        <th>Tour</th>
                         <th>Địa điểm</th>
                         <th>Địa hình</th>
                         <th>Phong cách</th>
                         <th>Số ngày</th>
                         <th>Phương tiện</th>
                         <th>Giá</th>
-                        <th>Hình</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
-
 
                 <tbody>
                     @if (Model != null && Model.Count > 0)
@@ -361,71 +81,48 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td class="tour-title-cell">@item.TenTour</td>
+                                <td>
+                                    <div class="ad-tour-cell">
+                                        <img src="~/images/dulich/@item.HinhAnh" class="ad-thumb" alt="" loading="lazy" />
+                                        <div>
+                                            <strong>@item.TenTour</strong>
+                                            @if (item.LoaiTour == "Ngoài nước")
+                                            {
+                                                <span class="ad-tag ngoai">Ngoài nước</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="ad-tag trong">Trong nước</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>@item.TenDiaDiemHienThi</td>
+                                <td>@item.LoaiDiaHinhHienThi</td>
+                                <td>@item.PhongCachHienThi</td>
+                                <td>@(item.SoNgay.HasValue ? item.SoNgay + " ngày" : "Chưa cập nhật")</td>
+                                <td>@item.PhuongTienHienThi</td>
+                                <td class="ad-price">@item.Gia.ToString("N0") VNĐ</td>
 
                                 <td>
-                                    @if (item.LoaiTour == "Ngoài nước")
-                                    {
-                                        <span class="tour-badge badge-abroad">🌍 Ngoài nước</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="tour-badge badge-local">🇻🇳 Trong nước</span>
-                                    }
+                                    <div class="ad-row-actions">
+                                        <a asp-controller="Admin" asp-action="DonDatTourTheoTour" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Khách đặt</a>
+
+                                        <a asp-controller="Admin" asp-action="Edit" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
+
+                                        <a asp-controller="Admin" asp-action="Delete" asp-route-id="@item.Id"
+                                           class="tv-btn tv-btn-huy ad-btn-nho"
+                                           onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</a>
+                                    </div>
                                 </td>
-
-                                <td>📍 @item.TenDiaDiemHienThi</td>
-
-                                <td>
-                                    @item.LoaiDiaHinhHienThi
-                                </td>
-
-                                <td>
-                                    @item.PhongCachHienThi
-                                </td>
-
-                                <td>
-                                    @(item.SoNgay.HasValue? item.SoNgay + " ngày" : "Chưa cập nhật")
-                                </td>
-
-                                <td>
-                                    @item.PhuongTienHienThi
-                                </td>
-
-                                <td class="price-cell">
-                                    @item.Gia.ToString("N0") VNĐ
-                                </td>
-
-                                <td>
-                                    <img src="~/images/dulich/@item.HinhAnh"
-                                         class="tour-img"
-                                         alt="Hình tour" />
-                                </td>
-
-                                <td class="action-cell">
-                                    <a asp-controller="Admin" asp-action="DonDatTourTheoTour" asp-route-id="@item.Id" class="admin-action-btn btn-view">
-                                        👥 Khách đặt
-                                    </a>
-
-                                    <a asp-controller="Admin" asp-action="Edit" asp-route-id="@item.Id" class="admin-action-btn btn-edit">
-                                        ✏️ Sửa
-                                    </a>
-
-                                    <a asp-controller="Admin" asp-action="Delete" asp-route-id="@item.Id"
-                                       class="admin-action-btn btn-delete"
-                                       onclick="return confirm('Bạn chắc chắn muốn xóa?')">
-                                        🗑️ Xóa
-                                    </a>
-                                </td>
-
-
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="10" class="empty-row">Chưa có tour nào.</td>
+                            <td colspan="8" class="ad-empty-cell">Chưa có tour nào.</td>
                         </tr>
                     }
                 </tbody>
