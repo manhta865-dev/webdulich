@@ -1,0 +1,294 @@
+/* Luồng đặt tour: Đặt tour, Thanh toán, Thành công. Dùng token trong tokens.css. */
+
+.dt-page h1 {
+    margin: 0 0 var(--tv-k5);
+    font-size: var(--tv-cs-tieu-de);
+    font-weight: 700;
+}
+
+/* ---------- Thanh ba bước ---------- */
+.dt-steps {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    margin: 0 0 var(--tv-k6);
+    padding: 0;
+    list-style: none;
+}
+
+.dt-steps li {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    color: var(--tv-chu-phu);
+    font-weight: 500;
+}
+
+.dt-steps li + li::before {
+    content: "";
+    width: 40px;
+    height: 2px;
+    margin-right: var(--tv-k1);
+    background: var(--tv-vien);
+}
+
+.dt-step-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--tv-be-mat);
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+}
+
+.dt-steps li.active { color: var(--tv-chu); font-weight: 600; }
+.dt-steps li.active .dt-step-no { border-color: var(--tv-nhan); background: var(--tv-nhan); color: #fff; }
+.dt-steps li.done { color: var(--tv-thanh-cong); }
+.dt-steps li.done .dt-step-no { border-color: var(--tv-thanh-cong); background: var(--tv-thanh-cong); color: #fff; }
+.dt-steps li.done + li::before,
+.dt-steps li.active + li::before { background: var(--tv-vien); }
+.dt-steps li.done + li::before { background: var(--tv-thanh-cong); }
+
+/* ---------- Bố cục hai cột ---------- */
+.dt-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: var(--tv-k6);
+    align-items: start;
+}
+
+.dt-block {
+    padding: var(--tv-k5);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.dt-block + .dt-block { margin-top: var(--tv-k4); }
+
+.dt-block h2 {
+    margin: 0 0 var(--tv-k4);
+    font-size: var(--tv-cs-vua);
+    font-weight: 700;
+}
+
+.dt-note {
+    margin: 0 0 var(--tv-k4);
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu-phu);
+}
+
+.dt-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tv-k3) var(--tv-k4);
+}
+
+.dt-info-grid .full { grid-column: 1 / -1; }
+
+/* Ô nhập và nhãn: dùng chung cho cả ô do JavaScript sinh ra */
+.dt-page .form-label {
+    margin-bottom: var(--tv-k1);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    color: var(--tv-chu);
+}
+
+.dt-page .form-control {
+    min-height: 44px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+}
+
+.dt-page .form-control:focus {
+    border-color: var(--tv-nhan);
+    box-shadow: 0 0 0 3px var(--tv-nhan-nhat);
+}
+
+.dt-page .form-control[readonly] { background: var(--tv-nen); }
+
+.dt-page textarea.form-control { min-height: 96px; }
+
+/* ---------- Thông báo lỗi: chỉ hiện sau khi bấm gửi ---------- */
+.dt-page .field-validation-error,
+.dt-page .text-danger {
+    display: none;
+    margin-top: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-loi) !important;
+}
+
+.booking-form.show-validation .field-validation-error,
+.booking-form.show-validation .text-danger:not(:empty) { display: block; }
+
+.dt-page .input-validation-error { border-color: var(--tv-loi) !important; }
+
+.passenger-error {
+    display: none;
+    margin-top: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-loi);
+}
+
+.booking-form.show-validation .passenger-error:not(:empty) { display: block; }
+
+/* ---------- Số lượng hành khách ---------- */
+.dt-counters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tv-k4);
+}
+
+.dt-counter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.dt-counter strong { display: block; font-weight: 600; }
+.dt-counter small { color: var(--tv-chu-phu); }
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+}
+
+.counter button {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    font-size: var(--tv-cs-vua);
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--tv-nhanh), background var(--tv-nhanh);
+}
+
+.counter button:hover { border-color: var(--tv-nhan); background: var(--tv-nhan-nhat); }
+
+.counter-value {
+    min-width: 28px;
+    text-align: center;
+    font-size: var(--tv-cs-vua);
+    font-weight: 700;
+}
+
+/* ---------- Thẻ thông tin từng hành khách (do JavaScript sinh ra) ---------- */
+.passenger-detail-card {
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-nen);
+}
+
+.passenger-detail-card + .passenger-detail-card { margin-top: var(--tv-k3); }
+
+.passenger-detail-title {
+    margin-bottom: var(--tv-k3);
+    font-weight: 700;
+}
+
+.passenger-detail-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: var(--tv-k3);
+}
+
+/* ---------- Ngày đi, nút ---------- */
+.dt-locked-note {
+    margin-top: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
+.dt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tv-k3);
+    margin-top: var(--tv-k5);
+}
+
+.dt-actions .tv-btn { min-height: 48px; padding: 0 var(--tv-k5); }
+
+/* ---------- Tóm tắt chuyến đi ---------- */
+.dt-summary { position: sticky; top: 88px; }
+
+.dt-summary-tour {
+    display: flex;
+    gap: var(--tv-k3);
+    margin-bottom: var(--tv-k4);
+    padding-bottom: var(--tv-k4);
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.dt-summary-tour img {
+    flex-shrink: 0;
+    width: 96px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-vien);
+}
+
+.dt-summary-tour h3 { margin: 0 0 var(--tv-k1); font-size: var(--tv-cs-thuong); font-weight: 600; line-height: 1.35; }
+
+.dt-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
+.dt-line {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k2) 0;
+    font-size: var(--tv-cs-thuong);
+}
+
+.dt-line > span:first-child { color: var(--tv-chu-phu); }
+.dt-line > span:last-child { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+
+.dt-line.total {
+    margin-top: var(--tv-k2);
+    padding-top: var(--tv-k4);
+    border-top: 1px solid var(--tv-vien);
+    font-size: var(--tv-cs-vua);
+}
+
+.dt-line.total > span:first-child { color: var(--tv-chu); font-weight: 700; }
+.dt-line.total > span:last-child { color: var(--tv-gia); font-weight: 700; }
+
+/* ---------- Máy tính bảng và điện thoại ---------- */
+@media (max-width: 900px) {
+    .dt-layout { grid-template-columns: 1fr; gap: var(--tv-k5); }
+    .dt-summary { position: static; }
+    .passenger-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 576px) {
+    .dt-page h1 { font-size: var(--tv-cs-lon); }
+    .dt-block { padding: var(--tv-k4); }
+    .dt-info-grid,
+    .dt-counters { grid-template-columns: 1fr; }
+    .dt-steps li + li::before { width: 16px; }
+    .dt-steps li:not(.active) .dt-step-text { display: none; }
+    .dt-step-text { font-size: var(--tv-cs-nho); white-space: nowrap; }
+    .dt-actions .tv-btn { flex: 1 1 100%; }
+}

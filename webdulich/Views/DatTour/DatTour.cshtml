@@ -12,446 +12,17 @@
     var coLoi = !ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0);
 }
 
-<style>
-    body {
-        background: radial-gradient(circle at top left, rgba(201,168,76,0.16), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+}
 
-    .booking-page {
-        max-width: 1300px;
-        margin: 34px auto 60px;
-        padding: 0 12px;
-    }
+<div class="dt-page">
+    <h1>Đặt tour</h1>
 
-    .booking-title {
-        text-align: center;
-        font-family: 'Playfair Display', serif;
-        font-size: 2.45rem;
-        font-weight: 900;
-        color: #0d1b3e;
-        margin-bottom: 24px;
-        letter-spacing: 0.04em;
-    }
+    <partial name="_BuocDatTour" model="1" />
 
-        .booking-title::after {
-            content: "";
-            display: block;
-            width: 90px;
-            height: 2px;
-            margin: 12px auto 0;
-            background: linear-gradient(90deg, transparent, #c9a84c, transparent);
-        }
-
-    .booking-steps {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 22px;
-        margin-bottom: 34px;
-        flex-wrap: wrap;
-    }
-
-    .step-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        color: #8a8170;
-        font-weight: 800;
-        min-width: 120px;
-        font-size: 0.92rem;
-    }
-
-    .step-circle {
-        width: 58px;
-        height: 58px;
-        border-radius: 50%;
-        background: #fffaf0;
-        border: 1px solid rgba(201,168,76,0.28);
-        color: #0d1b3e;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.35rem;
-        box-shadow: 0 8px 20px rgba(13,27,62,0.08);
-    }
-
-    .step-item.active {
-        color: #0d1b3e;
-    }
-
-        .step-item.active .step-circle {
-            background: linear-gradient(135deg, #c9a84c, #e8c96d);
-            color: #0a0f1e;
-            box-shadow: 0 10px 28px rgba(201,168,76,0.35);
-        }
-
-    .step-line {
-        width: 64px;
-        height: 2px;
-        background: linear-gradient(90deg, rgba(201,168,76,0.25), rgba(13,27,62,0.18));
-        border-radius: 999px;
-    }
-
-    .booking-layout {
-        display: grid;
-        grid-template-columns: 1.6fr 1fr;
-        gap: 24px;
-        align-items: start;
-    }
-
-    .booking-card {
-        background: rgba(255,253,248,0.96);
-        border: 1px solid rgba(201,168,76,0.24);
-        border-radius: 18px;
-        box-shadow: 0 18px 44px rgba(13,27,62,0.12);
-        padding: 26px;
-    }
-
-    .card-title-custom,
-    .section-subtitle {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.32rem;
-        font-weight: 900;
-        margin-bottom: 18px;
-        color: #0d1b3e;
-    }
-
-    .section-subtitle {
-        margin-top: 28px;
-        margin-bottom: 14px;
-    }
-
-    .login-note {
-        background: linear-gradient(135deg, #fff7df, #f6ecd0);
-        color: #614b12;
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 18px;
-        font-weight: 700;
-    }
-
-    .info-grid,
-    .passenger-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-
-    .form-label {
-        color: #0d1b3e;
-    }
-
-    .form-control {
-        min-height: 48px;
-        border-radius: 8px;
-        border: 1px solid #d8c99d;
-        background: #fffdf8;
-        color: #0a0f1e;
-        box-shadow: none;
-    }
-
-        .form-control:focus {
-            border-color: #c9a84c;
-            box-shadow: 0 0 0 0.22rem rgba(201,168,76,0.18);
-        }
-
-        .form-control[readonly] {
-            background: #f5efe0;
-            color: #0d1b3e;
-            font-weight: 700;
-        }
-
-    .field-validation-error,
-    .text-danger {
-        display: none;
-        margin-top: 6px;
-        color: #dc2626 !important;
-        font-weight: 700;
-        font-size: 0.92rem;
-    }
-
-    .booking-form.show-validation .field-validation-error,
-    .booking-form.show-validation .text-danger:not(:empty) {
-        display: block;
-    }
-
-    .input-validation-error {
-        border-color: #ef4444 !important;
-        background: #fff7f7 !important;
-    }
-
-    .passenger-box {
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 14px;
-        padding: 16px;
-        background: linear-gradient(180deg, #fffdf8, #f8f1df);
-    }
-
-        .passenger-box h6 {
-            color: #0d1b3e;
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-bottom: 4px;
-        }
-
-        .passenger-box small {
-            color: #766a55;
-            font-weight: 600;
-        }
-
-    .counter {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 14px;
-        margin-top: 10px;
-    }
-
-        .counter button {
-            width: 36px;
-            height: 36px;
-            border: 1px solid rgba(201,168,76,0.35);
-            border-radius: 8px;
-            background: #fffaf0;
-            color: #0d1b3e;
-            font-size: 1.15rem;
-            font-weight: 900;
-            transition: 0.2s;
-        }
-
-            .counter button:hover {
-                background: linear-gradient(135deg, #c9a84c, #e8c96d);
-                color: #0a0f1e;
-            }
-
-    .counter-value {
-        min-width: 24px;
-        text-align: center;
-        font-weight: 900;
-        color: #0d1b3e;
-    }
-
-    .passenger-detail-list {
-        display: grid;
-        gap: 14px;
-        margin-bottom: 22px;
-    }
-
-    .passenger-detail-card {
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 14px;
-        padding: 16px;
-        background: #fffdf8;
-        box-shadow: 0 8px 22px rgba(13,27,62,0.05);
-    }
-
-    .passenger-detail-title {
-        font-weight: 900;
-        color: #0d1b3e;
-        margin-bottom: 12px;
-    }
-
-    .passenger-detail-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 0.8fr 1fr;
-        gap: 12px;
-    }
-
-    .passenger-error {
-        display: none;
-        margin-top: 6px;
-        color: #dc2626;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-    .booking-form.show-validation .passenger-error:not(:empty) {
-        display: block;
-    }
-
-    .locked-date-input {
-        background: #f8fbff !important;
-        border: 1px solid #dbeafe !important;
-        color: #0f172a !important;
-        font-weight: 900;
-        cursor: not-allowed;
-    }
-
-    .locked-date-note {
-        margin-top: 8px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #eaf6ff;
-        color: #075985;
-        border: 1px solid #dbeafe;
-        font-weight: 700;
-        font-size: 0.92rem;
-    }
-
-    .summary-tour {
-        display: flex;
-        gap: 14px;
-        margin-bottom: 18px;
-    }
-
-        .summary-tour img {
-            width: 140px;
-            height: 95px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid rgba(201,168,76,0.25);
-            flex-shrink: 0;
-        }
-
-        .summary-tour h5 {
-            color: #0d1b3e;
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-bottom: 6px;
-        }
-
-    .summary-meta {
-        color: #665b48;
-        font-size: 0.95rem;
-        margin-bottom: 6px;
-        font-weight: 600;
-    }
-
-    .summary-line {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 14px;
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(201,168,76,0.2);
-        font-size: 0.97rem;
-    }
-
-    .summary-label {
-        color: #5d5648;
-        font-weight: 700;
-    }
-
-    .summary-value {
-        font-weight: 900;
-        color: #0d1b3e;
-        text-align: right;
-    }
-
-    .text-primary {
-        color: #a78328 !important;
-    }
-
-    .summary-line.total {
-        font-size: 1.18rem;
-        font-weight: 900;
-        color: #0d1b3e;
-        border-bottom: none;
-        padding-top: 16px;
-    }
-
-        .summary-line.total span:last-child {
-            color: #b88b19;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.35rem;
-        }
-
-    .btn-confirm-booking {
-        width: 100%;
-        padding: 13px 20px;
-        border: none;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e;
-        font-size: 1.02rem;
-        font-weight: 900;
-        letter-spacing: 0.04em;
-        box-shadow: 0 10px 26px rgba(201,168,76,0.28);
-        transition: 0.25s;
-    }
-
-        .btn-confirm-booking:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 34px rgba(201,168,76,0.42);
-        }
-
-    .btn-back-booking {
-        width: 100%;
-        margin-top: 10px;
-        display: inline-block;
-        text-align: center;
-        padding: 12px 20px;
-        border-radius: 8px;
-        background: #0d1b3e;
-        color: #f5e6b8;
-        text-decoration: none;
-        font-weight: 800;
-        transition: 0.25s;
-    }
-
-        .btn-back-booking:hover {
-            color: #e8c96d;
-            transform: translateY(-2px);
-        }
-
-    @@media (max-width: 992px) {
-        .booking-layout,
-        .info-grid,
-        .passenger-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .summary-tour {
-            flex-direction: column;
-        }
-
-            .summary-tour img {
-                width: 100%;
-                height: 200px;
-            }
-    }
-
-    @@media (max-width: 768px) {
-        .passenger-detail-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<div class="booking-page">
-    <h2 class="booking-title">ĐẶT TOUR</h2>
-
-    <div class="booking-steps">
-        <div class="step-item active">
-            <div class="step-circle">📝</div>
-            <div>NHẬP THÔNG TIN</div>
-        </div>
-
-        <div class="step-line"></div>
-
-        <div class="step-item">
-            <div class="step-circle">💳</div>
-            <div>THANH TOÁN</div>
-        </div>
-
-        <div class="step-line"></div>
-
-        <div class="step-item">
-            <div class="step-circle">✅</div>
-            <div>HOÀN TẤT</div>
-        </div>
-    </div>
-
-    <div class="booking-layout">
-        <div class="booking-card">
-            <div class="card-title-custom">THÔNG TIN LIÊN LẠC</div>
-
-            <div class="login-note">
-                👤 Bạn đang đăng nhập, hãy kiểm tra thông tin trước khi xác nhận đặt tour.
-            </div>
-
+    <div class="dt-layout">
+        <div>
             <form asp-controller="DatTour"
                   asp-action="DatTour"
                   method="post"
@@ -465,182 +36,193 @@
                 <input type="hidden" name="SoNguoiLon" id="SoNguoiLonHidden" value="1" />
                 <input type="hidden" name="SoTreNho" id="SoTreNhoHidden" value="0" />
 
-                <div class="info-grid">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Họ tên *</label>
-                        <input asp-for="TenKhach" class="form-control" readonly />
-                        <span asp-validation-for="TenKhach" class="text-danger"></span>
-                    </div>
+                <section class="dt-block">
+                    <h2>Thông tin liên lạc</h2>
+                    <p class="dt-note">Bạn đang đăng nhập, hãy kiểm tra thông tin trước khi xác nhận đặt tour.</p>
 
-                    <div class="mb-3">
-                        <label asp-for="DienThoai" class="form-label fw-bold">Điện thoại *</label>
-                        <input asp-for="DienThoai" class="form-control" placeholder="Nhập số điện thoại" />
-                        <span asp-validation-for="DienThoai" class="text-danger"></span>
-                    </div>
+                    <div class="dt-info-grid">
+                        <div class="full">
+                            <label class="form-label">Họ tên *</label>
+                            <input asp-for="TenKhach" class="form-control" readonly />
+                            <span asp-validation-for="TenKhach" class="text-danger"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-bold">Email *</label>
-                        <input asp-for="Email" class="form-control" placeholder="Nhập email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                        <div>
+                            <label asp-for="DienThoai" class="form-label">Điện thoại *</label>
+                            <input asp-for="DienThoai" class="form-control" placeholder="Nhập số điện thoại" />
+                            <span asp-validation-for="DienThoai" class="text-danger"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="DiaChi" class="form-label fw-bold">Địa chỉ *</label>
-                        <input asp-for="DiaChi" class="form-control" placeholder="Nhập địa chỉ" />
-                        <span asp-validation-for="DiaChi" class="text-danger"></span>
-                    </div>
-                </div>
+                        <div>
+                            <label asp-for="Email" class="form-label">Email *</label>
+                            <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
 
-                <div class="section-subtitle">SỐ LƯỢNG HÀNH KHÁCH</div>
-
-                <div class="passenger-grid">
-                    <div class="passenger-box">
-                        <h6>Người lớn</h6>
-                        <small>Từ 12 tuổi trở lên</small>
-
-                        <div class="counter">
-                            <button type="button" onclick="changeAdult(-1)">-</button>
-                            <div class="counter-value" id="adultCount">1</div>
-                            <button type="button" onclick="changeAdult(1)">+</button>
+                        <div class="full">
+                            <label asp-for="DiaChi" class="form-label">Địa chỉ *</label>
+                            <input asp-for="DiaChi" class="form-control" placeholder="Nhập địa chỉ" />
+                            <span asp-validation-for="DiaChi" class="text-danger"></span>
                         </div>
                     </div>
+                </section>
 
-                    <div class="passenger-box">
-                        <h6>Trẻ nhỏ</h6>
-                        <small>Từ 2 - 11 tuổi</small>
+                <section class="dt-block">
+                    <h2>Số lượng hành khách</h2>
 
-                        <div class="counter">
-                            <button type="button" onclick="changeChild(-1)">-</button>
-                            <div class="counter-value" id="childCount">0</div>
-                            <button type="button" onclick="changeChild(1)">+</button>
+                    <div class="dt-counters">
+                        <div class="dt-counter">
+                            <div>
+                                <strong>Người lớn</strong>
+                                <small>Từ 12 tuổi trở lên</small>
+                            </div>
+                            <div class="counter">
+                                <button type="button" onclick="changeAdult(-1)" aria-label="Giảm người lớn">-</button>
+                                <div class="counter-value" id="adultCount">1</div>
+                                <button type="button" onclick="changeAdult(1)" aria-label="Tăng người lớn">+</button>
+                            </div>
+                        </div>
+
+                        <div class="dt-counter">
+                            <div>
+                                <strong>Trẻ nhỏ</strong>
+                                <small>Từ 2 - 11 tuổi</small>
+                            </div>
+                            <div class="counter">
+                                <button type="button" onclick="changeChild(-1)" aria-label="Giảm trẻ nhỏ">-</button>
+                                <div class="counter-value" id="childCount">0</div>
+                                <button type="button" onclick="changeChild(1)" aria-label="Tăng trẻ nhỏ">+</button>
+                            </div>
                         </div>
                     </div>
+                </section>
+
+                <section class="dt-block">
+                    <h2>Thông tin hành khách</h2>
+                    <p class="dt-note">Vui lòng nhập thông tin từng hành khách theo đúng số lượng người đi tour.</p>
+
+                    <div id="passengerDetailList" class="passenger-detail-list"></div>
+                </section>
+
+                <section class="dt-block">
+                    <h2>Thông tin chuyến đi</h2>
+
+                    <div class="mb-3">
+                        @if (Model.LichKhoiHanhTourId.HasValue)
+                        {
+                            <label class="form-label">Ngày đi đã chọn *</label>
+
+                            <input type="hidden" name="NgayDi" value="@Model.NgayDi.ToString("yyyy-MM-dd")" />
+
+                            <input type="text"
+                                   class="form-control locked-date-input"
+                                   value="@Model.NgayDi.ToString("dd/MM/yyyy")"
+                                   readonly />
+
+                            <div class="dt-locked-note">
+                                Ngày đi được lấy từ lịch khởi hành bạn đã chọn ở trang chi tiết tour.
+                            </div>
+                        }
+                        else
+                        {
+                            <label asp-for="NgayDi" class="form-label">Ngày đi *</label>
+                            <input asp-for="NgayDi" type="date" class="form-control" />
+                            <span asp-validation-for="NgayDi" class="text-danger"></span>
+                        }
+                    </div>
+
+                    <div>
+                        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+                        <textarea asp-for="GhiChu"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Ví dụ: cần hỗ trợ đặc biệt, muốn đi cùng gia đình..."></textarea>
+                        <span asp-validation-for="GhiChu" class="text-danger"></span>
+                    </div>
+                </section>
+
+                <div class="dt-actions">
+                    <button type="submit" class="tv-btn tv-btn-chinh">Tiếp tục thanh toán</button>
+                    <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Quay lại</a>
                 </div>
-
-                <div class="section-subtitle">THÔNG TIN HÀNH KHÁCH</div>
-
-                <div class="locked-date-note" style="margin-bottom:14px;">
-                    Vui lòng nhập thông tin từng hành khách theo đúng số lượng người đi tour.
-                </div>
-
-                <div id="passengerDetailList" class="passenger-detail-list"></div>
-
-                <div class="section-subtitle">THÔNG TIN CHUYẾN ĐI</div>
-
-                <div class="mb-3">
-                    @if (Model.LichKhoiHanhTourId.HasValue)
-                    {
-                        <label class="form-label fw-bold">Ngày đi đã chọn *</label>
-
-                        <input type="hidden" name="NgayDi" value="@Model.NgayDi.ToString("yyyy-MM-dd")" />
-
-                        <input type="text"
-                               class="form-control locked-date-input"
-                               value="@Model.NgayDi.ToString("dd/MM/yyyy")"
-                               readonly />
-
-                        <div class="locked-date-note">
-                            Ngày đi được lấy từ lịch khởi hành bạn đã chọn ở trang chi tiết tour.
-                        </div>
-                    }
-                    else
-                    {
-                        <label asp-for="NgayDi" class="form-label fw-bold">Ngày đi *</label>
-                        <input asp-for="NgayDi" type="date" class="form-control" />
-                        <span asp-validation-for="NgayDi" class="text-danger"></span>
-                    }
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="GhiChu" class="form-label fw-bold">Ghi chú</label>
-                    <textarea asp-for="GhiChu"
-                              class="form-control"
-                              rows="4"
-                              placeholder="Ví dụ: cần hỗ trợ đặc biệt, muốn đi cùng gia đình..."></textarea>
-                    <span asp-validation-for="GhiChu" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn-confirm-booking">
-                    Tiếp tục thanh toán
-                </button>
-
-                <a asp-controller="TrangChu" asp-action="Index" class="btn-back-booking">
-                    Quay lại
-                </a>
             </form>
         </div>
 
-        <div class="booking-card">
-            <div class="card-title-custom">TÓM TẮT CHUYẾN ĐI</div>
+        <aside class="dt-block dt-summary">
+            <h2>Tóm tắt chuyến đi</h2>
 
             @if (tour != null)
             {
-                <div class="summary-tour">
+                <div class="dt-summary-tour">
                     <img src="~/images/dulich/@tour.HinhAnh" alt="@tour.TenTour" />
                     <div>
-                        <h5>@tour.TenTour</h5>
-                        <div class="summary-meta">📍 @tour.TenDiaDiemHienThi</div>
-                        <div class="summary-meta">🗓 @(tour.SoNgay.HasValue? tour.SoNgay + " ngày" : "Chưa cập nhật")</div>
-                        <div class="summary-meta">🎒 @tour.PhongCachHienThi</div>
+                        <h3>@tour.TenTour</h3>
+                        <div class="dt-meta">
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                            @tour.TenDiaDiemHienThi
+                        </div>
+                        <div class="dt-meta">
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
+                            @(tour.SoNgay.HasValue ? tour.SoNgay + " ngày" : "Chưa cập nhật")
+                        </div>
+                        <div class="dt-meta">@tour.PhongCachHienThi</div>
                     </div>
                 </div>
 
                 @if (lichKhoiHanh != null)
                 {
-                    <div class="summary-line">
-                        <span class="summary-label">Ngày khởi hành</span>
-                        <span class="summary-value">@lichKhoiHanh.NgayKhoiHanh.ToString("dd/MM/yyyy")</span>
+                    <div class="dt-line">
+                        <span>Ngày khởi hành</span>
+                        <span>@lichKhoiHanh.NgayKhoiHanh.ToString("dd/MM/yyyy")</span>
                     </div>
 
-                    <div class="summary-line">
-                        <span class="summary-label">Giờ khởi hành</span>
-                        <span class="summary-value">
-                            @(lichKhoiHanh.GioKhoiHanh.HasValue? lichKhoiHanh.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa cập nhật")
-                        </span>
+                    <div class="dt-line">
+                        <span>Giờ khởi hành</span>
+                        <span>@(lichKhoiHanh.GioKhoiHanh.HasValue ? lichKhoiHanh.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa cập nhật")</span>
                     </div>
 
-                    <div class="summary-line">
-                        <span class="summary-label">Số chỗ còn</span>
-                        <span class="summary-value">@lichKhoiHanh.SoChoCon chỗ</span>
+                    <div class="dt-line">
+                        <span>Số chỗ còn</span>
+                        <span>@lichKhoiHanh.SoChoCon chỗ</span>
                     </div>
                 }
 
-                <div class="summary-line">
-                    <span class="summary-label">Mã chuyến đi</span>
-                    <span class="summary-value text-primary">🧾 @maChuyenDiTam</span>
+                <div class="dt-line">
+                    <span>Mã chuyến đi</span>
+                    <span>@maChuyenDiTam</span>
                 </div>
 
-                <div class="summary-line">
-                    <span class="summary-label">Giá tour / người lớn</span>
-                    <span class="summary-value">@giaNguoiLon.ToString("N0") VNĐ</span>
+                <div class="dt-line">
+                    <span>Giá tour / người lớn</span>
+                    <span>@giaNguoiLon.ToString("N0") VNĐ</span>
                 </div>
 
-                <div class="summary-line">
-                    <span class="summary-label">Giá trẻ nhỏ (50%)</span>
-                    <span class="summary-value">@giaTreEm.ToString("N0") VNĐ</span>
+                <div class="dt-line">
+                    <span>Giá trẻ nhỏ (50%)</span>
+                    <span>@giaTreEm.ToString("N0") VNĐ</span>
                 </div>
 
-                <div class="summary-line">
-                    <span class="summary-label">Người lớn</span>
-                    <span class="summary-value" id="adultSummary">1</span>
+                <div class="dt-line">
+                    <span>Người lớn</span>
+                    <span id="adultSummary">1</span>
                 </div>
 
-                <div class="summary-line">
-                    <span class="summary-label">Trẻ nhỏ</span>
-                    <span class="summary-value" id="childSummary">0</span>
+                <div class="dt-line">
+                    <span>Trẻ nhỏ</span>
+                    <span id="childSummary">0</span>
                 </div>
 
-                <div class="summary-line">
-                    <span class="summary-label">Tổng số người</span>
-                    <span class="summary-value" id="tongNguoiSummary">1</span>
+                <div class="dt-line">
+                    <span>Tổng số người</span>
+                    <span id="tongNguoiSummary">1</span>
                 </div>
 
-                <div class="summary-line total">
-                    <span>TỔNG TIỀN</span>
+                <div class="dt-line total">
+                    <span>Tổng tiền</span>
                     <span id="tongTien">@giaNguoiLon.ToString("N0") VNĐ</span>
                 </div>
             }
-        </div>
+        </aside>
     </div>
 </div>
 
