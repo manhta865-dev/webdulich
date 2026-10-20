@@ -99,6 +99,8 @@ Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch s�
 Thành công: dấu tích, mã chuyến đi, tóm tắt, nút xem lịch sử. Lịch sử: danh sách đơn dạng thẻ, mỗi thẻ có nhãn trạng thái (chữ kèm màu), nút Hủy ở đúng chỗ.
 
 ### Gợi ý tour
+Đã làm: khung ảnh đầu trang, khối chọn tiêu chí (giữ nguyên form và các trường TieuChi), khối "Cách gợi ý hoạt động", kết quả dạng thẻ có thanh mức phù hợp, lý do đề xuất, nút xem chi tiết và đặt tour. Đã gỡ dải số liệu khảo sát viết cứng (xem docs/KHAO_SAT.md) và nhãn "Hot".
+
 Biểu mẫu chọn sở thích ở trên, kết quả là lưới thẻ tour dùng chung với trang danh sách. Thay các emoji bằng icon SVG.
 
 ### Nhân viên (hướng dẫn viên, tài xế)

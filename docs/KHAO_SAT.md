@@ -31,3 +31,12 @@ Kiểm chứng giả thuyết của bài toán. Kết quả chỉ nói về nhó
 - Số phiếu hợp lệ: ...
 - Tỉ lệ ở từng nhóm câu: ...
 - Kết luận so với ngưỡng: ...
+
+## Số liệu khảo sát cũ (đồ án cơ sở) từng hiển thị trên trang Gợi ý tour
+
+Bốn con số sau từng được viết cứng trên trang Gợi ý tour, không ghi cỡ mẫu. Đã gỡ khỏi web khi làm lại giao diện. Nếu dùng trong báo cáo thì phải ghi rõ đây là khảo sát cũ của đồ án cơ sở, cỡ mẫu 18 người (các tỉ lệ khớp với 11/18, 16/18, 14/18 và 18/18), không suy ra cho cả thị trường:
+
+- 61,1%: chưa biết nên đi đâu khi muốn du lịch
+- 88,9%: gặp khó khăn vì không biết chọn địa điểm
+- 77,8%: xem gợi ý tour là chức năng quan trọng
+- 100%: muốn hệ thống gợi ý tour theo nhu cầu

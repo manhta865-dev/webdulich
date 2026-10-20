@@ -15,665 +15,24 @@
         Model.TieuChi.UuTienTourHot;
 }
 
-<style>
-    :root {
-        --navy-deep: #071126;
-        --navy-main: #0d1b3e;
-        --navy-soft: #14285c;
-        --blue-main: #0b74ff;
-        --blue-soft: #eaf4ff;
-        --gold-main: #d8b84f;
-        --gold-bright: #f2d66b;
-        --orange-main: #ff6b2c;
-        --green-main: #16a34a;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --line-soft: #dbe5f2;
-        --white: #ffffff;
-    }
-
-    body {
-        background: radial-gradient(circle at top left, rgba(216,184,79,0.14), transparent 28%), linear-gradient(180deg, #f6f8fc 0%, #edf3f8 100%) !important;
-        color: var(--text-main);
-    }
-
-    .goiy-page {
-        max-width: 1380px;
-        margin: 30px auto 64px;
-        padding: 0 16px;
-    }
-
-    .goiy-hero {
-        position: relative;
-        overflow: hidden;
-        border-radius: 26px;
-        min-height: 300px;
-        padding: 46px 28px;
-        display: grid;
-        align-items: center;
-        color: white;
-        background: linear-gradient(135deg, rgba(7,17,38,0.86), rgba(11,116,255,0.56)), url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1800&auto=format&fit=crop') center/cover no-repeat;
-        box-shadow: 0 24px 58px rgba(7,17,38,0.2);
-        margin-bottom: 24px;
-    }
-
-        .goiy-hero::after {
-            content: "";
-            position: absolute;
-            inset: auto 0 0;
-            height: 5px;
-            background: linear-gradient(90deg, transparent, var(--gold-bright), var(--orange-main), transparent);
-        }
-
-    .goiy-hero-content {
-        position: relative;
-        z-index: 1;
-        max-width: 860px;
-        margin: 0 auto;
-        text-align: center;
-    }
-
-    .goiy-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-        border: 1px solid rgba(255,255,255,0.28);
-        font-weight: 900;
-        margin-bottom: 16px;
-        backdrop-filter: blur(8px);
-    }
-
-    .goiy-title {
-        margin: 0 0 10px;
-        font-size: clamp(2.2rem, 4vw, 4rem);
-        font-weight: 950;
-        line-height: 1.08;
-        letter-spacing: 0;
-        text-shadow: 0 12px 30px rgba(0,0,0,0.22);
-    }
-
-    .goiy-subtitle {
-        margin: 0;
-        color: rgba(255,255,255,0.92);
-        font-size: 1.12rem;
-        font-weight: 700;
-        line-height: 1.6;
-    }
-
-    .survey-strip {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-        margin: -42px auto 28px;
-        max-width: 1180px;
-        position: relative;
-        z-index: 3;
-    }
-
-    .survey-card {
-        background: rgba(255,255,255,0.96);
-        border: 1px solid rgba(216,184,79,0.26);
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 18px 38px rgba(15,23,42,0.1);
-    }
-
-        .survey-card strong {
-            display: block;
-            color: var(--navy-main);
-            font-size: 1.55rem;
-            font-weight: 950;
-            margin-bottom: 4px;
-        }
-
-        .survey-card span {
-            color: var(--text-muted);
-            font-weight: 750;
-            line-height: 1.4;
-        }
-
-    .assistant-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1.55fr) 0.9fr;
-        gap: 22px;
-        align-items: stretch;
-        margin-bottom: 38px;
-    }
-
-    .goiy-form-card,
-    .insight-card {
-        background: rgba(255,255,255,0.96);
-        border: 1px solid #dbe5f2;
-        border-radius: 24px;
-        box-shadow: 0 18px 44px rgba(15,23,42,0.08);
-    }
-
-    .goiy-form-card {
-        padding: 28px;
-    }
-
-    .form-kicker {
-        color: var(--orange-main);
-        font-size: 0.82rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 6px;
-    }
-
-    .form-title {
-        margin: 0 0 8px;
-        color: var(--navy-deep);
-        font-size: clamp(1.65rem, 2.4vw, 2.2rem);
-        font-weight: 950;
-        letter-spacing: 0;
-    }
-
-    .form-note {
-        margin: 0 0 22px;
-        color: var(--text-muted);
-        font-weight: 700;
-        line-height: 1.55;
-    }
-
-    .goiy-label {
-        display: block;
-        margin-bottom: 8px;
-        color: #1e293b;
-        font-weight: 900;
-    }
-
-    .goiy-control {
-        min-height: 56px;
-        border-radius: 15px;
-        border: 1px solid #cfe0f4;
-        background-color: #ffffff;
-        color: var(--text-main);
-        font-size: 1rem;
-        font-weight: 750;
-        box-shadow: none;
-    }
-
-        .goiy-control:focus {
-            border-color: var(--blue-main);
-            box-shadow: 0 0 0 0.22rem rgba(11,116,255,0.12);
-        }
-
-    .check-wrap {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 13px 16px;
-        border-radius: 15px;
-        background: linear-gradient(135deg, #fff8df, #ffffff);
-        border: 1px solid rgba(216,184,79,0.35);
-        color: var(--navy-main);
-        font-weight: 900;
-    }
-
-        .check-wrap .form-check-input {
-            width: 20px;
-            height: 20px;
-            margin-top: 0;
-            border-color: rgba(216,184,79,0.7);
-        }
-
-    .submit-wrap {
-        text-align: center;
-        margin-top: 12px;
-    }
-
-    .btn-goiy {
-        min-width: 290px;
-        border: none;
-        border-radius: 999px;
-        padding: 15px 34px;
-        background: linear-gradient(135deg, var(--orange-main), #ff934a);
-        color: white;
-        font-size: 1.08rem;
-        font-weight: 950;
-        box-shadow: 0 18px 36px rgba(255,107,44,0.3);
-        transition: 0.24s ease;
-    }
-
-        .btn-goiy:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 22px 44px rgba(255,107,44,0.38);
-        }
-
-    .insight-card {
-        padding: 24px;
-        background: radial-gradient(circle at top right, rgba(242,214,107,0.22), transparent 36%), linear-gradient(160deg, #ffffff, #f6faff);
-    }
-
-    .insight-title {
-        color: var(--navy-deep);
-        font-size: 1.35rem;
-        font-weight: 950;
-        margin-bottom: 14px;
-    }
-
-    .insight-item {
-        display: grid;
-        grid-template-columns: 56px 1fr;
-        gap: 12px;
-        align-items: center;
-        padding: 14px 0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-        .insight-item:last-child {
-            border-bottom: none;
-        }
-
-    .insight-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 16px;
-        display: grid;
-        place-items: center;
-        background: var(--navy-main);
-        color: var(--gold-bright);
-        font-size: 1.35rem;
-        box-shadow: 0 12px 26px rgba(13,27,62,0.16);
-    }
-
-    .insight-item strong {
-        display: block;
-        color: var(--navy-main);
-        font-size: 1rem;
-        font-weight: 950;
-    }
-
-    .insight-item span {
-        color: var(--text-muted);
-        font-weight: 700;
-        line-height: 1.45;
-    }
-
-    .result-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 18px;
-        margin-bottom: 22px;
-    }
-
-    .result-kicker {
-        color: var(--orange-main);
-        font-size: 0.82rem;
-        font-weight: 950;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 5px;
-    }
-
-    .result-title {
-        margin: 0;
-        color: var(--navy-deep);
-        font-size: clamp(1.8rem, 2.8vw, 2.45rem);
-        font-weight: 950;
-        letter-spacing: 0;
-    }
-
-    .result-subtitle {
-        margin: 8px 0 0;
-        color: var(--text-muted);
-        font-weight: 700;
-    }
-
-    .result-count {
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: var(--navy-main);
-        color: var(--gold-bright);
-        font-weight: 950;
-        white-space: nowrap;
-    }
-
-    .tour-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-    }
-
-    .tour-card {
-        background: white;
-        border: 1px solid #dbe5f2;
-        border-radius: 22px;
-        overflow: hidden;
-        box-shadow: 0 18px 42px rgba(15,23,42,0.08);
-        transition: 0.26s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-        .tour-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 26px 54px rgba(15,23,42,0.14);
-            border-color: rgba(216,184,79,0.45);
-        }
-
-    .tour-image-wrap {
-        position: relative;
-        height: 238px;
-        overflow: hidden;
-        background: #dbeafe;
-    }
-
-    .tour-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-        transition: 0.42s ease;
-    }
-
-    .tour-card:hover .tour-image {
-        transform: scale(1.06);
-    }
-
-    .tour-score {
-        position: absolute;
-        top: 13px;
-        left: 13px;
-        padding: 8px 13px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, var(--navy-main), var(--blue-main));
-        color: white;
-        font-size: 0.84rem;
-        font-weight: 950;
-        box-shadow: 0 10px 24px rgba(7,17,38,0.28);
-    }
-
-    .hot-badge {
-        position: absolute;
-        right: 13px;
-        top: 13px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, var(--gold-main), var(--gold-bright));
-        color: var(--navy-deep);
-        font-size: 0.82rem;
-        font-weight: 950;
-    }
-
-    .tour-body {
-        padding: 19px;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-    }
-
-    .match-row {
-        margin-bottom: 14px;
-    }
-
-    .match-text {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        color: #334155;
-        font-weight: 900;
-        font-size: 0.92rem;
-        margin-bottom: 7px;
-    }
-
-    .match-bar {
-        height: 9px;
-        border-radius: 999px;
-        background: #e2e8f0;
-        overflow: hidden;
-    }
-
-    .match-fill {
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--orange-main), var(--gold-bright), var(--blue-main));
-    }
-
-    .tour-title {
-        margin: 0 0 8px;
-        color: var(--navy-deep);
-        font-size: 1.18rem;
-        font-weight: 950;
-        line-height: 1.35;
-        text-transform: uppercase;
-        min-height: 50px;
-    }
-
-    .tour-location {
-        color: #334155;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
-
-    .tag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 13px;
-    }
-
-    .tag-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 7px 11px;
-        border-radius: 999px;
-        background: var(--blue-soft);
-        color: #075985;
-        border: 1px solid #dbeafe;
-        font-size: 0.8rem;
-        font-weight: 850;
-    }
-
-    .tour-reason {
-        background: linear-gradient(135deg, #fff8df, #ffffff);
-        border: 1px dashed rgba(216,184,79,0.55);
-        border-radius: 16px;
-        padding: 12px 13px;
-        color: #475569;
-        font-size: 0.93rem;
-        line-height: 1.55;
-        margin-bottom: 15px;
-    }
-
-    .reason-title {
-        display: block;
-        color: var(--navy-main);
-        font-weight: 950;
-        margin-bottom: 6px;
-    }
-
-    .reason-chip {
-        display: inline-flex;
-        margin: 4px 5px 0 0;
-        padding: 6px 9px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid #f4d77b;
-        color: #6b4d00;
-        font-weight: 800;
-        font-size: 0.82rem;
-    }
-
-    .tour-meta-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: auto;
-        margin-bottom: 15px;
-    }
-
-    .tour-booked {
-        color: var(--text-muted);
-        font-weight: 800;
-        font-size: 0.94rem;
-    }
-
-    .tour-price {
-        color: var(--orange-main);
-        font-size: 1.32rem;
-        font-weight: 950;
-        white-space: nowrap;
-    }
-
-    .card-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .tour-btn,
-    .detail-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        padding: 12px 14px;
-        text-decoration: none;
-        font-weight: 950;
-        transition: 0.22s ease;
-        text-align: center;
-    }
-
-    .tour-btn {
-        background: linear-gradient(135deg, var(--orange-main), #ff934a);
-        color: white !important;
-        box-shadow: 0 12px 28px rgba(255,107,44,0.23);
-    }
-
-    .detail-btn {
-        background: #f8fbff;
-        color: var(--navy-main) !important;
-        border: 1px solid #cfe0f4;
-    }
-
-        .tour-btn:hover,
-        .detail-btn:hover {
-            transform: translateY(-2px);
-        }
-
-    .tour-empty {
-        border-radius: 22px;
-        border: 1px solid #fed7aa;
-        background: #fff7ed;
-        color: #9a3412;
-        text-align: center;
-        padding: 30px 18px;
-        font-weight: 800;
-        box-shadow: 0 14px 30px rgba(251,146,60,0.10);
-    }
-
-    @@media (max-width: 1199px) {
-        .survey-strip {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .assistant-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .tour-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @@media (max-width: 767px) {
-        .goiy-page {
-            margin-top: 16px;
-            padding: 0 10px;
-        }
-
-        .goiy-hero {
-            min-height: 260px;
-            padding: 34px 16px;
-        }
-
-        .survey-strip {
-            grid-template-columns: 1fr;
-            margin-top: -24px;
-        }
-
-        .goiy-form-card,
-        .insight-card {
-            padding: 18px;
-        }
-
-        .result-head {
-            display: block;
-        }
-
-        .result-count {
-            display: inline-flex;
-            margin-top: 12px;
-        }
-
-        .tour-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .btn-goiy {
-            width: 100%;
-            min-width: unset;
-        }
-
-        .tour-meta-row,
-        .card-actions {
-            grid-template-columns: 1fr;
-            align-items: flex-start;
-        }
-    }
-</style>
-
-<div class="goiy-page">
-    <section class="goiy-hero">
-        <div class="goiy-hero-content">
-            <div class="goiy-badge">✨ Trợ lý chọn tour TravelVN</div>
-            <h1 class="goiy-title">Gợi ý tour theo nhu cầu của bạn</h1>
-            <p class="goiy-subtitle">
-                Chọn vài tiêu chí về ngân sách, địa hình, phong cách, thời gian và phương tiện.
-                TravelVN sẽ lọc ra những chuyến đi phù hợp nhất để bạn dễ quyết định hơn.
-            </p>
-        </div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/goi-y.css" asp-append-version="true" />
+}
+
+<div class="gy-page">
+    <section class="gy-head">
+        <h1>Gợi ý tour theo nhu cầu của bạn</h1>
+        <p>
+            Chọn vài tiêu chí về loại tour, địa hình, phong cách, ngân sách, thời gian và phương tiện.
+            TravelVN sẽ lọc ra những chuyến đi phù hợp để bạn dễ quyết định hơn.
+        </p>
     </section>
 
-    <div class="survey-strip">
-        <div class="survey-card">
-            <strong>61,1%</strong>
-            <span>người dùng chưa biết nên đi đâu khi muốn du lịch</span>
-        </div>
-
-        <div class="survey-card">
-            <strong>88,9%</strong>
-            <span>gặp khó khăn vì không biết chọn địa điểm</span>
-        </div>
-
-        <div class="survey-card">
-            <strong>77,8%</strong>
-            <span>xem gợi ý tour là chức năng quan trọng</span>
-        </div>
-
-        <div class="survey-card">
-            <strong>100%</strong>
-            <span>muốn hệ thống gợi ý tour theo nhu cầu</span>
-        </div>
-    </div>
-
-    <div class="assistant-layout">
-        <div class="goiy-form-card">
-            <div class="form-kicker">Bộ lọc thông minh</div>
-            <h2 class="form-title">Khám phá chuyến đi lý tưởng</h2>
-            <p class="form-note">
-                Càng chọn rõ tiêu chí, kết quả gợi ý càng sát với mong muốn của bạn.
-            </p>
+    <div class="gy-layout">
+        <div class="gy-block">
+            <h2>Chọn tiêu chí</h2>
+            <p class="gy-note">Càng chọn rõ tiêu chí, kết quả gợi ý càng sát với mong muốn của bạn. Bạn không cần chọn hết các mục.</p>
 
             <form id="formGoiY" asp-controller="GoiYTour" asp-action="Index" method="post">
                 @Html.AntiForgeryToken()
@@ -685,8 +44,6 @@
                             <option value="">-- Tất cả --</option>
                         </select>
                     </div>
-
-                      
 
                     <div class="col-md-6">
                         <label class="goiy-label">Bạn thích kiểu địa hình nào?</label>
@@ -703,7 +60,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="goiy-label">Ngân sách tối đa</label>
+                        <label class="goiy-label">Ngân sách tối đa (VNĐ)</label>
                         <input asp-for="TieuChi.NganSachToiDa" class="form-control goiy-control" placeholder="Ví dụ: 3000000" />
                     </div>
 
@@ -721,72 +78,52 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6 d-flex align-items-end">
+                    <div class="col-12">
                         <div class="check-wrap">
                             <input asp-for="TieuChi.UuTienTourHot" class="form-check-input" />
-                            <label class="form-check-label">Ưu tiên tour hot / nhiều người chọn</label>
+                            <label class="form-check-label" asp-for="TieuChi.UuTienTourHot">Ưu tiên tour có nhiều người đặt</label>
                         </div>
                     </div>
 
-                    <div class="col-12 submit-wrap">
-                        <button class="btn-goiy" type="submit">
-                            🔥 Gợi ý tour phù hợp
-                        </button>
+                    <div class="col-12">
+                        <button class="tv-btn tv-btn-chinh gy-submit" type="submit">Gợi ý tour phù hợp</button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <aside class="insight-card">
-            <div class="insight-title">Vì sao có trang gợi ý?</div>
+        <aside class="gy-block gy-how">
+            <h2>Cách gợi ý hoạt động</h2>
 
-            <div class="insight-item">
-                <div class="insight-icon">🎯</div>
-                <div>
-                    <strong>Giảm khó khăn khi chọn tour</strong>
-                    <span>Nhiều người dùng có nhu cầu đi du lịch nhưng chưa biết địa điểm phù hợp.</span>
-                </div>
-            </div>
-
-            <div class="insight-item">
-                <div class="insight-icon">⚖️</div>
-                <div>
-                    <strong>Dễ so sánh hơn</strong>
-                    <span>Hệ thống lọc theo giá, thời gian, địa hình, phong cách và phương tiện.</span>
-                </div>
-            </div>
-
-            <div class="insight-item">
-                <div class="insight-icon">✨</div>
-                <div>
-                    <strong>Gợi ý có lý do</strong>
-                    <span>Mỗi tour hiển thị điểm phù hợp và lý do đề xuất để người dùng dễ ra quyết định.</span>
-                </div>
-            </div>
+            <ol>
+                <li>
+                    <strong>Bạn chọn tiêu chí</strong>
+                    <span>Loại tour, địa hình, phong cách, ngân sách, số ngày và phương tiện.</span>
+                </li>
+                <li>
+                    <strong>Hệ thống lọc và chấm điểm</strong>
+                    <span>Tour càng khớp nhiều tiêu chí thì điểm càng cao. Danh sách xếp theo mức phù hợp và lượt quan tâm.</span>
+                </li>
+                <li>
+                    <strong>Mỗi tour có lý do đề xuất</strong>
+                    <span>Bạn thấy ngay tour khớp tiêu chí nào để dễ so sánh.</span>
+                </li>
+            </ol>
         </aside>
     </div>
 
     @if (Model.KetQua != null && Model.KetQua.Any())
     {
-        <div id="ketqua" class="result-head">
+        <div id="ketqua" class="gy-result-head">
             <div>
-                <div class="result-kicker">
-                    @(daChonTieuChi ? "Kết quả theo tiêu chí của bạn" : "Tour gợi ý hôm nay")
-                </div>
-
-                <h2 class="result-title">
-                    @(daChonTieuChi ? "Những tour phù hợp nhất" : "Bạn có thể bắt đầu từ các tour này")
-                </h2>
-
-                <p class="result-subtitle">
-                    Danh sách được sắp xếp theo mức độ phù hợp và lượt quan tâm của khách hàng.
-                </p>
+                <h2>@(daChonTieuChi ? "Những tour phù hợp nhất" : "Bạn có thể bắt đầu từ các tour này")</h2>
+                <p>@(daChonTieuChi ? "Kết quả theo tiêu chí của bạn, " : "")sắp xếp theo mức độ phù hợp và lượt quan tâm của khách hàng.</p>
             </div>
 
-            <div class="result-count">@Model.KetQua.Count tour gợi ý</div>
+            <div class="gy-count"><strong>@Model.KetQua.Count</strong> tour gợi ý</div>
         </div>
 
-        <div class="tour-grid">
+        <div class="tv-grid">
             @foreach (var item in Model.KetQua)
             {
                 var tour = item.Tour;
@@ -808,107 +145,103 @@
                 .Take(4)
                 .ToList();
 
-                <div class="tour-card">
-                    <div class="tour-image-wrap">
+                <article class="gy-card">
+                    <div class="gy-card-media">
                         @if (!string.IsNullOrEmpty(tour.HinhAnh))
                         {
-                            <img src="~/images/dulich/@tour.HinhAnh" class="tour-image" alt="@tour.TenTour" />
+                            <img src="~/images/dulich/@tour.HinhAnh" alt="@tour.TenTour" loading="lazy" />
                         }
                         else
                         {
-                            <div class="tour-image d-flex justify-content-center align-items-center text-muted">
-                                Chưa có hình ảnh
-                            </div>
+                            <div class="gy-no-img">Chưa có hình ảnh</div>
                         }
 
-                        <div class="tour-score">⭐ Điểm: @item.DiemGoiY</div>
-
-                        @if (item.SoLuotDat > 0)
-                        {
-                            <div class="hot-badge">🔥 Hot</div>
-                        }
+                        <span class="tv-pill">Điểm gợi ý: @item.DiemGoiY</span>
                     </div>
 
-                    <div class="tour-body">
-                        <div class="match-row">
-                            <div class="match-text">
+                    <div class="gy-card-body">
+                        <div class="gy-match">
+                            <div class="gy-match-text">
                                 <span>Mức phù hợp</span>
-                                <span>@matchPercent%</span>
+                                <strong>@matchPercent%</strong>
                             </div>
-                            <div class="match-bar">
-                                <div class="match-fill" style="width:@matchPercent%"></div>
+                            <div class="gy-match-bar">
+                                <div class="gy-match-fill" style="width:@matchPercent%"></div>
                             </div>
                         </div>
 
-                        <h3 class="tour-title">@tour.TenTour</h3>
+                        <h3 class="gy-card-title">@tour.TenTour</h3>
 
-                        <div class="tour-location">📍 @tenDiaDiem</div>
+                        <div class="gy-place">
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                            @tenDiaDiem
+                        </div>
 
-                        <div class="tag-list">
+                        <div class="tv-tags">
                             @if (!string.IsNullOrWhiteSpace(loaiDiaHinhText) && loaiDiaHinhText != "Chưa cập nhật")
                             {
-                                <span class="tag-item">🌍 @loaiDiaHinhText</span>
+                                <span class="tv-tag">@loaiDiaHinhText</span>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(phongCachText) && phongCachText != "Chưa cập nhật")
                             {
-                                <span class="tag-item">💖 @phongCachText</span>
+                                <span class="tv-tag">@phongCachText</span>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(phuongTienText) && phuongTienText != "Chưa cập nhật")
                             {
-                                <span class="tag-item">🚗 @phuongTienText</span>
+                                <span class="tv-tag">@phuongTienText</span>
                             }
 
-                            <span class="tag-item">🗓 @soNgayText</span>
+                            <span class="tv-tag">@soNgayText</span>
                         </div>
 
-                        <div class="tour-reason">
-                            <span class="reason-title">Vì sao gợi ý tour này?</span>
+                        <div class="gy-reason">
+                            <span class="gy-reason-title">Vì sao gợi ý tour này?</span>
 
                             @if (lyDoItems.Any())
                             {
-                                foreach (var lyDo in lyDoItems)
-                                {
-                                    <span class="reason-chip">@lyDo</span>
-                                }
+                                <div class="gy-reason-chips">
+                                    @foreach (var lyDo in lyDoItems)
+                                    {
+                                        <span class="gy-reason-chip">@lyDo</span>
+                                    }
+                                </div>
                             }
                             else
                             {
-                                <span>Tour phù hợp để bạn tham khảo.</span>
+                                <span class="gy-reason-none">Tour phù hợp để bạn tham khảo.</span>
                             }
                         </div>
 
-                        <div class="tour-meta-row">
-                            <div class="tour-booked">🔥 Lượt đặt: @item.SoLuotDat</div>
-                            <div class="tour-price">@tour.Gia.ToString("N0") VNĐ</div>
+                        <div class="gy-meta">
+                            <div>
+                                <span class="tv-price-label">Lượt đặt: @item.SoLuotDat</span>
+                                <div class="tv-price">@tour.Gia.ToString("N0") <small>VNĐ</small></div>
+                            </div>
                         </div>
 
-                        <div class="card-actions">
+                        <div class="gy-actions">
                             <a asp-controller="DiaDiem"
                                asp-action="ChiTiet"
                                asp-route-id="@tour.Id"
-                               class="detail-btn">
-                                Xem chi tiết
-                            </a>
+                               class="tv-btn tv-btn-vien">Xem chi tiết</a>
 
                             <a asp-controller="DatTour"
                                asp-action="DatTour"
                                asp-route-id="@tour.Id"
-                               class="tour-btn">
-                                Đặt tour
-                            </a>
+                               class="tv-btn tv-btn-chinh">Đặt tour</a>
                         </div>
                     </div>
-                </div>
+                </article>
             }
         </div>
     }
     else
     {
-        <div class="tour-empty">
-            Không tìm thấy tour phù hợp 😢<br />
-            Bạn thử đổi phong cách, chọn số ngày khác hoặc tăng ngân sách để xem thêm gợi ý nhé.
+        <div class="tv-empty">
+            <h3>Không tìm thấy tour phù hợp</h3>
+            <p>Bạn thử đổi phong cách, chọn số ngày khác hoặc tăng ngân sách để xem thêm gợi ý nhé.</p>
         </div>
     }
 </div>
