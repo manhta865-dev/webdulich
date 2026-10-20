@@ -292,3 +292,24 @@
 }
 
 .tv-photo-card:hover .tv-photo-mui { transform: translateX(4px); }
+
+/* Chip đang chọn và dòng địa điểm trên thẻ ảnh */
+.tv-chip.active {
+    background: var(--tv-nhan);
+    border-color: var(--tv-nhan);
+    color: #fff;
+}
+
+.tv-chip.active:hover { background: var(--tv-nhan-dam); color: #fff; }
+
+.tv-photo-place {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    opacity: 0.9;
+}
+
+@media (max-width: 576px) {
+    .tv-photo-card { aspect-ratio: 4 / 3; }
+}
