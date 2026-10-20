@@ -167,7 +167,7 @@ namespace webdulich.Controllers
             // điều hướng theo vai trò 
             if (user.VaiTro == "admin")
             {
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("TongQuan", "Admin");
             }
 
             if (user.VaiTro == "huongdanvien" || user.VaiTro == "taixe")

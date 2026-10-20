@@ -1,0 +1,142 @@
+/* Giao diện chung của trang quản trị. Dùng token trong tokens.css.
+   Lô A: trang Tổng quan. Các lô sau sẽ thêm bảng, biểu mẫu, nhãn trạng thái dùng chung. */
+
+.ad-page { max-width: 1180px; }
+
+.ad-lead { margin: 0 0 var(--tv-k4); color: var(--tv-chu-phu); }
+
+/* ---------- Ô số liệu ---------- */
+.ad-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k5);
+}
+
+.ad-kpi {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--tv-k3);
+    padding: var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    color: var(--tv-chu);
+    text-decoration: none;
+    transition: border-color var(--tv-nhanh);
+}
+
+.ad-kpi:hover { border-color: var(--tv-nhan); color: var(--tv-chu); }
+
+.ad-kpi-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+}
+
+.ad-kpi-body { display: flex; flex-direction: column; min-width: 0; }
+.ad-kpi-label { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-kpi-body strong { margin: 2px 0; font-size: var(--tv-cs-lon); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.ad-kpi-body small { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+.ad-kpi-canh-bao { border-color: var(--tv-canh-bao); }
+.ad-kpi-canh-bao .ad-kpi-icon { background: #FBF1DC; color: var(--tv-canh-bao); }
+
+/* ---------- Thẻ nội dung ---------- */
+.ad-card {
+    padding: var(--tv-k5);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-card + .ad-card,
+.ad-two + .ad-card,
+.ad-card + .ad-two { margin-top: var(--tv-k5); }
+
+.ad-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+}
+
+.ad-card-head h2 { margin: 0; font-size: var(--tv-cs-vua); font-weight: 700; }
+.ad-note { margin: var(--tv-k1) 0 var(--tv-k4); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-note-cuoi { margin: var(--tv-k3) 0 0; }
+
+.ad-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tv-k5);
+    margin-top: var(--tv-k5);
+}
+
+.ad-two > .ad-card { margin-top: 0; }
+
+/* ---------- Biểu đồ ---------- */
+.ad-chart { display: block; width: 100%; height: auto; }
+.ad-grid-line { stroke: var(--tv-vien); stroke-width: 1; }
+.ad-axis { fill: var(--tv-chu-phu); font-size: 12px; font-family: var(--tv-font); }
+.ad-axis.hien-tai { fill: var(--tv-nhan-dam); font-weight: 700; }
+.ad-bar { fill: #8DBFCD; }
+.ad-bar.hien-tai { fill: var(--tv-nhan); }
+
+/* ---------- Danh sách ---------- */
+.ad-list { margin: var(--tv-k3) 0 0; padding: 0; list-style: none; }
+
+.ad-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k4);
+    padding: var(--tv-k3) 0;
+    border-top: 1px solid var(--tv-vien);
+}
+
+.ad-list li:first-child { border-top: 0; }
+.ad-list li > div:first-child { min-width: 0; }
+.ad-list strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.ad-list li span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+.ad-list-end { display: flex; align-items: center; gap: var(--tv-k3); flex-shrink: 0; text-align: right; }
+.ad-list-end .ad-money { font-weight: 700; color: var(--tv-gia); }
+
+.ad-seats { font-weight: 600; color: var(--tv-thanh-cong); }
+.ad-seats.it { color: var(--tv-loi); }
+
+.ad-btn-nho { min-height: 34px; padding: 0 var(--tv-k3); font-size: var(--tv-cs-nho); }
+
+.ad-badge {
+    padding: var(--tv-k1) var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    background: #E4F4EC;
+    color: var(--tv-thanh-cong);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ad-badge.canh-bao { background: #FBF1DC; color: var(--tv-canh-bao); }
+
+/* ---------- Máy tính bảng và điện thoại ---------- */
+@media (max-width: 900px) {
+    .ad-two { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 576px) {
+    .ad-card { padding: var(--tv-k4); }
+    .ad-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k3); }
+    .ad-list li { flex-direction: column; align-items: flex-start; gap: var(--tv-k2); }
+    .ad-list-end { width: 100%; justify-content: space-between; }
+}
+
+@media (max-width: 576px) {
+    .ad-kpi { flex-direction: column; gap: var(--tv-k2); padding: var(--tv-k3); }
+}

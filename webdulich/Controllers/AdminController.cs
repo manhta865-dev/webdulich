@@ -978,6 +978,91 @@ namespace webdulich.Controllers
 
             return RedirectToAction("TaiKhoan");
         }
+        // Trang Tổng quan của admin: các số liệu chính và việc cần xử lý. Chỉ đọc dữ liệu, không ghi gì xuống database.
+        // Dùng truy vấn gọn (Select, Count, AsNoTracking, không Include) để tránh làm SQL Server phải xin nhiều bộ nhớ.
+        public IActionResult TongQuan()
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var homNay = DateTime.Today;
+            var ngayMai = homNay.AddDays(1);
+            var sau30Ngay = homNay.AddDays(30);
+
+            // Doanh thu: cùng cách tính với trang Doanh thu (đơn "Đã thanh toán", theo ngày đi)
+            var doanhThuTheoThang = _context.DatTours
+                .AsNoTracking()
+                .Where(x => x.TrangThaiThanhToan == "Đã thanh toán" && x.NgayDi.Year == homNay.Year)
+                .GroupBy(x => x.NgayDi.Month)
+                .Select(g => new { Thang = g.Key, DoanhThu = g.Sum(d => d.TongTien), SoDon = g.Count() })
+                .ToList();
+
+            var thangNay = doanhThuTheoThang.FirstOrDefault(x => x.Thang == homNay.Month);
+
+            var donChoXacNhan = _context.DatTours
+                .AsNoTracking()
+                .Where(x => x.TrangThaiThanhToan == "Đang kiểm tra")
+                .OrderByDescending(x => x.Id)
+                .Select(x => new DonChoXacNhanItem
+                {
+                    Id = x.Id,
+                    TenKhach = x.TenKhach,
+                    TenTour = x.Tour != null ? x.Tour.TenTour : "Chưa cập nhật",
+                    NgayDi = x.NgayDi,
+                    TongTien = x.TongTien,
+                    PhuongThucThanhToan = x.PhuongThucThanhToan
+                })
+                .Take(5)
+                .ToList();
+
+            var lichSapKhoiHanhQuery = _context.LichKhoiHanhTours
+                .AsNoTracking()
+                .Where(x => x.TrangThai != "Đã hủy" && x.NgayKhoiHanh >= homNay && x.NgayKhoiHanh <= sau30Ngay);
+
+            var tourThieuLichQuery = _context.Tours
+                .AsNoTracking()
+                .Where(t => !_context.LichKhoiHanhTours.Any(l =>
+                    l.TourId == t.Id && l.TrangThai != "Đã hủy" && l.NgayKhoiHanh >= ngayMai));
+
+            var model = new TongQuanAdminViewModel
+            {
+                Thang = homNay.Month,
+                Nam = homNay.Year,
+                DoanhThuThang = thangNay?.DoanhThu ?? 0,
+                SoDonDaThanhToanThang = thangNay?.SoDon ?? 0,
+                SoDonChoXacNhan = _context.DatTours.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra"),
+                SoLichSapKhoiHanh = lichSapKhoiHanhQuery.Count(),
+                SoTour = _context.Tours.Count(),
+                TinNhanChuaDoc = _context.TinNhanLienHes.Count(x =>
+                    x.TaiKhoanId != null && x.NguoiGui != "admin" && !x.DaDoc),
+                DoanhThu12Thang = Enumerable.Range(1, 12)
+                    .Select(m => doanhThuTheoThang.FirstOrDefault(x => x.Thang == m)?.DoanhThu ?? 0)
+                    .ToList(),
+                DonChoXacNhan = donChoXacNhan,
+                LichSapKhoiHanh = lichSapKhoiHanhQuery
+                    .OrderBy(x => x.NgayKhoiHanh)
+                    .Select(x => new LichSapKhoiHanhItem
+                    {
+                        Id = x.Id,
+                        TourId = x.TourId,
+                        TenTour = x.Tour != null ? x.Tour.TenTour : "Chưa cập nhật",
+                        NgayKhoiHanh = x.NgayKhoiHanh,
+                        SoChoCon = x.SoChoCon
+                    })
+                    .Take(5)
+                    .ToList(),
+                SoTourThieuLich = tourThieuLichQuery.Count(),
+                TourThieuLich = tourThieuLichQuery
+                    .OrderBy(t => t.Id)
+                    .Select(t => new TourThieuLichItem { Id = t.Id, TenTour = t.TenTour })
+                    .Take(6)
+                    .ToList()
+            };
+
+            return View(model);
+        }
         // Đây là action hiển thị báo cáo doanh thu trong trang quản trị. Admin có thể xem tổng doanh thu, số đơn đã thanh toán, trung bình đơn, doanh thu theo năm và tour bán chạy nhất trong tháng. Admin cũng có thể lọc báo cáo theo tháng và năm để xem doanh thu của tháng đó hoặc năm đó.
         public IActionResult DoanhThu(int? thang, int? nam)
         {

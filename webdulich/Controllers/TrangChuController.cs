@@ -32,7 +32,7 @@ namespace webdulich.Controllers
             //Nếu người đăng nhập là admin thì tự chuyển về trang quản trị.
             if (HttpContext.Session.GetString("role") == "admin")
             {
-                return RedirectToAction("Index", "Admin");
+                return RedirectToAction("TongQuan", "Admin");
             }
             // Lấy 3 tour đầu tiên để hiển thị ở trang chủ.
             var tours = LayQueryTourDayDu()
