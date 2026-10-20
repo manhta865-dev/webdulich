@@ -94,7 +94,7 @@ Một cột, khung hẹp giữa trang, toàn bộ tiếng Việt. Bỏ chữ "Si
 Thanh tiến trình ba bước ở đầu trang: Thông tin, Thanh toán, Hoàn tất. Cột trái là biểu mẫu, cột phải là tóm tắt đơn (tour, ngày, số người, giảm giá, tổng). Giữ nguyên toàn bộ trường và `id` hiện có. Trang thanh toán bỏ quảng cáo thẻ, ví chưa hỗ trợ; luồng vẫn là giả lập cho đến khi làm QR.
 
 ### Thành công và Lịch sử
-Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch sử chưa làm.
+Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch sử đã làm: bảng 11 cột đổi thành danh sách thẻ đơn (tên tour, mã chuyến đi, nhãn trạng thái bằng chữ kèm màu, lưới thông tin, nút hủy đơn), kèm bốn ô số liệu tổng.
 
 Thành công: dấu tích, mã chuyến đi, tóm tắt, nút xem lịch sử. Lịch sử: danh sách đơn dạng thẻ, mỗi thẻ có nhãn trạng thái (chữ kèm màu), nút Hủy ở đúng chỗ.
 
