@@ -1,0 +1,224 @@
+/* Riêng trang Chi tiết tour: ảnh và thông tin, lịch trình, ngày khởi hành. */
+
+.ct-crumb { margin-bottom: var(--tv-k4); }
+.ct-crumb .tv-icon { transform: scaleX(-1); }
+
+.ct-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--tv-k6);
+    align-items: start;
+}
+
+/* ---------- Ảnh ---------- */
+.ct-main-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-vien);
+}
+
+.ct-no-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tv-chu-phu);
+}
+
+.ct-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tv-k2);
+    margin-top: var(--tv-k3);
+}
+
+.ct-thumb {
+    width: 88px;
+    height: 66px;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-vien);
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+
+.ct-thumb:hover { opacity: 1; }
+.ct-thumb.active { border-color: var(--tv-nhan); opacity: 1; }
+.ct-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Thông tin ---------- */
+.ct-title {
+    margin: var(--tv-k3) 0 var(--tv-k3);
+    font-size: var(--tv-cs-tieu-de);
+    font-weight: 700;
+    line-height: 1.25;
+    text-wrap: balance;
+}
+
+.ct-price { display: flex; flex-direction: column; margin-bottom: var(--tv-k4); }
+
+.ct-price-value {
+    font-size: var(--tv-cs-lon);
+    font-weight: 700;
+    color: var(--tv-gia);
+}
+
+.ct-price-value small { font-size: var(--tv-cs-thuong); font-weight: 600; }
+
+.ct-desc {
+    margin: 0 0 var(--tv-k5);
+    max-width: 62ch;
+    line-height: 1.6;
+    color: var(--tv-chu-phu);
+}
+
+.ct-specs {
+    margin: 0 0 var(--tv-k5);
+    border-top: 1px solid var(--tv-vien);
+}
+
+.ct-specs > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k4);
+    padding: var(--tv-k3) 0;
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.ct-specs dt { font-weight: 500; color: var(--tv-chu-phu); }
+.ct-specs dd { margin: 0; text-align: right; font-weight: 600; }
+
+.ct-actions { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
+
+/* ---------- Lịch trình và ngày khởi hành ---------- */
+.ct-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: var(--tv-k6);
+    align-items: start;
+    margin-top: var(--tv-k8);
+}
+
+.ct-body h2 { margin: 0; font-size: var(--tv-cs-lon); font-weight: 700; }
+.ct-note { margin: var(--tv-k2) 0 var(--tv-k5); color: var(--tv-chu-phu); }
+
+.ct-day {
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ct-day + .ct-day { margin-top: var(--tv-k3); }
+
+.ct-day summary {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    padding: var(--tv-k4);
+    cursor: pointer;
+    list-style: none;
+}
+
+.ct-day summary::-webkit-details-marker { display: none; }
+
+.ct-day summary::after {
+    content: "";
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-right: 2px solid var(--tv-chu-phu);
+    border-bottom: 2px solid var(--tv-chu-phu);
+    transform: rotate(45deg);
+    transition: transform var(--tv-nhanh);
+}
+
+.ct-day[open] summary::after { transform: rotate(-135deg); }
+
+.ct-day-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 700;
+}
+
+.ct-day-title { font-weight: 600; }
+
+.ct-day-title small {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--tv-cs-nho);
+    font-weight: 400;
+    color: var(--tv-chu-phu);
+}
+
+.ct-day-body {
+    padding: 0 var(--tv-k4) var(--tv-k4) calc(var(--tv-k4) + 36px + var(--tv-k3));
+    line-height: 1.65;
+    color: var(--tv-chu-phu);
+    white-space: pre-line;
+}
+
+.ct-departures {
+    position: sticky;
+    top: 88px;
+}
+
+.ct-dep-list { display: flex; flex-direction: column; gap: var(--tv-k3); }
+
+.ct-dep {
+    padding: var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ct-dep-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--tv-k1) var(--tv-k3);
+    margin-bottom: var(--tv-k3);
+}
+
+.ct-dep-head strong { font-size: var(--tv-cs-vua); }
+.ct-dep-head span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ct-dep-head .ct-seats { margin-left: auto; font-weight: 600; color: var(--tv-thanh-cong); }
+.ct-dep-head .ct-seats.het { color: var(--tv-loi); }
+
+.ct-dep-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k1) 0;
+    color: var(--tv-chu-phu);
+}
+
+.ct-dep-price { font-weight: 700; color: var(--tv-gia); }
+
+.ct-dep-btn { width: 100%; margin-top: var(--tv-k3); }
+
+/* ---------- Máy tính bảng và điện thoại ---------- */
+@media (max-width: 900px) {
+    .ct-top,
+    .ct-body { grid-template-columns: 1fr; gap: var(--tv-k5); }
+    .ct-body { margin-top: var(--tv-k7); }
+    .ct-departures { position: static; }
+    .ct-title { font-size: var(--tv-cs-lon); }
+}
+
+@media (max-width: 576px) {
+    .ct-actions .tv-btn { flex: 1 1 100%; }
+    .ct-day-body { padding-left: var(--tv-k4); }
+}

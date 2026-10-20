@@ -81,6 +81,8 @@ Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng b�
 Điện thoại: một cột. Bộ lọc thu vào một hàng ngang cuộn được.
 
 ### Chi tiết tour
+Đã làm: ảnh lớn bo góc kèm dải ảnh nhỏ (bấm để đổi ảnh), cột thông tin (loại tour, tên, giá, mô tả, bảng địa điểm - thời gian - địa hình - phong cách). Bên dưới là lịch trình dạng mở/đóng từng ngày và khung "Chọn ngày khởi hành" nằm bên phải (dính khi cuộn, xếp dưới lịch trình ở điện thoại), có giờ đi và số chỗ còn lại lấy từ dữ liệu. Đã bỏ các câu viết cứng không có trong dữ liệu (khách sạn 3 sao, hướng dẫn viên, ưu đãi, nhãn nổi bật). Bản vẽ dưới đây là ý tưởng ban đầu.
+
 Ảnh lớn đầu trang, bên dưới là hai cột trên máy tính: trái là mô tả, lịch trình theo ngày; phải là hộp đặt tour dính (chọn lịch khởi hành, số người, giá, nút "Đặt tour"). Điện thoại: hộp đặt thành thanh cố định ở đáy màn hình.
 
 ### Đăng nhập và đăng ký

@@ -1,7 +1,7 @@
 ﻿@model webdulich.Models.Tour
 
 @{
-    ViewData["Title"] = "Chi tiết tour";
+    ViewData["Title"] = Model.TenTour;
 
     var danhSachAnh = new List<string>();
 
@@ -20,760 +20,193 @@
 
     danhSachAnh = danhSachAnh.Distinct().ToList();
 
-    
-
     var lichKhoiHanh = ViewBag.LichKhoiHanh as List<webdulich.Models.LichKhoiHanhTour>;
     var lichTrinhTour = Model.LichTrinhTours != null
-    ? Model.LichTrinhTours.OrderBy(x => x.NgayThu).ToList()
-    : new List<webdulich.Models.LichTrinhTour>();
+        ? Model.LichTrinhTours.OrderBy(x => x.NgayThu).ToList()
+        : new List<webdulich.Models.LichTrinhTour>();
+
+    var loaiTourText = Model.DanhMuc?.TenDanhMuc ?? "Tour du lịch";
+    var phuongTienText = Model.PhuongTienHienThi;
 }
 
-<style>
-    :root {
-        --blue-main: #0b74ff;
-        --blue-dark: #073b78;
-        --blue-soft: #eaf6ff;
-        --orange-main: #ff6b2c;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --line-soft: #e2e8f0;
-        --white: #ffffff;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chi-tiet.css" asp-append-version="true" />
+}
 
-    html {
-        scroll-behavior: smooth;
-    }
+<nav class="ct-crumb" aria-label="Điều hướng">
+    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+        Danh sách tour
+    </a>
+</nav>
 
-    body {
-        background: #f5f8fc !important;
-        color: var(--text-main);
-    }
-
-    .tour-detail-page {
-        max-width: 1320px;
-        margin: 28px auto 50px;
-        padding: 0 14px;
-    }
-
-    .tour-detail-hero {
-        border-radius: 24px;
-        overflow: hidden;
-        background: linear-gradient(135deg, rgba(7,59,120,0.88), rgba(11,116,255,0.78)), url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
-        color: white;
-        padding: 36px 28px;
-        box-shadow: 0 20px 48px rgba(2, 30, 70, 0.22);
-        margin-bottom: 24px;
-    }
-
-        .tour-detail-hero h1 {
-            font-size: clamp(2rem, 3.2vw, 3rem);
-            margin: 0 0 8px;
-            font-weight: 900;
+<section class="ct-top">
+    <div class="ct-gallery">
+        @if (danhSachAnh.Any())
+        {
+            <img id="mainImage" src="~/images/dulich/@danhSachAnh.First()" class="ct-main-img" alt="@Model.TenTour" />
+        }
+        else
+        {
+            <div class="ct-main-img ct-no-img">Chưa có hình ảnh</div>
         }
 
-        .tour-detail-hero p {
-            margin: 0;
-            font-size: 1.05rem;
-            color: rgba(255,255,255,0.92);
-            font-weight: 600;
+        @if (danhSachAnh.Count > 1)
+        {
+            <div class="ct-thumbs">
+                @foreach (var anh in danhSachAnh)
+                {
+                    <button type="button" class="ct-thumb" onclick="changeImage(this)" aria-label="Xem ảnh tour">
+                        <img src="~/images/dulich/@anh" alt="" loading="lazy" />
+                    </button>
+                }
+            </div>
         }
-
-    .tour-detail-card,
-    .departure-section {
-        background: var(--white);
-        border: 1px solid #e2e8f0;
-        border-radius: 24px;
-        box-shadow: 0 18px 44px rgba(15,23,42,0.08);
-        padding: 24px;
-    }
-
-    .tour-detail-grid {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 24px;
-        align-items: start;
-    }
-
-    .gallery-box {
-        position: relative;
-    }
-
-    .main-image {
-        width: 100%;
-        height: 500px;
-        object-fit: cover;
-        border-radius: 20px;
-        border: 1px solid #dbeafe;
-        box-shadow: 0 14px 32px rgba(15,23,42,0.12);
-        background: #eef2ff;
-    }
-
-    .badge-hot {
-        position: absolute;
-        top: 14px;
-        left: 14px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #ff6b2c, #ff9a3d);
-        color: white;
-        font-weight: 900;
-        font-size: 0.86rem;
-        padding: 8px 14px;
-        box-shadow: 0 10px 24px rgba(255,107,44,0.28);
-    }
-
-    .thumb-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 14px;
-    }
-
-        .thumb-list img {
-            width: 88px;
-            height: 68px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 2px solid #dbeafe;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-            .thumb-list img:hover {
-                border-color: var(--blue-main);
-                transform: translateY(-2px);
-            }
-
-    .tour-type {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: #eef6ff;
-        border: 1px solid #dbeafe;
-        color: var(--blue-dark);
-        font-weight: 900;
-        margin-bottom: 14px;
-    }
-
-    .tour-title {
-        margin: 0 0 6px;
-        font-size: clamp(1.8rem, 3vw, 2.6rem);
-        line-height: 1.22;
-        font-weight: 950;
-        color: var(--text-main);
-        text-transform: uppercase;
-    }
-
-    .tour-price {
-        color: var(--orange-main);
-        font-size: 2rem;
-        font-weight: 950;
-        margin: 0 0 14px;
-    }
-
-    .tour-desc {
-        color: var(--text-muted);
-        line-height: 1.7;
-        margin: 0 0 20px;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .info-title {
-        margin: 0 0 12px;
-        font-size: 1.35rem;
-        font-weight: 900;
-        color: var(--text-main);
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .info-item {
-        background: #f8fbff;
-        border: 1px solid #dbeafe;
-        border-radius: 16px;
-        padding: 14px;
-    }
-
-    .info-label {
-        color: var(--text-muted);
-        font-size: 0.86rem;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
-
-    .info-value {
-        color: var(--text-main);
-        font-size: 1.02rem;
-        font-weight: 900;
-        line-height: 1.35;
-    }
-
-    .tag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: #eef6ff;
-        border: 1px solid #dbeafe;
-        color: #075985;
-        font-weight: 850;
-        font-size: 0.9rem;
-    }
-
-    .action-box {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-
-    .btn-book {
-        border: none;
-        border-radius: 14px;
-        padding: 12px 22px;
-        background: linear-gradient(135deg, var(--orange-main), #ff8a3d);
-        color: white !important;
-        text-decoration: none;
-        font-weight: 900;
-        box-shadow: 0 12px 28px rgba(255,107,44,0.26);
-        transition: 0.25s;
-    }
-
-        .btn-book:hover {
-            transform: translateY(-2px);
-            color: white !important;
-        }
-
-    .btn-back {
-        border: 1px solid #cbd5e1;
-        border-radius: 14px;
-        padding: 12px 22px;
-        background: #f8fafc;
-        color: #0f172a;
-        text-decoration: none;
-        font-weight: 900;
-        transition: 0.2s;
-    }
-
-        .btn-back:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-
-    .note-box {
-        border-radius: 16px;
-        padding: 14px 16px;
-        background: #ecfdf5;
-        border: 1px solid #bbf7d0;
-        color: #166534;
-        font-weight: 700;
-        line-height: 1.5;
-    }
-
-    .departure-section {
-        margin-top: 24px;
-    }
-
-    .departure-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 16px;
-        margin-bottom: 18px;
-    }
-
-    .departure-title {
-        margin: 0;
-        color: #0f172a;
-        font-size: 1.65rem;
-        font-weight: 950;
-    }
-
-    .departure-note {
-        margin: 5px 0 0;
-        color: #64748b;
-        font-weight: 650;
-    }
-
-    .departure-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
-    }
-
-    .departure-card {
-        position: relative;
-        overflow: hidden;
-        border-radius: 18px;
-        padding: 18px;
-        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-        border: 1px solid #dbeafe;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-        transition: 0.25s ease;
-    }
-
-        .departure-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 4px;
-            background: linear-gradient(90deg, #0b74ff, #ff6b2c);
-        }
-
-        .departure-card:hover {
-            transform: translateY(-5px);
-            border-color: #93c5fd;
-            box-shadow: 0 18px 38px rgba(11, 116, 255, 0.14);
-        }
-
-    .departure-date {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 14px;
-        border-radius: 999px;
-        background: #eaf6ff;
-        color: #0b74ff;
-        font-weight: 950;
-        margin-bottom: 14px;
-    }
-
-    .departure-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        padding: 9px 0;
-        border-bottom: 1px solid #e2e8f0;
-        color: #475569;
-        font-weight: 700;
-    }
-
-        .departure-row:last-of-type {
-            border-bottom: none;
-        }
-
-    .departure-value {
-        color: #0f172a;
-        font-weight: 900;
-        text-align: right;
-    }
-
-    .departure-price {
-        color: #ff6b2c;
-        font-size: 1.12rem;
-        font-weight: 950;
-    }
-
-    .departure-btn {
-        width: 100%;
-        margin-top: 16px;
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        padding: 12px 16px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #0b74ff, #1d4ed8);
-        color: white !important;
-        text-decoration: none;
-        font-weight: 950;
-        box-shadow: 0 12px 28px rgba(11, 116, 255, 0.24);
-        transition: 0.22s ease;
-    }
-
-        .departure-btn:hover {
-            transform: translateY(-2px);
-            color: white !important;
-        }
-
-    .departure-empty {
-        border-radius: 16px;
-        padding: 18px;
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        color: #9a3412;
-        font-weight: 750;
-    }
-
-    .itinerary-section {
-        margin-top: 24px;
-        background: var(--white);
-        border: 1px solid #e2e8f0;
-        border-radius: 24px;
-        box-shadow: 0 18px 44px rgba(15,23,42,0.08);
-        padding: 24px;
-    }
-
-    .itinerary-head {
-        margin-bottom: 18px;
-    }
-
-    .itinerary-kicker {
-        display: inline-flex;
-        padding: 8px 13px;
-        border-radius: 999px;
-        background: #fff1e8;
-        color: #c2410c;
-        font-weight: 900;
-        margin-bottom: 10px;
-    }
-
-    .itinerary-title {
-        margin: 0;
-        color: #0f172a;
-        font-size: 1.65rem;
-        font-weight: 950;
-    }
-
-    .itinerary-note {
-        margin: 5px 0 0;
-        color: #64748b;
-        font-weight: 650;
-    }
-
-    .itinerary-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-
-    .itinerary-item {
-        border: 1px solid #dbeafe;
-        border-radius: 18px;
-        background: linear-gradient(180deg, #f8fbff, #ffffff);
-        overflow: hidden;
-    }
-
-    .itinerary-summary {
-        list-style: none;
-        cursor: pointer;
-        display: grid;
-        grid-template-columns: 56px 1fr auto;
-        gap: 14px;
-        align-items: center;
-        padding: 18px;
-    }
-
-        .itinerary-summary::-webkit-details-marker {
-            display: none;
-        }
-
-    .itinerary-day {
-        width: 46px;
-        height: 46px;
-        border-radius: 15px;
-        background: linear-gradient(135deg, #0b74ff, #1d4ed8);
-        color: white;
-        display: grid;
-        place-items: center;
-        font-weight: 950;
-    }
-
-    .itinerary-main-title {
-        color: #0f172a;
-        font-size: 1.08rem;
-        font-weight: 950;
-        margin-bottom: 4px;
-    }
-
-    .itinerary-meal {
-        color: #64748b;
-        font-weight: 750;
-    }
-
-    .itinerary-arrow {
-        color: #0b74ff;
-        font-size: 1.4rem;
-        font-weight: 900;
-        transition: 0.2s;
-    }
-
-    .itinerary-item[open] .itinerary-arrow {
-        transform: rotate(90deg);
-    }
-
-    .itinerary-content {
-        border-top: 1px solid #e2e8f0;
-        padding: 0 18px 18px 88px;
-        color: #475569;
-        font-weight: 650;
-        line-height: 1.7;
-        white-space: pre-line;
-    }
-
-    .itinerary-empty {
-        border-radius: 16px;
-        padding: 18px;
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        color: #9a3412;
-        font-weight: 750;
-    }
-
-    @@media (max-width: 1100px) {
-        .tour-detail-grid,
-        .departure-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .main-image {
-            height: 420px;
-        }
-    }
-
-    @@media (max-width: 767px) {
-        .tour-detail-page {
-            margin-top: 16px;
-            padding: 0 10px;
-        }
-
-        .tour-detail-card,
-        .departure-section {
-            padding: 16px;
-        }
-
-        .tour-detail-hero {
-            padding: 26px 16px;
-        }
-
-        .main-image {
-            height: 280px;
-        }
-
-        .tour-title {
-            font-size: 1.7rem;
-        }
-
-        .tour-price {
-            font-size: 1.6rem;
-        }
-
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .departure-head {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-    }
-</style>
-
-<div class="tour-detail-page">
-    <div class="tour-detail-hero">
-        <h1>Chi tiết tour du lịch</h1>
-        <p>Thông tin lịch trình, phong cách và mức giá để bạn chọn chuyến đi phù hợp nhất.</p>
     </div>
 
-    <div class="tour-detail-card">
-        <div class="tour-detail-grid">
-            <div class="gallery-box">
-                @if (danhSachAnh.Any())
-                {
-                    <img id="mainImage" src="~/images/dulich/@danhSachAnh.First()" class="main-image" alt="@Model.TenTour" />
-                }
-                else
-                {
-                    <div class="main-image d-flex align-items-center justify-content-center text-muted">Chưa có hình ảnh</div>
-                }
+    <div class="ct-summary">
+        <div class="tv-tags">
+            <span class="tv-tag">@loaiTourText</span>
+            @if (!string.IsNullOrWhiteSpace(phuongTienText) && phuongTienText != "Chưa cập nhật")
+            {
+                <span class="tv-tag">@phuongTienText</span>
+            }
+        </div>
 
-                <div class="badge-hot">⭐ Tour nổi bật</div>
+        <h1 class="ct-title">@Model.TenTour</h1>
 
-                <div class="thumb-list">
-                    @foreach (var anh in danhSachAnh)
-                    {
-                        <img src="~/images/dulich/@anh" onclick="changeImage(this)" alt="Ảnh tour" />
-                    }
-                </div>
-            </div>
+        <div class="ct-price">
+            <span class="tv-price-label">Giá trọn gói từ</span>
+            <span class="ct-price-value">@Model.Gia.ToString("N0") <small>VNĐ</small></span>
+        </div>
 
+        <p class="ct-desc">
+            @(string.IsNullOrEmpty(Model.MoTa) ? "Thông tin mô tả của tour đang được cập nhật." : Model.MoTa)
+        </p>
+
+        <dl class="ct-specs">
             <div>
-                <div class="tour-type">
-                    @{
-                        var loaiTourText = Model.DanhMuc?.TenDanhMuc ?? "Tour du lịch";
-                    }
-
-                    🌍 @loaiTourText
-                </div>
-
-                <h1 class="tour-title">@Model.TenTour</h1>
-
-                <div class="tour-price">
-                    Từ @Model.Gia.ToString("N0") VNĐ
-                </div>
-
-                <p class="tour-desc">
-                    @(string.IsNullOrEmpty(Model.MoTa) ? "Tour du lịch hấp dẫn, phù hợp cho chuyến đi nghỉ dưỡng và khám phá." : Model.MoTa)
-                </p>
-
-                <div class="info-title">Thông tin tour</div>
-
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">📍 Địa điểm</div>
-                        <div class="info-value">@Model.TenDiaDiemHienThi</div>
-                    </div>
-
-                    <div class="info-item">
-                        <div class="info-label">🕒 Thời gian</div>
-                        <div class="info-value">@(Model.SoNgay.HasValue? Model.SoNgay.Value + " ngày" : "Chưa cập nhật")</div>
-                    </div>
-
-                    <div class="info-item">
-                        <div class="info-label">🌄 Địa hình</div>
-                        <div class="info-value">@Model.LoaiDiaHinhHienThi</div>
-                    </div>
-
-                    <div class="info-item">
-                        <div class="info-label">💖 Phong cách</div>
-                        <div class="info-value">@Model.PhongCachHienThi</div>
-                    </div>
-                </div>
-
-                <div class="tag-list">
-                    <span class="tag">🚗 @Model.PhuongTienHienThi</span>
-                    <span class="tag">🏨 Khách sạn 3 sao</span>
-                    <span class="tag">🍽️ Ăn uống theo tour</span>
-                    <span class="tag">🎒 Hướng dẫn viên</span>
-                </div>
-
-                <div class="action-box">
-                    <a href="#departureSection" class="btn-book">
-                        Chọn lịch khởi hành
-                    </a>
-                    <a href="#itinerarySection" class="btn-back">
-                        Xem lịch trình
-                    </a>
-
-                    <a asp-controller="DiaDiem"
-                       asp-action="DanhSach"
-                       class="btn-back">
-                        ← Quay lại
-                    </a>
-                </div>
-
-                <div class="note-box">
-                    🎁 Đặt tour hôm nay để nhận ưu đãi và được hỗ trợ tư vấn miễn phí.
-                </div>
+                <dt>Địa điểm</dt>
+                <dd>@Model.TenDiaDiemHienThi</dd>
             </div>
+            <div>
+                <dt>Thời gian</dt>
+                <dd>@(Model.SoNgay.HasValue ? Model.SoNgay.Value + " ngày" : "Chưa cập nhật")</dd>
+            </div>
+            <div>
+                <dt>Địa hình</dt>
+                <dd>@Model.LoaiDiaHinhHienThi</dd>
+            </div>
+            <div>
+                <dt>Phong cách</dt>
+                <dd>@Model.PhongCachHienThi</dd>
+            </div>
+        </dl>
+
+        <div class="ct-actions">
+            <a href="#departureSection" class="tv-btn tv-btn-chinh">Chọn ngày khởi hành</a>
+            <a href="#itinerarySection" class="tv-btn tv-btn-vien">Xem lịch trình</a>
         </div>
     </div>
+</section>
 
-    <div id="departureSection" class="departure-section">
-        <div class="departure-head">
-            <div>
-                <h2 class="departure-title">Chọn ngày khởi hành</h2>
-                <p class="departure-note">Chọn lịch đi phù hợp trước khi đặt tour.</p>
+<div class="ct-body">
+    <section id="itinerarySection" class="ct-itinerary">
+        <h2>Lịch trình tour</h2>
+        <p class="ct-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
+
+        @if (lichTrinhTour.Any())
+        {
+            <div class="ct-days">
+                @foreach (var item in lichTrinhTour)
+                {
+                    <details class="ct-day" @(item.NgayThu == 1 ? "open" : "")>
+                        <summary>
+                            <span class="ct-day-no">@item.NgayThu</span>
+                            <span class="ct-day-title">
+                                Ngày @item.NgayThu: @item.TieuDe
+                                @if (!string.IsNullOrWhiteSpace(item.BuaAn))
+                                {
+                                    <small>Bữa ăn: @item.BuaAn</small>
+                                }
+                            </span>
+                        </summary>
+
+                        @if (!string.IsNullOrWhiteSpace(item.NoiDung))
+                        {
+                            <div class="ct-day-body">@item.NoiDung</div>
+                        }
+                    </details>
+                }
             </div>
-        </div>
-        <div id="itinerarySection" class="itinerary-section">
-            <div class="itinerary-head">
-                <div class="itinerary-kicker">🧭 Lịch trình chi tiết</div>
-                <h2 class="itinerary-title">Lịch trình tour</h2>
-                <p class="itinerary-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
+        }
+        else
+        {
+            <div class="tv-empty">
+                <p>Lịch trình chi tiết của tour này đang được cập nhật.</p>
             </div>
+        }
+    </section>
 
-            @if (lichTrinhTour.Any())
-            {
-                <div class="itinerary-list">
-                    @foreach (var item in lichTrinhTour)
-                    {
-                        <details class="itinerary-item" @(item.NgayThu == 1 ? "open" : "")>
-                            <summary class="itinerary-summary">
-                                <div class="itinerary-day">@item.NgayThu</div>
-
-                                <div>
-                                    <div class="itinerary-main-title">
-                                        Ngày @item.NgayThu: @item.TieuDe
-                                    </div>
-
-                                    @if (!string.IsNullOrWhiteSpace(item.BuaAn))
-                                    {
-                                        <div class="itinerary-meal">
-                                            🍽️ @item.BuaAn
-                                        </div>
-                                    }
-                                </div>
-
-                                <div class="itinerary-arrow">›</div>
-                            </summary>
-
-                            @if (!string.IsNullOrWhiteSpace(item.NoiDung))
-                            {
-                                <div class="itinerary-content">
-                                    @item.NoiDung
-                                </div>
-                            }
-                        </details>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="itinerary-empty">
-                    Lịch trình chi tiết của tour này đang được cập nhật.
-                </div>
-            }
-        </div>
+    <aside id="departureSection" class="ct-departures">
+        <h2>Chọn ngày khởi hành</h2>
+        <p class="ct-note">Chọn lịch đi phù hợp trước khi đặt tour.</p>
 
         @if (lichKhoiHanh != null && lichKhoiHanh.Any())
         {
-            <div class="departure-grid">
+            <div class="ct-dep-list">
                 @foreach (var lich in lichKhoiHanh)
                 {
                     var giaNguoiLon = lich.GiaNguoiLon ?? Model.Gia;
                     var giaTreEm = lich.GiaTreEm ?? giaNguoiLon * 0.5m;
 
-                    <div class="departure-card">
-                        <div class="departure-date">
-                            📅 @lich.NgayKhoiHanh.ToString("dd/MM/yyyy")
-                        </div>
-                        <div class="departure-row">
-                            <span>Giá người lớn</span>
-                            <span class="departure-value departure-price">@giaNguoiLon.ToString("N0") VNĐ</span>
+                    <div class="ct-dep">
+                        <div class="ct-dep-head">
+                            <strong>@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</strong>
+                            @if (lich.GioKhoiHanh.HasValue)
+                            {
+                                <span>Giờ đi @lich.GioKhoiHanh.Value.ToString(@"hh\:mm")</span>
+                            }
+                            <span class="ct-seats@(lich.SoChoCon <= 0 ? " het" : "")">@(lich.SoChoCon > 0 ? "Còn " + lich.SoChoCon + " chỗ" : "Hết chỗ")</span>
                         </div>
 
-                        <div class="departure-row">
+                        <div class="ct-dep-row">
+                            <span>Giá người lớn</span>
+                            <span class="ct-dep-price">@giaNguoiLon.ToString("N0") VNĐ</span>
+                        </div>
+                        <div class="ct-dep-row">
                             <span>Giá trẻ em</span>
-                            <span class="departure-value departure-price">@giaTreEm.ToString("N0") VNĐ</span>
+                            <span class="ct-dep-price">@giaTreEm.ToString("N0") VNĐ</span>
                         </div>
 
                         <a asp-controller="DatTour"
                            asp-action="DatTour"
                            asp-route-id="@Model.Id"
                            asp-route-lichId="@lich.Id"
-                           class="departure-btn">
-                            Chọn ngày này
-                        </a>
+                           class="tv-btn tv-btn-chinh ct-dep-btn">Chọn ngày này</a>
                     </div>
                 }
             </div>
         }
         else
         {
-            <div class="departure-empty">
-                Tour này chưa có lịch khởi hành. Vui lòng quay lại sau hoặc liên hệ TravelVN để được tư vấn.
+            <div class="tv-empty">
+                <p>Tour này chưa có lịch khởi hành. Vui lòng quay lại sau hoặc liên hệ TravelVN để được tư vấn.</p>
             </div>
         }
-    </div>
+    </aside>
 </div>
 
 <script>
     function changeImage(el) {
-        document.getElementById("mainImage").src = el.src;
+        var img = el.tagName === "IMG" ? el : el.querySelector("img");
+        if (!img) return;
+        document.getElementById("mainImage").src = img.src;
+        document.querySelectorAll(".ct-thumb").forEach(function (t) { t.classList.remove("active"); });
+        if (el.classList) el.classList.add("active");
     }
+
+    var thumbDau = document.querySelector(".ct-thumb");
+    if (thumbDau) thumbDau.classList.add("active");
 </script>
