@@ -89,9 +89,13 @@ Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng b�
 Một cột, khung hẹp giữa trang, toàn bộ tiếng Việt. Bỏ chữ "Sign in", "Hello Friend!". Liên kết "Quên mật khẩu" hiện chưa có chức năng nên tạm ẩn cho đến khi làm.
 
 ### Đặt tour và Thanh toán
+Đã làm: thanh ba bước dùng chung (`_BuocDatTour`), biểu mẫu chia khối, cột tóm tắt dính; Thanh toán có khối thông tin khách, mã khuyến mãi, chọn phương thức (tiền mặt, ACB, MoMo, hiển thị QR và nội dung chuyển khoản). Giữ nguyên toàn bộ JavaScript và id. Bản vẽ dưới đây là ý tưởng ban đầu.
+
 Thanh tiến trình ba bước ở đầu trang: Thông tin, Thanh toán, Hoàn tất. Cột trái là biểu mẫu, cột phải là tóm tắt đơn (tour, ngày, số người, giảm giá, tổng). Giữ nguyên toàn bộ trường và `id` hiện có. Trang thanh toán bỏ quảng cáo thẻ, ví chưa hỗ trợ; luồng vẫn là giả lập cho đến khi làm QR.
 
 ### Thành công và Lịch sử
+Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch sử chưa làm.
+
 Thành công: dấu tích, mã chuyến đi, tóm tắt, nút xem lịch sử. Lịch sử: danh sách đơn dạng thẻ, mỗi thẻ có nhãn trạng thái (chữ kèm màu), nút Hủy ở đúng chỗ.
 
 ### Gợi ý tour

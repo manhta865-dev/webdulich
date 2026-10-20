@@ -2,172 +2,35 @@
     ViewData["Title"] = "Đặt tour thành công";
 }
 
-<style>
-    body {
-        background: radial-gradient(circle at top left, rgba(201,168,76,0.16), transparent 28%), linear-gradient(180deg, #f8f5ee 0%, #eef3f8 100%) !important;
-        min-height: 100vh;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+}
 
-    .success-page {
-        max-width: 920px;
-        margin: 46px auto 70px;
-        padding: 0 12px;
-        text-align: center;
-    }
+<div class="dt-page">
+    <partial name="_BuocDatTour" model="3" />
 
-    .success-card {
-        background: rgba(255,253,248,0.96);
-        border: 1px solid rgba(201,168,76,0.26);
-        border-radius: 20px;
-        padding: 44px 34px;
-        box-shadow: 0 20px 52px rgba(13,27,62,0.13);
-        position: relative;
-        overflow: hidden;
-    }
-
-        .success-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #c9a84c, #e8c96d, transparent);
-        }
-
-    .success-icon {
-        width: 86px;
-        height: 86px;
-        margin: 0 auto 18px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.8rem;
-        box-shadow: 0 14px 34px rgba(201,168,76,0.35);
-    }
-
-    .success-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(2rem, 4vw, 2.55rem);
-        font-weight: 900;
-        color: #0d1b3e;
-        margin-bottom: 14px;
-    }
-
-        .success-title::after {
-            content: "";
-            display: block;
-            width: 90px;
-            height: 2px;
-            margin: 14px auto 0;
-            background: linear-gradient(90deg, transparent, #c9a84c, transparent);
-        }
-
-    .success-text {
-        font-size: 1.08rem;
-        color: #2f3745;
-        margin-bottom: 10px;
-        line-height: 1.6;
-    }
-
-    .success-highlight {
-        color: #a78328;
-        font-weight: 900;
-    }
-
-    .success-note {
-        max-width: 640px;
-        margin: 22px auto 0;
-        padding: 14px 16px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #fff7df, #f6ecd0);
-        border: 1px solid rgba(201,168,76,0.28);
-        color: #614b12;
-        font-weight: 700;
-    }
-
-    .success-actions {
-        margin-top: 28px;
-        display: flex;
-        justify-content: center;
-        gap: 14px;
-        flex-wrap: wrap;
-    }
-
-    .success-btn {
-        padding: 13px 24px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 900;
-        transition: 0.25s;
-        min-width: 180px;
-    }
-
-    .btn-home {
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e !important;
-        box-shadow: 0 10px 26px rgba(201,168,76,0.28);
-    }
-
-    .btn-history {
-        background: #0d1b3e;
-        color: #f5e6b8 !important;
-        box-shadow: 0 10px 26px rgba(13,27,62,0.18);
-    }
-
-    .success-btn:hover {
-        transform: translateY(-2px);
-    }
-
-    .btn-home:hover {
-        box-shadow: 0 14px 34px rgba(201,168,76,0.42);
-    }
-
-    .btn-history:hover {
-        color: #e8c96d !important;
-    }
-
-    @@media (max-width: 576px) {
-        .success-card {
-            padding: 34px 18px;
-        }
-
-        .success-btn {
-            width: 100%;
-        }
-    }
-</style>
-
-<div class="success-page">
-    <div class="success-card">
-        <div class="success-icon">✅</div>
-        <div class="success-title">Đặt tour thành công!</div>
-
-        <p class="success-text">
-            Bạn đã đặt tour <span class="success-highlight">@TempData["TenTour"]</span> thành công.
-        </p>
-
-        <p class="success-text">
-            Phương thức thanh toán: <span class="success-highlight">@TempData["PhuongThucThanhToan"]</span>
-        </p>
-
-        <p class="success-text">
-            Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của TravelVN.
-        </p>
-
-        <div class="success-note">
-            TravelVN sẽ kiểm tra thông tin thanh toán và hỗ trợ bạn trong thời gian sớm nhất.
+    <div class="dt-success">
+        <div class="dt-success-icon" aria-hidden="true">
+            <svg class="tv-icon"><use href="#i-check" /></svg>
         </div>
 
-        <div class="success-actions">
-            <a asp-controller="TrangChu" asp-action="Index" class="success-btn btn-home">
-                Về trang chủ
-            </a>
+        <h1>Đặt tour thành công</h1>
 
-            <a asp-controller="DatTour" asp-action="LichSu" class="success-btn btn-history">
-                Xem lịch sử đặt tour
-            </a>
+        <p>
+            Bạn đã đặt tour <strong>@TempData["TenTour"]</strong>.
+        </p>
+
+        <p>
+            Phương thức thanh toán: <strong>@TempData["PhuongThucThanhToan"]</strong>
+        </p>
+
+        <p class="dt-success-note">
+            TravelVN sẽ kiểm tra thông tin thanh toán và hỗ trợ bạn trong thời gian sớm nhất. Cảm ơn bạn đã sử dụng dịch vụ của TravelVN.
+        </p>
+
+        <div class="dt-actions dt-actions-giua">
+            <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-chinh">Xem lịch sử đặt tour</a>
+            <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Về trang chủ</a>
         </div>
     </div>
 </div>

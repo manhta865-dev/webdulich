@@ -292,3 +292,140 @@
     .dt-step-text { font-size: var(--tv-cs-nho); white-space: nowrap; }
     .dt-actions .tv-btn { flex: 1 1 100%; }
 }
+
+/* ---------- Trang Thanh toán ---------- */
+.dt-info-list { margin: 0; }
+
+.dt-info-list > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k4);
+    padding: var(--tv-k2) 0;
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.dt-info-list > div:last-child { border-bottom: 0; }
+.dt-info-list dt { font-weight: 500; color: var(--tv-chu-phu); }
+.dt-info-list dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+
+.promo-pay-row { display: flex; gap: var(--tv-k2); }
+.promo-pay-row .form-control { flex: 1; min-width: 0; }
+
+.promo-message {
+    margin-top: var(--tv-k2);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
+.promo-message.success { color: var(--tv-thanh-cong); }
+.promo-message.error { color: var(--tv-loi); }
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    min-height: 52px;
+    padding: var(--tv-k3) var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color var(--tv-nhanh), background var(--tv-nhanh);
+}
+
+.payment-method + .payment-method { margin-top: var(--tv-k2); }
+.payment-method:hover { border-color: var(--tv-nhan); }
+.payment-method:has(input:checked) { border-color: var(--tv-nhan); background: var(--tv-nhan-nhat); }
+.payment-method input { width: 18px; height: 18px; accent-color: var(--tv-nhan); }
+
+.pay-box {
+    display: none;
+    margin-top: var(--tv-k4);
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-nen);
+}
+
+.pay-box.active { display: block; }
+
+.pay-grid {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--tv-k5);
+    align-items: start;
+}
+
+.qr-wrap img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--tv-bo-nut);
+    background: #fff;
+}
+
+.pay-info p { margin: 0 0 var(--tv-k2); }
+
+.pay-amount { font-weight: 700; color: var(--tv-gia); }
+
+.copy-box {
+    padding: var(--tv-k3);
+    border: 1px dashed var(--tv-chu-phu);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    font-family: ui-monospace, Consolas, monospace;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.note-box {
+    margin-top: var(--tv-k4);
+    padding: var(--tv-k3) var(--tv-k4);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-chu);
+    line-height: 1.55;
+}
+
+.summary-line-discount > span:last-child { color: var(--tv-thanh-cong); }
+
+/* ---------- Trang Thành công ---------- */
+.dt-success {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: var(--tv-k6) var(--tv-k5);
+    text-align: center;
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+}
+
+.dt-success-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--tv-k4);
+    border-radius: 50%;
+    background: var(--tv-thanh-cong);
+    color: #fff;
+}
+
+.dt-success-icon .tv-icon { width: 32px; height: 32px; stroke-width: 2.5; }
+
+.dt-success h1 { margin: 0 0 var(--tv-k4); }
+.dt-success p { margin: 0 0 var(--tv-k2); color: var(--tv-chu-phu); }
+.dt-success strong { color: var(--tv-chu); }
+.dt-success .dt-success-note { margin-top: var(--tv-k4); line-height: 1.6; }
+.dt-actions-giua { justify-content: center; }
+
+@media (max-width: 576px) {
+    .pay-grid { grid-template-columns: 1fr; }
+    .qr-wrap { max-width: 220px; }
+    .promo-pay-row { flex-direction: column; }
+    .promo-pay-row .tv-btn { width: 100%; }
+}
+
+/* Khối đầu tiên trong form đứng sau một khối khác ở ngoài form */
+.dt-block + form > .dt-block:first-child { margin-top: var(--tv-k4); }
