@@ -1,2275 +1,333 @@
 @using Microsoft.AspNetCore.Http
 @model List<webdulich.Models.Tour>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-    :root {
-        --navy-950: #060d1a;
-        --navy-900: #0b162c;
-        --navy-800: #132342;
-        --gold-500: #d4a359;
-        --gold-400: #e6b973;
-        --gold-soft: rgba(212, 163, 89, 0.14);
-        --brand-blue: #0f62fe;
-        --brand-coral: #ff5722;
-        --brand-coral-hover: #e64a19;
-        --emerald: #059669;
-        --surface-bg: #f8f9fc;
-        --surface-card: #ffffff;
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --text-muted: #64748b;
-        --border-subtle: #e2e8f0;
-        --border-focus: #cbd5e1;
-        --shadow-sm: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
-        --shadow-md: 0 12px 32px -4px rgba(15, 23, 42, 0.08);
-        --shadow-lg: 0 24px 56px -8px rgba(11, 22, 44, 0.14);
-        --radius-sm: 10px;
-        --radius-md: 16px;
-        --radius-lg: 24px;
-        --radius-xl: 32px;
-    }
-
-    body {
-        background: var(--surface-bg) !important;
-        color: var(--text-primary);
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        min-height: 100vh;
-        -webkit-font-smoothing: antialiased;
-    }
-
-    .home-modern {
-        width: 100vw;
-        margin-left: calc(50% - 50vw);
-        overflow-x: hidden;
-    }
-
-    .home-inner {
-        max-width: 1340px;
-        margin: 0 auto;
-        padding: 0 24px;
-        position: relative;
-        z-index: 2;
-    }
-
-    /* ================= HERO SECTION ================= */
-    .modern-hero {
-        position: relative;
-        min-height: 690px;
-        padding: 72px 0 96px;
-        color: #ffffff;
-        overflow: hidden;
-        background: var(--navy-950);
-        display: flex;
-        align-items: center;
-    }
-
-    .hero-banner-slider {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        overflow: hidden;
-    }
-
-    .hero-banner-slide {
-        position: absolute;
-        inset: 0;
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        opacity: 0;
-        transform: scale(1.06);
-        transition: opacity 1.1s cubic-bezier(0.4, 0, 0.2, 1), transform 6s ease-out;
-    }
-
-        .hero-banner-slide.active {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-    /* Lớp phủ đa tầng giúp chữ luôn nổi bật trên mọi bức ảnh */
-    .hero-banner-slider::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 50% 35%, rgba(11, 22, 44, 0.45) 0%, rgba(6, 13, 26, 0.82) 100%), linear-gradient(180deg, rgba(6, 13, 26, 0.65) 0%, rgba(6, 13, 26, 0.35) 50%, rgba(6, 13, 26, 0.92) 100%);
-        z-index: 1;
-    }
-
-    .hero-slider-btn {
-        position: absolute;
-        top: 50%;
-        z-index: 5;
-        width: 48px;
-        height: 48px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 50%;
-        background: rgba(11, 22, 44, 0.45);
-        backdrop-filter: blur(12px);
-        color: #ffffff;
-        display: grid;
-        place-items: center;
-        cursor: pointer;
-        transform: translateY(-50%);
-        transition: all 0.25s ease;
-    }
-
-        .hero-slider-btn:hover {
-            background: var(--gold-500);
-            border-color: var(--gold-500);
-            color: var(--navy-950);
-            transform: translateY(-50%) scale(1.06);
-        }
-
-    .hero-slider-prev {
-        left: 28px;
-    }
-
-    .hero-slider-next {
-        right: 28px;
-    }
-
-    .hero-slider-dots {
-        position: absolute;
-        left: 50%;
-        bottom: 42px;
-        z-index: 5;
-        display: flex;
-        gap: 8px;
-        transform: translateX(-50%);
-    }
-
-    .hero-dot {
-        width: 8px;
-        height: 8px;
-        border: none;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.35);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        padding: 0;
-    }
-
-        .hero-dot.active {
-            width: 32px;
-            background: var(--gold-400);
-        }
-
-    .hero-content-modern {
-        position: relative;
-        z-index: 2;
-        max-width: 1040px;
-        margin: 0 auto;
-        text-align: center;
-    }
-
-    .hero-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 7px 18px;
-        border-radius: 999px;
-        background: rgba(212, 163, 89, 0.16);
-        border: 1px solid rgba(212, 163, 89, 0.45);
-        backdrop-filter: blur(12px);
-        color: var(--gold-400);
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        margin-bottom: 22px;
-    }
-
-    .hero-title-modern {
-        font-size: clamp(2.5rem, 4.8vw, 4.35rem);
-        font-weight: 800;
-        letter-spacing: -0.025em;
-        line-height: 1.12;
-        margin-bottom: 18px;
-        color: #ffffff;
-        text-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    }
-
-        .hero-title-modern em {
-            font-family: 'Cormorant Garamond', Georgia, serif;
-            font-style: italic;
-            font-weight: 600;
-            color: var(--gold-400);
-            font-size: 1.12em;
-            letter-spacing: 0;
-        }
-
-    .hero-subtitle-modern {
-        font-size: clamp(1rem, 1.5vw, 1.18rem);
-        color: rgba(255, 255, 255, 0.82);
-        max-width: 680px;
-        margin: 0 auto 30px;
-        font-weight: 400;
-        line-height: 1.65;
-    }
-
-    /* Navigation Pills */
-    .travel-tabs {
-        display: inline-flex;
-        justify-content: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        padding: 6px;
-        border-radius: 999px;
-        background: rgba(11, 22, 44, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        backdrop-filter: blur(16px);
-        margin: 0 auto 24px;
-    }
-
-    .travel-tab {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: 999px;
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.25s ease;
-    }
-
-        .travel-tab svg {
-            width: 16px;
-            height: 16px;
-            stroke-width: 2;
-            color: var(--gold-400);
-            transition: transform 0.25s ease;
-        }
-
-        .travel-tab:hover,
-        .travel-tab.active {
-            background: rgba(255, 255, 255, 0.14);
-            color: #ffffff;
-        }
-
-            .travel-tab:hover svg {
-                transform: translateY(-1px);
-            }
-
-    /* Executive Search Command Bar */
-    .search-panel-modern {
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 14px 18px 16px;
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.98);
-        box-shadow: 0 28px 64px rgba(4, 10, 24, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-    }
-
-    .search-form-modern {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .search-input-wrap {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        min-height: 56px;
-        padding: 0 16px;
-        border-radius: 14px;
-        background: #f8fafc;
-        border: 1px solid transparent;
-        transition: all 0.2s ease;
-    }
-
-        .search-input-wrap:focus-within {
-            background: #ffffff;
-            border-color: var(--brand-blue);
-            box-shadow: 0 0 0 4px rgba(15, 98, 254, 0.08);
-        }
-
-    .search-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        background: #eff6ff;
-        color: var(--brand-blue);
-        flex-shrink: 0;
-    }
-
-    .search-input-wrap input {
-        width: 100%;
-        border: none;
-        outline: none;
-        background: transparent;
-        color: var(--text-primary);
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-        .search-input-wrap input::placeholder {
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-    .search-btn-modern {
-        border: none;
-        border-radius: 14px;
-        height: 56px;
-        padding: 0 32px;
-        background: linear-gradient(135deg, var(--brand-coral), #ff7043);
-        color: #ffffff;
-        font-size: 0.96rem;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        cursor: pointer;
-        box-shadow: 0 10px 24px rgba(255, 87, 34, 0.28);
-        transition: all 0.25s ease;
-    }
-
-        .search-btn-modern:hover {
-            background: linear-gradient(135deg, var(--brand-coral-hover), var(--brand-coral));
-            transform: translateY(-1px);
-            box-shadow: 0 14px 30px rgba(255, 87, 34, 0.38);
-        }
-
-    .quick-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 12px;
-        padding: 0 4px;
-    }
-
-    .quick-row-label {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--text-muted);
-    }
-
-    .quick-chip-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .quick-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 13px;
-        border-radius: 999px;
-        background: #f1f5f9;
-        color: var(--text-secondary);
-        font-size: 0.82rem;
-        font-weight: 600;
-        text-decoration: none;
-        border: 1px solid transparent;
-        transition: all 0.2s ease;
-    }
-
-        .quick-chip svg {
-            width: 14px;
-            height: 14px;
-            color: var(--brand-blue);
-        }
-
-        .quick-chip:hover {
-            background: #eff6ff;
-            color: var(--brand-blue);
-            border-color: #bfdbfe;
-        }
-
-    /* Trust Metrics Bar */
-    .hero-trust {
-        max-width: 920px;
-        margin: 28px auto 0;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        background: rgba(11, 22, 44, 0.68);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        backdrop-filter: blur(16px);
-        border-radius: var(--radius-md);
-        overflow: hidden;
-    }
-
-    .trust-card {
-        padding: 16px 20px;
-        text-align: left;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-        .trust-card:last-child {
-            border-right: none;
-        }
-
-    .trust-card-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: rgba(212, 163, 89, 0.15);
-        border: 1px solid rgba(212, 163, 89, 0.3);
-        color: var(--gold-400);
-        display: grid;
-        place-items: center;
-        flex-shrink: 0;
-    }
-
-    .trust-card strong {
-        display: block;
-        font-size: 1rem;
-        font-weight: 800;
-        color: #ffffff;
-        line-height: 1.2;
-    }
-
-    .trust-card span {
-        color: rgba(255, 255, 255, 0.68);
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-
-    /* ================= TICKER BAR ================= */
-    .marquee-container {
-        margin: -26px auto 0;
-        position: relative;
-        z-index: 4;
-        max-width: 1180px;
-        overflow: hidden;
-        background: var(--navy-900);
-        border: 1px solid rgba(212, 163, 89, 0.35);
-        color: #ffffff;
-        border-radius: 999px;
-        padding: 12px 24px;
-        box-shadow: var(--shadow-md);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .marquee-badge {
-        background: var(--gold-500);
-        color: var(--navy-950);
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 4px 10px;
-        border-radius: 999px;
-        flex-shrink: 0;
-    }
-
-    .marquee-viewport {
-        overflow: hidden;
-        flex: 1;
-    }
-
-    .marquee-text {
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
-        animation: marquee 22s linear infinite;
-        font-weight: 600;
-        font-size: 0.88rem;
-        color: rgba(255, 255, 255, 0.9);
-        letter-spacing: 0.02em;
-    }
-
-        .marquee-text:hover {
-            animation-play-state: paused;
-        }
-
-    @@keyframes marquee {
-        0% {
-            transform: translateX(0);
-        }
-
-        100% {
-            transform: translateX(-100%);
-        }
-    }
-
-    /* ================= SECTION HEADERS ================= */
-    .section-block {
-        padding: 76px 0 0;
-    }
-
-    .section-head {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .section-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--brand-coral);
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-
-        .section-kicker::before {
-            content: "";
-            width: 20px;
-            height: 2px;
-            background: currentColor;
-            border-radius: 2px;
-        }
-
-    .section-title {
-        color: var(--text-primary);
-        font-size: clamp(1.75rem, 2.8vw, 2.4rem);
-        font-weight: 800;
-        letter-spacing: -0.025em;
-        line-height: 1.18;
-        margin: 0;
-    }
-
-    .section-desc {
-        color: var(--text-muted);
-        font-size: 0.98rem;
-        font-weight: 500;
-        margin: 8px 0 0;
-        max-width: 620px;
-        line-height: 1.6;
-    }
-
-    .section-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid var(--border-subtle);
-        color: var(--text-primary);
-        text-decoration: none;
-        font-size: 0.88rem;
-        font-weight: 700;
-        white-space: nowrap;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.25s ease;
-    }
-
-        .section-link:hover {
-            border-color: var(--navy-900);
-            background: var(--navy-900);
-            color: #ffffff;
-            transform: translateY(-2px);
-        }
-
-    /* ================= PROMO VOUCHERS (BOARDING PASS STYLE) ================= */
-    .promo-home-section {
-        padding: 64px 0 0;
-    }
-
-    .promo-slider {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(320px, 410px);
-        gap: 20px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        padding: 6px 4px 20px;
-        scrollbar-width: thin;
-    }
-
-    .promo-card-home {
-        position: relative;
-        border-radius: 20px;
-        color: #ffffff;
-        padding: 24px 26px;
-        overflow: hidden;
-        scroll-snap-align: start;
-        box-shadow: var(--shadow-md);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 190px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-        /* Rãnh vé máy bay 2 bên */
-        .promo-card-home::before,
-        .promo-card-home::after {
-            content: "";
-            position: absolute;
-            top: 62%;
-            width: 24px;
-            height: 24px;
-            background: var(--surface-bg);
-            border-radius: 50%;
-            z-index: 2;
-        }
-
-        .promo-card-home::before {
-            left: -13px;
-        }
-
-        .promo-card-home::after {
-            right: -13px;
-        }
-
-    .promo-card-top {
-        position: relative;
-        z-index: 1;
-        padding-bottom: 14px;
-        border-bottom: 1px dashed rgba(255, 255, 255, 0.35);
-        margin-bottom: 14px;
-    }
-
-    .promo-badge-mini {
-        display: inline-block;
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 3px 9px;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.2);
-        margin-bottom: 8px;
-    }
-
-    .promo-card-home h3 {
-        margin: 0 0 6px;
-        font-size: 1.3rem;
-        font-weight: 800;
-        letter-spacing: -0.01em;
-    }
-
-    .promo-card-home p {
-        margin: 0;
-        font-size: 0.88rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.88);
-        line-height: 1.45;
-    }
-
-    .promo-card-bottom {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .promo-code-pill {
-        font-family: monospace;
-        font-size: 0.95rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        background: rgba(0, 0, 0, 0.22);
-        padding: 6px 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .promo-copy-btn {
-        border: none;
-        border-radius: 10px;
-        padding: 9px 16px;
-        background: #ffffff;
-        color: var(--navy-900);
-        font-size: 0.84rem;
-        font-weight: 800;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        transition: all 0.2s ease;
-    }
-
-        .promo-copy-btn:hover {
-            transform: translateY(-2px);
-            background: var(--navy-900);
-            color: #ffffff;
-        }
-
-    .promo-toast {
-        position: fixed;
-        left: 50%;
-        bottom: 30px;
-        transform: translateX(-50%) translateY(20px);
-        opacity: 0;
-        padding: 12px 22px;
-        border-radius: 999px;
-        background: var(--navy-900);
-        border: 1px solid var(--gold-500);
-        color: var(--gold-400);
-        font-weight: 700;
-        font-size: 0.9rem;
-        z-index: 9999;
-        box-shadow: var(--shadow-lg);
-        transition: 0.25s;
-        pointer-events: none;
-    }
-
-        .promo-toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-    /* ================= TOUR CARDS (BESPOKE OTA STYLE) ================= */
-    .tour-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 28px;
-    }
-
-    .tour-card {
-        background: var(--surface-card);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        border: 1px solid var(--border-subtle);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-        .tour-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-lg);
-            border-color: #cbd5e1;
-        }
-
-    .tour-image-wrap {
-        position: relative;
-        height: 240px;
-        overflow: hidden;
-        background: var(--navy-900);
-    }
-
-        .tour-image-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-    .tour-card:hover .tour-image-wrap img {
-        transform: scale(1.07);
-    }
-
-    .tour-image-wrap::after {
-        content: "";
-        position: absolute;
-        inset: auto 0 0 0;
-        height: 45%;
-        background: linear-gradient(to top, rgba(6, 13, 26, 0.65), transparent);
-        pointer-events: none;
-    }
-
-    .tour-badge {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        z-index: 2;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(11, 22, 44, 0.78);
-        border: 1px solid rgba(212, 163, 89, 0.5);
-        backdrop-filter: blur(8px);
-        color: var(--gold-400);
-        font-weight: 700;
-        font-size: 0.74rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-
-    .tour-duration-pill {
-        position: absolute;
-        bottom: 14px;
-        left: 16px;
-        z-index: 2;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 11px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(6px);
-        color: var(--navy-900);
-        font-size: 0.78rem;
-        font-weight: 700;
-    }
-
-    .tour-body {
-        padding: 22px 24px 24px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .tour-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 12px;
-    }
-
-    .tour-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: #f1f5f9;
-        color: var(--text-secondary);
-    }
-
-    .tag-blue {
-        background: #eff6ff;
-        color: #1d4ed8;
-    }
-
-    .tag-yellow {
-        background: #fef3c7;
-        color: #b45309;
-    }
-
-    .tag-cyan {
-        background: #ecfdf5;
-        color: #047857;
-    }
-
-    .tour-title {
-        font-size: 1.16rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-bottom: 8px;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        min-height: 3.2em;
-    }
-
-    .tour-desc {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        line-height: 1.55;
-        margin-bottom: 20px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .tour-card-footer {
-        margin-top: auto;
-        padding-top: 16px;
-        border-top: 1px solid #f1f5f9;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 12px;
-    }
-
-    .tour-price-label {
-        color: var(--text-muted);
-        font-weight: 600;
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 2px;
-    }
-
-    .tour-price {
-        color: var(--brand-coral);
-        font-size: 1.38rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
-    }
-
-    .btn-book {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 11px 18px;
-        border-radius: 12px;
-        background: var(--navy-900);
-        color: #ffffff !important;
-        text-decoration: none;
-        font-size: 0.86rem;
-        font-weight: 700;
-        white-space: nowrap;
-        transition: all 0.25s ease;
-    }
-
-        .btn-book:hover {
-            background: var(--brand-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(15, 98, 254, 0.25);
-        }
-
-    .empty-box {
-        background: #ffffff;
-        border: 1px dashed var(--border-focus);
-        border-radius: var(--radius-lg);
-        padding: 48px 24px;
-        text-align: center;
-        color: var(--text-muted);
-    }
-
-    /* ================= BENTO GRID POPULAR DESTINATIONS ================= */
-    .popular-grid {
-        display: grid;
-        grid-template-columns: 1.25fr 1fr 1fr;
-        grid-template-rows: repeat(2, 230px);
-        gap: 20px;
-    }
-
-    .popular-card {
-        position: relative;
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        cursor: pointer;
-        background: var(--navy-900);
-    }
-
-        .popular-card:nth-child(1) {
-            grid-column: 1 / 2;
-            grid-row: 1 / 3;
-        }
-
-        .popular-card:nth-child(2) {
-            grid-column: 2 / 4;
-            grid-row: 1 / 2;
-        }
-
-        .popular-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .popular-card:hover img {
-            transform: scale(1.07);
-        }
-
-    .popular-card-overlay {
-        position: absolute;
-        inset: 0;
-        padding: 24px;
-        background: linear-gradient(180deg, rgba(6, 13, 26, 0.05) 35%, rgba(6, 13, 26, 0.82) 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-    }
-
-    .popular-tag {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--gold-400);
-        margin-bottom: 4px;
-    }
-
-    .popular-name {
-        color: #ffffff;
-        font-size: 1.5rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .popular-arrow {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.18);
-        backdrop-filter: blur(8px);
-        display: grid;
-        place-items: center;
-        color: #ffffff;
-        transition: all 0.25s ease;
-    }
-
-    .popular-card:hover .popular-arrow {
-        background: var(--gold-500);
-        color: var(--navy-950);
-        transform: translate(2px, -2px);
-    }
-
-    /* ================= ARCHITECTURAL FEATURE & STATS BAND ================= */
-    .feature-band {
-        margin-top: 84px;
-        padding: 84px 0;
-        background: var(--navy-900);
-        background-image: radial-gradient(circle at 12% 20%, rgba(15, 98, 254, 0.22), transparent 40%), radial-gradient(circle at 88% 80%, rgba(212, 163, 89, 0.16), transparent 40%);
-        color: #ffffff;
-        position: relative;
-    }
-
-        .feature-band .section-title {
-            color: #ffffff;
-        }
-
-        .feature-band .section-desc {
-            color: rgba(255, 255, 255, 0.72);
-        }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-    }
-
-    .feature-box {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: var(--radius-lg);
-        padding: 30px 28px;
-        transition: all 0.3s ease;
-    }
-
-        .feature-box:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(212, 163, 89, 0.45);
-            transform: translateY(-4px);
-        }
-
-    .feature-icon {
-        width: 48px;
-        height: 48px;
-        display: grid;
-        place-items: center;
-        border-radius: 14px;
-        background: var(--gold-soft);
-        border: 1px solid rgba(212, 163, 89, 0.35);
-        color: var(--gold-400);
-        margin-bottom: 20px;
-    }
-
-    .feature-box h4 {
-        font-size: 1.18rem;
-        font-weight: 800;
-        margin-bottom: 10px;
-        color: #ffffff;
-    }
-
-    .feature-box p {
-        color: rgba(255, 255, 255, 0.72);
-        margin: 0;
-        line-height: 1.6;
-        font-size: 0.94rem;
-    }
-
-    /* Stats Grid */
-    .stats-section {
-        padding-top: 76px;
-    }
-
-    .info-grid-4 {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-    }
-
-    .stat-box {
-        background: #ffffff;
-        border: 1px solid var(--border-subtle);
-        padding: 28px 24px;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-sm);
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        text-align: left;
-    }
-
-        .stat-box .feature-icon {
-            margin-bottom: 0;
-            background: #eff6ff;
-            border-color: #dbeafe;
-            color: var(--brand-blue);
-            flex-shrink: 0;
-        }
-
-        .stat-box h4 {
-            color: var(--text-primary);
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin: 0 0 2px;
-        }
-
-        .stat-box p {
-            color: var(--text-muted);
-            font-size: 0.88rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-    /* ================= TESTIMONIALS ================= */
-    .testimonial-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 24px;
-    }
-
-    .testimonial-card {
-        background: #ffffff;
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-lg);
-        padding: 28px;
-        box-shadow: var(--shadow-sm);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 18px;
-    }
-
-    .testimonial-stars {
-        display: flex;
-        gap: 4px;
-        color: #f59e0b;
-    }
-
-    .testimonial-card p {
-        color: var(--text-secondary);
-        margin: 0;
-        line-height: 1.65;
-        font-size: 0.96rem;
-        font-weight: 500;
-    }
-
-    .testimonial-author {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding-top: 14px;
-        border-top: 1px solid #f1f5f9;
-    }
-
-    .author-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--navy-900);
-        color: var(--gold-400);
-        display: grid;
-        place-items: center;
-        font-weight: 800;
-        font-size: 0.88rem;
-    }
-
-    .testimonial-author h4 {
-        font-size: 0.95rem;
-        font-weight: 800;
-        margin: 0;
-        color: var(--text-primary);
-    }
-
-    .testimonial-author span {
-        font-size: 0.78rem;
-        color: var(--emerald);
-        font-weight: 600;
-    }
-
-    /* ================= CTA BANNER ================= */
-    .cta-box {
-        margin-top: 76px;
-        padding: 64px 40px;
-        border-radius: var(--radius-xl);
-        background: linear-gradient(120deg, rgba(6, 13, 26, 0.92) 0%, rgba(11, 22, 44, 0.78) 55%, rgba(15, 98, 254, 0.65) 100%), url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
-        color: #ffffff;
-        text-align: center;
-        box-shadow: var(--shadow-lg);
-        position: relative;
-        overflow: hidden;
-    }
-
-        .cta-box h2 {
-            font-size: clamp(1.85rem, 3.2vw, 2.65rem);
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 10px;
-        }
-
-        .cta-box p {
-            color: rgba(255, 255, 255, 0.82);
-            font-size: 1.02rem;
-            max-width: 560px;
-            margin: 0 auto 28px;
-        }
-
-    .cta-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 15px 34px;
-        border-radius: 999px;
-        background: var(--gold-500);
-        color: var(--navy-950) !important;
-        text-decoration: none;
-        font-weight: 800;
-        font-size: 0.96rem;
-        box-shadow: 0 14px 32px rgba(212, 163, 89, 0.35);
-        transition: all 0.25s ease;
-    }
-
-        .cta-btn:hover {
-            background: var(--gold-400);
-            transform: translateY(-2px);
-        }
-
-    /* ================= FOOTER ================= */
-    .modern-footer {
-        margin-top: 84px;
-        background: var(--navy-950);
-        color: rgba(255, 255, 255, 0.78);
-        border-top: 1px solid rgba(212, 163, 89, 0.25);
-        position: relative;
-    }
-
-    .modern-footer-inner {
-        max-width: 1340px;
-        margin: 0 auto;
-        padding: 64px 24px 48px;
-        display: grid;
-        grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.6fr) minmax(300px, 0.95fr);
-        gap: 56px;
-        align-items: start;
-    }
-
-    .footer-logo-text {
-        color: #ffffff;
-        font-size: 1.9rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        margin-bottom: 6px;
-    }
-
-        .footer-logo-text span {
-            color: var(--gold-400);
-        }
-
-    .footer-company {
-        color: rgba(255, 255, 255, 0.6);
-        font-weight: 600;
-        font-size: 0.92rem;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-    .footer-contact-line {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 10px;
-        font-size: 0.92rem;
-    }
-
-        .footer-contact-line span {
-            color: var(--gold-400);
-            font-weight: 700;
-            min-width: 62px;
-        }
-
-    .footer-map-link {
-        color: rgba(255, 255, 255, 0.85);
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-
-        .footer-map-link:hover {
-            color: var(--gold-400);
-        }
-
-    .footer-map-mini {
-        width: 100%;
-        max-width: 420px;
-        height: 155px;
-        margin: 18px 0;
-        overflow: hidden;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-        .footer-map-mini iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            display: block;
-        }
-
-    .footer-actions-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-        margin-top: 16px;
-    }
-
-    .footer-socials {
-        display: flex;
-        gap: 10px;
-    }
-
-        .footer-socials a {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            background: rgba(255, 255, 255, 0.06);
-            color: #ffffff;
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            transition: all 0.25s ease;
-        }
-
-            .footer-socials a:hover {
-                background: var(--gold-500);
-                color: var(--navy-950);
-                border-color: var(--gold-500);
-                transform: translateY(-2px);
-            }
-
-    .footer-hotline {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 999px;
-        background: var(--brand-coral);
-        color: #ffffff !important;
-        text-decoration: none;
-        font-weight: 800;
-        font-size: 0.9rem;
-        transition: all 0.25s ease;
-    }
-
-        .footer-hotline:hover {
-            background: var(--brand-coral-hover);
-            transform: translateY(-2px);
-        }
-
-    .footer-col-title {
-        color: #ffffff;
-        font-size: 0.88rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 20px;
-    }
-
-    .footer-links {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-size: 0.94rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-            .footer-links a:hover {
-                color: var(--gold-400);
-                transform: translateX(4px);
-            }
-
-    .footer-payment-card {
-        width: 100%;
-        padding: 26px;
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .footer-payment-note {
-        color: rgba(255, 255, 255, 0.65);
-        font-size: 0.88rem;
-        margin-bottom: 18px;
-        line-height: 1.5;
-    }
-
-    .footer-payment-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-    }
-
-    .footer-pay {
-        min-height: 44px;
-        padding: 8px 10px;
-        border-radius: 10px;
-        background: #ffffff;
-        font-weight: 800;
-        font-size: 0.88rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .pay-visa {
-        color: #1a1f71;
-        font-style: italic;
-    }
-
-    .pay-vnpay {
-        color: #005baa;
-    }
-
-    .pay-momo {
-        color: #a50064;
-    }
-
-    .pay-zalopay {
-        color: #0068ff;
-    }
-
-    .pay-acb {
-        color: #004b9b;
-    }
-
-    .footer-bottom-bar {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 22px 24px;
-        text-align: center;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.85rem;
-        line-height: 1.6;
-    }
-
-    .footer-float-actions {
-        position: fixed;
-        right: 24px;
-        bottom: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        z-index: 30;
-    }
-
-        .footer-float-actions a {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            background: var(--navy-900);
-            border: 1px solid rgba(212, 163, 89, 0.45);
-            color: var(--gold-400);
-            text-decoration: none;
-            box-shadow: var(--shadow-md);
-            transition: all 0.25s ease;
-        }
-
-            .footer-float-actions a:hover {
-                background: var(--gold-500);
-                color: var(--navy-950);
-                transform: translateY(-3px);
-            }
-
-    /* ================= RESPONSIVE ================= */
-    @@media (max-width: 1100px) {
-        .hero-trust {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .trust-card:nth-child(2) {
-            border-right: none;
-        }
-
-        .trust-card:nth-child(1), .trust-card:nth-child(2) {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tour-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .popular-grid {
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 240px);
-        }
-
-        .popular-card:nth-child(1), .popular-card:nth-child(2) {
-            grid-column: auto;
-            grid-row: auto;
-        }
-
-        .info-grid-4 {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .modern-footer-inner {
-            grid-template-columns: 1fr;
-            gap: 36px;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .modern-hero {
-            padding: 48px 0 72px;
-            min-height: auto;
-        }
-
-        .hero-slider-btn {
-            display: none;
-        }
-
-        .search-form-modern {
-            grid-template-columns: 1fr;
-        }
-
-        .hero-trust, .tour-grid, .popular-grid, .info-grid, .info-grid-4, .testimonial-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .popular-grid {
-            grid-template-rows: auto;
-        }
-
-        .popular-card {
-            height: 230px;
-        }
-
-        .trust-card {
-            border-right: none !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section-head {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-</style>
-
-<div class="home-modern">
-    <section class="modern-hero">
-        <div class="hero-banner-slider">
-            <div class="hero-banner-slide active" style="background-image: url('/images/banner/banner1.jpg');"></div>
-            <div class="hero-banner-slide" style="background-image: url('/images/banner/banner2.jpg');"></div>
-            <div class="hero-banner-slide" style="background-image: url('/images/banner/banner3.jpg');"></div>
-            <div class="hero-banner-slide" style="background-image: url('/images/banner/banner4.jpg');"></div>
-
-            <button type="button" class="hero-slider-btn hero-slider-prev" onclick="changeHeroSlide(-1)" aria-label="Slide trước">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-            </button>
-            <button type="button" class="hero-slider-btn hero-slider-next" onclick="changeHeroSlide(1)" aria-label="Slide tiếp">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
-
-            <div class="hero-slider-dots">
-                <button type="button" class="hero-dot active" onclick="goHeroSlide(0)"></button>
-                <button type="button" class="hero-dot" onclick="goHeroSlide(1)"></button>
-                <button type="button" class="hero-dot" onclick="goHeroSlide(2)"></button>
-                <button type="button" class="hero-dot" onclick="goHeroSlide(3)"></button>
-            </div>
-        </div>
-
-        <div class="home-inner">
-            <div class="hero-content-modern">
-                <div class="hero-kicker">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                    TravelVN — Trải nghiệm hành trình xứng tầm
-                </div>
-
-                <h1 class="hero-title-modern">Khám phá Việt Nam <em>theo cách của bạn</em></h1>
-
-                <p class="hero-subtitle-modern">
-                    Tuyển chọn những hành trình đặc sắc, lịch trình minh bạch, chi phí tối ưu và gợi ý thông minh theo đúng sở thích cá nhân.
-                </p>
-
-                <div class="travel-tabs">
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="travel-tab active">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-                        Tour du lịch
-                    </a>
-                    <a asp-controller="GoiYTour" asp-action="Index" class="travel-tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" /></svg>
-                        Gợi ý tour
-                    </a>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="travel-tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
-                        Điểm đến
-                    </a>
-                    <a asp-controller="DatTour" asp-action="LichSu" class="travel-tab">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8" /></svg>
-                        Lịch sử đặt tour
-                    </a>
-                </div>
-
-                <div class="search-panel-modern">
-                    <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="search-form-modern">
-                        <div class="search-input-wrap">
-                            <div class="search-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                            </div>
-                            <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Đà Lạt, Phú Quốc, Hà Giang..." />
-                        </div>
-
-                        <button type="submit" class="search-btn-modern">
-                            Tìm kiếm hành trình
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                        </button>
-                    </form>
-
-                    <div class="quick-row">
-                        <span class="quick-row-label">Xu hướng tìm kiếm:</span>
-                        <div class="quick-chip-group">
-                            <a asp-controller="DiaDiem" asp-action="DanhSach" class="quick-chip">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                                Tour đang hot
-                            </a>
-                            <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-loaiDiaHinh="Biển" class="quick-chip">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M2 17c3.5-2 6.5-2 10 0s6.5 2 10 0" /></svg>
-                                Nghỉ dưỡng biển
-                            </a>
-                            <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-loaiDiaHinh="Núi" class="quick-chip">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z" /></svg>
-                                Khám phá vùng cao
-                            </a>
-                            <a asp-controller="GoiYTour" asp-action="Index" class="quick-chip">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></svg>
-                                Tìm tour hợp gu
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hero-trust">
-                    <div class="trust-card">
-                        <div class="trust-card-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /></svg>
-                        </div>
-                        <div>
-                            <strong>100+ tour</strong>
-                            <span>Lịch trình chọn lọc</span>
-                        </div>
-                    </div>
-
-                    <div class="trust-card">
-                        <div class="trust-card-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /></svg>
-                        </div>
-                        <div>
-                            <strong>500+ khách</strong>
-                            <span>Đánh giá hài lòng</span>
-                        </div>
-                    </div>
-
-                    <div class="trust-card">
-                        <div class="trust-card-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                        </div>
-                        <div>
-                            <strong>Hỗ trợ 24/7</strong>
-                            <span>Đồng hành suốt tuyến</span>
-                        </div>
-                    </div>
-
-                    <div class="trust-card">
-                        <div class="trust-card-icon">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>
-                        </div>
-                        <div>
-                            <strong>Ưu đãi mỗi ngày</strong>
-                            <span>Giá minh bạch, trọn gói</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="home-inner">
-        <div class="marquee-container">
-            <span class="marquee-badge">Ưu đãi độc quyền</span>
-            <div class="marquee-viewport">
-                <div class="marquee-text">
-                    FLASH SALE GIẢM TỚI 30% CHO CÁC CHUYẾN ĐI MÙA NÀY &nbsp;•&nbsp; TRAVELVN — KHÁM PHÁ VIỆT NAM TRỌN VẸN &nbsp;•&nbsp; TẶNG VOUCHER 500.000Đ CHO KHÁCH HÀNG ĐẶT LẦN ĐẦU &nbsp;•&nbsp; CAM KẾT HOÀN TIỀN NẾU DỊCH VỤ KHÔNG ĐÚNG LỊCH TRÌNH
-                </div>
-            </div>
-        </div>
-
-        @{
-            var khuyenMais = ViewBag.KhuyenMais as List<webdulich.Models.KhuyenMai> ?? new List<webdulich.Models.KhuyenMai>();
-        }
-
-        @if (khuyenMais.Any())
-        {
-            <section class="promo-home-section">
-                <div class="section-head">
-                    <div>
-                        <div class="section-kicker">Đặc quyền thành viên</div>
-                        <h2 class="section-title">Mã ưu đãi hiện hành</h2>
-                        <p class="section-desc">Sao chép mã voucher và áp dụng trực tiếp tại bước thanh toán để nhận mức chiết khấu tốt nhất.</p>
-                    </div>
-                </div>
-
-                <div class="promo-slider-wrap">
-                    <div class="promo-slider">
-                        @foreach (var km in khuyenMais)
+@{
+    ViewData["Title"] = "Trang chủ";
+    var khuyenMais = ViewBag.KhuyenMais as List<webdulich.Models.KhuyenMai> ?? new List<webdulich.Models.KhuyenMai>();
+
+    // Tour trong nước và nước ngoài do TrangChuController đã chuẩn bị sẵn (tối đa 6 tour mỗi nhóm).
+    var tourTrongNuoc = ViewBag.TourTrongNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
+    var tourNgoaiNuoc = ViewBag.TourNgoaiNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
+    var coNhomTour = tourTrongNuoc.Any() || tourNgoaiNuoc.Any();
+    var laAdmin = Context.Session.GetString("role") == "admin";
+
+    async Task VeTheTour(webdulich.Models.Tour item)
+    {
+        var loaiDiaHinhText = item.LoaiDiaHinhHienThi;
+        var phongCachText = item.PhongCachHienThi;
+        var phuongTienText = item.PhuongTienHienThi;
+        var tags = new[] { loaiDiaHinhText, phongCachText, phuongTienText }
+            .Where(x => !string.IsNullOrWhiteSpace(x) && x != "Chưa cập nhật")
+            .Take(2)
+            .ToList();
+
+        <div class="tv-photo-card-wrap">
+            @if (laAdmin)
+            {
+                <div class="tv-photo-card">
+                    <img src="~/images/dulich/@item.HinhAnh" alt="@item.TenTour" loading="lazy" />
+                    <div class="tv-photo-top">
+                        @if (item.SoNgay.HasValue)
                         {
-                            <div class="promo-card-home" style="background: linear-gradient(135deg, @km.MauNen, #1e1b4b);">
-                                <div class="promo-card-top">
-                                    <span class="promo-badge-mini">TravelVN Voucher</span>
-                                    <h3>@km.TenKhuyenMai</h3>
-                                    <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
-                                </div>
-                                <div class="promo-card-bottom">
-                                    <span class="promo-code-pill">@km.MaKhuyenMai</span>
-                                    <button type="button" class="promo-copy-btn" onclick="copyPromoCode('@km.MaKhuyenMai')">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                                        Sao chép mã
-                                    </button>
-                                </div>
-                            </div>
+                            <span class="tv-pill-tren">@item.SoNgay ngày</span>
                         }
                     </div>
+                    <div class="tv-photo-body">
+                        <h3 class="tv-photo-title">@item.TenTour</h3>
+                        <div class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@item.Id" class="tv-photo-card" aria-label="Xem chi tiết @item.TenTour">
+                    <img src="~/images/dulich/@item.HinhAnh" alt="" loading="lazy" />
+                    <div class="tv-photo-top">
+                        @if (item.SoNgay.HasValue)
+                        {
+                            <span class="tv-pill-tren">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
+                                @item.SoNgay ngày
+                            </span>
+                        }
+                    </div>
+                    <div class="tv-photo-body">
+                        @if (tags.Any())
+                        {
+                            <div class="tv-photo-tags">
+                                @foreach (var tag in tags)
+                                {
+                                    <span>@tag</span>
+                                }
+                            </div>
+                        }
+                        <h3 class="tv-photo-title">@item.TenTour</h3>
+                        <div class="tv-photo-foot">
+                            <div>
+                                <span class="tv-photo-nho">Giá trọn gói từ</span>
+                                <span class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</span>
+                            </div>
+                            <span class="tv-photo-mui" aria-hidden="true"><svg class="tv-icon"><use href="#i-arrow" /></svg></span>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+
+    // Điểm đến ở phần đầu trang. Ảnh lấy trong wwwroot/images/dulich, chỉ dùng ảnh đủ nét để phủ kín màn hình.
+    var diemDens = new[]
+    {
+        new { Ten = "Hạ Long", Vung = "Miền Bắc", Anh = "halong.jpg", MoTa = "Vịnh có hàng nghìn đảo đá vôi nhô lên từ mặt nước xanh, nổi tiếng với các chuyến du thuyền." },
+        new { Ten = "Đà Lạt", Vung = "Tây Nguyên", Anh = "dalat1.jpg", MoTa = "Thành phố cao nguyên mát mẻ quanh năm, có đồi thông, hồ nước và những vườn hoa." },
+        new { Ten = "Đà Nẵng", Vung = "Miền Trung", Anh = "danang.jpg", MoTa = "Thành phố biển có bãi cát dài, cầu Vàng ở Bà Nà và nhiều món ăn địa phương." },
+        new { Ten = "Phú Quốc", Vung = "Miền Nam", Anh = "phuquoc.jpg", MoTa = "Hòn đảo lớn nhất Việt Nam, có biển trong, bãi cát trắng và các điểm lặn ngắm san hô." },
+        new { Ten = "Nha Trang", Vung = "Miền Trung", Anh = "nhatrang.jpg", MoTa = "Thành phố biển có vịnh nước xanh, các đảo gần bờ và nhiều khu vui chơi ven biển." }
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
+}
+
+<section class="hero" id="hero" aria-roledescription="carousel" aria-label="Điểm đến nổi tiếng">
+    <h1 class="visually-hidden">Tìm chuyến đi tiếp theo của bạn</h1>
+
+    @for (var i = 0; i < diemDens.Length; i++)
+    {
+        var d = diemDens[i];
+        <div class="hero-slide@(i == 0 ? " is-active" : "")">
+            <img src="~/images/dulich/@d.Anh" alt="Ảnh @d.Ten"
+                 loading="@(i == 0 ? "eager" : "lazy")" fetchpriority="@(i == 0 ? "high" : "auto")" />
+            <div class="hero-text">
+                <span class="hero-place">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                    @d.Vung, Việt Nam
+                </span>
+                <h2 class="hero-title">@d.Ten</h2>
+                <p class="hero-desc">@d.MoTa</p>
+                <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten" class="tv-btn tv-btn-sang">Xem tour @d.Ten</a>
+            </div>
+        </div>
+    }
+
+    <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="hero-search home-search">
+        <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt, Phú Quốc" aria-label="Điểm đến" />
+        <button type="submit" class="tv-btn tv-btn-chinh">Tìm tour</button>
+    </form>
+
+    <div class="hero-thumbs">
+        @for (var i = 0; i < diemDens.Length; i++)
+        {
+            var d = diemDens[i];
+            <button type="button" class="hero-thumb@(i == 0 ? " is-active" : "")" aria-label="Xem @d.Ten" aria-current="@(i == 0 ? "true" : "false")">
+                <img src="~/images/dulich/@d.Anh" alt="" loading="lazy" />
+                <span><small>@d.Vung</small>@d.Ten</span>
+            </button>
+        }
+    </div>
+</section>
+
+<div class="home-wrap">
+    @if (khuyenMais.Any())
+    {
+        <section class="tv-section">
+            <div class="tv-section-head">
+                <div>
+                    <h2>Mã giảm giá đang áp dụng</h2>
+                    <p>Sao chép mã và nhập ở bước thanh toán.</p>
+                </div>
+            </div>
+
+            <div class="promo-list">
+                @foreach (var km in khuyenMais)
+                {
+                    <div class="promo-card" style="@(string.IsNullOrWhiteSpace(km.MauNen) ? "" : $"--mau:{km.MauNen}")">
+                        <h3>@km.TenKhuyenMai</h3>
+                        <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
+                        <div class="promo-foot">
+                            <span class="promo-code">@km.MaKhuyenMai</span>
+                            <button type="button" class="tv-btn tv-btn-vien" onclick="copyPromoCode('@km.MaKhuyenMai')">Sao chép mã</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div id="promoToast" class="promo-toast" role="status">Đã sao chép mã khuyến mãi</div>
+    }
+
+    @if (coNhomTour)
+    {
+        if (tourTrongNuoc.Any())
+        {
+            <section class="tv-section">
+                <div class="tv-section-head">
+                    <div>
+                        <h2>Tour trong nước</h2>
+                        <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
+                    </div>
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
+                </div>
+                <div class="tv-grid-photo">
+                    @foreach (var item in tourTrongNuoc)
+                    {
+                        await VeTheTour(item);
+                    }
                 </div>
             </section>
-
-            <div id="promoToast" class="promo-toast">Đã sao chép mã khuyến mãi</div>
-
-            <script>
-                function copyPromoCode(code) {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(code).then(function () {
-                            showPromoToast(code);
-                        });
-                    } else {
-                        const textArea = document.createElement("textarea");
-                        textArea.value = code;
-                        textArea.style.position = "fixed";
-                        textArea.style.left = "-999999px";
-                        document.body.appendChild(textArea);
-                        textArea.focus();
-                        textArea.select();
-                        try {
-                            document.execCommand('copy');
-                            showPromoToast(code);
-                        } catch (err) {
-                            alert("Không thể copy mã");
-                        }
-                        document.body.removeChild(textArea);
-                    }
-                }
-
-                function showPromoToast(code) {
-                    const toast = document.getElementById("promoToast");
-                    if (!toast) return;
-                    toast.textContent = "Đã sao chép mã: " + code;
-                    toast.classList.add("show");
-                    setTimeout(function () {
-                        toast.classList.remove("show");
-                    }, 1800);
-                }
-            </script>
         }
 
-        <section class="section-block">
-            <div class="section-head">
-                <div>
-                    <div class="section-kicker">Tuyển chọn đặc biệt</div>
-                    <h2 class="section-title">Tour nổi bật hôm nay</h2>
-                    <p class="section-desc">Những hành trình được yêu thích nhất với lịch trình cân bằng, khách sạn tiêu chuẩn và dịch vụ trọn gói.</p>
+        if (tourNgoaiNuoc.Any())
+        {
+            <section class="tv-section">
+                <div class="tv-section-head">
+                    <div>
+                        <h2>Tour nước ngoài</h2>
+                    </div>
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
                 </div>
-
-                <a asp-controller="DiaDiem" asp-action="DanhSach" class="section-link">
-                    Xem tất cả hành trình
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                </a>
+                <div class="tv-grid-photo">
+                    @foreach (var item in tourNgoaiNuoc)
+                    {
+                        await VeTheTour(item);
+                    }
+                </div>
+            </section>
+        }
+    }
+    else
+    {
+        <section class="tv-section">
+            <div class="tv-section-head">
+                <div>
+                    <h2>Một số tour để bắt đầu</h2>
+                    <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
+                </div>
+                <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
             </div>
 
             @if (Model != null && Model.Any())
             {
-                <div class="tour-grid">
+                <div class="tv-grid-photo">
                     @foreach (var item in Model)
                     {
-                        <div class="tour-card">
-                            <div class="tour-image-wrap">
-                                <img src="~/images/dulich/@item.HinhAnh" alt="@item.TenTour" />
-                                <div class="tour-badge">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                                    Nổi bật
-                                </div>
-                                @if (item.SoNgay.HasValue)
-                                {
-                                    <div class="tour-duration-pill">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                        @item.SoNgay ngày
-                                    </div>
-                                }
-                            </div>
-
-                            <div class="tour-body">
-                                <div class="tour-tags">
-                                    @{
-                                        var loaiDiaHinhText = item.LoaiDiaHinhHienThi;
-                                        var phongCachText = item.PhongCachHienThi;
-                                        var phuongTienText = item.PhuongTienHienThi;
-                                    }
-
-                                    @if (!string.IsNullOrWhiteSpace(loaiDiaHinhText) && loaiDiaHinhText != "Chưa cập nhật")
-                                    {
-                                        <span class="tour-tag tag-blue">@loaiDiaHinhText</span>
-                                    }
-
-                                    @if (!string.IsNullOrWhiteSpace(phongCachText) && phongCachText != "Chưa cập nhật")
-                                    {
-                                        <span class="tour-tag tag-yellow">@phongCachText</span>
-                                    }
-
-                                    @if (!string.IsNullOrWhiteSpace(phuongTienText) && phuongTienText != "Chưa cập nhật")
-                                    {
-                                        <span class="tour-tag tag-cyan">@phuongTienText</span>
-                                    }
-                                </div>
-
-                                <div class="tour-title">@item.TenTour</div>
-
-                                <div class="tour-desc">
-                                    @(item.MoTa != null && item.MoTa.Length > 95 ? item.MoTa.Substring(0, 95) + "..." : item.MoTa)
-                                </div>
-
-                                <div class="tour-card-footer">
-                                    <div>
-                                        <div class="tour-price-label">Giá trọn gói từ</div>
-                                        <div class="tour-price">@item.Gia.ToString("N0") <small style="font-size:0.7em;font-weight:700;">VNĐ</small></div>
-                                    </div>
-
-                                    @if (Context.Session.GetString("role") != "admin")
-                                    {
-                                        <a asp-controller="DiaDiem"
-                                           asp-action="ChiTiet"
-                                           asp-route-id="@item.Id"
-                                           class="btn-book">
-                                            Đặt tour
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                                        </a>
-                                    }
-                                </div>
-                            </div>
-                        </div>
+                        await VeTheTour(item);
                     }
                 </div>
             }
             else
             {
-                <div class="empty-box">
-                    <h4>Chưa có tour nổi bật</h4>
-                    <p>Hiện tại chưa có dữ liệu tour để hiển thị.</p>
+                <div class="tv-empty">
+                    <h3>Chưa có tour để hiển thị</h3>
+                    <p>Vui lòng quay lại sau.</p>
                 </div>
             }
         </section>
-
-        <section class="section-block">
-            <div class="section-head">
-                <div>
-                    <div class="section-kicker">Cảm hứng dịch chuyển</div>
-                    <h2 class="section-title">Điểm đến phổ biến</h2>
-                    <p class="section-desc">Khám phá những tọa độ du lịch hàng đầu Việt Nam với cảnh sắc thiên nhiên và văn hóa bản địa đặc sắc.</p>
-                </div>
-            </div>
-
-            <div class="popular-grid">
-                <div class="popular-card">
-                    <img src="https://bloganchoi.com/wp-content/uploads/2021/11/review-da-lat-toan-canh-dat-lat-trong-suong-mu-som-mai-1.jpg" alt="Đà Lạt" />
-                    <div class="popular-card-overlay">
-                        <span class="popular-tag">Cao nguyên sương mù</span>
-                        <div class="popular-name">
-                            Đà Lạt
-                            <span class="popular-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M7 7h10v10" /></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="popular-card">
-                    <img src="https://vietnamtravelmart.com.vn/wp-content/uploads/images1248012-unnamed-1468255588101.jpg" alt="Đà Nẵng" />
-                    <div class="popular-card-overlay">
-                        <span class="popular-tag">Thành phố đáng sống</span>
-                        <div class="popular-name">
-                            Đà Nẵng
-                            <span class="popular-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M7 7h10v10" /></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="popular-card">
-                    <img src="https://static.vinwonders.com/production/kinh-nghiem-du-lich-phu-quoc-banner.jpg" alt="Phú Quốc" />
-                    <div class="popular-card-overlay">
-                        <span class="popular-tag">Thiên đường đảo ngọc</span>
-                        <div class="popular-name">
-                            Phú Quốc
-                            <span class="popular-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M7 7h10v10" /></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="popular-card">
-                    <img src="https://static.vinwonders.com/2022/06/quang-truong-2-4-nha-trang.jpg" alt="Nha Trang" />
-                    <div class="popular-card-overlay">
-                        <span class="popular-tag">Vịnh biển quyến rũ</span>
-                        <div class="popular-name">
-                            Nha Trang
-                            <span class="popular-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M7 7h10v10" /></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <section class="feature-band">
-        <div class="home-inner">
-            <div class="section-head">
-                <div>
-                    <div class="section-kicker" style="color:var(--gold-400);">Giá trị cốt lõi</div>
-                    <h2 class="section-title">Đặt tour dễ hơn, tận hưởng trọn vẹn hơn</h2>
-                    <p class="section-desc">TravelVN chuẩn hóa mọi khâu từ tư vấn, thiết kế lịch trình đến chăm sóc khách hàng trên suốt hành trình.</p>
-                </div>
-            </div>
-
-            <div class="info-grid">
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
-                    </div>
-                    <h4>Mạng lưới điểm đến đa dạng</h4>
-                    <p>Hàng trăm tuyến điểm chọn lọc trải dài khắp 3 miền Bắc – Trung – Nam, từ nghỉ dưỡng cao cấp đến khám phá bản địa.</p>
-                </div>
-
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                    </div>
-                    <h4>Chi phí minh bạch & Tối ưu</h4>
-                    <p>Cam kết báo giá trọn gói không chi phí ẩn, tích hợp nhiều chương trình ưu đãi thiết thực cho nhóm bạn và gia đình.</p>
-                </div>
-
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
-                    </div>
-                    <h4>Dịch vụ tận tâm chuẩn mực</h4>
-                    <p>Đội ngũ điều hành và hướng dẫn viên giàu kinh nghiệm, hỗ trợ nhanh chóng 24/7 trước, trong và sau mỗi chuyến đi.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="home-inner">
-        <section class="stats-section">
-            <div class="section-head">
-                <div>
-                    <div class="section-kicker">Dấu ấn thương hiệu</div>
-                    <h2 class="section-title">Những con số biết nói</h2>
-                </div>
-            </div>
-
-            <div class="info-grid-4">
-                <div class="stat-box">
-                    <div class="feature-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
-                    </div>
-                    <div>
-                        <h4>100+</h4>
-                        <p>Tour tuyển chọn</p>
-                    </div>
-                </div>
-
-                <div class="stat-box">
-                    <div class="feature-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                    </div>
-                    <div>
-                        <h4>500+</h4>
-                        <p>Khách hàng hài lòng</p>
-                    </div>
-                </div>
-
-                <div class="stat-box">
-                    <div class="feature-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                    </div>
-                    <div>
-                        <h4>50+</h4>
-                        <p>Điểm đến nổi bật</p>
-                    </div>
-                </div>
-
-                <div class="stat-box">
-                    <div class="feature-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                    </div>
-                    <div>
-                        <h4>24/7</h4>
-                        <p>Hỗ trợ tận tâm</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section-block">
-            <div class="section-head">
-                <div>
-                    <div class="section-kicker">Cảm nhận thực tế</div>
-                    <h2 class="section-title">Khách hàng nói gì về TravelVN</h2>
-                </div>
-            </div>
-
-            <div class="testimonial-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-stars">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                    </div>
-                    <p>"Lịch trình tour rất hợp lý, không bị mệt. Hướng dẫn viên nhiệt tình, chu đáo từ bữa ăn đến giấc ngủ, gia đình mình rất hài lòng!"</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">MA</div>
-                        <div>
-                            <h4>Minh Anh</h4>
-                            <span>Khách hàng đã xác thực</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-stars">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                    </div>
-                    <p>"Thao tác đặt tour trên web cực kỳ nhanh, áp mã giảm giá trực tiếp rất tiện. Khách sạn đẹp đúng như cam kết ban đầu."</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">LC</div>
-                        <div>
-                            <h4>Lan Chi</h4>
-                            <span>Khách hàng đã xác thực</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-stars">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" /></svg>
-                    </div>
-                    <p>"Tính năng gợi ý tour rất thông minh, giúp nhóm mình chọn ngay được chuyến đi hợp túi tiền. Chắc chắn sẽ quay lại ủng hộ."</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">TM</div>
-                        <div>
-                            <h4>Thành Mạnh</h4>
-                            <span>Khách hàng đã xác thực</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="cta-box">
-            <h2>Sẵn sàng cho hành trình tiếp theo của bạn?</h2>
-            <p>Đặt tour ngay hôm nay để nhận ưu đãi độc quyền và sự đồng hành tận tâm từ đội ngũ TravelVN.</p>
-
-            <a asp-controller="DiaDiem" asp-action="DanhSach" class="cta-btn">
-                Khám phá danh sách tour
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-            </a>
-        </div>
-    </div>
-
-    <footer class="modern-footer">
-        <div class="modern-footer-inner">
-            <div class="footer-brand-col">
-                <div class="footer-logo-text">Travel<span>VN</span></div>
-                <div class="footer-company">Công ty Du Lịch & Lữ Hành TravelVN</div>
-
-                <div class="footer-contact-line">
-                    <span>Địa chỉ:</span>
-                    <a class="footer-map-link"
-                       href="https://www.google.com/maps?q=201%2F1%20M%C3%A3%20L%C3%B2%2C%20B%C3%ACnh%20Tr%E1%BB%8B%20%C4%90%C3%B4ng%20A%2C%20B%C3%ACnh%20T%C3%A2n%2C%20TP.HCM"
-                       target="_blank">
-                        201/1 Mã Lò, Bình Trị Đông A, Bình Tân, TP.HCM
-                    </a>
-                </div>
-
-                <div class="footer-contact-line">
-                    <span>Email:</span>
-                    VietTravelVN@gmail.com
-                </div>
-
-                <div class="footer-map-mini">
-                    <iframe src="https://www.google.com/maps?q=201%2F1%20M%C3%A3%20L%C3%B2%2C%20B%C3%ACnh%20Tr%E1%BB%8B%20%C4%90%C3%B4ng%20A%2C%20B%C3%ACnh%20T%C3%A2n%2C%20TP.HCM&output=embed"
-                            loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade">
-                    </iframe>
-                </div>
-
-                <div class="footer-actions-row">
-                    <a href="tel:0342500619" class="footer-hotline">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                        0342 500 619
-                    </a>
-
-                    <div class="footer-socials">
-                        <a href="#" aria-label="Facebook">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
-                        </a>
-                        <a href="#" aria-label="Instagram">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
-                        </a>
-                        <a href="https://zalo.me/0342500619" target="_blank" aria-label="Zalo">
-                            <span style="font-size:0.75rem;font-weight:800;">Zalo</span>
-                        </a>
-                        <a href="#" aria-label="TikTok">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-info-col">
-                <div class="footer-col-title">Điều hướng</div>
-
-                <div class="footer-links">
-                    <a asp-controller="TrangChu" asp-action="Index">Trang chủ</a>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach">Danh sách tour</a>
-                    <a asp-controller="GoiYTour" asp-action="Index">Gợi ý tour thông minh</a>
-                    <a href="#">Cẩm nang & Tin tức</a>
-                    <a href="#">Trung tâm trợ giúp</a>
-                </div>
-            </div>
-
-            <div class="footer-payment-card">
-                <div class="footer-col-title">Đối tác thanh toán</div>
-
-                <div class="footer-payment-note">
-                    Hỗ trợ đa dạng phương thức thanh toán điện tử an toàn, bảo mật và xác nhận tức thì.
-                </div>
-
-                <div class="footer-payment-grid">
-                    <div class="footer-pay pay-visa"><span>VISA</span></div>
-                    <div class="footer-pay pay-vnpay"><span>VNPay</span></div>
-                    <div class="footer-pay pay-momo"><span>MoMo</span></div>
-                    <div class="footer-pay pay-zalopay"><span>ZaloPay</span></div>
-                    <div class="footer-pay pay-acb"><span>ACB</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer-bottom-bar">
-            © 2026 TravelVN. Bản quyền thuộc về Công ty Du lịch TravelVN.<br />
-            Hệ thống đặt tour trực tuyến, tư vấn lộ trình và chăm sóc khách hàng 24/7.
-        </div>
-
-        <div class="footer-float-actions">
-            <a href="#" title="Lên đầu trang">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m18 15-6-6-6 6" /></svg>
-            </a>
-            <a href="https://zalo.me/0342500619" target="_blank" title="Liên hệ Zalo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-            </a>
-        </div>
-    </footer>
-
-    <script>
-        let currentHeroSlide = 0;
-        const heroSlides = document.querySelectorAll(".hero-banner-slide");
-        const heroDots = document.querySelectorAll(".hero-dot");
-
-        function showHeroSlide(index) {
-            if (!heroSlides.length) return;
-
-            if (index >= heroSlides.length) {
-                currentHeroSlide = 0;
-            } else if (index < 0) {
-                currentHeroSlide = heroSlides.length - 1;
-            } else {
-                currentHeroSlide = index;
-            }
-
-            heroSlides.forEach(slide => slide.classList.remove("active"));
-            heroDots.forEach(dot => dot.classList.remove("active"));
-
-            heroSlides[currentHeroSlide].classList.add("active");
-            heroDots[currentHeroSlide].classList.add("active");
-        }
-
-        function changeHeroSlide(step) {
-            showHeroSlide(currentHeroSlide + step);
-        }
-
-        function goHeroSlide(index) {
-            showHeroSlide(index);
-        }
-
-        setInterval(function () {
-            changeHeroSlide(1);
-        }, 4500);
-    </script>
+    }
 </div>
+
+<section class="home-band">
+    <div class="home-band-inner">
+        <h2>Đặt tour qua ba bước</h2>
+        <ol class="band-steps">
+            <li>
+                <strong>Chọn tour</strong>
+                <span>Tìm theo điểm đến hoặc để web gợi ý theo sở thích của bạn.</span>
+            </li>
+            <li>
+                <strong>Chọn ngày khởi hành</strong>
+                <span>Xem ngày còn chỗ, nhập số người và thông tin hành khách.</span>
+            </li>
+            <li>
+                <strong>Thanh toán</strong>
+                <span>Kiểm tra giá, nhập mã giảm giá nếu có và hoàn tất đơn.</span>
+            </li>
+        </ol>
+        <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-sang">Bắt đầu chọn tour</a>
+    </div>
+</section>
+
+<script>
+    (function () {
+        var hero = document.getElementById("hero");
+        if (!hero) return;
+
+        var slides = hero.querySelectorAll(".hero-slide");
+        var thumbs = hero.querySelectorAll(".hero-thumb");
+        var hienTai = 0;
+        var timer = null;
+        var daBamTay = false;
+
+        function hien(n) {
+            hienTai = (n + slides.length) % slides.length;
+            slides.forEach(function (s, k) { s.classList.toggle("is-active", k === hienTai); });
+            thumbs.forEach(function (t, k) {
+                t.classList.toggle("is-active", k === hienTai);
+                t.setAttribute("aria-current", k === hienTai ? "true" : "false");
+            });
+        }
+
+        function chay() {
+            if (timer || daBamTay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            timer = setInterval(function () { hien(hienTai + 1); }, 6000);
+        }
+
+        function dung() {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        thumbs.forEach(function (t, k) {
+            t.addEventListener("click", function () {
+                daBamTay = true;
+                dung();
+                hien(k);
+            });
+        });
+
+        hero.addEventListener("mouseenter", dung);
+        hero.addEventListener("mouseleave", chay);
+        hero.addEventListener("focusin", dung);
+        hero.addEventListener("focusout", chay);
+        chay();
+    })();
+</script>
+
+@if (khuyenMais.Any())
+{
+    <script>
+        function copyPromoCode(code) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(function () {
+                    showPromoToast(code);
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = code;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showPromoToast(code);
+                } catch (err) {
+                    alert("Không thể sao chép mã. Bạn hãy chọn mã và sao chép thủ công.");
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showPromoToast(code) {
+            const toast = document.getElementById("promoToast");
+            if (!toast) return;
+            toast.textContent = "Đã sao chép mã: " + code;
+            toast.classList.add("show");
+            setTimeout(function () {
+                toast.classList.remove("show");
+            }, 1800);
+        }
+    </script>
+}

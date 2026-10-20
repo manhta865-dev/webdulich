@@ -323,3 +323,142 @@
     .tv-content { padding: var(--tv-k4); }
     .tv-user-text { display: none; }
 }
+
+/* ---------- Chân trang của khách ---------- */
+.tv-footer {
+    margin-top: var(--tv-k8);
+    background: #10242C;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--tv-cs-thuong);
+}
+
+.tv-footer-inner {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr 1fr 1.1fr;
+    gap: var(--tv-k6);
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: var(--tv-k7) var(--tv-k4) var(--tv-k5);
+}
+
+.tv-footer p { margin: var(--tv-k2) 0 0; }
+
+.tv-footer a { color: rgba(255, 255, 255, 0.9); text-decoration: none; }
+.tv-footer a:hover { color: #fff; text-decoration: underline; }
+
+.tv-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    font-size: var(--tv-cs-lon);
+    font-weight: 700;
+    color: #fff;
+}
+
+.tv-footer-title { margin-bottom: var(--tv-k3); font-weight: 600; color: #fff; }
+
+.tv-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tv-k2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tv-footer-links a { display: inline-flex; align-items: center; gap: var(--tv-k2); min-height: 28px; }
+
+.tv-footer-map {
+    width: 100%;
+    max-width: 420px;
+    height: 160px;
+    margin-top: var(--tv-k4);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.tv-footer-map iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+/* Các loại thanh toán chỉ để minh họa trong đồ án */
+.tv-pay-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tv-k2);
+}
+
+.tv-pay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: #fff;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 800;
+}
+
+.tv-pay-visa { color: #1A1F71; font-style: italic; }
+.tv-pay-vnpay { color: #005BAA; }
+.tv-pay-momo { color: #A50064; }
+.tv-pay-zalopay { color: #0068FF; }
+.tv-pay-acb { color: #004B9B; }
+
+.tv-footer-bottom {
+    padding: var(--tv-k4);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    text-align: center;
+    font-size: var(--tv-cs-nho);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 900px) {
+    .tv-footer-inner { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 576px) {
+    .tv-footer-inner { grid-template-columns: 1fr; gap: var(--tv-k5); }
+}
+
+/* ---------- Menu trong suốt trên trang chủ ---------- */
+.tv-nav--over {
+    position: fixed;
+    inset: 0 0 auto 0;
+    background: transparent;
+    border-bottom-color: transparent;
+    transition: background var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-brand,
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-nav-links a,
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-user {
+    color: #fff;
+}
+
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-nav-links a:hover,
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-nav-links a.active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-btn-vien {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-nav-toggle {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+}
+
+.tv-nav--over.is-solid,
+.tv-nav--over.is-open {
+    background: var(--tv-be-mat);
+    border-bottom-color: var(--tv-vien);
+}
+
+/* Trang chủ: dải ảnh cuối trang nối liền với chân trang */
+.page-full + .tv-footer { margin-top: 0; }

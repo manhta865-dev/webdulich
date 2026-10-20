@@ -57,13 +57,13 @@ Ký hiệu: `[ ]` là nút hoặc ô nhập, `( )` là nhãn nhỏ.
 ├──────────────────────────────────────────────┤
 │ nội dung                                     │
 ├──────────────────────────────────────────────┤
-│ Giới thiệu | Hỗ trợ | Liên hệ (thông tin thật)│  bỏ logo VISA/MoMo/ZaloPay chưa có
+│ Địa chỉ + bản đồ | Khám phá | Liên hệ | Thanh toán (minh họa)
 └──────────────────────────────────────────────┘
 ```
 Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng bộ.
 
 ### Trang chủ
-Một ô tìm tour ngay đầu trang (điểm đến, ngày đi, số người) với một ảnh lớn bên cạnh, tiếp theo là danh sách tour nổi bật lấy từ dữ liệu thật (chỉ gắn nhãn khi tour đúng là nổi bật), rồi khối "Đi theo nhóm" giải thích ngắn cách đặt chia phần. Bỏ số liệu "100+ tour, 500+ khách" và ba lời khen viết cứng.
+Đầu trang là ảnh điểm đến phủ kín màn hình, menu trong suốt nằm trên ảnh (đổi nền trắng khi cuộn xuống). Thanh tìm kiếm nổi ở giữa phía trên; góc trái dưới có tên điểm đến lớn, mô tả ngắn và nút "Xem tour"; góc phải dưới là dải thẻ điểm đến, bấm để đổi ảnh (tự chuyển sau 6 giây, dừng khi rê chuột, tắt khi người dùng chọn giảm chuyển động). Ảnh chỉ dùng loại đủ nét trong `wwwroot/images/dulich`. Bên dưới là mã giảm giá (nếu có trong dữ liệu), tour trong nước và nước ngoài dạng thẻ ảnh dọc (tên, số ngày, giá chồng lên ảnh), rồi một dải ảnh phủ kín với ba bước đặt tour. Chân trang nền tối có địa chỉ, bản đồ Google, liên hệ và các loại thanh toán (chỉ để minh họa trong đồ án, chưa kết nối cổng thanh toán). Bỏ số liệu "100+ tour, 500+ khách", ba lời khen viết cứng, băng chữ ưu đãi và nhãn "Nổi bật". Khối "Đi theo nhóm" sẽ thêm khi chức năng đơn nhóm có thật.
 
 ### Danh sách tour
 ```

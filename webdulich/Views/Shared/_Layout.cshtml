@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/widgets.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body>
@@ -184,7 +185,7 @@
     }
     else
     {
-        <nav class="tv-nav" id="tvNav">
+        <nav class="tv-nav@(laTrangChu ? " tv-nav--over" : "")" id="tvNav">
             <div class="tv-nav-inner">
                 <a class="tv-brand" asp-controller="TrangChu" asp-action="Index">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
@@ -233,6 +234,8 @@
         <div class="@(laTrangChu ? "page-full" : "container tv-page")">
             @RenderBody()
         </div>
+
+        <partial name="_Footer" />
     }
 
 
@@ -247,6 +250,15 @@
                     var open = nav.classList.toggle("is-open");
                     navBtn.setAttribute("aria-expanded", open ? "true" : "false");
                 });
+
+                // Trang chủ: menu nằm trong suốt trên ảnh, đổi sang nền trắng khi cuộn xuống
+                if (nav.classList.contains("tv-nav--over")) {
+                    var doiNenMenu = function () {
+                        nav.classList.toggle("is-solid", window.scrollY > 40);
+                    };
+                    doiNenMenu();
+                    window.addEventListener("scroll", doiNenMenu, { passive: true });
+                }
             }
             var admin = document.getElementById("tvAdmin");
             var sideBtn = document.getElementById("tvSideToggle");
@@ -449,13 +461,14 @@
     }
 
     <script>
-        window.addEventListener("load", function () {
+        // Tắt màn hình chờ ngay khi trang dựng xong, không đợi ảnh và phông tải hết
+        document.addEventListener("DOMContentLoaded", function () {
             const loader = document.getElementById("travelLoader");
 
             if (loader) {
                 setTimeout(function () {
                     loader.classList.add("hide");
-                }, 250);
+                }, 150);
             }
         });
     </script>
