@@ -359,3 +359,123 @@
 .ad-table td:nth-child(4) { min-width: 150px; }
 .ad-row-actions { flex-wrap: nowrap; min-width: 0; }
 .ad-row-actions .tv-btn { white-space: nowrap; }
+
+/* =====================================================================
+   Lô C: lịch khởi hành, lịch trình
+   ===================================================================== */
+
+/* ---------- Thông báo ---------- */
+.ad-alert {
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k3) var(--tv-k4);
+    border-radius: var(--tv-bo-nut);
+    font-weight: 500;
+}
+
+.ad-alert.ok { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.ad-alert.loi { background: #FBE9E7; color: var(--tv-loi); }
+
+/* ---------- Tab trạng thái ---------- */
+.ad-tabs { margin-bottom: var(--tv-k4); }
+
+/* ---------- Biểu mẫu ngang (thêm lịch khởi hành) ---------- */
+.ad-inline-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--tv-k3) var(--tv-k4);
+    align-items: end;
+}
+
+.ad-inline-grid .full { grid-column: 1 / -1; }
+.ad-hint { margin: var(--tv-k4) 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); line-height: 1.55; }
+
+/* ---------- Nhãn trạng thái của lịch khởi hành ---------- */
+.ad-status {
+    display: inline-block;
+    padding: var(--tv-k1) var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ad-status.status-upcoming { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
+.ad-status.status-running { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-status.status-done { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.ad-status.status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
+
+/* ---------- Bảng có ô nhập ngay trong dòng ---------- */
+.ad-table .form-control {
+    min-height: 38px;
+    min-width: 108px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+}
+
+.ad-table .form-control:focus { border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+.ad-table .form-control:disabled { background: var(--tv-nen); color: var(--tv-chu-phu); }
+.ad-table td .price-input { min-width: 130px; }
+.ad-table tr.schedule-cancelled td { background: #FDF6F5; }
+.ad-no-action { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); white-space: nowrap; }
+.ad-row-actions form { margin: 0; }
+
+/* ---------- Trang lịch trình: biểu mẫu bên trái, dòng thời gian bên phải ---------- */
+.ad-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    gap: var(--tv-k5);
+    align-items: start;
+}
+
+.ad-split .ad-card { margin-top: 0; }
+.ad-split h2 { margin: 0 0 var(--tv-k4); font-size: var(--tv-cs-vua); font-weight: 700; }
+.ad-split .ad-form .mb-3 { margin-bottom: var(--tv-k3) !important; }
+
+.ad-timeline { display: flex; flex-direction: column; gap: var(--tv-k3); }
+
+.ad-timeline-item {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    column-gap: var(--tv-k3);
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-day {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    grid-row: span 3;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 700;
+}
+
+.ad-timeline-item strong { font-weight: 600; }
+.ad-timeline-item .ad-meal { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-timeline-content { margin-top: var(--tv-k2); line-height: 1.6; color: var(--tv-chu-phu); white-space: pre-line; grid-column: 2 / -1; }
+.ad-timeline-item .ad-btn-nho { align-self: start; grid-column: 3; grid-row: 1; }
+
+@media (max-width: 1100px) {
+    .ad-inline-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+    .ad-split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 576px) {
+    .ad-inline-grid { grid-template-columns: 1fr; }
+    .ad-timeline-item { grid-template-columns: 40px minmax(0, 1fr); }
+    .ad-timeline-item .ad-btn-nho { grid-column: 2; grid-row: auto; margin-top: var(--tv-k2); justify-self: start; }
+}
+
+.ad-form-actions-trai { justify-content: flex-start; margin-top: var(--tv-k2); }
+.ad-inline-grid .ad-form-actions-trai { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
+.ad-khoang-tren { margin-top: var(--tv-k4); }

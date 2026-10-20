@@ -7,500 +7,267 @@
     decimal giaTreEmMacDinh = giaMacDinh * 0.5m;
 }
 
-<style>
-    .schedule-page {
-        max-width: 1280px;
-        margin: 34px auto 70px;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .schedule-title {
-        text-align: center;
-        color: #0d1b3e;
-        font-weight: 900;
-        margin-bottom: 24px;
-    }
-
-    .schedule-card {
-        background: #fffdf8;
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 18px 44px rgba(13,27,62,0.12);
-        margin-bottom: 24px;
-    }
-
-        .schedule-card h3 {
-            color: #0d1b3e;
-            font-weight: 900;
-            margin-bottom: 18px;
-        }
-
-    .form-label {
-        color: #0d1b3e;
-        font-weight: 800;
-    }
-
-    .form-control {
-        min-height: 44px;
-        border-radius: 10px;
-        border: 1px solid #d8c99d;
-        background: #fffdf8;
-        font-weight: 650;
-    }
-
-        .form-control:focus {
-            border-color: #c9a84c;
-            box-shadow: 0 0 0 0.2rem rgba(201,168,76,0.18);
-        }
-
-    .btn-add-schedule,
-    .btn-update-schedule {
-        border: none;
-        border-radius: 10px;
-        padding: 10px 16px;
-        color: white;
-        font-weight: 900;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .btn-add-schedule {
-        background: linear-gradient(135deg, #ff6b2c, #ff8a3d);
-    }
-
-    .btn-update-schedule {
-        background: linear-gradient(135deg, #0b74ff, #245be8);
-    }
-
-    .btn-back-schedule {
-        border-radius: 10px;
-        padding: 10px 16px;
-        background: #6b7280;
-        color: white !important;
-        font-weight: 800;
-        text-decoration: none;
-    }
-
-    .schedule-table-wrap {
-        overflow-x: auto;
-        border-radius: 14px;
-        box-shadow: 0 16px 34px rgba(13,27,62,0.1);
-    }
-
-    .schedule-table {
-        min-width: 1200px;
-        margin-bottom: 0;
-        background: white;
-    }
-
-        .schedule-table thead th {
-            background: #0d1b3e;
-            color: #f5d76e;
-            border-color: rgba(255,255,255,0.16);
-            padding: 14px 12px;
-            white-space: nowrap;
-        }
-
-        .schedule-table tbody td {
-            vertical-align: middle;
-            padding: 12px;
-            font-weight: 650;
-        }
-
-        .schedule-table .form-control {
-            min-height: 40px;
-            min-width: 130px;
-        }
-
-    .price-input {
-        color: #ff5c2b;
-        font-weight: 950;
-    }
-
-    .action-cell {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .btn-delete-schedule {
-        border: none;
-        border-radius: 10px;
-        padding: 10px 14px;
-        background: #dc2626;
-        color: white !important;
-        text-decoration: none;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .schedule-note {
-        margin-top: 12px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: #eef6ff;
-        color: #075985;
-        border: 1px solid #dbeafe;
-        font-weight: 700;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 120px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-weight: 900;
-        font-size: 0.86rem;
-        white-space: nowrap;
-    }
-
-    .status-upcoming {
-        background: #dbeafe;
-        color: #1d4ed8;
-        border: 1px solid #93c5fd;
-    }
-
-    .status-running {
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fcd34d;
-    }
-
-    .status-done {
-        background: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
-    }
-
-    .status-cancelled {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    .schedule-cancelled {
-        opacity: 0.72;
-    }
-
-    .no-action {
-        color: #64748b;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .alert-custom {
-        border-radius: 14px;
-        padding: 14px 16px;
-        font-weight: 850;
-        margin-bottom: 18px;
-    }
-
-    .schedule-tabs {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 22px;
-    }
-
-    .schedule-tab {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: #eef6ff;
-        color: #0d1b3e;
-        border: 1px solid #dbeafe;
-        text-decoration: none;
-        font-weight: 900;
-    }
-
-        .schedule-tab:hover {
-            background: #dbeafe;
-            color: #0d1b3e;
-        }
-
-        .schedule-tab.active {
-            background: #0d1b3e;
-            color: #f5d76e;
-            border-color: #0d1b3e;
-        }
-
-        .schedule-tab.danger {
-            background: #fee2e2;
-            color: #991b1b;
-            border-color: #fecaca;
-        }
-
-            .schedule-tab.danger.active {
-                background: #dc2626;
-                color: white;
-                border-color: #dc2626;
-            }
-</style>
-
-<div class="schedule-page">
-    <h2 class="schedule-title">Lịch khởi hành: @tour?.TenTour</h2>
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Lịch khởi hành</h1>
+            <p>@tour?.TenTour</p>
+        </div>
+    </div>
 
     @if (TempData["success"] != null)
     {
-        <div class="alert alert-success alert-custom">
-            @TempData["success"]
-        </div>
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
     }
 
     @if (TempData["error"] != null)
     {
-        <div class="alert alert-danger alert-custom">
-            @TempData["error"]
-        </div>
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
     }
+
     @{
         string activeTab = ViewBag.TrangThai as string ?? "SapKhoiHanh";
     }
 
-    <div class="schedule-tabs">
+    <div class="tv-chips ad-tabs">
         <a asp-controller="Admin"
            asp-action="LichKhoiHanh"
            asp-route-id="@tour?.Id"
            asp-route-trangThai="SapKhoiHanh"
-           class="schedule-tab @(activeTab == "SapKhoiHanh" ? "active" : "")">
+           class="tv-chip @(activeTab == "SapKhoiHanh" ? "active" : "")">
             Sắp khởi hành (@ViewBag.CountSapKhoiHanh)
         </a>
-
         <a asp-controller="Admin"
            asp-action="LichKhoiHanh"
            asp-route-id="@tour?.Id"
            asp-route-trangThai="DangDienRa"
-           class="schedule-tab @(activeTab == "DangDienRa" ? "active" : "")">
+           class="tv-chip @(activeTab == "DangDienRa" ? "active" : "")">
             Đang diễn ra (@ViewBag.CountDangDienRa)
         </a>
-
         <a asp-controller="Admin"
            asp-action="LichKhoiHanh"
            asp-route-id="@tour?.Id"
            asp-route-trangThai="DaHoanThanh"
-           class="schedule-tab @(activeTab == "DaHoanThanh" ? "active" : "")">
+           class="tv-chip @(activeTab == "DaHoanThanh" ? "active" : "")">
             Đã hoàn thành (@ViewBag.CountDaHoanThanh)
         </a>
-
         <a asp-controller="Admin"
            asp-action="LichKhoiHanh"
            asp-route-id="@tour?.Id"
            asp-route-trangThai="DaHuy"
-           class="schedule-tab danger @(activeTab == "DaHuy" ? "active" : "")">
+           class="tv-chip @(activeTab == "DaHuy" ? "active" : "")">
             Đã hủy (@ViewBag.CountDaHuy)
         </a>
-
         <a asp-controller="Admin"
            asp-action="LichKhoiHanh"
            asp-route-id="@tour?.Id"
            asp-route-trangThai="TatCa"
-           class="schedule-tab @(activeTab == "TatCa" ? "active" : "")">
+           class="tv-chip @(activeTab == "TatCa" ? "active" : "")">
             Tất cả (@ViewBag.CountTatCa)
         </a>
     </div>
-    <div class="schedule-card">
-        <h3>Thêm ngày khởi hành</h3>
 
-        <form asp-controller="Admin" asp-action="ThemLichKhoiHanh" method="post" class="row g-3">
+    <section class="ad-form-block">
+        <h2>Thêm ngày khởi hành</h2>
+
+        <form asp-controller="Admin" asp-action="ThemLichKhoiHanh" method="post" class="ad-form">
             @Html.AntiForgeryToken()
 
             <input type="hidden" name="tourId" value="@tour?.Id" />
 
-            <div class="col-md-3">
-                <label class="form-label">Ngày khởi hành</label>
-                <input type="date" name="ngayKhoiHanh" class="form-control" required />
-            </div>
+            <div class="ad-inline-grid">
+                <div>
+                    <label class="form-label">Ngày khởi hành</label>
+                    <input type="date" name="ngayKhoiHanh" class="form-control" required />
+                </div>
 
-            <div class="col-md-2">
-                <label class="form-label">Giờ khởi hành</label>
-                <input type="time" name="gioKhoiHanh" class="form-control" />
-            </div>
+                <div>
+                    <label class="form-label">Giờ khởi hành</label>
+                    <input type="time" name="gioKhoiHanh" class="form-control" />
+                </div>
 
-            <div class="col-md-2">
-                <label class="form-label">Số chỗ còn</label>
-                <input type="number" name="soChoCon" class="form-control" min="0" required />
-            </div>
+                <div>
+                    <label class="form-label">Số chỗ còn</label>
+                    <input type="number" name="soChoCon" class="form-control" min="0" required />
+                </div>
 
-            <div class="col-md-2">
-                <label class="form-label">Giá người lớn</label>
-                <input type="number" name="giaNguoiLon" class="form-control price-input" min="0" step="1000" value="@giaMacDinh.ToString("0")" required />
-            </div>
+                <div>
+                    <label class="form-label">Giá người lớn</label>
+                    <input type="number" name="giaNguoiLon" class="form-control price-input" min="0" step="1000" value="@giaMacDinh.ToString("0")" required />
+                </div>
 
-            <div class="col-md-2">
-                <label class="form-label">Giá trẻ em</label>
-                <input type="number" name="giaTreEm" class="form-control price-input" min="0" step="1000" value="@giaTreEmMacDinh.ToString("0")" required />
-            </div>
+                <div>
+                    <label class="form-label">Giá trẻ em</label>
+                    <input type="number" name="giaTreEm" class="form-control price-input" min="0" step="1000" value="@giaTreEmMacDinh.ToString("0")" required />
+                </div>
 
-            <div class="col-md-12 d-flex gap-2 flex-wrap">
-                <button type="submit" class="btn-add-schedule">Thêm lịch</button>
+                <div class="full ad-form-actions-trai">
+                    <button type="submit" class="tv-btn tv-btn-chinh">Thêm lịch</button>
 
-                <a asp-controller="Admin"
-                   asp-action="QuanLyLichKhoiHanh"
-                   class="btn-back-schedule">
-                    Quay lại
-                </a>
+                    <a asp-controller="Admin"
+                       asp-action="QuanLyLichKhoiHanh"
+                       class="tv-btn tv-btn-vien">Quay lại</a>
+                </div>
             </div>
         </form>
 
-        <div class="schedule-note">
+        <p class="ad-hint">
             Mỗi lịch khởi hành có thể đặt giá riêng. Trạng thái sẽ tự tính theo ngày thật:
             sắp khởi hành, đang diễn ra, đã hoàn thành. Riêng trạng thái đã hủy là do admin bấm hủy.
-        </div>
-    </div>
+        </p>
+    </section>
 
-    <div class="schedule-table-wrap">
-        <table class="table table-bordered schedule-table">
-            <thead>
-                <tr>
-                    <th>Ngày khởi hành</th>
-                    <th>Giờ</th>
-                    <th>Số chỗ còn</th>
-                    <th>Giá người lớn</th>
-                    <th>Giá trẻ em</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
+    <div class="ad-table-card ad-khoang-tren">
+        <div class="ad-table-wrap">
+            <table class="ad-table">
+                <thead>
+                    <tr>
+                        <th>Ngày khởi hành</th>
+                        <th>Giờ</th>
+                        <th>Số chỗ còn</th>
+                        <th>Giá người lớn</th>
+                        <th>Giá trẻ em</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var item in Model)
+                <tbody>
+                    @if (Model != null && Model.Any())
                     {
-                        var giaNguoiLon = item.GiaNguoiLon ?? giaMacDinh;
-                        var giaTreEm = item.GiaTreEm ?? giaNguoiLon * 0.5m;
-                        var formId = $"update-lich-{item.Id}";
-                        var trangThai = item.TrangThaiHienThi;
-
-                        var badgeClass = trangThai switch
+                        foreach (var item in Model)
                         {
-                            "Sắp khởi hành" => "status-upcoming",
-                            "Đang diễn ra" => "status-running",
-                            "Đã hoàn thành" => "status-done",
-                            "Đã hủy" => "status-cancelled",
-                            _ => "status-upcoming"
-                        };
+                            var giaNguoiLon = item.GiaNguoiLon ?? giaMacDinh;
+                            var giaTreEm = item.GiaTreEm ?? giaNguoiLon * 0.5m;
+                            var formId = $"update-lich-{item.Id}";
+                            var trangThai = item.TrangThaiHienThi;
 
-                        var choPhepSua = trangThai == "Sắp khởi hành";
-                        var choPhepHuy = trangThai == "Sắp khởi hành";
+                            var badgeClass = trangThai switch
+                            {
+                                "Sắp khởi hành" => "status-upcoming",
+                                "Đang diễn ra" => "status-running",
+                                "Đã hoàn thành" => "status-done",
+                                "Đã hủy" => "status-cancelled",
+                                _ => "status-upcoming"
+                            };
 
-                        <tr class="@(trangThai == "Đã hủy" ? "schedule-cancelled" : "")">
-                            <td>
-                                <form id="@formId"
-                                      asp-controller="Admin"
-                                      asp-action="CapNhatLichKhoiHanh"
-                                      method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                </form>
+                            var choPhepSua = trangThai == "Sắp khởi hành";
+                            var choPhepHuy = trangThai == "Sắp khởi hành";
 
-                                <input form="@formId"
-                                       type="date"
-                                       name="ngayKhoiHanh"
-                                       class="form-control"
-                                       value="@item.NgayKhoiHanh.ToString("yyyy-MM-dd")"
-                                       disabled="@(!choPhepSua)"
-                                       required />
-                            </td>
+                            <tr class="@(trangThai == "Đã hủy" ? "schedule-cancelled" : "")">
+                                <td>
+                                    <form id="@formId"
+                                          asp-controller="Admin"
+                                          asp-action="CapNhatLichKhoiHanh"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                    </form>
 
-                            <td>
-                                <input form="@formId"
-                                       type="time"
-                                       name="gioKhoiHanh"
-                                       class="form-control"
-                                       value="@(item.GioKhoiHanh.HasValue? item.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")"
-                                       disabled="@(!choPhepSua)" />
-                            </td>
+                                    <input form="@formId"
+                                           type="date"
+                                           name="ngayKhoiHanh"
+                                           class="form-control"
+                                           value="@item.NgayKhoiHanh.ToString("yyyy-MM-dd")"
+                                           disabled="@(!choPhepSua)"
+                                           required />
+                                </td>
 
-                            <td>
-                                <input form="@formId"
-                                       type="number"
-                                       name="soChoCon"
-                                       class="form-control"
-                                       min="0"
-                                       value="@item.SoChoCon"
-                                       disabled="@(!choPhepSua)"
-                                       required />
-                            </td>
+                                <td>
+                                    <input form="@formId"
+                                           type="time"
+                                           name="gioKhoiHanh"
+                                           class="form-control"
+                                           value="@(item.GioKhoiHanh.HasValue ? item.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")"
+                                           disabled="@(!choPhepSua)" />
+                                </td>
 
-                            <td>
-                                <input form="@formId"
-                                       type="number"
-                                       name="giaNguoiLon"
-                                       class="form-control price-input"
-                                       min="0"
-                                       step="1000"
-                                       value="@giaNguoiLon.ToString("0")"
-                                       disabled="@(!choPhepSua)"
-                                       required />
-                            </td>
+                                <td>
+                                    <input form="@formId"
+                                           type="number"
+                                           name="soChoCon"
+                                           class="form-control"
+                                           min="0"
+                                           value="@item.SoChoCon"
+                                           disabled="@(!choPhepSua)"
+                                           required />
+                                </td>
 
-                            <td>
-                                <input form="@formId"
-                                       type="number"
-                                       name="giaTreEm"
-                                       class="form-control price-input"
-                                       min="0"
-                                       step="1000"
-                                       value="@giaTreEm.ToString("0")"
-                                       disabled="@(!choPhepSua)"
-                                       required />
-                            </td>
+                                <td>
+                                    <input form="@formId"
+                                           type="number"
+                                           name="giaNguoiLon"
+                                           class="form-control price-input"
+                                           min="0"
+                                           step="1000"
+                                           value="@giaNguoiLon.ToString("0")"
+                                           disabled="@(!choPhepSua)"
+                                           required />
+                                </td>
 
-                            <td>
-                                <span class="status-badge @badgeClass">
-                                    @trangThai
-                                </span>
-                            </td>
+                                <td>
+                                    <input form="@formId"
+                                           type="number"
+                                           name="giaTreEm"
+                                           class="form-control price-input"
+                                           min="0"
+                                           step="1000"
+                                           value="@giaTreEm.ToString("0")"
+                                           disabled="@(!choPhepSua)"
+                                           required />
+                                </td>
 
-                            <td>
-                                <div class="action-cell">
-                                    @if (choPhepSua)
-                                    {
-                                        <button form="@formId"
-                                                type="submit"
-                                                class="btn-update-schedule">
-                                            Lưu
-                                        </button>
-                                    }
+                                <td>
+                                    <span class="ad-status @badgeClass">@trangThai</span>
+                                </td>
 
-                                    @if (choPhepHuy)
-                                    {
-                                        <form asp-controller="Admin"
-                                              asp-action="HuyLichKhoiHanh"
-                                              asp-route-id="@item.Id"
-                                              method="post"
-                                              onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch khởi hành này không? Các đơn đặt tour liên quan sẽ chuyển sang trạng thái Đã hủy.');">
-                                            @Html.AntiForgeryToken()
-
-                                            <button type="submit" class="btn-delete-schedule">
-                                                Hủy lịch
+                                <td>
+                                    <div class="ad-row-actions">
+                                        @if (choPhepSua)
+                                        {
+                                            <button form="@formId"
+                                                    type="submit"
+                                                    class="tv-btn tv-btn-chinh ad-btn-nho">
+                                                Lưu
                                             </button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <span class="no-action">Không thao tác</span>
-                                    }
-                                </div>
-                            </td>
+                                        }
+
+                                        @if (choPhepHuy)
+                                        {
+                                            <form asp-controller="Admin"
+                                                  asp-action="HuyLichKhoiHanh"
+                                                  asp-route-id="@item.Id"
+                                                  method="post"
+                                                  onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch khởi hành này không? Các đơn đặt tour liên quan sẽ chuyển sang trạng thái Đã hủy.');">
+                                                @Html.AntiForgeryToken()
+
+                                                <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">
+                                                    Hủy lịch
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="ad-no-action">Không thao tác</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="ad-empty-cell">Chưa có lịch khởi hành cho tour này.</td>
                         </tr>
                     }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            Chưa có lịch khởi hành cho tour này.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
