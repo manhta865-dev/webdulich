@@ -1,5 +1,4 @@
-﻿
-@model List<webdulich.Models.PhanCongTour>
+﻿@model List<webdulich.Models.PhanCongTour>
 @using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
@@ -10,358 +9,138 @@
     var taiXeList = ViewBag.TaiXeList as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
-<style>
-    .admin-soft-page {
-        max-width: 1320px;
-        margin: 0 auto;
-        padding: 18px 12px 36px;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .admin-soft-card {
-        border: 1px solid rgba(226, 232, 240, 0.95);
-        border-radius: 26px;
-        background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
-        box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10);
-        overflow: hidden;
-    }
-
-    .admin-soft-header {
-        padding: 30px 32px 18px;
-        text-align: center;
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        background: radial-gradient(circle at top left, rgba(232, 201, 109, 0.18), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fffaf0 100%);
-    }
-
-    .admin-soft-title {
-        margin: 0;
-        color: #071633;
-        font-family: 'Playfair Display', serif;
-        font-size: 2.05rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
-
-    .admin-soft-subtitle {
-        margin: 8px 0 0;
-        color: #64748b;
-        font-weight: 650;
-    }
-
-    .admin-soft-body {
-        padding: 24px 30px 30px;
-    }
-
-    .assign-form-panel {
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 22px;
-        background: #ffffff;
-        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
-        margin-bottom: 24px;
-    }
-
-        .assign-form-panel .form-label {
-            color: #0f172a;
-            font-weight: 900;
-            margin-bottom: 7px;
-        }
-
-        .assign-form-panel .form-control,
-        .assign-form-panel .form-select {
-            min-height: 48px;
-            border-radius: 13px;
-            border: 1px solid #dbe4f0;
-            color: #0f172a;
-            font-weight: 650;
-            background-color: #ffffff;
-        }
-
-            .assign-form-panel .form-control:focus,
-            .assign-form-panel .form-select:focus {
-                border-color: #e8c96d;
-                box-shadow: 0 0 0 0.2rem rgba(232, 201, 109, 0.18);
-            }
-
-    .btn-soft-save {
-        border: none;
-        border-radius: 13px;
-        background: linear-gradient(135deg, #e8c96d, #f5d76e);
-        color: #071633 !important;
-        font-weight: 950;
-        padding: 12px 24px;
-        box-shadow: 0 10px 22px rgba(232, 201, 109, 0.28);
-    }
-
-        .btn-soft-save:hover {
-            transform: translateY(-1px);
-        }
-
-    .admin-table-wrap {
-        border-radius: 18px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-    }
-
-    .admin-soft-table {
-        margin: 0;
-    }
-
-        .admin-soft-table thead th {
-            background: #0f172a;
-            color: #f8fafc;
-            border-color: rgba(255,255,255,0.12);
-            padding: 15px 16px;
-            font-weight: 900;
-            white-space: nowrap;
-        }
-
-        .admin-soft-table tbody td {
-            padding: 15px 16px;
-            vertical-align: middle;
-            border-color: #e5e7eb;
-            color: #0f172a;
-            font-weight: 650;
-        }
-
-        .admin-soft-table tbody tr:nth-child(even) {
-            background: #fffaf0;
-        }
-
-        .admin-soft-table tbody tr:hover {
-            background: #f8fbff;
-        }
-
-    .tour-name {
-        font-weight: 950;
-        color: #071633;
-        text-transform: uppercase;
-    }
-
-    .note-cell {
-        color: #475569;
-        font-weight: 650;
-        max-width: 300px;
-    }
-
-    .staff-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 11px;
-        background: #eef6ff;
-        color: #075985;
-        border: 1px solid #bae6fd;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .driver-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 11px;
-        background: #ecfdf5;
-        color: #166534;
-        border: 1px solid #86efac;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .driver-empty-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 11px;
-        background: #f1f5f9;
-        color: #64748b;
-        border: 1px solid #cbd5e1;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-
-    .btn-soft-delete {
-        border: none;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: #ffffff !important;
-        font-weight: 950;
-        padding: 8px 13px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        box-shadow: 0 10px 20px rgba(220, 38, 38, 0.22);
-        white-space: nowrap;
-    }
-
-        .btn-soft-delete:hover {
-            transform: translateY(-1px);
-            color: #ffffff !important;
-        }
-
-    .empty-row {
-        color: #64748b !important;
-        font-weight: 700;
-        padding: 30px !important;
-    }
-
-    @@media (max-width: 768px) {
-        .admin-soft-page {
-            padding: 10px 8px 26px;
-        }
-
-        .admin-soft-header {
-            padding: 24px 16px 16px;
-        }
-
-        .admin-soft-title {
-            font-size: 1.55rem;
-        }
-
-        .admin-soft-body {
-            padding: 18px 14px 20px;
-        }
-
-        .assign-form-panel {
-            padding: 16px;
-        }
-
-        .admin-soft-table thead th,
-        .admin-soft-table tbody td {
-            padding: 12px;
-            font-size: 0.92rem;
-        }
-
-        .btn-soft-save {
-            width: 100%;
-        }
-    }
-</style>
-
-<div class="admin-soft-page">
-    <div class="admin-soft-card">
-        <div class="admin-soft-header">
-            <h2 class="admin-soft-title">🧭 Phân công tour</h2>
-            <p class="admin-soft-subtitle">Chọn lịch khởi hành, hướng dẫn viên và tài xế phụ trách tour.</p>
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Phân công tour</h1>
+            <p>Chọn lịch khởi hành, hướng dẫn viên và tài xế phụ trách tour.</p>
         </div>
+    </div>
 
-        <div class="admin-soft-body">
-            <div class="assign-form-panel">
-                <form asp-controller="Admin" asp-action="ThemPhanCongTour" method="post" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Lịch khởi hành</label>
-                        <select name="LichKhoiHanhTourId" class="form-select" asp-items="lichList" required>
-                            <option value="">-- Chọn lịch --</option>
-                        </select>
-                    </div>
+    <section class="ad-form-block">
+        <h2>Thêm phân công</h2>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Hướng dẫn viên</label>
-                        <select name="HuongDanVienId" class="form-select" asp-items="hdvList" required>
-                            <option value="">-- Chọn hướng dẫn viên --</option>
-                        </select>
-                    </div>
+        <form asp-controller="Admin" asp-action="ThemPhanCongTour" method="post" class="ad-form">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Lịch khởi hành</label>
+                    <select name="LichKhoiHanhTourId" class="form-select" asp-items="lichList" required>
+                        <option value="">-- Chọn lịch --</option>
+                    </select>
+                </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Tài xế</label>
+                <div class="col-md-4">
+                    <label class="form-label">Hướng dẫn viên</label>
+                    <select name="HuongDanVienId" class="form-select" asp-items="hdvList" required>
+                        <option value="">-- Chọn hướng dẫn viên --</option>
+                    </select>
+                </div>
 
-                        <select name="TaiXeId" class="form-select">
-                            <option value="">-- Không cần tài xế --</option>
+                <div class="col-md-4">
+                    <label class="form-label">Tài xế</label>
 
-                            @foreach (var tx in taiXeList)
-                            {
-                                if (!string.IsNullOrWhiteSpace(tx.Value))
-                                {
-                                    <option value="@tx.Value">@tx.Text</option>
-                                }
-                            }
-                        </select>
-                    </div>
+                    <select name="TaiXeId" class="form-select">
+                        <option value="">-- Không cần tài xế --</option>
 
-                    <div class="col-12">
-                        <label class="form-label">Ghi chú</label>
-                        <input name="GhiChu" class="form-control" placeholder="Ví dụ: tour nước ngoài không cần tài xế..." />
-                    </div>
-
-                    <div class="col-12">
-                        <button type="submit" class="btn-soft-save">💾 Lưu phân công</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="table-responsive admin-table-wrap">
-                <table class="table table-bordered align-middle admin-soft-table">
-                    <thead>
-                        <tr>
-                            <th>Tour</th>
-                            <th>Ngày đi</th>
-                            <th>Giờ đi</th>
-                            <th>Hướng dẫn viên</th>
-                            <th>Tài xế</th>
-                            <th>Ghi chú</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var tx in taiXeList)
                         {
-                            var lich = item.LichKhoiHanhTour;
-                            var tour = lich?.Tour;
+                            if (!string.IsNullOrWhiteSpace(tx.Value))
+                            {
+                                <option value="@tx.Value">@tx.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
 
-                            <tr>
-                                <td class="tour-name">@tour?.TenTour</td>
-                                <td>@lich?.NgayKhoiHanh.ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    @(lich?.GioKhoiHanh.HasValue == true
-                                                                    ? lich.GioKhoiHanh.Value.ToString(@"hh\:mm")
-                                                                    : "Chưa cập nhật")
+                <div class="col-12">
+                    <label class="form-label">Ghi chú</label>
+                    <input name="GhiChu" class="form-control" placeholder="Ví dụ: tour nước ngoài không cần tài xế..." />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="tv-btn tv-btn-chinh">Lưu phân công</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <div class="ad-table-card ad-khoang-tren">
+        <div class="ad-table-wrap">
+            <table class="ad-table">
+                <thead>
+                    <tr>
+                        <th>Tour</th>
+                        <th>Ngày đi</th>
+                        <th>Giờ đi</th>
+                        <th>Hướng dẫn viên</th>
+                        <th>Tài xế</th>
+                        <th>Ghi chú</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var lich = item.LichKhoiHanhTour;
+                        var tour = lich?.Tour;
+
+                        <tr>
+                            <td><strong>@tour?.TenTour</strong></td>
+                            <td>@lich?.NgayKhoiHanh.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @(lich?.GioKhoiHanh.HasValue == true
+                                    ? lich.GioKhoiHanh.Value.ToString(@"hh\:mm")
+                                    : "Chưa cập nhật")
                             </td>
                             <td>
-                                <span class="staff-pill">@item.HuongDanVien?.HoTen</span>
+                                <span class="ad-pill">@item.HuongDanVien?.HoTen</span>
                             </td>
                             <td>
                                 @if (item.TaiXe != null)
-                                    {
-                                        <span class="driver-pill">@item.TaiXe.HoTen</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="driver-empty-pill">Không cần tài xế</span>
-                                    }
-                                </td>
-                                <td class="note-cell">@item.GhiChu</td>
-                                <td>
-                                    <a asp-controller="Admin"
-                                       asp-action="XoaPhanCongTour"
-                                       asp-route-id="@item.Id"
-                                       class="btn-soft-delete"
-                                       onclick="return confirm('Xóa phân công này?')">
-                                        Xóa
-                                    </a>
+                                {
+                                    <span class="ad-pill taixe">@item.TaiXe.HoTen</span>
+                                }
+                                else
+                                {
+                                    <span class="ad-pill trong">Không cần tài xế</span>
+                                }
+                            </td>
+                            <td>@item.GhiChu</td>
+                            <td>
+                                <div class="ad-row-actions">
                                     <a asp-controller="Admin"
                                        asp-action="SuaPhanCongTour"
                                        asp-route-id="@item.Id"
-                                       class="btn btn-warning">
+                                       class="tv-btn tv-btn-vien ad-btn-nho">
                                         Sửa
                                     </a>
-                                </td>
-                            </tr>
-                        }
 
-                        @if (Model == null || Model.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center empty-row">
-                                    Chưa có phân công tour nào.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                    <a asp-controller="Admin"
+                                       asp-action="XoaPhanCongTour"
+                                       asp-route-id="@item.Id"
+                                       class="tv-btn tv-btn-huy ad-btn-nho"
+                                       onclick="return confirm('Xóa phân công này?')">
+                                        Xóa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @if (Model == null || Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="ad-empty-cell">Chưa có phân công tour nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-

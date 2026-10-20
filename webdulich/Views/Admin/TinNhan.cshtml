@@ -7,327 +7,96 @@
     int chuaDoc = ViewBag.ChuaDoc ?? 0;
 }
 
-<style>
-    body {
-        background: #f4f7fb !important;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .chat-admin-page {
-        max-width: 1350px;
-        margin: 34px auto 70px;
-        padding: 0 14px;
-    }
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Tin nhắn khách hàng</h1>
+            <p>Theo dõi và phản hồi cuộc trò chuyện giữa khách hàng với admin TravelVN.</p>
+        </div>
+    </div>
 
-    .chat-hero {
-        background: rgba(255,253,248,0.98);
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 22px;
-        padding: 32px;
-        box-shadow: 0 20px 48px rgba(13,27,62,0.12);
-        margin-bottom: 24px;
-        text-align: center;
-    }
-
-    .chat-title {
-        font-family: 'Playfair Display', serif;
-        color: #0d1b3e;
-        font-size: clamp(2rem, 4vw, 3rem);
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
-
-    .chat-desc {
-        color: #6b5d43;
-        font-weight: 700;
-        margin-bottom: 22px;
-    }
-
-    .chat-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 22px;
-    }
-
-    .stat-card {
-        border-radius: 18px;
-        padding: 20px;
-        color: white;
-        text-align: left;
-        position: relative;
-        overflow: hidden;
-    }
-
-        .stat-card::after {
-            content: "";
-            position: absolute;
-            width: 88px;
-            height: 88px;
-            right: -22px;
-            top: -24px;
-            background: rgba(255,255,255,0.18);
-            border-radius: 50%;
-        }
-
-        .stat-card span {
-            display: block;
-            font-weight: 900;
-            margin-bottom: 8px;
-        }
-
-        .stat-card strong {
-            font-size: 2rem;
-            font-weight: 950;
-        }
-
-    .stat-total {
-        background: #0d1b3e;
-    }
-
-    .stat-new {
-        background: #dc2626;
-    }
-
-    .chat-filter {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: 10px;
-    }
-
-        .chat-filter input {
-            min-height: 48px;
-            border-radius: 12px;
-            border: 1px solid #d8c99d;
-            background: #fffdf8;
-            padding: 0 14px;
-            font-weight: 700;
-            color: #0d1b3e;
-        }
-
-        .chat-filter button,
-        .chat-filter a {
-            min-height: 48px;
-            border-radius: 12px;
-            padding: 0 22px;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-        }
-
-    .btn-search-chat {
-        background: linear-gradient(135deg, #c9a84c, #e8c96d);
-        color: #0a0f1e;
-    }
-
-    .btn-reset-chat {
-        background: #0d1b3e;
-        color: #f5e6b8;
-    }
-
-    .conversation-card {
-        background: rgba(255,253,248,0.98);
-        border: 1px solid rgba(201,168,76,0.28);
-        border-radius: 22px;
-        padding: 18px;
-        box-shadow: 0 20px 48px rgba(13,27,62,0.1);
-    }
-
-    .conversation-item {
-        display: grid;
-        grid-template-columns: 54px 1fr auto;
-        gap: 14px;
-        align-items: center;
-        padding: 18px;
-        border-radius: 16px;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 12px;
-        text-decoration: none;
-        color: #0a0f1e;
-        transition: 0.22s;
-    }
-
-        .conversation-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 30px rgba(13,27,62,0.1);
-        }
-
-    .conversation-avatar {
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #0d1b3e, #2563eb);
-        color: #f5e6b8;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 950;
-        font-size: 1.25rem;
-    }
-
-    .conversation-name {
-        font-weight: 950;
-        color: #0d1b3e;
-        margin-bottom: 4px;
-    }
-
-    .conversation-email {
-        color: #64748b;
-        font-weight: 700;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-    }
-
-    .conversation-last {
-        color: #334155;
-        font-weight: 650;
-        line-height: 1.45;
-    }
-
-    .conversation-meta {
-        text-align: right;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 8px;
-    }
-
-    .conversation-time {
-        color: #64748b;
-        font-weight: 800;
-        font-size: 0.9rem;
-    }
-
-    .unread-badge {
-        background: #dc2626;
-        color: white;
-        border-radius: 999px;
-        padding: 6px 11px;
-        font-weight: 950;
-        font-size: 0.82rem;
-    }
-
-    .sender-badge {
-        background: #eaf6ff;
-        color: #075985;
-        border-radius: 999px;
-        padding: 6px 11px;
-        font-weight: 900;
-        font-size: 0.82rem;
-    }
-
-    .delete-link {
-        background: #fee2e2;
-        color: #b91c1c;
-        border-radius: 10px;
-        padding: 8px 12px;
-        text-decoration: none;
-        font-weight: 900;
-    }
-
-    .empty-chat {
-        background: #fff;
-        border: 1px dashed #d8c99d;
-        border-radius: 18px;
-        padding: 36px;
-        text-align: center;
-        color: #64748b;
-        font-weight: 800;
-    }
-
-    @@media (max-width: 850px) {
-        .chat-stats,
-        .chat-filter,
-        .conversation-item {
-            grid-template-columns: 1fr;
-        }
-
-        .conversation-meta {
-            text-align: left;
-            align-items: flex-start;
-        }
-    }
-</style>
-
-<div class="chat-admin-page">
-    <div class="chat-hero">
-        <h1 class="chat-title">💬 Tin nhắn khách hàng</h1>
-        <p class="chat-desc">Theo dõi và phản hồi cuộc trò chuyện giữa khách hàng với admin TravelVN.</p>
-
-        <div class="chat-stats">
-            <div class="stat-card stat-total">
-                <span>Tổng cuộc trò chuyện</span>
+    <div class="ad-kpis">
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg></span>
+            <span class="ad-kpi-body">
+                <span class="ad-kpi-label">Tổng cuộc trò chuyện</span>
                 <strong>@tongCuocTroChuyen</strong>
-            </div>
-
-            <div class="stat-card stat-new">
-                <span>Tin chưa đọc</span>
-                <strong>@chuaDoc</strong>
-            </div>
+            </span>
         </div>
 
-        <form method="get" asp-controller="Admin" asp-action="TinNhan" class="chat-filter">
-            <input type="text" name="search" value="@search" placeholder="Tìm khách hàng, email hoặc nội dung..." />
+        <div class="ad-kpi@(chuaDoc > 0 ? " ad-kpi-canh-bao" : "")">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg></span>
+            <span class="ad-kpi-body">
+                <span class="ad-kpi-label">Tin chưa đọc</span>
+                <strong>@chuaDoc</strong>
+            </span>
+        </div>
+    </div>
 
-            <button type="submit" class="btn-search-chat">🔍 Tìm kiếm</button>
+    <div class="ad-toolbar">
+        <form method="get" asp-controller="Admin" asp-action="TinNhan" class="ad-search">
+            <input type="text" name="search" value="@search" class="form-control" aria-label="Tìm tin nhắn" placeholder="Tìm khách hàng, email hoặc nội dung..." />
 
-            <a asp-controller="Admin" asp-action="TinNhan" class="btn-reset-chat">Làm mới</a>
+            <button type="submit" class="tv-btn tv-btn-chinh">Tìm kiếm</button>
+
+            <a asp-controller="Admin" asp-action="TinNhan" class="tv-btn tv-btn-vien">Làm mới</a>
         </form>
     </div>
 
-    <div class="conversation-card">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var item in Model)
+    @if (Model != null && Model.Any())
+    {
+        <div class="ad-conv-list">
+            @foreach (var item in Model)
             {
                 <a asp-controller="Admin"
                    asp-action="ChiTietTinNhan"
                    asp-route-taiKhoanId="@item.TaiKhoanId"
-                   class="conversation-item">
+                   class="ad-conv">
 
-                    <div class="conversation-avatar">
+                    <div class="ad-conv-avatar">
                         @(string.IsNullOrWhiteSpace(item.HoTen) ? "U" : item.HoTen.Trim().Substring(0, 1).ToUpper())
                     </div>
 
                     <div>
-                        <div class="conversation-name">@item.HoTen</div>
-                        <div class="conversation-email">@item.Email</div>
-                        <div class="conversation-last">
+                        <div class="ad-conv-name">@item.HoTen</div>
+                        <div class="ad-conv-email">@item.Email</div>
+                        <div class="ad-conv-last">
                             @(item.NguoiGuiCuoi == "admin" ? "Admin: " : "Khách: ")
                             @item.TinNhanCuoi
                         </div>
                     </div>
 
-                    <div class="conversation-meta">
-                        <div class="conversation-time">@item.NgayGuiCuoi.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="ad-conv-meta">
+                        <div>@item.NgayGuiCuoi.ToString("dd/MM/yyyy HH:mm")</div>
 
                         @if (item.ChuaDoc > 0)
                         {
-                            <span class="unread-badge">@item.ChuaDoc tin mới</span>
+                            <span class="ad-unread">@item.ChuaDoc tin mới</span>
                         }
                         else
                         {
-                            <span class="sender-badge">Đã xem</span>
+                            <span>Đã xem</span>
                         }
-
-                        <span class="sender-badge">Mở trò chuyện →</span>
                     </div>
                 </a>
             }
-        }
-        else
-        {
-            <div class="empty-chat">
-                Chưa có cuộc trò chuyện nào từ người dùng.
-            </div>
-        }
-        <script>
-            setInterval(function () {
-                location.reload();
-            }, 8000);
-        </script>
-    </div>
+        </div>
+    }
+    else
+    {
+        <div class="tv-empty">
+            <p>Chưa có cuộc trò chuyện nào từ người dùng.</p>
+        </div>
+    }
+
+    <script>
+        setInterval(function () {
+            location.reload();
+        }, 8000);
+    </script>
 </div>

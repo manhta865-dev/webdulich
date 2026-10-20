@@ -107,6 +107,7 @@ Biểu mẫu chọn sở thích ở trên, kết quả là lưới thẻ tour d�
 Danh sách lịch làm việc theo ngày, mỗi mục một dòng: tour, ngày, giờ, số khách.
 
 ### Admin
+Lô E đã làm: Khuyến mãi, Tài khoản (kèm hộp thoại xóa), Sửa tài khoản, Tin nhắn (danh sách cuộc trò chuyện), Chi tiết tin nhắn (khung chat, JavaScript tải tin giữ nguyên), Nhân sự, Phân công tour, Sửa phân công và Lịch làm việc của nhân viên. Đã bỏ ký tự ```cshtml thừa ở Nhân sự và chú thích // lộ ra ở Tài khoản.
 Lô D đã làm: Đơn đặt tour (bảng 7 cột, nhãn trạng thái có màu riêng cho "Đã hủy", ghi chú trang chỉ liệt kê đơn chưa thanh toán), Sửa đơn (khối thông tin, thẻ hành khách, nhãn trạng thái đổi theo ô chọn), Doanh thu (giữ Chart.js, đổi màu biểu đồ sang bộ màu mới). Bản in `BaoCaoDoanhThuPdf` đã làm lại theo bộ màu mới (A4 ngang, đầu báo cáo, ba ô tóm tắt, bảng 9 cột có dòng tổng cộng), giữ nguyên dữ liệu, nút "In / Lưu PDF" và tự mở hộp thoại in.
 Lô C đã làm: Lịch đi (danh sách tour, lịch khởi hành có tab trạng thái, thêm lịch, sửa ngay trong bảng, hủy lịch) và Lịch trình (danh sách tour, thêm ngày, dòng thời gian). Nhãn trạng thái bằng chữ kèm màu; tour chưa có lịch hoặc lịch trình được đánh dấu cam. Đã bỏ ký tự ``` thừa ở cuối hai trang danh sách.
 Lô B đã làm: Quản lý tour (danh sách dạng bảng gọn có tìm kiếm và chip lọc, Thêm tour, Sửa tour chia khối), dùng thành phần chung trong `admin.css`; `Views/Admin/Them.cshtml` là view cũ không còn action nào dùng, chưa xóa.

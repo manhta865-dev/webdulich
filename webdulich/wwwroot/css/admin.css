@@ -616,3 +616,220 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     .ad-table-toolbar { padding: var(--tv-k4); }
     .ad-chart-wrap { height: 260px; }
 }
+
+/* =====================================================================
+   Lô E: khuyến mãi, tài khoản, tin nhắn, nhân sự, phân công, lịch làm việc
+   ===================================================================== */
+
+/* ---------- Biểu mẫu dạng lưới ô nhập ---------- */
+.ad-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--tv-k3) var(--tv-k4);
+}
+
+.ad-field.full { grid-column: 1 / -1; }
+
+.ad-field label {
+    display: block;
+    margin-bottom: var(--tv-k1);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+}
+
+.ad-field input:not([type="color"]):not([type="checkbox"]),
+.ad-field select,
+.ad-field textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: var(--tv-chu);
+}
+
+.ad-field textarea { padding: var(--tv-k3); min-height: 96px; resize: vertical; }
+.ad-field input[type="color"] { width: 64px; height: 44px; padding: 2px; border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-nut); background: var(--tv-be-mat); }
+
+.ad-field input:focus,
+.ad-field select:focus,
+.ad-field textarea:focus { outline: none; border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+
+/* ---------- Thành phần nhỏ trong bảng ---------- */
+.ad-color-dot { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--tv-vien); }
+
+.ad-badge.tat { background: #EEF1F2; color: var(--tv-chu-phu); }
+
+.ad-code {
+    display: inline-block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+    padding: 2px var(--tv-k2);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nen);
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
+.ad-role {
+    display: inline-block;
+    padding: 2px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ad-role.admin { background: #FBE9E7; color: var(--tv-loi); }
+.ad-role.staff { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
+.ad-role.driver { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-role.user { background: #EEF1F2; color: var(--tv-chu-phu); }
+
+.ad-pill {
+    display: inline-block;
+    padding: 2px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}
+
+.ad-pill.taixe { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-pill.trong { background: #EEF1F2; color: var(--tv-chu-phu); font-weight: 500; }
+
+/* ---------- Hộp thoại xác nhận xóa tài khoản (Bootstrap modal) ---------- */
+.modal-content { border: 0; border-radius: var(--tv-bo-anh); overflow: hidden; }
+.modal-header-custom { background: var(--tv-be-mat); border-bottom: 1px solid var(--tv-vien); }
+.modal-body-custom { padding: var(--tv-k5); }
+
+.btn-modal-cancel,
+.btn-modal-delete {
+    min-height: 42px;
+    padding: 0 var(--tv-k5);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-modal-cancel { border: 1px solid var(--tv-vien); background: var(--tv-be-mat); color: var(--tv-chu); }
+.btn-modal-cancel:hover { border-color: var(--tv-nhan); }
+.btn-modal-delete { border: 1px solid var(--tv-loi); background: var(--tv-loi); color: #fff; }
+.btn-modal-delete:hover { background: #A5301F; }
+
+/* ---------- Danh sách cuộc trò chuyện ---------- */
+.ad-conv-list {
+    overflow: hidden;
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-conv {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--tv-k4);
+    padding: var(--tv-k4) var(--tv-k5);
+    border-top: 1px solid var(--tv-vien);
+    color: var(--tv-chu);
+    text-decoration: none;
+    transition: background var(--tv-nhanh);
+}
+
+.ad-conv:first-child { border-top: 0; }
+.ad-conv:hover { background: var(--tv-nen); color: var(--tv-chu); }
+
+.ad-conv-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 700;
+}
+
+.ad-conv-name { font-weight: 600; }
+.ad-conv-email { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-conv-last { margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tv-chu-phu); }
+.ad-conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: var(--tv-k1); text-align: right; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-unread { padding: 2px var(--tv-k3); border-radius: var(--tv-bo-nhan); background: var(--tv-gia); color: #fff; font-weight: 600; }
+
+/* ---------- Khung trò chuyện chi tiết (cả phần do JavaScript sinh ra) ---------- */
+.ad-chat {
+    overflow: hidden;
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.ad-chat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k4);
+    padding: var(--tv-k4) var(--tv-k5);
+    border-bottom: 1px solid var(--tv-vien);
+}
+
+.ad-chat-head h2 { margin: 0; font-size: var(--tv-cs-vua); font-weight: 700; }
+.ad-chat-head p { margin: 2px 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+.chat-messages {
+    height: 420px;
+    overflow-y: auto;
+    padding: var(--tv-k5);
+    background: var(--tv-nen);
+}
+
+.message-row { display: flex; margin-bottom: var(--tv-k3); }
+.message-row.admin { justify-content: flex-end; }
+.message-row.user { justify-content: flex-start; }
+
+.message-bubble {
+    max-width: 72%;
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-khoi);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.message-row.admin .message-bubble { background: var(--tv-nhan); color: #fff; border-bottom-right-radius: var(--tv-k1); }
+.message-row.user .message-bubble { background: var(--tv-be-mat); border: 1px solid var(--tv-vien); border-bottom-left-radius: var(--tv-k1); }
+.message-meta { margin-top: var(--tv-k1); font-size: 0.75rem; opacity: 0.75; }
+.empty-detail { padding: var(--tv-k7) var(--tv-k4); text-align: center; color: var(--tv-chu-phu); }
+
+.chat-reply { padding: var(--tv-k4) var(--tv-k5); border-top: 1px solid var(--tv-vien); }
+
+.chat-reply textarea {
+    width: 100%;
+    min-height: 84px;
+    padding: var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    resize: vertical;
+}
+
+.chat-reply textarea:focus { outline: none; border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+.reply-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--tv-k3); margin-top: var(--tv-k3); }
+
+@media (max-width: 576px) {
+    .ad-conv { grid-template-columns: 40px minmax(0, 1fr); padding: var(--tv-k3) var(--tv-k4); }
+    .ad-conv-meta { grid-column: 2; align-items: flex-start; text-align: left; flex-direction: row; flex-wrap: wrap; gap: var(--tv-k2); }
+    .chat-messages { height: 340px; padding: var(--tv-k4); }
+    .message-bubble { max-width: 88%; }
+    .ad-chat-head, .chat-reply { padding: var(--tv-k4); }
+}

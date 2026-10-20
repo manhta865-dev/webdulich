@@ -1,478 +1,209 @@
 ﻿@model List<webdulich.Models.KhuyenMai>
 @{
+    ViewData["Title"] = "Khuyến mãi";
     var khuyenMaiSua = ViewBag.KhuyenMaiSua as webdulich.Models.KhuyenMai;
     bool dangSua = khuyenMaiSua != null;
     string actionForm = dangSua ? "SuaKhuyenMai" : "ThemKhuyenMai";
 }
 
-<style>
-    .promo-admin-wrap {
-        max-width: 1380px;
-        margin: 18px auto 50px;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
 
-    .promo-admin-card {
-        background: #fffdf8;
-        border: 1px solid #ead9a6;
-        border-radius: 22px;
-        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
-        overflow: hidden;
-    }
-
-    .promo-admin-head {
-        padding: 26px 30px 18px;
-        background: linear-gradient(135deg, #fff9e8, #ffffff);
-        border-bottom: 1px solid #ead9a6;
-        text-align: center;
-    }
-
-        .promo-admin-head h2 {
-            margin: 0;
-            color: #071638;
-            font-family: 'Playfair Display', serif;
-            font-weight: 900;
-            font-size: 2rem;
-        }
-
-        .promo-admin-head p {
-            margin: 8px 0 0;
-            color: #64748b;
-            font-weight: 750;
-        }
-
-    .promo-admin-body {
-        padding: 24px 30px 30px;
-    }
-
-    .promo-alert {
-        padding: 13px 16px;
-        border-radius: 14px;
-        font-weight: 850;
-        margin-bottom: 18px;
-    }
-
-        .promo-alert.success {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .promo-alert.error {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-
-    .promo-form {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-        padding: 20px;
-        border: 1px solid #dbe4f0;
-        border-radius: 18px;
-        background: #ffffff;
-        margin-bottom: 24px;
-    }
-
-    .promo-field label {
-        display: block;
-        color: #0f172a;
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
-
-    .promo-field input,
-    .promo-field select,
-    .promo-field textarea {
-        width: 100%;
-        min-height: 46px;
-        border: 1px solid #cfd8e6;
-        border-radius: 12px;
-        padding: 10px 13px;
-        color: #0f172a;
-        font-weight: 750;
-        outline: none;
-        background: #ffffff;
-    }
-
-    .promo-field textarea {
-        min-height: 92px;
-        resize: vertical;
-    }
-
-        .promo-field input:focus,
-        .promo-field select:focus,
-        .promo-field textarea:focus {
-            border-color: #d7b84f;
-            box-shadow: 0 0 0 0.18rem rgba(215, 184, 79, 0.18);
-        }
-
-    .promo-full {
-        grid-column: 1 / -1;
-    }
-
-    .promo-actions {
-        grid-column: 1 / -1;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .btn-promo-primary,
-    .btn-promo-muted,
-    .btn-promo-warning,
-    .btn-promo-danger {
-        border: none;
-        border-radius: 12px;
-        min-height: 44px;
-        padding: 0 18px;
-        font-weight: 950;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .btn-promo-primary {
-        background: linear-gradient(135deg, #d7b84f, #f4d96f);
-        color: #071638 !important;
-    }
-
-    .btn-promo-muted {
-        background: #eef4ff;
-        color: #0d47a1 !important;
-        border: 1px solid #cfe1ff;
-    }
-
-    .btn-promo-warning {
-        background: #ff7a1a;
-        color: #ffffff !important;
-    }
-
-    .btn-promo-danger {
-        background: #d71920;
-        color: #ffffff !important;
-    }
-
-    .promo-toolbar {
-        display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        align-items: center;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-    }
-
-    .promo-search {
-        display: flex;
-        gap: 10px;
-        flex: 1;
-        min-width: 320px;
-    }
-
-        .promo-search input {
-            flex: 1;
-            min-height: 44px;
-            border: 1px solid #dbe4f0;
-            border-radius: 12px;
-            padding: 0 14px;
-            font-weight: 750;
-        }
-
-    .promo-table-wrap {
-        overflow-x: auto;
-        border: 1px solid #dbe4f0;
-        border-radius: 16px;
-        background: #fff;
-    }
-
-    .promo-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 1120px;
-    }
-
-        .promo-table th {
-            background: #071638;
-            color: #ffd95f;
-            padding: 15px 14px;
-            text-align: left;
-            font-weight: 950;
-        }
-
-        .promo-table td {
-            padding: 15px 14px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #0f172a;
-            font-weight: 750;
-            vertical-align: middle;
-        }
-
-        .promo-table tr:nth-child(even) td {
-            background: #fff9ec;
-        }
-
-    .promo-code {
-        display: inline-flex;
-        padding: 7px 12px;
-        border-radius: 999px;
-        background: #eef6ff;
-        color: #0b5ed7;
-        border: 1px solid #cfe1ff;
-        font-weight: 950;
-        letter-spacing: 0.04em;
-    }
-
-    .promo-badge {
-        display: inline-flex;
-        padding: 7px 12px;
-        border-radius: 999px;
-        font-weight: 950;
-        white-space: nowrap;
-    }
-
-        .promo-badge.on {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .promo-badge.off {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-
-    .promo-color-dot {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        display: inline-block;
-        border: 3px solid #fff;
-        box-shadow: 0 0 0 1px #dbe4f0;
-    }
-
-    .table-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-        .table-actions form {
-            display: inline;
-        }
-
-    @@media (max-width: 992px) {
-        .promo-form {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @@media (max-width: 640px) {
-        .promo-form {
-            grid-template-columns: 1fr;
-        }
-
-        .promo-search {
-            min-width: 100%;
-        }
-    }
-</style>
-
-<div class="promo-admin-wrap">
-    <div class="promo-admin-card">
-        <div class="promo-admin-head">
-            <h2>🏷️ Quản lý khuyến mãi</h2>
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Quản lý khuyến mãi</h1>
             <p>Tạo mã giảm giá để khách copy ở trang chủ và áp dụng khi thanh toán.</p>
         </div>
+    </div>
 
-        <div class="promo-admin-body">
-            @if (TempData["ThanhCong"] != null)
-            {
-                <div class="promo-alert success">@TempData["ThanhCong"]</div>
-            }
+    @if (TempData["ThanhCong"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["ThanhCong"]</div>
+    }
 
-            @if (TempData["Loi"] != null)
-            {
-                <div class="promo-alert error">@TempData["Loi"]</div>
-            }
+    @if (TempData["Loi"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["Loi"]</div>
+    }
 
-            <form method="post" action="@Url.Action(actionForm, "Admin")" class="promo-form">
-                @Html.AntiForgeryToken()
+    <form method="post" action="@Url.Action(actionForm, "Admin")" class="ad-form-block ad-form">
+        @Html.AntiForgeryToken()
 
-                @if (dangSua)
-                {
-                    <input type="hidden" name="Id" value="@khuyenMaiSua!.Id" />
-                }
+        @if (dangSua)
+        {
+            <input type="hidden" name="Id" value="@khuyenMaiSua!.Id" />
+        }
 
-                <div class="promo-field">
-                    <label>Tên khuyến mãi</label>
-                    <input name="TenKhuyenMai" value="@(khuyenMaiSua?.TenKhuyenMai ?? "")" required placeholder="Ví dụ: Summer Sale" />
-                </div>
+        <h2>@(dangSua ? "Sửa khuyến mãi" : "Thêm khuyến mãi")</h2>
 
-                <div class="promo-field">
-                    <label>Mã khuyến mãi</label>
-                    <input name="MaKhuyenMai" value="@(khuyenMaiSua?.MaKhuyenMai ?? "")" required placeholder="Ví dụ: SUMMER2026" />
-                </div>
-
-                <div class="promo-field">
-                    <label>Kiểu giảm</label>
-                    <select name="KieuGiamGia">
-                        @if (khuyenMaiSua?.KieuGiamGia == "PhanTram")
-                        {
-                            <option value="Tien">Giảm tiền</option>
-                            <option value="PhanTram" selected>Giảm phần trăm</option>
-                        }
-                        else
-                        {
-                            <option value="Tien" selected>Giảm tiền</option>
-                            <option value="PhanTram">Giảm phần trăm</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="promo-field">
-                    <label>Giá trị giảm</label>
-                    <input type="number" step="0.1" min="0" name="GiaTriGiam" value="@(khuyenMaiSua?.GiaTriGiam.ToString("0.##") ?? "")" required placeholder="1500000 hoặc 10" />
-                </div>
-
-                <div class="promo-field">
-                    <label>Ngày bắt đầu</label>
-                    <input type="date" name="NgayBatDau" value="@((khuyenMaiSua?.NgayBatDau ?? DateTime.Today).ToString("yyyy-MM-dd"))" required />
-                </div>
-
-                <div class="promo-field">
-                    <label>Ngày kết thúc</label>
-                    <input type="date" name="NgayKetThuc" value="@((khuyenMaiSua?.NgayKetThuc ?? DateTime.Today.AddMonths(1)).ToString("yyyy-MM-dd"))" required />
-                </div>
-
-                <div class="promo-field">
-                    <label>Màu thẻ</label>
-                    <input type="color" name="MauNen" value="@(khuyenMaiSua?.MauNen ?? "#ff6b4a")" />
-                </div>
-
-                <div class="promo-field">
-                    <label>Thứ tự hiển thị</label>
-                    <input type="number" name="ThuTu" value="@(khuyenMaiSua?.ThuTu ?? 1)" min="1" />
-                </div>
-
-                <div class="promo-field">
-                    <label>Số lượt tối đa</label>
-                    <input type="number" name="SoLuotDungToiDa" value="@(khuyenMaiSua?.SoLuotDungToiDa?.ToString() ?? "")" min="1" placeholder="Bỏ trống nếu không giới hạn" />
-                </div>
-
-                <div class="promo-field">
-                    <label>Trạng thái</label>
-                    <select name="TrangThai">
-                        @if (khuyenMaiSua?.TrangThai == "TamAn")
-                        {
-                            <option value="DangHienThi">Đang hiển thị</option>
-                            <option value="TamAn" selected>Tạm ẩn</option>
-                        }
-                        else
-                        {
-                            <option value="DangHienThi" selected>Đang hiển thị</option>
-                            <option value="TamAn">Tạm ẩn</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="promo-field promo-full">
-                    <label>Mô tả</label>
-                    <textarea name="MoTa" placeholder="Ví dụ: Giảm ngay 1.500.000đ cho tất cả tour.">@(khuyenMaiSua?.MoTa ?? "")</textarea>
-                </div>
-
-                <div class="promo-actions">
-                    <button type="submit" class="btn-promo-primary">
-                        @(dangSua ? "💾 Lưu cập nhật" : "➕ Thêm khuyến mãi")
-                    </button>
-
-                    @if (dangSua)
-                    {
-                        <a asp-controller="Admin" asp-action="KhuyenMai" class="btn-promo-muted">Hủy sửa</a>
-                    }
-                </div>
-            </form>
-
-            <div class="promo-toolbar">
-                <form method="get" asp-controller="Admin" asp-action="KhuyenMai" class="promo-search">
-                    <input name="search" value="@ViewBag.Search" placeholder="Tìm theo tên hoặc mã khuyến mãi..." />
-                    <button type="submit" class="btn-promo-primary">🔎 Tìm</button>
-                    <a asp-controller="Admin" asp-action="KhuyenMai" class="btn-promo-muted">Làm mới</a>
-                </form>
+        <div class="ad-fields">
+            <div class="ad-field">
+                <label>Tên khuyến mãi</label>
+                <input name="TenKhuyenMai" value="@(khuyenMaiSua?.TenKhuyenMai ?? "")" required placeholder="Ví dụ: Summer Sale" />
             </div>
 
-            <div class="promo-table-wrap">
-                <table class="promo-table">
-                    <thead>
-                        <tr>
-                            <th>Tên khuyến mãi</th>
-                            <th>Mã</th>
-                            <th>Giảm</th>
-                            <th>Thời gian</th>
-                            <th>Lượt dùng</th>
-                            <th>Màu</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
+            <div class="ad-field">
+                <label>Mã khuyến mãi</label>
+                <input name="MaKhuyenMai" value="@(khuyenMaiSua?.MaKhuyenMai ?? "")" required placeholder="Ví dụ: SUMMER2026" />
+            </div>
+
+            <div class="ad-field">
+                <label>Kiểu giảm</label>
+                <select name="KieuGiamGia">
+                    @if (khuyenMaiSua?.KieuGiamGia == "PhanTram")
+                    {
+                        <option value="Tien">Giảm tiền</option>
+                        <option value="PhanTram" selected>Giảm phần trăm</option>
+                    }
+                    else
+                    {
+                        <option value="Tien" selected>Giảm tiền</option>
+                        <option value="PhanTram">Giảm phần trăm</option>
+                    }
+                </select>
+            </div>
+
+            <div class="ad-field">
+                <label>Giá trị giảm</label>
+                <input type="number" step="0.1" min="0" name="GiaTriGiam" value="@(khuyenMaiSua?.GiaTriGiam.ToString("0.##") ?? "")" required placeholder="1500000 hoặc 10" />
+            </div>
+
+            <div class="ad-field">
+                <label>Ngày bắt đầu</label>
+                <input type="date" name="NgayBatDau" value="@((khuyenMaiSua?.NgayBatDau ?? DateTime.Today).ToString("yyyy-MM-dd"))" required />
+            </div>
+
+            <div class="ad-field">
+                <label>Ngày kết thúc</label>
+                <input type="date" name="NgayKetThuc" value="@((khuyenMaiSua?.NgayKetThuc ?? DateTime.Today.AddMonths(1)).ToString("yyyy-MM-dd"))" required />
+            </div>
+
+            <div class="ad-field">
+                <label>Màu thẻ</label>
+                <input type="color" name="MauNen" value="@(khuyenMaiSua?.MauNen ?? "#ff6b4a")" />
+            </div>
+
+            <div class="ad-field">
+                <label>Thứ tự hiển thị</label>
+                <input type="number" name="ThuTu" value="@(khuyenMaiSua?.ThuTu ?? 1)" min="1" />
+            </div>
+
+            <div class="ad-field">
+                <label>Số lượt tối đa</label>
+                <input type="number" name="SoLuotDungToiDa" value="@(khuyenMaiSua?.SoLuotDungToiDa?.ToString() ?? "")" min="1" placeholder="Bỏ trống nếu không giới hạn" />
+            </div>
+
+            <div class="ad-field">
+                <label>Trạng thái</label>
+                <select name="TrangThai">
+                    @if (khuyenMaiSua?.TrangThai == "TamAn")
+                    {
+                        <option value="DangHienThi">Đang hiển thị</option>
+                        <option value="TamAn" selected>Tạm ẩn</option>
+                    }
+                    else
+                    {
+                        <option value="DangHienThi" selected>Đang hiển thị</option>
+                        <option value="TamAn">Tạm ẩn</option>
+                    }
+                </select>
+            </div>
+
+            <div class="ad-field full">
+                <label>Mô tả</label>
+                <textarea name="MoTa" placeholder="Ví dụ: Giảm ngay 1.500.000đ cho tất cả tour.">@(khuyenMaiSua?.MoTa ?? "")</textarea>
+            </div>
+        </div>
+
+        <div class="ad-form-actions ad-form-actions-trai">
+            <button type="submit" class="tv-btn tv-btn-chinh">@(dangSua ? "Lưu cập nhật" : "Thêm khuyến mãi")</button>
+
+            @if (dangSua)
+            {
+                <a asp-controller="Admin" asp-action="KhuyenMai" class="tv-btn tv-btn-vien">Hủy sửa</a>
+            }
+        </div>
+    </form>
+
+    <div class="ad-toolbar ad-khoang-tren">
+        <form method="get" asp-controller="Admin" asp-action="KhuyenMai" class="ad-search">
+            <input name="search" value="@ViewBag.Search" class="form-control" aria-label="Tìm khuyến mãi" placeholder="Tìm theo tên hoặc mã khuyến mãi..." />
+            <button type="submit" class="tv-btn tv-btn-chinh">Tìm</button>
+            <a asp-controller="Admin" asp-action="KhuyenMai" class="tv-btn tv-btn-vien">Làm mới</a>
+        </form>
+    </div>
+
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table">
+                <thead>
+                    <tr>
+                        <th>Tên khuyến mãi</th>
+                        <th>Mã</th>
+                        <th>Giảm</th>
+                        <th>Thời gian</th>
+                        <th>Lượt dùng</th>
+                        <th>Màu</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
                         {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td>
+                            <tr>
+                                <td>
+                                    <div class="ad-cell-stack">
                                         <strong>@item.TenKhuyenMai</strong>
                                         @if (!string.IsNullOrWhiteSpace(item.MoTa))
                                         {
-                                            <div style="color:#64748b; font-size:0.9rem; margin-top:4px;">@item.MoTa</div>
+                                            <span class="ad-sub">@item.MoTa</span>
                                         }
-                                    </td>
-                                    <td><span class="promo-code">@item.MaKhuyenMai</span></td>
-                                    <td>@item.GiaTriHienThi</td>
-                                    <td>@item.NgayBatDau.ToString("dd/MM/yyyy") - @item.NgayKetThuc.ToString("dd/MM/yyyy")</td>
-                                    <td>@item.SoLuotDaDung / @(item.SoLuotDungToiDa?.ToString() ?? "Không giới hạn")</td>
-                                    <td><span class="promo-color-dot" style="background:@item.MauNen"></span></td>
-                                    <td>
-                                        <span class="promo-badge @(item.DangHoatDong ? "on" : "off")">
-                                            @item.TrangThaiHienThi
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <a asp-controller="Admin" asp-action="SuaKhuyenMai" asp-route-id="@item.Id" class="btn-promo-muted">Sửa</a>
+                                    </div>
+                                </td>
+                                <td><span class="ad-mono">@item.MaKhuyenMai</span></td>
+                                <td>@item.GiaTriHienThi</td>
+                                <td>@item.NgayBatDau.ToString("dd/MM/yyyy") - @item.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                                <td>@item.SoLuotDaDung / @(item.SoLuotDungToiDa?.ToString() ?? "Không giới hạn")</td>
+                                <td><span class="ad-color-dot" style="background:@item.MauNen"></span></td>
+                                <td>
+                                    <span class="ad-badge@(item.DangHoatDong ? "" : " tat")">@item.TrangThaiHienThi</span>
+                                </td>
+                                <td>
+                                    <div class="ad-row-actions">
+                                        <a asp-controller="Admin" asp-action="SuaKhuyenMai" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
 
-                                            <form method="post" asp-controller="Admin" asp-action="DoiTrangThaiKhuyenMai">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                                <button type="submit" class="btn-promo-warning">
-                                                    @(item.TrangThai == "DangHienThi" ? "Ẩn" : "Hiện")
-                                                </button>
-                                            </form>
+                                        <form method="post" asp-controller="Admin" asp-action="DoiTrangThaiKhuyenMai">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">
+                                                @(item.TrangThai == "DangHienThi" ? "Ẩn" : "Hiện")
+                                            </button>
+                                        </form>
 
-                                            <form method="post" asp-controller="Admin" asp-action="XoaKhuyenMai" onsubmit="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?');">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                                <button type="submit" class="btn-promo-danger">Xóa</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="8" style="text-align:center; padding:26px; color:#64748b;">
-                                    Chưa có khuyến mãi nào.
+                                        <form method="post" asp-controller="Admin" asp-action="XoaKhuyenMai" onsubmit="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="ad-empty-cell">Chưa có khuyến mãi nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
