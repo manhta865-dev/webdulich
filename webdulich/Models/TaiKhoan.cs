@@ -17,6 +17,11 @@ namespace webdulich.Models
         [Required(ErrorMessage = "Vui lòng nhập mật khẩu!")]
         public string MatKhau { get; set; } = string.Empty;
 
+        // Hai cột sẽ thay TaiKhoanDangNhap (bước mở rộng, chưa dùng trong code cũ)
+        public string? Email { get; set; }
+
+        public string? SoDienThoai { get; set; }
+
         [Required(ErrorMessage = "Vui lòng chọn vai trò!")]
         public string VaiTro { get; set; } = "user";
 

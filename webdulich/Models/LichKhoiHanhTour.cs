@@ -16,6 +16,14 @@ namespace webdulich.Models
 
         public int SoChoCon { get; set; }
 
+        // Cột mới (bước mở rộng): sức chứa và sơ đồ chỗ ngồi của chuyến
+        public int SoChoToiDa { get; set; }
+
+        public int? SoDoChoNgoiId { get; set; }
+
+        [ForeignKey("SoDoChoNgoiId")]
+        public SoDoChoNgoi? SoDoChoNgoi { get; set; }
+
         public decimal? GiaNguoiLon { get; set; }
 
         public decimal? GiaTreEm { get; set; }

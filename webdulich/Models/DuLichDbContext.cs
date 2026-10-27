@@ -28,6 +28,10 @@ namespace webdulich.Models
         public DbSet<NhanVien> NhanViens { get; set; }
         public DbSet<PhanCongTour> PhanCongTours { get; set; }
         public DbSet<KhuyenMai> KhuyenMais { get; set; }
+        public DbSet<GiaoDichThanhToan> GiaoDichThanhToans { get; set; }
+        public DbSet<SoDoChoNgoi> SoDoChoNgois { get; set; }
+        public DbSet<ViTriChoNgoi> ViTriChoNgois { get; set; }
+        public DbSet<ChoNgoiChuyenDi> ChoNgoiChuyenDis { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -148,6 +152,103 @@ namespace webdulich.Models
                 .WithMany(x => x.DatTours)
                 .HasForeignKey(x => x.KhuyenMaiId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // ---------- Bước mở rộng mô hình dữ liệu (xem docs/MO_HINH_DU_LIEU.md) ----------
+            // Ngày đặt: đơn cũ nhận ngày chạy migration, bước chuyển dữ liệu sẽ điền lại nếu cần
+            modelBuilder.Entity<DatTours>()
+                .Property(x => x.NgayDat)
+                .HasDefaultValueSql("GETDATE()");
+
+            modelBuilder.Entity<DatTours>().Property(x => x.LoaiDon).HasMaxLength(20).HasDefaultValue("CaNhan");
+            modelBuilder.Entity<DatTours>().Property(x => x.TrangThai).HasMaxLength(20).HasDefaultValue("DaXacNhan");
+            modelBuilder.Entity<DatTours>().Property(x => x.MaMoi).HasMaxLength(30);
+
+            modelBuilder.Entity<HanhKhachDatTour>().Property(x => x.GiaLucDat).HasPrecision(18, 2);
+            modelBuilder.Entity<HanhKhachDatTour>().Property(x => x.MaThanhToan).HasMaxLength(30);
+            modelBuilder.Entity<HanhKhachDatTour>()
+                .HasOne(x => x.TaiKhoan)
+                .WithMany()
+                .HasForeignKey(x => x.TaiKhoanId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<TaiKhoan>().Property(x => x.Email).HasMaxLength(256);
+            modelBuilder.Entity<TaiKhoan>().Property(x => x.SoDienThoai).HasMaxLength(20);
+
+            modelBuilder.Entity<LichKhoiHanhTour>()
+                .HasOne(x => x.SoDoChoNgoi)
+                .WithMany()
+                .HasForeignKey(x => x.SoDoChoNgoiId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SoDoChoNgoi>(e =>
+            {
+                e.Property(x => x.TenSoDo).HasMaxLength(100);
+                e.HasOne(x => x.PhuongTien)
+                    .WithMany()
+                    .HasForeignKey(x => x.PhuongTienId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t => t.HasCheckConstraint("CK_SoDoChoNgoi_KichThuoc", "[SoHang] > 0 AND [SoCot] > 0"));
+            });
+
+            modelBuilder.Entity<ViTriChoNgoi>(e =>
+            {
+                e.Property(x => x.MaViTri).HasMaxLength(10);
+                e.HasOne(x => x.SoDoChoNgoi)
+                    .WithMany(x => x.ViTriChoNgois)
+                    .HasForeignKey(x => x.SoDoChoNgoiId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(x => new { x.SoDoChoNgoiId, x.MaViTri }).IsUnique();
+                e.HasIndex(x => new { x.SoDoChoNgoiId, x.Hang, x.Cot }).IsUnique();
+            });
+
+            modelBuilder.Entity<ChoNgoiChuyenDi>(e =>
+            {
+                e.HasKey(x => new { x.LichKhoiHanhTourId, x.ViTriChoNgoiId });
+                e.HasOne(x => x.LichKhoiHanhTour)
+                    .WithMany()
+                    .HasForeignKey(x => x.LichKhoiHanhTourId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.ViTriChoNgoi)
+                    .WithMany()
+                    .HasForeignKey(x => x.ViTriChoNgoiId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.HanhKhachDatTour)
+                    .WithMany()
+                    .HasForeignKey(x => x.HanhKhachDatTourId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(x => x.HanhKhachDatTourId).IsUnique();
+            });
+
+            modelBuilder.Entity<GiaoDichThanhToan>(e =>
+            {
+                e.Property(x => x.SoTien).HasPrecision(18, 2);
+                e.Property(x => x.PhuongThuc).HasMaxLength(50);
+                e.Property(x => x.TrangThai).HasMaxLength(20);
+                e.Property(x => x.MaThamChieuNganHang).HasMaxLength(100);
+                e.HasOne(x => x.DatTour)
+                    .WithMany()
+                    .HasForeignKey(x => x.DatTourId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.HanhKhachDatTour)
+                    .WithMany()
+                    .HasForeignKey(x => x.HanhKhachDatTourId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiXacNhan)
+                    .WithMany()
+                    .HasForeignKey(x => x.NguoiXacNhanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => x.MaThamChieuNganHang).IsUnique();
+                // Mỗi đơn hoặc ghế tối đa một giao dịch thành công
+                e.HasIndex(x => x.DatTourId).IsUnique().HasFilter("[TrangThai] = 'ThanhCong' AND [DatTourId] IS NOT NULL");
+                e.HasIndex(x => x.HanhKhachDatTourId).IsUnique().HasFilter("[TrangThai] = 'ThanhCong' AND [HanhKhachDatTourId] IS NOT NULL");
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_GiaoDich_MotDoiTuong",
+                        "([DatTourId] IS NOT NULL AND [HanhKhachDatTourId] IS NULL) OR ([DatTourId] IS NULL AND [HanhKhachDatTourId] IS NOT NULL)");
+                    t.HasCheckConstraint("CK_GiaoDich_TrangThai", "[TrangThai] IN ('ChoXacNhan','ThanhCong','ThatBai')");
+                    t.HasCheckConstraint("CK_GiaoDich_SoTien", "[SoTien] > 0");
+                });
+            });
 
 
         }

@@ -22,7 +22,19 @@ namespace webdulich.Models
         [Required(ErrorMessage = "Vui lòng chọn loại hành khách")]
         public string LoaiHanhKhach { get; set; } = "Người lớn";
 
+        // Cột mới của mô hình ghế (bước mở rộng, chưa dùng trong code cũ)
+        public int? TaiKhoanId { get; set; }
+
+        public decimal GiaLucDat { get; set; }
+
+        public string? MaThanhToan { get; set; }
+
+        public DateTime? NgayNha { get; set; }
+
         [ForeignKey("DatTourId")]
         public DatTours? DatTour { get; set; }
+
+        [ForeignKey("TaiKhoanId")]
+        public TaiKhoan? TaiKhoan { get; set; }
     }
 }

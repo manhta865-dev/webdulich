@@ -52,6 +52,17 @@ namespace webdulich.Models
 
         [ForeignKey("LichKhoiHanhTourId")]
         public LichKhoiHanhTour? LichKhoiHanhTour { get; set; }
+        // Cột mới của mô hình đơn nhóm (bước mở rộng, chưa dùng trong code cũ)
+        public string LoaiDon { get; set; } = "CaNhan";
+
+        public string TrangThai { get; set; } = "DaXacNhan";
+
+        public string? MaMoi { get; set; }
+
+        public DateTime? HanGiuCho { get; set; }
+
+        public DateTime NgayDat { get; set; } = DateTime.Now;
+
         public int? TaiKhoanId { get; set; }
 
         [ForeignKey("TaiKhoanId")]

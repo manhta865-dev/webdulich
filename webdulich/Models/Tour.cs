@@ -25,6 +25,9 @@ namespace webdulich.Models
 
         public int? PhuongTienId { get; set; }
 
+        // Ngừng bán thay cho xóa tour (bước mở rộng)
+        public bool NgungBan { get; set; }
+
         [ForeignKey("DiaDiemId")]
         public DiaDiem? DiaDiemInfo { get; set; }
 

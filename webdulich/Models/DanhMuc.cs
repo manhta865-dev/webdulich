@@ -6,6 +6,6 @@ namespace webdulich.Models
     {
         [Key]
         public int MaDanhMuc { get; set; }
-        public string? TenDanhMuc { get; set; }
+        public string TenDanhMuc { get; set; } = string.Empty;
     }
 }
