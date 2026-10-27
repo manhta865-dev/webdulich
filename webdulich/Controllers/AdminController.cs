@@ -812,7 +812,8 @@ namespace webdulich.Controllers
             {
                 ds = ds.Where(x =>
                     x.HoTen.Contains(search) ||
-                    x.TaiKhoanDangNhap.Contains(search) ||
+                    (x.Email != null && x.Email.Contains(search)) ||
+                    (x.SoDienThoai != null && x.SoDienThoai.Contains(search)) ||
                     x.VaiTro.Contains(search)
                 );
             }
@@ -837,57 +838,26 @@ namespace webdulich.Controllers
                 return NotFound();
             }
 
-            return View(tk);
+            // Không đưa mật khẩu (kể cả bản băm) ra form
+            return View(new SuaTaiKhoanViewModel
+            {
+                Id = tk.Id,
+                HoTen = tk.HoTen,
+                Email = tk.Email,
+                SoDienThoai = tk.SoDienThoai,
+                VaiTro = tk.VaiTro
+            });
         }
 
+        private static readonly string[] CacVaiTro = { "user", "admin", "huongdanvien", "taixe" };
+
         [HttpPost]
-        public IActionResult SuaTaiKhoan(TaiKhoan model)
+        [ValidateAntiForgeryToken]
+        public IActionResult SuaTaiKhoan(SuaTaiKhoanViewModel model)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
-            }
-
-            if (string.IsNullOrWhiteSpace(model.HoTen))
-            {
-                ModelState.AddModelError("HoTen", "Vui lòng nhập họ tên!");
-            }
-
-            if (string.IsNullOrWhiteSpace(model.TaiKhoanDangNhap))
-            {
-                ModelState.AddModelError("TaiKhoanDangNhap", "Vui lòng nhập email hoặc số điện thoại!");
-            }
-            else
-            {
-                var taiKhoanMoi = model.TaiKhoanDangNhap.Trim();
-
-                bool laEmail = Regex.IsMatch(taiKhoanMoi, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-                bool laSoDienThoai = Regex.IsMatch(taiKhoanMoi, @"^0\d{9}$");
-
-                if (!laEmail && !laSoDienThoai)
-                {
-                    ModelState.AddModelError("TaiKhoanDangNhap", "Vui lòng nhập đúng email hoặc số điện thoại 10 số!");
-                }
-                else
-                {
-                    var biTrung = _context.TaiKhoans
-                        .Any(x => x.TaiKhoanDangNhap == taiKhoanMoi && x.Id != model.Id);
-
-                    if (biTrung)
-                    {
-                        ModelState.AddModelError("TaiKhoanDangNhap", "Email hoặc số điện thoại này đã tồn tại!");
-                    }
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(model.MatKhau))
-            {
-                ModelState.AddModelError("MatKhau", "Vui lòng nhập mật khẩu!");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
             }
 
             var tk = _context.TaiKhoans.FirstOrDefault(x => x.Id == model.Id);
@@ -897,13 +867,58 @@ namespace webdulich.Controllers
                 return NotFound();
             }
 
+            string? email = DinhDanhTaiKhoan.ChuanHoa(model.Email);
+            string? soDienThoai = DinhDanhTaiKhoan.ChuanHoa(model.SoDienThoai);
+
+            if (email == null && soDienThoai == null)
+            {
+                ModelState.AddModelError("Email", "Cần ít nhất email hoặc số điện thoại để đăng nhập.");
+            }
+            if (email != null && !DinhDanhTaiKhoan.LaEmail(email))
+            {
+                ModelState.AddModelError("Email", "Email chưa đúng định dạng.");
+            }
+            if (soDienThoai != null && !DinhDanhTaiKhoan.LaSoDienThoai(soDienThoai))
+            {
+                ModelState.AddModelError("SoDienThoai", "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.");
+            }
+            if (email != null && _context.TaiKhoans.DaDuocDung(email, null, tk.Id))
+            {
+                ModelState.AddModelError("Email", "Email này đã thuộc tài khoản khác.");
+            }
+            if (soDienThoai != null && _context.TaiKhoans.DaDuocDung(null, soDienThoai, tk.Id))
+            {
+                ModelState.AddModelError("SoDienThoai", "Số điện thoại này đã thuộc tài khoản khác.");
+            }
+            if (!string.IsNullOrWhiteSpace(model.MatKhauMoi) && model.MatKhauMoi.Trim().Length < 6)
+            {
+                ModelState.AddModelError("MatKhauMoi", "Mật khẩu mới cần ít nhất 6 ký tự.");
+            }
+            if (!CacVaiTro.Contains(model.VaiTro))
+            {
+                ModelState.AddModelError("VaiTro", "Vai trò không hợp lệ.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.MatKhauMoi = null;
+                return View(model);
+            }
+
             tk.HoTen = model.HoTen.Trim();
-            tk.TaiKhoanDangNhap = model.TaiKhoanDangNhap.Trim();
-            tk.MatKhau = model.MatKhau.Trim();
+            tk.Email = email;
+            tk.SoDienThoai = soDienThoai;
+            tk.TaiKhoanDangNhap = DinhDanhTaiKhoan.GiaTriCot(email, soDienThoai);
+            // Trước đây mật khẩu được lưu thẳng chuỗi nhập vào (không băm); giờ băm như đăng ký
+            if (!string.IsNullOrWhiteSpace(model.MatKhauMoi))
+            {
+                tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi.Trim());
+            }
             tk.VaiTro = model.VaiTro;
 
             _context.SaveChanges();
 
+            TempData["success"] = "Đã lưu tài khoản.";
             return RedirectToAction("TaiKhoan");
         }
 
@@ -953,13 +968,16 @@ namespace webdulich.Controllers
                 _context.NhanViens.Remove(nhanVien);
             }
             // Kiểm tra xem tài khoản này có liên quan đến đơn đặt tour nào trong bảng DatTours hay không. Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
-            bool coDonDatTour = _context.DatTours
-                .Any(x => x.TaiKhoanId == id);
+            // Tài khoản đã có đơn, đang giữ ghế trong đơn của người khác, hoặc đã xác nhận giao dịch
+            // thì giữ lại (dữ liệu tài chính và giấy tờ không được mất chủ)
+            bool coDonDatTour = _context.DatTours.Any(x => x.TaiKhoanId == id)
+                || _context.HanhKhachDatTours.Any(x => x.TaiKhoanId == id)
+                || _context.GiaoDichThanhToans.Any(x => x.NguoiXacNhanId == id);
             // Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
             if (coDonDatTour)
             {
                 TempData["error"] =
-                    "Không thể xóa tài khoản vì tài khoản này đã có đơn đặt tour.";
+                    "Không thể xóa tài khoản vì tài khoản này đã có đơn đặt tour, ghế hoặc giao dịch thanh toán.";
                 return RedirectToAction("TaiKhoan");
             }
             // Nếu không có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
@@ -2274,9 +2292,28 @@ namespace webdulich.Controllers
                 return RedirectToAction("NhanSu");
             }
 
-            if (_context.TaiKhoans.Any(x => x.TaiKhoanDangNhap == taiKhoanDangNhap.Trim()))
+            // Tài khoản đăng nhập của nhân viên là email hoặc số điện thoại, như khách
+            var dangNhap = taiKhoanDangNhap.Trim();
+            bool laEmail = DinhDanhTaiKhoan.LaEmail(dangNhap);
+            bool laSoDienThoai = DinhDanhTaiKhoan.LaSoDienThoai(dangNhap);
+            if (!laEmail && !laSoDienThoai)
             {
-                TempData["error"] = "Tài khoản đăng nhập này đã tồn tại.";
+                TempData["error"] = "Tài khoản đăng nhập phải là email hoặc số điện thoại 10 số.";
+                return RedirectToAction("NhanSu");
+            }
+
+            string? email = laEmail ? dangNhap : null;
+            // Số điện thoại liên hệ của nhân viên lưu vào tài khoản nếu đăng nhập bằng email
+            string? soDienThoaiTk = laSoDienThoai ? dangNhap : DinhDanhTaiKhoan.ChuanHoa(soDienThoai);
+            if (soDienThoaiTk != null && !DinhDanhTaiKhoan.LaSoDienThoai(soDienThoaiTk))
+            {
+                TempData["error"] = "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.";
+                return RedirectToAction("NhanSu");
+            }
+
+            if (_context.TaiKhoans.DaDuocDung(email, soDienThoaiTk))
+            {
+                TempData["error"] = "Email hoặc số điện thoại này đã thuộc tài khoản khác.";
                 return RedirectToAction("NhanSu");
             }
 
@@ -2285,7 +2322,9 @@ namespace webdulich.Controllers
             var taiKhoan = new TaiKhoan
             {
                 HoTen = hoTen.Trim(),
-                TaiKhoanDangNhap = taiKhoanDangNhap.Trim(),
+                Email = email,
+                SoDienThoai = soDienThoaiTk,
+                TaiKhoanDangNhap = dangNhap,
                 MatKhau = BCrypt.Net.BCrypt.HashPassword(matKhau),
                 VaiTro = vaiTro,
                 NgayTao = DateTime.Now

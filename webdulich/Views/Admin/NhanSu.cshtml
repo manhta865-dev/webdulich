@@ -92,7 +92,7 @@
                     {
                         <tr>
                             <td><strong>@item.HoTen</strong></td>
-                            <td>@item.TaiKhoan?.TaiKhoanDangNhap</td>
+                            <td>@webdulich.Models.DinhDanhTaiKhoan.HienThi(item.TaiKhoan)</td>
                             <td>@item.SoDienThoai</td>
                             <td>
                                 @(item.LoaiNhanVien == "HuongDanVien" ? "Hướng dẫn viên" : "Tài xế")

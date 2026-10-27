@@ -86,16 +86,22 @@ namespace webdulich.Controllers
                 // Kiểm tra định dạng email/số điện thoại
                 string taiKhoan = tk.TaiKhoanDangNhap.Trim();
 
-                bool laEmail = Regex.IsMatch(taiKhoan, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-                bool laSoDienThoai = Regex.IsMatch(taiKhoan, @"^0\d{9}$");
+                bool laEmail = DinhDanhTaiKhoan.LaEmail(taiKhoan);
+                bool laSoDienThoai = DinhDanhTaiKhoan.LaSoDienThoai(taiKhoan);
 
                 if (!laEmail && !laSoDienThoai)
                 {
                     ModelState.AddModelError("TaiKhoanDangNhap", "Vui lòng nhập đúng email hoặc số điện thoại 10 số!");
                 }
-                else if (_context.TaiKhoans.Any(x => x.TaiKhoanDangNhap == taiKhoan)) //Kiểm tra trùng tài khoản
+                else if (_context.TaiKhoans.DaDuocDung(laEmail ? taiKhoan : null, laSoDienThoai ? taiKhoan : null)) //Kiểm tra trùng tài khoản
                 {
                     ModelState.AddModelError("TaiKhoanDangNhap", "Email hoặc số điện thoại này đã được đăng ký!");
+                }
+                else
+                {
+                    // Ô nhập chung được tách vào đúng cột Email hoặc SoDienThoai
+                    tk.Email = laEmail ? taiKhoan : null;
+                    tk.SoDienThoai = laSoDienThoai ? taiKhoan : null;
                 }
             }
             // Nếu chưa nhập mật khẩu thì báo lỗi.
@@ -155,7 +161,7 @@ namespace webdulich.Controllers
 
             string taiKhoan = taiKhoanDangNhap.Trim();
             // Tìm tài khoản trong database theo email hoặc số điện thoại.
-            var user = _context.TaiKhoans.FirstOrDefault(x => x.TaiKhoanDangNhap == taiKhoan);
+            var user = _context.TaiKhoans.TheoDinhDanh(taiKhoan).FirstOrDefault();
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(matKhau, user.MatKhau)) // có 2 trường hơp lỗi BCrypt.Verify() dùng để so sánh mật khẩu người dùng nhập với mật khẩu đã mã hóa trong database.
             {
@@ -194,21 +200,30 @@ namespace webdulich.Controllers
             {
                 return RedirectToAction("DangNhap");
             }
-            // var user = _context.TaiKhoans.FirstOrDefault(x => x.Id == taiKhoanId.Value);
             var user = _context.TaiKhoans.FirstOrDefault(x => x.Id == taiKhoanId.Value);
 
             if (user == null)
             {
                 return RedirectToAction("DangNhap");
             }
-            // Xóa mật khẩu trước khi đưa ra giao diện để không hiện chuỗi mã hóa.
-            user.MatKhau = "";
-            return View(user);
+
+            return View(TaoHoSo(user));
         }
+
+        // Đưa tài khoản sang dữ liệu của trang hồ sơ (không kèm mật khẩu)
+        private static HoSoViewModel TaoHoSo(TaiKhoan user) => new HoSoViewModel
+        {
+            HoTen = user.HoTen,
+            Email = user.Email,
+            SoDienThoai = user.SoDienThoai,
+            AnhDaiDien = user.AnhDaiDien,
+            VaiTro = user.VaiTro,
+            NgayTao = user.NgayTao
+        };
         // Dùng khi người dùng bấm Cập nhật hồ sơ.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SuaHoSo(TaiKhoan model)
+        public async Task<IActionResult> SuaHoSo(HoSoViewModel model)
         {
             //Dựa vào Session để biết đang sửa hồ sơ của ai.
             int? taiKhoanId = HttpContext.Session.GetInt32("taiKhoanId");
@@ -224,69 +239,95 @@ namespace webdulich.Controllers
             {
                 return RedirectToAction("DangNhap");
             }
-            // Lưu lại tên cũ và ảnh cũ.
-            string tenCu = user.HoTen;
-            string anhCu = user.AnhDaiDien ?? "";
-            // Không cho để trống họ tên.
-            if (string.IsNullOrWhiteSpace(model.HoTen))
+
+            string? email = DinhDanhTaiKhoan.ChuanHoa(model.Email);
+            string? soDienThoai = DinhDanhTaiKhoan.ChuanHoa(model.SoDienThoai);
+
+            // Email và số điện thoại: cần ít nhất một, đúng định dạng, chưa thuộc tài khoản khác
+            if (email == null && soDienThoai == null)
             {
-                ModelState.AddModelError("HoTen", "Vui lòng nhập họ tên!");
-                model.AnhDaiDien = anhCu;
-                model.MatKhau = "";
-                return View(model);
+                ModelState.AddModelError("Email", "Cần giữ ít nhất email hoặc số điện thoại để đăng nhập.");
             }
-            //Cập nhật họ tên
-            user.HoTen = model.HoTen.Trim();
-            // Nếu người dùng nhập mật khẩu mới thì mới đổi.
-            if (!string.IsNullOrWhiteSpace(model.MatKhau))
+            if (email != null && !DinhDanhTaiKhoan.LaEmail(email))
             {
-                if (model.MatKhau.Length < 6)
+                ModelState.AddModelError("Email", "Email chưa đúng định dạng, ví dụ ten@gmail.com.");
+            }
+            if (soDienThoai != null && !DinhDanhTaiKhoan.LaSoDienThoai(soDienThoai))
+            {
+                ModelState.AddModelError("SoDienThoai", "Số điện thoại gồm 10 chữ số, bắt đầu bằng 0.");
+            }
+            if (email != null && _context.TaiKhoans.DaDuocDung(email, null, user.Id))
+            {
+                ModelState.AddModelError("Email", "Email này đã thuộc một tài khoản khác.");
+            }
+            if (soDienThoai != null && _context.TaiKhoans.DaDuocDung(null, soDienThoai, user.Id))
+            {
+                ModelState.AddModelError("SoDienThoai", "Số điện thoại này đã thuộc một tài khoản khác.");
+            }
+
+            // Đổi mật khẩu: chỉ khi có nhập mật khẩu mới, và phải đúng mật khẩu hiện tại
+            bool doiMatKhau = !string.IsNullOrWhiteSpace(model.MatKhauMoi);
+            if (doiMatKhau)
+            {
+                if (string.IsNullOrWhiteSpace(model.MatKhauHienTai) || !BCrypt.Net.BCrypt.Verify(model.MatKhauHienTai, user.MatKhau))
                 {
-                    ModelState.AddModelError("MatKhau", "Mật khẩu phải có ít nhất 6 ký tự!");
-                    model.AnhDaiDien = anhCu;
-                    model.MatKhau = "";
-                    return View(model);
+                    ModelState.AddModelError("MatKhauHienTai", "Mật khẩu hiện tại chưa đúng.");
                 }
-                // Mã hóa mật khẩu mới
-                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhau.Trim());
+                if (model.MatKhauMoi!.Trim().Length < 6)
+                {
+                    ModelState.AddModelError("MatKhauMoi", "Mật khẩu mới cần ít nhất 6 ký tự.");
+                }
+                if (model.MatKhauMoi != model.XacNhanMatKhau)
+                {
+                    ModelState.AddModelError("XacNhanMatKhau", "Hai lần nhập mật khẩu mới chưa khớp.");
+                }
             }
-            // Nếu có chọn ảnh mới thì gọi hàm lưu ảnh.
-            //Nếu không chọn ảnh mới thì giữ ảnh cũ.
-            if (model.AnhDaiDienFile != null && model.AnhDaiDienFile.Length > 0)
+
+            // Ảnh đại diện: chỉ lưu file khi mọi thông tin khác đã hợp lệ
+            string? anhMoi = null;
+            if (ModelState.IsValid && model.AnhDaiDienFile != null && model.AnhDaiDienFile.Length > 0)
             {
                 try
                 {
-                    string anhMoi = await LuuAnhDaiDienAsync(model.AnhDaiDienFile);
-                    user.AnhDaiDien = anhMoi;
+                    anhMoi = await LuuAnhDaiDienAsync(model.AnhDaiDienFile);
                 }
                 catch (InvalidOperationException ex)
                 {
                     ModelState.AddModelError("AnhDaiDienFile", ex.Message);
-                    model.AnhDaiDien = anhCu;
-                    model.MatKhau = "";
-                    return View(model);
                 }
             }
-            else
-            {
-                user.AnhDaiDien = anhCu;
-            }
-            //Cập nhật tên trong đơn đặt tour
-            var dsDatTour = _context.DatTours
-                .Where(x => x.TenKhach == tenCu)
-                .ToList();
 
-            foreach (var item in dsDatTour)
+            if (!ModelState.IsValid)
             {
-                item.TenKhach = user.HoTen;
+                // Trả lại form với thông tin đang nhập, không gửi lại mật khẩu
+                model.AnhDaiDien = user.AnhDaiDien;
+                model.VaiTro = user.VaiTro;
+                model.NgayTao = user.NgayTao;
+                model.MatKhauHienTai = model.MatKhauMoi = model.XacNhanMatKhau = null;
+                return View(model);
             }
 
+            user.HoTen = model.HoTen.Trim();
+            user.Email = email;
+            user.SoDienThoai = soDienThoai;
+            user.TaiKhoanDangNhap = DinhDanhTaiKhoan.GiaTriCot(email, soDienThoai);
+            if (doiMatKhau)
+            {
+                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi!.Trim());
+            }
+            if (anhMoi != null)
+            {
+                user.AnhDaiDien = anhMoi;
+            }
+
+            // Không còn đổi TenKhach của các đơn theo họ tên cũ: tên trên đơn là thông tin
+            // liên hệ của riêng đơn đó, và so theo họ tên có thể đổi nhầm đơn của người trùng tên.
             _context.SaveChanges();
 
             LuuSessionDangNhap(user);
 
-            TempData["ThanhCong"] = "Cập nhật hồ sơ thành công!";
-            return RedirectToAction("Index", "TrangChu");
+            TempData["ThanhCong"] = doiMatKhau ? "Đã lưu hồ sơ và đổi mật khẩu." : "Đã lưu hồ sơ.";
+            return RedirectToAction("SuaHoSo");
         }
     }
 }

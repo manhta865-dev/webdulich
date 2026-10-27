@@ -1,321 +1,161 @@
-```cshtml
-@model webdulich.Models.TaiKhoan
+@model webdulich.Models.HoSoViewModel
 
 @{
-    ViewData["Title"] = "Sửa hồ sơ";
-    var coAnhDaiDien = !string.IsNullOrWhiteSpace(Model?.AnhDaiDien);
+    ViewData["Title"] = "Hồ sơ của bạn";
+    var coAnh = !string.IsNullOrWhiteSpace(Model.AnhDaiDien);
+    var chuCai = string.IsNullOrWhiteSpace(Model.HoTen) ? "?" : Model.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper();
+    var tenVaiTro = Model.VaiTro switch
+    {
+        "admin" => "Quản trị viên",
+        "huongdanvien" => "Hướng dẫn viên",
+        "taixe" => "Tài xế",
+        _ => "Khách hàng"
+    };
+    var thongBao = TempData["ThanhCong"] as string;
+    var coLoiMatKhau = !ViewData.ModelState.IsValid &&
+        new[] { "MatKhauHienTai", "MatKhauMoi", "XacNhanMatKhau" }.Any(k => ViewData.ModelState[k]?.Errors.Count > 0);
 }
 
-<style>
-    :root {
-        --blue-main: #0b74ff;
-        --blue-dark: #073b78;
-        --blue-soft: #eaf6ff;
-        --orange-main: #ff6b2c;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --line-soft: #dbeafe;
-        --white: #ffffff;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/ho-so.css" asp-append-version="true" />
+}
 
-    body {
-        background: #f5f8fc !important;
-    }
-
-    .profile-page {
-        min-height: calc(100vh - 86px);
-        padding: 28px 12px 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .profile-shell {
-        width: 100%;
-        max-width: 1060px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        background: var(--white);
-        border: 1px solid #e2e8f0;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 22px 52px rgba(15,23,42,0.10);
-    }
-
-    .profile-left {
-        position: relative;
-        min-height: 560px;
-        padding: 30px;
-        background: linear-gradient(180deg, rgba(11,116,255,0.52), rgba(7,59,120,0.84)), url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
-        display: flex;
-        align-items: flex-end;
-    }
-
-    .left-content h3 {
-        color: #ffffff;
-        margin: 0 0 8px;
-        font-size: 2rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
-
-    .left-content p {
-        color: rgba(255,255,255,0.92);
-        margin: 0;
-        line-height: 1.6;
-        font-weight: 600;
-    }
-
-    .profile-right {
-        padding: 34px 36px;
-        display: flex;
-        align-items: center;
-    }
-
-    .profile-form-wrap {
-        width: 100%;
-    }
-
-    .profile-title {
-        margin: 0 0 6px;
-        font-size: 2.1rem;
-        font-weight: 950;
-        color: var(--text-main);
-    }
-
-    .profile-subtitle {
-        margin: 0 0 22px;
-        color: var(--text-muted);
-        font-weight: 600;
-    }
-
-    .success-box {
-        margin-bottom: 14px;
-        border-radius: 12px;
-        border: 1px solid #86efac;
-        background: #ecfdf5;
-        color: #166534;
-        padding: 10px 12px;
-        font-weight: 700;
-    }
-
-    .form-group {
-        margin-bottom: 14px;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 7px;
-        font-weight: 800;
-        color: #1e293b;
-    }
-
-    .form-input {
-        width: 100%;
-        height: 52px;
-        border-radius: 14px;
-        border: 1px solid var(--line-soft);
-        background: #ffffff;
-        padding: 0 14px;
-        font-size: 1rem;
-        color: var(--text-main);
-        font-weight: 650;
-        transition: all .2s ease;
-    }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #93c5fd;
-            box-shadow: 0 0 0 0.2rem rgba(11,116,255,0.12);
-        }
-
-    .password-wrap {
-        position: relative;
-    }
-
-        .password-wrap .form-input {
-            padding-right: 84px;
-        }
-
-    .toggle-password {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        height: 40px;
-        min-width: 68px;
-        border: none;
-        border-radius: 10px;
-        background: var(--blue-soft);
-        color: var(--blue-main);
-        font-weight: 900;
-        cursor: pointer;
-        transition: .2s;
-    }
-
-        .toggle-password:hover {
-            background: var(--blue-main);
-            color: #fff;
-        }
-
-    .profile-submit {
-        width: 100%;
-        height: 52px;
-        border: none;
-        border-radius: 14px;
-        background: linear-gradient(135deg, var(--blue-main), #1d4ed8);
-        color: #fff;
-        font-size: 1rem;
-        font-weight: 900;
-        letter-spacing: 0.2px;
-        box-shadow: 0 14px 30px rgba(11,116,255,0.24);
-        transition: .22s;
-        margin-top: 4px;
-    }
-
-        .profile-submit:hover {
-            transform: translateY(-1px);
-        }
-
-    .profile-back {
-        display: inline-block;
-        width: 100%;
-        margin-top: 10px;
-        text-align: center;
-        text-decoration: none;
-        padding: 12px 16px;
-        border-radius: 14px;
-        border: 1px solid #cbd5e1;
-        background: #f8fafc;
-        color: #0f172a;
-        font-weight: 800;
-        transition: .2s;
-    }
-
-        .profile-back:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-
-    @@media (max-width: 900px) {
-        .profile-shell {
-            grid-template-columns: 1fr;
-        }
-
-        .profile-left {
-            min-height: 220px;
-        }
-
-        .profile-right {
-            padding: 24px 16px;
-        }
-
-        .profile-title {
-            font-size: 1.8rem;
-        }
-    }
-
-    .avatar-edit-box {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        margin-bottom: 20px;
-    }
-
-    .avatar-preview {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #d8b84f;
-        box-shadow: 0 10px 26px rgba(13, 27, 62, 0.16);
-        flex-shrink: 0;
-    }
-</style>
-
-<div class="profile-page">
-    <div class="profile-shell">
-        <div class="profile-left">
-            <div class="left-content">
-                <h3>TravelVN</h3>
-                <p>Cập nhật hồ sơ để hệ thống hỗ trợ đặt tour và chăm sóc bạn nhanh hơn.</p>
-            </div>
-        </div>
-
-        <div class="profile-right">
-            <div class="profile-form-wrap">
-                <h1 class="profile-title">Sửa hồ sơ</h1>
-                <p class="profile-subtitle">Cập nhật thông tin tài khoản của bạn</p>
-
-                @if (TempData["Success"] != null)
-                {
-                    <div class="success-box">@TempData["Success"]</div>
-                }
-
-                <form asp-action="SuaHoSo" method="post" enctype="multipart/form-data">
-                    <input type="hidden" asp-for="Id" />
-
-                    @{
-                        var anhDaiDien = string.IsNullOrEmpty(Model.AnhDaiDien)
-                        ? Url.Content("~/images/default-avatar.png")
-                        : Url.Content("~/images/avatar/" + Model.AnhDaiDien);
-                    }
-
-                    <div class="avatar-edit-box">
-                        <img id="avatarPreview" src="@anhDaiDien" class="avatar-preview" alt="Ảnh cá nhân" />
-
-                        <div>
-                            <label asp-for="AnhDaiDienFile" class="form-label fw-bold">Ảnh cá nhân</label>
-                            <input asp-for="AnhDaiDienFile"
-                                   type="file"
-                                   class="form-control"
-                                   accept="image/*"
-                                   onchange="previewAvatar(this)" />
-                            <small class="text-muted">Ảnh này dùng để hiển thị hồ sơ của bạn.</small>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Họ tên</label>
-                        <input asp-for="HoTen" class="form-input" placeholder="Nhập họ tên..." />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Mật khẩu mới</label>
-                        <div class="password-wrap">
-                            <input asp-for="MatKhau" type="password" id="profilePassword" class="form-input" placeholder="Để trống nếu không đổi mật khẩu" />
-                            <button type="button" class="toggle-password" onclick="togglePassword('profilePassword', this)">Hiện</button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="profile-submit">Lưu thay đổi</button>
-
-                    <a asp-controller="TrangChu" asp-action="Index" class="profile-back">
-                        Quay lại trang chủ
-                    </a>
-                </form>
-            </div>
-        </div>
+<div class="hs-page">
+    <div class="hs-head">
+        <h1>Hồ sơ của bạn</h1>
+        <p>Thông tin này dùng để đăng nhập và điền sẵn khi bạn đặt tour.</p>
     </div>
+
+    @if (!string.IsNullOrEmpty(thongBao))
+    {
+        <div class="hs-ok" role="status">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-check" /></svg>
+            @thongBao
+        </div>
+    }
+
+    <form asp-action="SuaHoSo" method="post" enctype="multipart/form-data" class="hs-layout" novalidate>
+        <aside class="hs-card hs-me">
+            <div class="hs-avatar" id="hsAvatar">
+                @if (coAnh)
+                {
+                    <img id="hsAvatarImg" src="~/images/avatar/@Model.AnhDaiDien" alt="Ảnh đại diện của @Model.HoTen" />
+                }
+                else
+                {
+                    <img id="hsAvatarImg" alt="Ảnh đại diện mới" hidden />
+                    <span id="hsAvatarChu" aria-hidden="true">@chuCai</span>
+                }
+            </div>
+
+            <label class="tv-btn tv-btn-vien hs-file">
+                <input asp-for="AnhDaiDienFile" type="file" accept=".jpg,.jpeg,.png,.webp" id="hsFile" />
+                Đổi ảnh đại diện
+            </label>
+            <p class="hs-hint">JPG, PNG hoặc WEBP, tối đa 5 MB.</p>
+            <span asp-validation-for="AnhDaiDienFile" class="hs-err"></span>
+
+            <dl class="hs-facts">
+                <div><dt>Vai trò</dt><dd>@tenVaiTro</dd></div>
+                <div><dt>Thành viên từ</dt><dd>@Model.NgayTao.ToString("dd/MM/yyyy")</dd></div>
+            </dl>
+
+            @if (Model.VaiTro == "user")
+            {
+                <a asp-controller="DatTour" asp-action="LichSu" class="tv-link hs-link">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                    Xem lịch sử đặt tour
+                </a>
+            }
+        </aside>
+
+        <div class="hs-main">
+            <section class="hs-card">
+                <h2>Thông tin cá nhân</h2>
+                <div class="hs-field">
+                    <label asp-for="HoTen">Họ và tên</label>
+                    <input asp-for="HoTen" autocomplete="name" />
+                    <span asp-validation-for="HoTen" class="hs-err"></span>
+                </div>
+            </section>
+
+            <section class="hs-card">
+                <h2>Đăng nhập</h2>
+                <p class="hs-note">Bạn đăng nhập được bằng email hoặc số điện thoại. Cần giữ ít nhất một trong hai.</p>
+                <div class="hs-grid">
+                    <div class="hs-field">
+                        <label asp-for="Email">Email</label>
+                        <input asp-for="Email" type="email" autocomplete="email" placeholder="ten@gmail.com" />
+                        <span asp-validation-for="Email" class="hs-err"></span>
+                    </div>
+                    <div class="hs-field">
+                        <label asp-for="SoDienThoai">Số điện thoại</label>
+                        <input asp-for="SoDienThoai" type="tel" inputmode="numeric" autocomplete="tel" placeholder="0912345678" />
+                        <span asp-validation-for="SoDienThoai" class="hs-err"></span>
+                    </div>
+                </div>
+            </section>
+
+            <details class="hs-card hs-pass" @(coLoiMatKhau ? "open" : "")>
+                <summary>
+                    <span>
+                        <span class="hs-sum-title">Đổi mật khẩu</span>
+                        <span class="hs-sum-note">Bỏ qua nếu bạn không muốn đổi.</span>
+                    </span>
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+                </summary>
+                <div class="hs-field">
+                    <label asp-for="MatKhauHienTai">Mật khẩu hiện tại</label>
+                    <input asp-for="MatKhauHienTai" type="password" autocomplete="current-password" />
+                    <span asp-validation-for="MatKhauHienTai" class="hs-err"></span>
+                </div>
+                <div class="hs-grid">
+                    <div class="hs-field">
+                        <label asp-for="MatKhauMoi">Mật khẩu mới</label>
+                        <input asp-for="MatKhauMoi" type="password" autocomplete="new-password" placeholder="Ít nhất 6 ký tự" />
+                        <span asp-validation-for="MatKhauMoi" class="hs-err"></span>
+                    </div>
+                    <div class="hs-field">
+                        <label asp-for="XacNhanMatKhau">Nhập lại mật khẩu mới</label>
+                        <input asp-for="XacNhanMatKhau" type="password" autocomplete="new-password" />
+                        <span asp-validation-for="XacNhanMatKhau" class="hs-err"></span>
+                    </div>
+                </div>
+                <label class="hs-show">
+                    <input type="checkbox" id="hsHienMatKhau" /> Hiện mật khẩu
+                </label>
+            </details>
+
+            <div class="hs-actions">
+                <button type="submit" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
+                <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Về trang chủ</a>
+            </div>
+        </div>
+    </form>
 </div>
 
 <script>
-    function togglePassword(inputId, btn) {
-        var input = document.getElementById(inputId);
-        if (!input) return;
-
-        if (input.type === "password") {
-            input.type = "text";
-            btn.textContent = "Ẩn";
-        } else {
-            input.type = "password";
-            btn.textContent = "Hiện";
+    (function () {
+        var file = document.getElementById("hsFile");
+        var img = document.getElementById("hsAvatarImg");
+        var chu = document.getElementById("hsAvatarChu");
+        if (file && img) {
+            file.addEventListener("change", function () {
+                if (!file.files || !file.files[0]) return;
+                img.src = URL.createObjectURL(file.files[0]);
+                img.hidden = false;
+                if (chu) chu.hidden = true;
+            });
         }
-    }
 
-    function previewAvatar(input) {
-        if (input.files && input.files[0]) {
-            document.getElementById("avatarPreview").src = URL.createObjectURL(input.files[0]);
+        var hien = document.getElementById("hsHienMatKhau");
+        if (hien) {
+            hien.addEventListener("change", function () {
+                document.querySelectorAll(".hs-pass input[type=password], .hs-pass input[data-hien]").forEach(function (o) {
+                    o.type = hien.checked ? "text" : "password";
+                    o.setAttribute("data-hien", "1");
+                });
+            });
         }
-    }
+    })();
 </script>
-```

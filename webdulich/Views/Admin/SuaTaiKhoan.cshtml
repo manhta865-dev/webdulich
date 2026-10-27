@@ -1,4 +1,4 @@
-﻿@model webdulich.Models.TaiKhoan
+﻿@model webdulich.Models.SuaTaiKhoanViewModel
 
 @{
     ViewData["Title"] = "Sửa tài khoản";
@@ -26,29 +26,33 @@
         </div>
 
         <div class="mb-3">
-            <label asp-for="TaiKhoanDangNhap" class="form-label">Email hoặc số điện thoại</label>
-
-            <input asp-for="TaiKhoanDangNhap"
-                   class="form-control"
-                   placeholder="Nhập email hoặc số điện thoại"
-                   pattern="(^[^@@\s]+@@[^@@\s]+\.[^@@\s]+$)|(^0\d{9}$)"
-                   title="Nhập email hợp lệ hoặc số điện thoại 10 số bắt đầu bằng 0" />
-
-            <span asp-validation-for="TaiKhoanDangNhap" class="text-danger"></span>
+            <label asp-for="Email" class="form-label">Email</label>
+            <input asp-for="Email" type="email" class="form-control" placeholder="ten@gmail.com" />
+            <span asp-validation-for="Email" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="MatKhau" class="form-label">Mật khẩu</label>
-            <input asp-for="MatKhau" class="form-control" placeholder="Nhập mật khẩu" />
-            <span asp-validation-for="MatKhau" class="text-danger"></span>
+            <label asp-for="SoDienThoai" class="form-label">Số điện thoại</label>
+            <input asp-for="SoDienThoai" type="tel" class="form-control" placeholder="0912345678" />
+            <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+            <small class="text-muted">Cần ít nhất email hoặc số điện thoại; cả hai đều dùng để đăng nhập.</small>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MatKhauMoi" class="form-label">Mật khẩu mới</label>
+            <input asp-for="MatKhauMoi" type="password" class="form-control" autocomplete="new-password" placeholder="Để trống nếu không đổi" />
+            <span asp-validation-for="MatKhauMoi" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
             <label asp-for="VaiTro" class="form-label">Vai trò</label>
             <select asp-for="VaiTro" class="form-select">
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
+                <option value="user">Khách hàng</option>
+                <option value="admin">Quản trị viên</option>
+                <option value="huongdanvien">Hướng dẫn viên</option>
+                <option value="taixe">Tài xế</option>
             </select>
+            <span asp-validation-for="VaiTro" class="text-danger"></span>
         </div>
 
         <div class="ad-form-actions ad-form-actions-trai">

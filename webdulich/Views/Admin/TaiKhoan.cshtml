@@ -77,8 +77,7 @@
                 <thead>
                     <tr>
                         <th>Họ tên</th>
-                        <th>Tài khoản</th>
-                        <th>Mật khẩu</th>
+                        <th>Email / số điện thoại</th>
                         <th>Vai trò</th>
                         <th>Ngày tạo</th>
                         <th>Hành động</th>
@@ -95,11 +94,7 @@
                             <tr>
                                 <td><strong>@item.HoTen</strong></td>
 
-                                <td>@item.TaiKhoanDangNhap</td>
-
-                                <td>
-                                    <code class="ad-code" title="@item.MatKhau">@item.MatKhau</code>
-                                </td>
+                                <td>@webdulich.Models.DinhDanhTaiKhoan.HienThi(item)</td>
 
                                 <td>
                                     @if (vaiTro == "admin")
@@ -141,7 +136,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" class="ad-empty-cell">Chưa có tài khoản nào.</td>
+                            <td colspan="5" class="ad-empty-cell">Chưa có tài khoản nào.</td>
                         </tr>
                     }
                 </tbody>
