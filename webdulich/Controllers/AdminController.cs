@@ -1854,10 +1854,17 @@ namespace webdulich.Controllers
 
             ViewBag.Search = search;
 
-            return View(ds
+            var dsKem = ds
                 .OrderBy(x => x.ThuTu)
                 .ThenByDescending(x => x.Id)
-                .ToList());
+                .Select(x => new { KhuyenMai = x, DaDung = x.DatTours.Count(d => d.TrangThai != "DaHuy" && d.TrangThaiThanhToan != "Đã hủy") })
+                .ToList();
+            foreach (var x in dsKem)
+            {
+                x.KhuyenMai.SoLuotDaDungThucTe = x.DaDung;
+            }
+
+            return View(dsKem.Select(x => x.KhuyenMai).ToList());
         }
         // Đây là action dùng để thêm mới một khuyến mãi trong trang quản trị. Khi admin điền thông tin về khuyến mãi như tên khuyến mãi, mã khuyến mãi, mô tả, kiểu giảm giá, giá trị giảm, ngày bắt đầu, ngày kết thúc, màu nền, thứ tự hiển thị và trạng thái hiển thị vào form thêm khuyến mãi và nhấn nút lưu, action này sẽ được gọi với các thông tin đó để tạo một đối tượng KhuyenMai mới. Hàm sẽ kiểm tra quyền admin, sau đó chuẩn hóa dữ liệu của khuyến mãi để đảm bảo rằng các giá trị đã nhận được từ form là hợp lệ và có định dạng đúng. Sau đó hàm sẽ kiểm tra các điều kiện hợp lệ của khuyến mãi như tên khuyến mãi không được để trống, mã khuyến mãi phải có định dạng hợp lệ và ngày bắt đầu phải trước ngày kết thúc. Nếu có lỗi nào đó thì sẽ lưu lỗi vào TempData và chuyển hướng admin về trang danh sách khuyến mãi để hiển thị lỗi. Nếu không có lỗi nào thì hệ thống sẽ kiểm tra xem có khuyến mãi nào đã tồn tại với cùng một mã khuyến mãi hay không. Nếu đã tồn tại thì sẽ lưu lỗi vào TempData và chuyển hướng admin về trang danh sách khuyến mãi để hiển thị lỗi. Nếu chưa tồn tại thì hệ thống sẽ tạo một đối tượng KhuyenMai mới với các thông tin đã nhận được từ form cùng với ngày tạo hiện tại và số lượt đã dùng ban đầu bằng 0. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng khuyến mãi đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi mới đã xuất hiện trong danh sách.
         [HttpPost]
@@ -1966,7 +1973,7 @@ namespace webdulich.Controllers
             TempData["ThanhCong"] = "Cập nhật khuyến mãi thành công.";
             return RedirectToAction("KhuyenMai");
         }
-        // Đây là action dùng để đổi trạng thái hiển thị của một khuyến mãi đã được tạo trong trang quản trị. Khi admin nhấn nút đổi trạng thái hiển thị, action này sẽ được gọi với Id của khuyến mãi đó để xác định chính xác khuyến mãi cần đổi trạng thái. Hàm sẽ kiểm tra quyền admin, sau đó tìm khuyến mãi trong database theo Id. Nếu không tìm thấy khuyến mãi thì trả về lỗi NotFound. Nếu tìm thấy khuyến mãi, hệ thống sẽ đổi trạng thái của khuyến mãi đó từ "DangHienThi" sang "TamAn" hoặc ngược lại tùy vào trạng thái hiện tại của khuyến mãi. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng trạng thái của khuyến mãi đã được đổi thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng trạng thái của khuyến mãi đã được cập nhật trong danh sách.
+        // Đây là action dùng để đổi trạng thái hiển thị của một khuyến mãi đã được tạo trong trang quản trị. Khi admin nhấn nút đổi trạng thái hiển thị, action này sẽ được gọi với Id của khuyến mãi đó để xác định chính xác khuyến mãi cần đổi trạng thái. Hàm sẽ kiểm tra quyền admin, sau đó tìm khuyến mãi trong database theo Id. Nếu không tìm thấy khuyến mãi thì trả về lỗi NotFound. Nếu tìm thấy khuyến mãi, hệ thống sẽ đổi trạng thái của khuyến mãi đó từ "HoatDong" sang "TamNgung" hoặc ngược lại tùy vào trạng thái hiện tại của khuyến mãi. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng trạng thái của khuyến mãi đã được đổi thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng trạng thái của khuyến mãi đã được cập nhật trong danh sách.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult DoiTrangThaiKhuyenMai(int id)
@@ -1982,13 +1989,13 @@ namespace webdulich.Controllers
                 return NotFound();
             }
 
-            khuyenMai.TrangThai = khuyenMai.TrangThai == "DangHienThi" ? "TamAn" : "DangHienThi";
+            khuyenMai.TrangThai = khuyenMai.TrangThai == TrangThaiKhuyenMai.HoatDong ? TrangThaiKhuyenMai.TamNgung : TrangThaiKhuyenMai.HoatDong;
             _context.SaveChanges();
 
             TempData["ThanhCong"] = "Đã đổi trạng thái khuyến mãi.";
             return RedirectToAction("KhuyenMai");
         }
-        // Đây là action dùng để xóa một khuyến mãi đã được tạo trong trang quản trị. Khi admin nhấn nút xóa, action này sẽ được gọi với Id của khuyến mãi đó để xác định chính xác khuyến mãi cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm khuyến mãi trong database theo Id. Nếu không tìm thấy khuyến mãi thì trả về lỗi NotFound. Nếu tìm thấy khuyến mãi, hệ thống sẽ kiểm tra xem có đơn nào đã sử dụng khuyến mãi đó hay chưa. Nếu đã có đơn sử dụng thì hệ thống sẽ không xóa khuyến mãi khỏi database mà sẽ đổi trạng thái của khuyến mãi đó sang "TamAn" để tạm ẩn khỏi danh sách hiển thị nhưng vẫn giữ lại trong database để đảm bảo tính toàn vẹn dữ liệu. Nếu chưa có đơn nào sử dụng thì hệ thống sẽ xóa bản ghi của khuyến mãi đó khỏi database và lưu lại để đảm bảo rằng khuyến mãi đã bị xóa thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi đã bị xóa khỏi danh sách (hoặc đã được chuyển sang trạng thái Tạm ẩn nếu có đơn đã sử dụng).
+        // Đây là action dùng để xóa một khuyến mãi đã được tạo trong trang quản trị. Khi admin nhấn nút xóa, action này sẽ được gọi với Id của khuyến mãi đó để xác định chính xác khuyến mãi cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm khuyến mãi trong database theo Id. Nếu không tìm thấy khuyến mãi thì trả về lỗi NotFound. Nếu tìm thấy khuyến mãi, hệ thống sẽ kiểm tra xem có đơn nào đã sử dụng khuyến mãi đó hay chưa. Nếu đã có đơn sử dụng thì hệ thống sẽ không xóa khuyến mãi khỏi database mà sẽ đổi trạng thái của khuyến mãi đó sang "TamNgung" để tạm ẩn khỏi danh sách hiển thị nhưng vẫn giữ lại trong database để đảm bảo tính toàn vẹn dữ liệu. Nếu chưa có đơn nào sử dụng thì hệ thống sẽ xóa bản ghi của khuyến mãi đó khỏi database và lưu lại để đảm bảo rằng khuyến mãi đã bị xóa thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi đã bị xóa khỏi danh sách (hoặc đã được chuyển sang trạng thái Tạm ngưng nếu có đơn đã sử dụng).
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult XoaKhuyenMai(int id)
@@ -2007,7 +2014,7 @@ namespace webdulich.Controllers
             bool daCoDonDung = _context.DatTours.Any(x => x.KhuyenMaiId == id);
             if (daCoDonDung)
             {
-                khuyenMai.TrangThai = "TamAn";
+                khuyenMai.TrangThai = TrangThaiKhuyenMai.TamNgung;
                 _context.SaveChanges();
 
                 TempData["Loi"] = "Khuyến mãi đã có đơn sử dụng nên không xóa khỏi dữ liệu, hệ thống đã chuyển sang Tạm ẩn.";
@@ -2023,24 +2030,24 @@ namespace webdulich.Controllers
         // Đây là hàm dùng để chuẩn hóa dữ liệu của một khuyến mãi trước khi lưu vào database. Hàm sẽ đảm bảo rằng các giá trị đã nhận được từ form là hợp lệ và có định dạng đúng. Cụ thể, hàm sẽ thực hiện các bước sau:
         private void ChuanHoaKhuyenMai(KhuyenMai model)
         {
-            // Hàm sẽ đảm bảo rằng các giá trị đã nhận được từ form là hợp lệ và có định dạng đúng. Cụ thể, hàm sẽ thực hiện các bước sau: Nếu tên khuyến mãi hoặc mã khuyến mãi là null thì sẽ gán thành chuỗi rỗng, sau đó loại bỏ khoảng trắng ở đầu và cuối của tên khuyến mãi và mã khuyến mãi. Mô tả nếu là chuỗi trắng hoặc null thì sẽ gán thành null, ngược lại sẽ loại bỏ khoảng trắng ở đầu và cuối của mô tả. Kiểu giảm giá nếu không phải là "PhanTram" thì sẽ gán thành "Tien". Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "DangHienThi". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
+            // Hàm sẽ đảm bảo rằng các giá trị đã nhận được từ form là hợp lệ và có định dạng đúng. Cụ thể, hàm sẽ thực hiện các bước sau: Nếu tên khuyến mãi hoặc mã khuyến mãi là null thì sẽ gán thành chuỗi rỗng, sau đó loại bỏ khoảng trắng ở đầu và cuối của tên khuyến mãi và mã khuyến mãi. Mô tả nếu là chuỗi trắng hoặc null thì sẽ gán thành null, ngược lại sẽ loại bỏ khoảng trắng ở đầu và cuối của mô tả. Kiểu giảm giá nếu không phải là "PhanTram" thì sẽ gán thành "Tien". Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "HoatDong". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
             model.TenKhuyenMai = (model.TenKhuyenMai ?? "").Trim();
             model.MaKhuyenMai = (model.MaKhuyenMai ?? "").Trim().ToUpper();
             model.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
-            // Kiểu giảm giá nếu không phải là "PhanTram" thì sẽ gán thành "Tien". Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "DangHienThi". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
+            // Kiểu giảm giá nếu không phải là "PhanTram" thì sẽ gán thành "Tien". Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "HoatDong". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
             if (model.KieuGiamGia != "PhanTram")
             {
                 model.KieuGiamGia = "Tien";
             }
-            // Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "DangHienThi". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
+            // Màu nền nếu là chuỗi trắng hoặc null thì sẽ gán thành "#ff6b4a". Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "HoatDong". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
             if (string.IsNullOrWhiteSpace(model.MauNen))
             {
                 model.MauNen = "#ff6b4a";
             }
-            // Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "DangHienThi". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
-            if (string.IsNullOrWhiteSpace(model.TrangThai))
+            // Trạng thái nếu là chuỗi trắng hoặc null thì sẽ gán thành "HoatDong". Thứ tự nếu nhỏ hơn hoặc bằng 0 thì sẽ gán thành 1.
+            if (model.TrangThai != TrangThaiKhuyenMai.HoatDong && model.TrangThai != TrangThaiKhuyenMai.TamNgung)
             {
-                model.TrangThai = "DangHienThi";
+                model.TrangThai = TrangThaiKhuyenMai.HoatDong;
             }
 
             if (model.ThuTu <= 0)

@@ -102,10 +102,11 @@ namespace webdulich.Controllers
             // Truy vấn cơ sở dữ liệu để tìm khuyến mãi phù hợp với mã đã chuẩn hóa và đáp ứng các điều kiện về trạng thái, ngày bắt đầu, ngày kết thúc, và số lượt dùng
             return _context.KhuyenMais.FirstOrDefault(x =>
                 x.MaKhuyenMai == ma &&
-                x.TrangThai == "DangHienThi" &&
+                x.TrangThai == TrangThaiKhuyenMai.HoatDong &&
                 x.NgayBatDau <= homNay &&
                 x.NgayKetThuc >= homNay &&
-                (!x.SoLuotDungToiDa.HasValue || x.SoLuotDaDung < x.SoLuotDungToiDa.Value));
+                // Lượt đã dùng = số đơn chưa hủy dùng mã (hủy đơn tự trả lượt)
+                (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy" && d.TrangThaiThanhToan != "Đã hủy") < x.SoLuotDungToiDa.Value));
         }
         // Hàm này sẽ tính số tiền giảm dựa trên kiểu giảm giá của khuyến mãi (theo phần trăm hoặc theo số tiền cố định) và đảm bảo rằng số tiền giảm không vượt quá tổng tiền
         private decimal TinhTienGiam(KhuyenMai khuyenMai, decimal tongTien)
@@ -616,10 +617,6 @@ namespace webdulich.Controllers
             }
             // Thêm đối tượng DatTours vào DbContext và lưu thay đổi vào cơ sở dữ liệu. Nếu có khuyến mãi được áp dụng, tăng số lượt đã dùng của khuyến mãi lên 1. Nếu có lịch khởi hành được chọn, giảm số chỗ còn lại của lịch khởi hành đi số người đặt, và đảm bảo rằng số chỗ còn lại không âm. Sau khi lưu thay đổi vào cơ sở dữ liệu, xóa các session liên quan đến đặt tour để dọn dẹp dữ liệu tạm thời, và chuyển hướng đến trang xác nhận sau khi thanh toán thành công.
             _context.DatTours.Add(model);
-            if (khuyenMai != null)
-            {
-                khuyenMai.SoLuotDaDung++;
-            }
             // Nếu có lịch khởi hành được chọn, giảm số chỗ còn lại của lịch khởi hành đi số người đặt, và đảm bảo rằng số chỗ còn lại không âm. Sau khi lưu thay đổi vào cơ sở dữ liệu, xóa các session liên quan đến đặt tour để dọn dẹp dữ liệu tạm thời, và chuyển hướng đến trang xác nhận sau khi thanh toán thành công.
             if (lich != null)
             {

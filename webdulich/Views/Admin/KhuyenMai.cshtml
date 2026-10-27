@@ -99,15 +99,15 @@
             <div class="ad-field">
                 <label>Trạng thái</label>
                 <select name="TrangThai">
-                    @if (khuyenMaiSua?.TrangThai == "TamAn")
+                    @if (khuyenMaiSua?.TrangThai == "TamNgung")
                     {
-                        <option value="DangHienThi">Đang hiển thị</option>
-                        <option value="TamAn" selected>Tạm ẩn</option>
+                        <option value="HoatDong">Hoạt động</option>
+                        <option value="TamNgung" selected>Tạm ngưng</option>
                     }
                     else
                     {
-                        <option value="DangHienThi" selected>Đang hiển thị</option>
-                        <option value="TamAn">Tạm ẩn</option>
+                        <option value="HoatDong" selected>Hoạt động</option>
+                        <option value="TamNgung">Tạm ngưng</option>
                     }
                 </select>
             </div>
@@ -169,7 +169,7 @@
                                 <td><span class="ad-mono">@item.MaKhuyenMai</span></td>
                                 <td>@item.GiaTriHienThi</td>
                                 <td>@item.NgayBatDau.ToString("dd/MM/yyyy") - @item.NgayKetThuc.ToString("dd/MM/yyyy")</td>
-                                <td>@item.SoLuotDaDung / @(item.SoLuotDungToiDa?.ToString() ?? "Không giới hạn")</td>
+                                <td>@item.SoLuotDaDungThucTe / @(item.SoLuotDungToiDa?.ToString() ?? "Không giới hạn")</td>
                                 <td><span class="ad-color-dot" style="background:@item.MauNen"></span></td>
                                 <td>
                                     <span class="ad-badge@(item.DangHoatDong ? "" : " tat")">@item.TrangThaiHienThi</span>
@@ -182,7 +182,7 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@item.Id" />
                                             <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">
-                                                @(item.TrangThai == "DangHienThi" ? "Ẩn" : "Hiện")
+                                                @(item.TrangThai == "HoatDong" ? "Tạm ngưng" : "Mở lại")
                                             </button>
                                         </form>
 

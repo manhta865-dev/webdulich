@@ -30,12 +30,17 @@ namespace webdulich.Models
 
         public int ThuTu { get; set; } = 1;
 
-        // DangHienThi hoặc TamAn.
-        public string TrangThai { get; set; } = "DangHienThi";
+        // HoatDong hoặc TamNgung (xem TrangThaiKhuyenMai).
+        public string TrangThai { get; set; } = TrangThaiKhuyenMai.HoatDong;
 
         public int? SoLuotDungToiDa { get; set; }
 
+        // Cột cũ, không còn đọc: số lượt đã dùng được đếm từ các đơn chưa hủy (sẽ bỏ ở bước thu hẹp)
         public int SoLuotDaDung { get; set; }
+
+        // Số đơn chưa hủy đang dùng mã này; nơi truy vấn điền vào để hiển thị
+        [NotMapped]
+        public int SoLuotDaDungThucTe { get; set; }
 
         public DateTime NgayTao { get; set; } = DateTime.Now;
 
@@ -47,9 +52,9 @@ namespace webdulich.Models
             get
             {
                 bool conHan = NgayBatDau.Date <= DateTime.Today && NgayKetThuc.Date >= DateTime.Today;
-                bool conLuot = !SoLuotDungToiDa.HasValue || SoLuotDaDung < SoLuotDungToiDa.Value;
+                bool conLuot = !SoLuotDungToiDa.HasValue || SoLuotDaDungThucTe < SoLuotDungToiDa.Value;
 
-                return TrangThai == "DangHienThi" && conHan && conLuot;
+                return TrangThai == TrangThaiKhuyenMai.HoatDong && conHan && conLuot;
             }
         }
 
@@ -61,6 +66,12 @@ namespace webdulich.Models
 
         [NotMapped]
         public string TrangThaiHienThi =>
-            DangHoatDong ? "Đang áp dụng" : TrangThai == "TamAn" ? "Tạm ẩn" : "Hết hiệu lực";
+            DangHoatDong ? "Đang áp dụng" : TrangThai == TrangThaiKhuyenMai.TamNgung ? "Tạm ngưng" : "Hết hiệu lực";
+    }
+
+    public static class TrangThaiKhuyenMai
+    {
+        public const string HoatDong = "HoatDong";
+        public const string TamNgung = "TamNgung";
     }
 }
