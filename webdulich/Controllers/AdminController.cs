@@ -1605,28 +1605,50 @@ namespace webdulich.Controllers
                 })
                 .ToList();
 
+            // Họ tên, số điện thoại và vai trò lấy từ tài khoản của nhân viên (RB-15)
             ViewBag.HuongDanVienList = _context.NhanViens
                 .AsNoTracking()
-                .Where(x =>
-                    x.DangLamViec &&
-                    x.LoaiNhanVien == "HuongDanVien")
-                .OrderBy(x => x.HoTen)
+                .Where(x => x.DangLamViec && x.TaiKhoan!.VaiTro == "huongdanvien")
+                .OrderBy(x => x.TaiKhoan!.HoTen)
                 .Select(x => new SelectListItem
                 {
                     Value = x.Id.ToString(),
-                    Text = $"{x.HoTen} - {x.SoDienThoai}"
+                    Text = x.TaiKhoan!.HoTen + " - " + (x.TaiKhoan.SoDienThoai ?? x.TaiKhoan.Email ?? "")
                 })
                 .ToList();
 
             ViewBag.TaiXeList = _context.NhanViens
-      .Where(x => x.DangLamViec && x.LoaiNhanVien == "TaiXe")
-      .OrderBy(x => x.HoTen)
-      .Select(x => new SelectListItem
-      {
-          Value = x.Id.ToString(),
-          Text = $"{x.HoTen} - {x.SoDienThoai}"
-      })
-      .ToList();
+                .AsNoTracking()
+                .Where(x => x.DangLamViec && x.TaiKhoan!.VaiTro == "taixe")
+                .OrderBy(x => x.TaiKhoan!.HoTen)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.Id.ToString(),
+                    Text = x.TaiKhoan!.HoTen + " - " + (x.TaiKhoan.SoDienThoai ?? x.TaiKhoan.Email ?? "")
+                })
+                .ToList();
+        }
+
+        // RB-15: người được chọn làm hướng dẫn viên phải có vai trò huongdanvien, tài xế phải là taixe,
+        // và đang làm việc. Form chỉ liệt kê đúng người, nhưng vẫn kiểm tra lại phía máy chủ.
+        private void KiemTraNhanSuPhanCong(PhanCongTour model)
+        {
+            bool hdvHopLe = _context.NhanViens.Any(x =>
+                x.Id == model.HuongDanVienId && x.DangLamViec && x.TaiKhoan!.VaiTro == "huongdanvien");
+            if (!hdvHopLe)
+            {
+                ModelState.AddModelError("HuongDanVienId", "Hãy chọn một hướng dẫn viên đang làm việc.");
+            }
+
+            if (model.TaiXeId.HasValue)
+            {
+                bool taiXeHopLe = _context.NhanViens.Any(x =>
+                    x.Id == model.TaiXeId.Value && x.DangLamViec && x.TaiKhoan!.VaiTro == "taixe");
+                if (!taiXeHopLe)
+                {
+                    ModelState.AddModelError("TaiXeId", "Hãy chọn một tài xế đang làm việc.");
+                }
+            }
         }
         // Đây là action hiển thị danh sách các phân công hướng dẫn viên và tài xế cho các lịch khởi hành của tour trong trang quản trị. Admin có thể xem chi tiết các phân công đã được tạo, bao gồm tên tour, ngày khởi hành, tên hướng dẫn viên và tên tài xế. Admin cũng có thể tìm kiếm các phân công đã được tạo theo tên tour, tên hướng dẫn viên hoặc tên tài xế để dễ dàng quản lý các phân công đã tạo.
         public IActionResult PhanCongTour(string search)
@@ -1642,7 +1664,9 @@ namespace webdulich.Controllers
                 .Include(x => x.LichKhoiHanhTour)
                     .ThenInclude(x => x.Tour)
                 .Include(x => x.HuongDanVien)
+                    .ThenInclude(x => x!.TaiKhoan)
                 .Include(x => x.TaiXe)
+                    .ThenInclude(x => x!.TaiKhoan)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search)) // 
@@ -1651,8 +1675,8 @@ namespace webdulich.Controllers
                     (x.LichKhoiHanhTour != null &&
                      x.LichKhoiHanhTour.Tour != null &&
                      x.LichKhoiHanhTour.Tour.TenTour.Contains(search)) ||
-                    (x.HuongDanVien != null && x.HuongDanVien.HoTen.Contains(search)) ||
-                    (x.TaiXe != null && x.TaiXe.HoTen.Contains(search))
+                    (x.HuongDanVien != null && x.HuongDanVien.TaiKhoan!.HoTen.Contains(search)) ||
+                    (x.TaiXe != null && x.TaiXe.TaiKhoan!.HoTen.Contains(search))
                 );
             }
 
@@ -1720,6 +1744,8 @@ namespace webdulich.Controllers
                     "Lịch khởi hành này đã được phân công rồi.");
             }
 
+            KiemTraNhanSuPhanCong(model);
+
             if (!ModelState.IsValid)
             {
                 NapDuLieuPhanCong();
@@ -1770,6 +1796,8 @@ namespace webdulich.Controllers
             {
                 return NotFound();
             }
+
+            KiemTraNhanSuPhanCong(model);
 
             if (!ModelState.IsValid)
             {
@@ -2070,9 +2098,11 @@ namespace webdulich.Controllers
             // Sau đó áp dụng bộ lọc tìm kiếm theo tên khách hàng, email hoặc nội dung tin nhắn nếu admin nhập vào ô tìm kiếm. Tiếp theo nhóm các tin nhắn theo tài khoản khách hàng để tạo thành các cuộc trò chuyện riêng biệt. Mỗi cuộc trò chuyện sẽ lấy thông tin của tin nhắn cuối cùng để hiển thị trong danh sách cuộc trò chuyện, đồng thời đếm số lượng tin nhắn chưa đọc trong cuộc trò chuyện đó. Cuối cùng trả về view TinNhan.cshtml cùng với danh sách các cuộc trò chuyện đã được lọc và sắp xếp theo thời gian gửi của tin nhắn cuối cùng để hiển thị trên trang quản lý tin nhắn.
             if (!string.IsNullOrWhiteSpace(search))
             {
+                // Tên, email, số điện thoại lấy từ tài khoản khách, không còn sao chép vào từng tin
                 ds = ds.Where(x =>
-                    x.HoTen.Contains(search) ||
-                    x.Email.Contains(search) ||
+                    x.TaiKhoan!.HoTen.Contains(search) ||
+                    (x.TaiKhoan.Email != null && x.TaiKhoan.Email.Contains(search)) ||
+                    (x.TaiKhoan.SoDienThoai != null && x.TaiKhoan.SoDienThoai.Contains(search)) ||
                     x.NoiDung.Contains(search)
                 );
             }
@@ -2087,9 +2117,8 @@ namespace webdulich.Controllers
                     return new TinNhanCuocTroChuyenViewModel
                     {
                         TaiKhoanId = g.Key,
-                        HoTen = g.Where(x => x.NguoiGui != "admin").OrderByDescending(x => x.NgayGui).FirstOrDefault()?.HoTen
-                            ?? tinCuoi.HoTen,
-                        Email = tinCuoi.Email,
+                        HoTen = tinCuoi.TaiKhoan?.HoTen ?? "Khách hàng",
+                        Email = DinhDanhTaiKhoan.HienThi(tinCuoi.TaiKhoan),
                         TinNhanCuoi = tinCuoi.NoiDung,
                         NguoiGuiCuoi = tinCuoi.NguoiGui,
                         NgayGuiCuoi = tinCuoi.NgayGui,
@@ -2114,6 +2143,7 @@ namespace webdulich.Controllers
             }
 
             var ds = _context.TinNhanLienHes
+                .Include(x => x.TaiKhoan)
                 .Where(x => x.TaiKhoanId == taiKhoanId)
                 .OrderBy(x => x.NgayGui)
                 .ToList();
@@ -2127,8 +2157,9 @@ namespace webdulich.Controllers
             _context.SaveChanges();
 
             ViewBag.TaiKhoanId = taiKhoanId;
-            ViewBag.KhachHang = ds.FirstOrDefault()?.HoTen ?? "Khách hàng";
-            ViewBag.Email = ds.FirstOrDefault()?.Email ?? "";
+            var khachHang = _context.TaiKhoans.AsNoTracking().FirstOrDefault(x => x.Id == taiKhoanId);
+            ViewBag.KhachHang = khachHang?.HoTen ?? "Khách hàng";
+            ViewBag.Email = DinhDanhTaiKhoan.HienThi(khachHang);
 
             return View(ds);
         }
@@ -2152,8 +2183,9 @@ namespace webdulich.Controllers
             var tinNhan = new TinNhanLienHe
             {
                 TaiKhoanId = taiKhoanId,
-                HoTen = "Admin TravelVN",
-                Email = khach?.TaiKhoanDangNhap ?? "",
+                // HoTen, Email của tin nhắn không còn được đọc (sẽ bỏ cột ở bước thu hẹp)
+                HoTen = string.Empty,
+                Email = string.Empty,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
                 NgayGui = DateTime.Now,
@@ -2192,6 +2224,7 @@ namespace webdulich.Controllers
             }
 
             var ds = _context.TinNhanLienHes
+                .Include(x => x.TaiKhoan)
                 .Where(x => x.TaiKhoanId == taiKhoanId)
                 .OrderBy(x => x.NgayGui)
                 .ToList();
@@ -2207,7 +2240,7 @@ namespace webdulich.Controllers
             var result = ds.Select(x => new
             {
                 x.Id,
-                x.HoTen,
+                HoTen = x.NguoiGui == "admin" ? "Admin TravelVN" : x.TaiKhoan?.HoTen ?? "Khách hàng",
                 x.NoiDung,
                 x.NguoiGui,
                 ThoiGian = x.NgayGui.ToString("dd/MM/yyyy HH:mm")
@@ -2236,8 +2269,9 @@ namespace webdulich.Controllers
             var tinNhan = new TinNhanLienHe
             {
                 TaiKhoanId = taiKhoanId,
-                HoTen = "Admin TravelVN",
-                Email = khach?.TaiKhoanDangNhap ?? "",
+                // HoTen, Email của tin nhắn không còn được đọc (sẽ bỏ cột ở bước thu hẹp)
+                HoTen = string.Empty,
+                Email = string.Empty,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
                 NgayGui = DateTime.Now,
@@ -2262,9 +2296,10 @@ namespace webdulich.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 ds = ds.Where(x =>
-                    x.HoTen.Contains(search) ||
-                    x.SoDienThoai.Contains(search) ||
-                    x.LoaiNhanVien.Contains(search));
+                    x.TaiKhoan!.HoTen.Contains(search) ||
+                    (x.TaiKhoan.SoDienThoai != null && x.TaiKhoan.SoDienThoai.Contains(search)) ||
+                    (x.TaiKhoan.Email != null && x.TaiKhoan.Email.Contains(search)) ||
+                    x.TaiKhoan.VaiTro.Contains(search));
             }
 
             ViewBag.Search = search;

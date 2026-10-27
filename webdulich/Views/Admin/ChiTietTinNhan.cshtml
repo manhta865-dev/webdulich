@@ -36,7 +36,7 @@
                             @item.NoiDung
 
                             <div class="message-meta">
-                                @(laAdmin ? "Admin" : item.HoTen) · @item.NgayGui.ToString("dd/MM/yyyy HH:mm")
+                                @(laAdmin ? "Admin" : item.TaiKhoan?.HoTen) · @item.NgayGui.ToString("dd/MM/yyyy HH:mm")
                             </div>
                         </div>
                     </div>

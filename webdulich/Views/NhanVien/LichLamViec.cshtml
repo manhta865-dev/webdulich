@@ -13,7 +13,7 @@
 <div class="ad-page">
     <div class="ad-pagehead">
         <div>
-            <h1>Lịch làm việc của @nv?.HoTen</h1>
+            <h1>Lịch làm việc của @nv?.TaiKhoan?.HoTen</h1>
             <p>Danh sách tour bạn được phân công tham gia.</p>
         </div>
     </div>
@@ -52,8 +52,8 @@
                                         : "Chưa cập nhật")
                                 </td>
                                 <td>@tour?.PhuongTienHienThi</td>
-                                <td>@item.HuongDanVien?.HoTen</td>
-                                <td>@(item.TaiXe?.HoTen ?? "Không có")</td>
+                                <td>@item.HuongDanVien?.TaiKhoan?.HoTen</td>
+                                <td>@(item.TaiXe?.TaiKhoan?.HoTen ?? "Không có")</td>
                                 <td>@(string.IsNullOrWhiteSpace(item.GhiChu) ? "Không có" : item.GhiChu)</td>
                             </tr>
                         }

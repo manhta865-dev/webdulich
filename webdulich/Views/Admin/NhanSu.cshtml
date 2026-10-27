@@ -78,7 +78,7 @@
                 <thead>
                     <tr>
                         <th>Họ tên</th>
-                        <th>Tài khoản</th>
+                        <th>Email</th>
                         <th>SĐT</th>
                         <th>Loại</th>
                         <th>Trạng thái</th>
@@ -91,11 +91,11 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td><strong>@item.HoTen</strong></td>
-                            <td>@webdulich.Models.DinhDanhTaiKhoan.HienThi(item.TaiKhoan)</td>
-                            <td>@item.SoDienThoai</td>
+                            <td><strong>@item.TaiKhoan?.HoTen</strong></td>
+                            <td>@(item.TaiKhoan?.Email ?? "Chưa có")</td>
+                            <td>@(item.TaiKhoan?.SoDienThoai ?? "Chưa có")</td>
                             <td>
-                                @(item.LoaiNhanVien == "HuongDanVien" ? "Hướng dẫn viên" : "Tài xế")
+                                @(item.TaiKhoan?.VaiTro == "huongdanvien" ? "Hướng dẫn viên" : "Tài xế")
                             </td>
                             <td>
                                 @if (item.DangLamViec)

@@ -99,12 +99,12 @@
                                     : "Chưa cập nhật")
                             </td>
                             <td>
-                                <span class="ad-pill">@item.HuongDanVien?.HoTen</span>
+                                <span class="ad-pill">@item.HuongDanVien?.TaiKhoan?.HoTen</span>
                             </td>
                             <td>
                                 @if (item.TaiXe != null)
                                 {
-                                    <span class="ad-pill taixe">@item.TaiXe.HoTen</span>
+                                    <span class="ad-pill taixe">@item.TaiXe.TaiKhoan?.HoTen</span>
                                 }
                                 else
                                 {

@@ -31,6 +31,7 @@ namespace webdulich.Controllers
             }
             // Chặn người không phải nhân viên
             var nhanVien = _context.NhanViens
+                .Include(x => x.TaiKhoan)
                 .FirstOrDefault(x => x.TaiKhoanId == taiKhoanId.Value);
             // K THẤY QUAY VE DANG NHAP 
             if (nhanVien == null)
@@ -46,7 +47,9 @@ namespace webdulich.Controllers
                     .ThenInclude(x => x.Tour)
                         .ThenInclude(x => x.PhuongTienInfo) // LẤY PHƯƠNG TIỆN 
                 .Include(x => x.HuongDanVien) // LẤY HDV
+                    .ThenInclude(x => x!.TaiKhoan)
                 .Include(x => x.TaiXe) // LẤY TX
+                    .ThenInclude(x => x!.TaiKhoan)
                 .AsQueryable();
             // Nếu role là huongdanvien, chỉ lấy các tour mà nhân viên đó được phân công làm hướng dẫn viên.
             if (role == "huongdanvien")
