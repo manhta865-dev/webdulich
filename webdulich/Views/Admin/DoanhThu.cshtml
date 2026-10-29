@@ -1,4 +1,4 @@
-﻿@model List<webdulich.Models.DatTours>
+﻿@model List<webdulich.Models.DonDatTourDoc>
 @using System.Text.Json
 
 @{
@@ -163,7 +163,7 @@
                             <tr>
                                 <td><span class="ad-mono">@item.MaChuyenDi</span></td>
                                 <td>@item.TenKhach</td>
-                                <td>@(item.Tour?.TenTour ?? "Chưa cập nhật")</td>
+                                <td>@(item.TenTour ?? "Chưa cập nhật")</td>
                                 <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
                                 <td>@item.SoNguoi</td>
                                 <td>@item.PhuongThucThanhToan</td>

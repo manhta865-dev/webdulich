@@ -619,8 +619,8 @@ namespace webdulich.Controllers
                 return NotFound();
             }
 
-            bool coDuLieu = _context.LichKhoiHanhTours.Any(x => x.TourId == id)
-                || _context.DatTours.Any(x => x.TourId == id);
+            // Đơn luôn gắn với một lịch, nên tour không có lịch thì cũng không có đơn
+            bool coDuLieu = _context.LichKhoiHanhTours.Any(x => x.TourId == id);
             if (coDuLieu)
             {
                 TempData["error"] = "Tour đã có lịch khởi hành hoặc đơn đặt, không xóa được. Hãy chọn Ngừng bán.";
@@ -660,180 +660,326 @@ namespace webdulich.Controllers
             return RedirectToAction("Index");
         }
 
-        // Đây là action hiển thị danh sách đơn đặt tour trong trang quản trị. Admin có thể tìm kiếm đơn đặt tour theo tên khách, điện thoại, email, mã chuyến đi, trạng thái thanh toán, phương thức thanh toán, tên tour hoặc thông tin hành khách. Admin cũng có thể lọc đơn đặt tour theo từng tour cụ thể.
+        // Danh sách đơn chưa thanh toán (đơn đã thanh toán xem ở Doanh thu). Mọi giá trị đọc qua TruyVanDon.ChonDon:
+        // tour và ngày đi từ lịch, số người và tiền từ ghế, trạng thái thanh toán từ giao dịch.
         public IActionResult DonDatTour(string search)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            // Đoạn này truy vấn danh sách đơn đặt tour từ database, bao gồm các thông tin liên quan như tour, lịch khởi hành, khuyến mãi và hành khách. Sau đó áp dụng bộ lọc tìm kiếm nếu admin nhập vào ô tìm kiếm. Cuối cùng trả về view DonDatTour.cshtml cùng với danh sách đơn đặt tour đã được lọc.
-            var ds = _context.DatTours
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
-                .Include(x => x.KhuyenMai)
-                .Include(x => x.HanhKhachDatTours)
-                .Where(x => x.TrangThaiThanhToan != "Đã thanh toán") // Chỉ lấy những đơn đặt tour chưa thanh toán để hiển thị trong trang quản trị. Những đơn đã thanh toán sẽ được hiển thị trong trang doanh thu.
-                .AsQueryable();
 
-            // Chỉ tìm kiếm khi người dùng có nhập từ khóa hợp lệ.
+            var ds = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan);
+
             if (!string.IsNullOrWhiteSpace(search))
             {
+                search = search.Trim();
+                // Đơn có hành khách trùng tên hoặc số giấy tờ
+                var donTheoHanhKhach = _context.HanhKhachDatTours
+                    .Where(h => h.HoTen.Contains(search) || h.SoGiayTo.Contains(search))
+                    .Select(h => h.DatTourId);
+
                 ds = ds.Where(x =>
                     x.TenKhach.Contains(search) ||
                     x.DienThoai.Contains(search) ||
                     x.Email.Contains(search) ||
-                    (x.MaChuyenDi != null && x.MaChuyenDi.Contains(search)) ||
+                    x.MaChuyenDi.Contains(search) ||
                     x.TrangThaiThanhToan.Contains(search) ||
                     x.PhuongThucThanhToan.Contains(search) ||
-                    (x.Tour != null && x.Tour.TenTour.Contains(search)) ||
-                    x.HanhKhachDatTours.Any(hk =>
-                        hk.HoTen.Contains(search) ||
-                        hk.SoGiayTo.Contains(search))
-                );
+                    x.TenTour.Contains(search) ||
+                    donTheoHanhKhach.Contains(x.Id));
             }
-            // Lưu lại từ khóa đã nhập để giao diện có thể hiển thị lại sau khi tìm kiếm.
+
             ViewBag.Search = search;
-            // Sắp xếp đơn mới nhất lên đầu.
             return View(ds.OrderByDescending(x => x.Id).ToList());
         }
 
-
-        // Đây là action hiển thị danh sách đơn đặt tour theo từng tour cụ thể. Khi admin nhấn vào tên tour trong trang danh sách đơn đặt tour, action này sẽ được gọi với Id của tour đó để hiển thị tất cả các đơn đặt tour liên quan đến tour đó. Admin cũng có thể tìm kiếm trong danh sách đơn đặt tour của tour đó theo tên khách, điện thoại, email, mã chuyến đi, trạng thái thanh toán, phương thức thanh toán hoặc thông tin hành khách.
+        // Đơn chưa thanh toán của một tour (nút "Khách đặt" ở Quản lý tour)
         public IActionResult DonDatTourTheoTour(int id)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            // Đoạn này truy vấn danh sách đơn đặt tour từ database theo Id của tour, bao gồm các thông tin liên quan như tour, lịch khởi hành và hành khách. Sau đó áp dụng bộ lọc tìm kiếm nếu admin nhập vào ô tìm kiếm. Cuối cùng trả về view DonDatTour.cshtml cùng với danh sách đơn đặt tour đã được lọc.
-            var list = _context.DatTours
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
-                .Include(x => x.HanhKhachDatTours)
-                .Where(x => x.TourId == id && x.TrangThaiThanhToan != "Đã thanh toán") // Chỉ lấy những đơn đặt tour của tour đó mà chưa thanh toán để hiển thị trong trang quản trị. Những đơn đã thanh toán sẽ được hiển thị trong trang doanh thu.
+
+            var list = _context.DatTours.AsNoTracking()
+                .Where(x => x.LichKhoiHanhTour != null && x.LichKhoiHanhTour.TourId == id)
+                .ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan)
                 .OrderByDescending(x => x.Id)
                 .ToList();
 
-            return View("DonDatTour", list);// Trả về view DonDatTour.cshtml cùng với danh sách đơn đặt tour đã được lọc theo tour cụ thể. View này sẽ hiển thị các đơn đặt tour của tour đó và cho phép admin tìm kiếm trong danh sách đó.
+            return View("DonDatTour", list);
         }
-        // Đây là action mở trang sửa đơn đặt tour. Khi admin nhấn nút sửa ở một đơn đặt tour nào đó trong trang danh sách đơn đặt tour, action này sẽ được gọi với Id của đơn đặt tour đó để lấy thông tin chi tiết và hiển thị trên form sửa. Admin có thể chỉnh sửa các thông tin của đơn đặt tour như tên khách, điện thoại, email, địa chỉ, ghi chú, số người, ngày đi, tour, lịch khởi hành, tổng tiền và trạng thái thanh toán.
+
+        // Trang chi tiết đơn (giữ tên action SuaDonDatTour để các liên kết cũ vẫn chạy)
         public IActionResult SuaDonDatTour(int id)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            // Đoạn này truy vấn đơn đặt tour từ database theo Id, bao gồm các thông tin liên quan như tour, lịch khởi hành và hành khách. Nếu không tìm thấy đơn đặt tour thì trả về lỗi NotFound. Nếu tìm thấy đơn đặt tour, hệ thống sẽ chuẩn bị dữ liệu cho form sửa bằng cách nạp danh sách tour và lịch khởi hành liên quan đến tour đó vào ViewBag để hiển thị trên dropdown. Hệ thống cũng sẽ chuẩn bị danh sách trạng thái thanh toán để hiển thị trên dropdown. Cuối cùng trả về view SuaDonDatTour.cshtml cùng với dữ liệu đơn đặt tour để hiển thị trên form sửa.
-            var datTour = _context.DatTours
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
-                .Include(x => x.HanhKhachDatTours)
-                .FirstOrDefault(x => x.Id == id); // Tìm đơn đặt tour theo Id. Nếu không tìm thấy thì datTour sẽ là null.
-            if (datTour == null)
+
+            var don = _context.DatTours.AsNoTracking().Where(x => x.Id == id).ChonDon(_context).FirstOrDefault();
+            if (don == null)
             {
                 return NotFound();
             }
-            // Lấy danh sách tour để hiển thị trong ô chọn tour.
-            ViewBag.Tours = _context.Tours
-                .Include(x => x.PhuongTienInfo)
-                .OrderBy(x => x.TenTour)
-                .ToList();
-            // Chỉ lấy lịch khởi hành thuộc tour hiện tại của đơn.
-            ViewBag.LichKhoiHanhTours = _context.LichKhoiHanhTours
-                .Where(x => x.TourId == datTour.TourId)
-                .OrderBy(x => x.NgayKhoiHanh)
-                .ToList();
-            // Chuẩn bị danh sách trạng thái thanh toán để hiển thị trong ô chọn trạng thái.
-            ViewBag.TrangThaiList = new List<string>
+
+            var lich = don.LichKhoiHanhTourId.HasValue
+                ? _context.LichKhoiHanhTours.AsNoTracking().Include(x => x.Tour).FirstOrDefault(x => x.Id == don.LichKhoiHanhTourId.Value)
+                : null;
+
+            var model = new ChiTietDonViewModel
             {
-                "Chưa thanh toán",
-                "Đang kiểm tra",
-                "Đã thanh toán"
+                Don = don,
+                DsGhe = _context.HanhKhachDatTours.AsNoTracking().Where(h => h.DatTourId == id).OrderBy(h => h.Id).ToList(),
+                DsGiaoDich = _context.GiaoDichThanhToans.AsNoTracking().Where(g => g.DatTourId == id).OrderBy(g => g.Id).ToList(),
+                GiaNguoiLon = lich?.GiaNguoiLonHienThi ?? 0,
+                GiaTreEm = lich?.GiaTreEmHienThi ?? 0,
+                SoChoCon = lich?.SoChoCon ?? 0,
+                DuocDoiSoNguoi = lich != null && !don.DaHuy && !don.DaThanhToan && lich.ChoPhepDatTour
             };
 
-            return View(datTour);
+            return View(model);
         }
-        // Lưu đơn đã sửa
+
+        // Admin chỉ sửa thông tin liên hệ của đơn. Lịch đi không đổi; số người đổi ở DoiSoNguoiDon.
         [HttpPost]
-        public IActionResult SuaDonDatTour(DatTours model)
+        [ValidateAntiForgeryToken]
+        public IActionResult SuaDonDatTour(SuaLienHeDonModel model)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            // Hệ thống tìm bản ghi cũ: Sau đó cập nhật các trường: TenKhach, DienThoai, Email, DiaChi, GhiChu, SoNguoi, NgayDi, TourId, LichKhoiHanhTourId, TongTien và TrangThaiThanhToan. Cuối cùng lưu các thay đổi vào database và chuyển hướng admin về trang danh sách đơn đặt tour với thông báo cập nhật thành công.
+
             var datTour = _context.DatTours.FirstOrDefault(x => x.Id == model.Id);
             if (datTour == null)
             {
                 return NotFound();
             }
-            // Cập nhật các trường thông tin của đơn đặt tour bằng dữ liệu mới từ form sửa. Các trường như TenKhach, DienThoai, Email, DiaChi, GhiChu, SoNguoi, NgayDi, TourId, LichKhoiHanhTourId, TongTien và TrangThaiThanhToan sẽ được cập nhật theo dữ liệu mới mà admin đã nhập trên form sửa.
-            datTour.TenKhach = model.TenKhach;
-            datTour.DienThoai = model.DienThoai;
-            datTour.Email = model.Email;
-            datTour.DiaChi = model.DiaChi;
+
+            if (string.IsNullOrWhiteSpace(model.TenKhach) || string.IsNullOrWhiteSpace(model.DienThoai))
+            {
+                TempData["error"] = "Cần có tên người liên hệ và số điện thoại.";
+                return RedirectToAction("SuaDonDatTour", new { id = model.Id });
+            }
+
+            datTour.TenKhach = model.TenKhach.Trim();
+            datTour.DienThoai = model.DienThoai.Trim();
+            datTour.Email = model.Email?.Trim() ?? string.Empty;
+            datTour.DiaChi = model.DiaChi?.Trim() ?? string.Empty;
             datTour.GhiChu = model.GhiChu;
-            datTour.SoNguoi = model.SoNguoi;
-            datTour.NgayDi = model.NgayDi;
-            datTour.TourId = model.TourId;
-            datTour.LichKhoiHanhTourId = model.LichKhoiHanhTourId;
-            datTour.TongTien = model.TongTien;
-            datTour.TrangThaiThanhToan = model.TrangThaiThanhToan;
-            // Lưu các thay đổi vào database sau khi đã cập nhật thông tin đơn đặt tour.
             _context.SaveChanges();
-            // Sau khi lưu xong, chuyển hướng admin về trang danh sách đơn đặt tour với thông báo cập nhật thành công.
-            TempData["success"] = "Cập nhật đơn đặt tour thành công!";
-            return RedirectToAction("DonDatTour");
+
+            TempData["success"] = "Đã lưu thông tin liên hệ.";
+            return RedirectToAction("SuaDonDatTour", new { id = model.Id });
         }
-        // Đây là action dùng để xóa một đơn đặt tour khỏi database. Khi admin nhấn nút xóa ở một đơn đặt tour nào đó trong trang danh sách đơn đặt tour, action này sẽ được gọi với Id của đơn đặt tour đó để xác định chính xác đơn đặt tour cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm đơn đặt tour trong database theo Id. Nếu không tìm thấy đơn đặt tour thì trả về lỗi NotFound. Nếu tìm thấy đơn đặt tour, hệ thống sẽ kiểm tra trạng thái thanh toán của đơn đó. Nếu đơn đã được thanh toán thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi. Nếu đơn chưa được thanh toán thì hệ thống sẽ xóa bản ghi của đơn đó khỏi bảng DatTours, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến đơn đó trong các bảng khác như HanhKhachDatTours để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách đơn đặt tour để thấy rằng đơn đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
-        public IActionResult XoaDonDatTour(int id)
+
+        // Admin xác nhận đã nhận đủ tiền của đơn: giao dịch chờ thành ThanhCong (hoặc tạo giao dịch tiền mặt
+        // nếu đơn cũ chưa có), đơn thành DaXacNhan. Chỉ một giao dịch thành công cho mỗi đơn (RB-05).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult XacNhanDaNhanTien(int id)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
-            var datTour = _context.DatTours.FirstOrDefault(x => x.Id == id);// Tìm đơn đặt tour trong database theo Id để xác định chính xác đơn đặt tour cần xóa. Nếu không tìm thấy đơn đặt tour nào thỏa mãn điều kiện này thì trả về lỗi NotFound.
-
-            if (datTour == null)
+            var don = _context.DatTours.AsNoTracking().Where(x => x.Id == id).ChonDon(_context).FirstOrDefault();
+            var datTour = _context.DatTours.FirstOrDefault(x => x.Id == id);
+            if (don == null || datTour == null)
             {
                 return NotFound();
             }
-            // Không cho phép xóa đơn đã thanh toán vì đây là dữ liệu liên quan đến doanh thu.
-            if (datTour.TrangThaiThanhToan == "Đã thanh toán")
+
+            if (don.DaHuy || don.DaThanhToan)
             {
-                TempData["error"] = "Không thể xóa đơn đã thanh toán!";
-                return RedirectToAction("DoanhThu");
+                TempData["error"] = don.DaHuy ? "Đơn đã hủy." : "Đơn này đã được xác nhận thanh toán.";
+                return RedirectToAction("SuaDonDatTour", new { id });
             }
-            // Bản ghi được xóa khỏi database.
-            _context.DatTours.Remove(datTour);
+
+            var bayGio = DateTime.Now;
+            var nguoiXacNhan = HttpContext.Session.GetInt32("taiKhoanId");
+            var gdCho = _context.GiaoDichThanhToans
+                .Where(g => g.DatTourId == id && g.TrangThai == "ChoXacNhan")
+                .OrderByDescending(g => g.Id)
+                .FirstOrDefault();
+
+            if (gdCho != null)
+            {
+                gdCho.TrangThai = "ThanhCong";
+                gdCho.SoTien = don.TongTien > 0 ? don.TongTien : gdCho.SoTien;
+                gdCho.NgayXacNhan = bayGio;
+                gdCho.NguoiXacNhanId = nguoiXacNhan;
+            }
+            else if (don.TongTien > 0)
+            {
+                _context.GiaoDichThanhToans.Add(new GiaoDichThanhToan
+                {
+                    DatTourId = id,
+                    SoTien = don.TongTien,
+                    PhuongThuc = "Tiền mặt",
+                    TrangThai = "ThanhCong",
+                    NgayTao = bayGio,
+                    NgayXacNhan = bayGio,
+                    NguoiXacNhanId = nguoiXacNhan
+                });
+            }
+
+            datTour.TrangThai = "DaXacNhan";
+            datTour.TrangThaiThanhToan = TrangThaiThanhToanDon.DaThanhToan; // cột cũ, ghi kèm đến bước thu hẹp
             _context.SaveChanges();
 
-            return RedirectToAction("DonDatTour");
+            TempData["success"] = $"Đã xác nhận nhận {don.TongTien:N0} VNĐ cho đơn {don.MaChuyenDi}.";
+            return RedirectToAction("SuaDonDatTour", new { id });
         }
-        // Đây là action dùng để cập nhật trạng thái thanh toán của một đơn đặt tour. Khi admin nhấn vào một trạng thái thanh toán nào đó trong trang danh sách đơn đặt tour, action này sẽ được gọi với Id của đơn đặt tour đó và trạng thái thanh toán mới mà admin đã chọn. Hàm sẽ kiểm tra quyền admin, sau đó tìm đơn đặt tour trong database theo Id. Nếu không tìm thấy đơn đặt tour thì trả về lỗi NotFound. Nếu tìm thấy đơn đặt tour, hệ thống sẽ cập nhật trường TrangThaiThanhToan của đơn đó bằng giá trị trạng thái mới mà admin đã chọn, rồi lưu các thay đổi vào database. Cuối cùng chuyển hướng admin về trang danh sách đơn đặt tour để thấy rằng trạng thái thanh toán của đơn đã được cập nhật.
-        public IActionResult CapNhatTrangThaiThanhToan(int id, string trangThai)
+
+        // Admin hủy đơn: cùng cách xử lý với khách hủy (XuLyDon.HuyDon). Thay cho xóa đơn trước đây.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult HuyDonDatTour(int id)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
-            var datTour = _context.DatTours.FirstOrDefault(x => x.Id == id); // Tìm đơn đặt tour trong database theo Id để xác định chính xác đơn đặt tour cần cập nhật. Nếu không tìm thấy đơn đặt tour nào thỏa mãn điều kiện này thì trả về lỗi NotFound.
-
+            var datTour = _context.DatTours.Include(x => x.HanhKhachDatTours).FirstOrDefault(x => x.Id == id);
             if (datTour == null)
             {
                 return NotFound();
             }
-            // Cập nhật trường TrangThaiThanhToan của đơn đó bằng giá trị trạng thái mới mà admin đã chọn, rồi lưu các thay đổi vào database.
-            datTour.TrangThaiThanhToan = trangThai;
-            _context.SaveChanges();
 
-            return RedirectToAction("DonDatTour");
+            if (datTour.TrangThai == "DaHuy")
+            {
+                TempData["error"] = "Đơn này đã hủy trước đó.";
+                return RedirectToAction("SuaDonDatTour", new { id });
+            }
+
+            XuLyDon.HuyDon(_context, datTour);
+
+            TempData["success"] = "Đã hủy đơn, ghế được nhả và chỗ đã trả lại cho lịch.";
+            return RedirectToAction("SuaDonDatTour", new { id });
+        }
+
+        // Đổi số người của đơn chưa thanh toán. Thêm ghế: trừ chỗ có điều kiện, ghế mới lấy giá hiện tại của lịch.
+        // Bớt ghế: nhả các ghế thêm sau cùng của loại đó và trả chỗ. Tất cả trong một giao dịch CSDL.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DoiSoNguoiDon(int id, int soNguoiLon, int soTreNho)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var don = _context.DatTours.AsNoTracking().Where(x => x.Id == id).ChonDon(_context).FirstOrDefault();
+            var datTour = _context.DatTours.Include(x => x.HanhKhachDatTours).FirstOrDefault(x => x.Id == id);
+            if (don == null || datTour == null || !datTour.LichKhoiHanhTourId.HasValue)
+            {
+                return NotFound();
+            }
+
+            var lich = _context.LichKhoiHanhTours.Include(x => x.Tour).First(x => x.Id == datTour.LichKhoiHanhTourId.Value);
+            if (don.DaHuy || don.DaThanhToan || !lich.ChoPhepDatTour)
+            {
+                TempData["error"] = "Chỉ đổi được số người khi đơn chưa thanh toán và lịch còn mở bán.";
+                return RedirectToAction("SuaDonDatTour", new { id });
+            }
+
+            if (soNguoiLon < 1 || soTreNho < 0)
+            {
+                TempData["error"] = "Cần ít nhất 1 người lớn, số trẻ nhỏ không âm.";
+                return RedirectToAction("SuaDonDatTour", new { id });
+            }
+
+            var gheConLai = datTour.HanhKhachDatTours.Where(h => h.NgayNha == null).ToList();
+            var gheLon = gheConLai.Where(h => h.LoaiHanhKhach != "Trẻ nhỏ").OrderByDescending(h => h.Id).ToList();
+            var gheTre = gheConLai.Where(h => h.LoaiHanhKhach == "Trẻ nhỏ").OrderByDescending(h => h.Id).ToList();
+            int themLon = soNguoiLon - gheLon.Count, themTre = soTreNho - gheTre.Count;
+            int chenhLech = themLon + themTre;
+
+            if (themLon == 0 && themTre == 0)
+            {
+                TempData["error"] = "Số người không thay đổi.";
+                return RedirectToAction("SuaDonDatTour", new { id });
+            }
+
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                if (chenhLech > 0)
+                {
+                    int soDong = _context.Database.ExecuteSqlInterpolated(
+                        $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon - {chenhLech} WHERE Id = {lich.Id} AND SoChoCon >= {chenhLech}");
+                    if (soDong == 0)
+                    {
+                        giaoDichCsdl.Rollback();
+                        TempData["error"] = $"Lịch chỉ còn {lich.SoChoCon} chỗ, không thêm được {chenhLech} người.";
+                        return RedirectToAction("SuaDonDatTour", new { id });
+                    }
+                }
+
+                var bayGio = DateTime.Now;
+                void ThemGhe(int soLuong, string loai, decimal gia)
+                {
+                    for (int i = 0; i < soLuong; i++)
+                    {
+                        datTour.HanhKhachDatTours.Add(new HanhKhachDatTour
+                        {
+                            HoTen = string.Empty,
+                            LoaiGiayTo = string.Empty,
+                            SoGiayTo = string.Empty,
+                            LoaiHanhKhach = loai,
+                            GiaLucDat = gia
+                        });
+                    }
+                }
+                void NhaGhe(List<HanhKhachDatTour> ds, int soLuong)
+                {
+                    foreach (var ghe in ds.Take(soLuong))
+                    {
+                        ghe.NgayNha = bayGio;
+                    }
+                }
+
+                if (themLon > 0) ThemGhe(themLon, "Người lớn", lich.GiaNguoiLonHienThi); else NhaGhe(gheLon, -themLon);
+                if (themTre > 0) ThemGhe(themTre, "Trẻ nhỏ", lich.GiaTreEmHienThi); else NhaGhe(gheTre, -themTre);
+
+                var dsNhaId = datTour.HanhKhachDatTours.Where(h => h.NgayNha == bayGio).Select(h => h.Id).ToList();
+                _context.ChoNgoiChuyenDis.RemoveRange(_context.ChoNgoiChuyenDis.Where(c => dsNhaId.Contains(c.HanhKhachDatTourId)));
+
+                // Tính lại tiền; khuyến mãi giữ số tiền đã giảm nhưng không vượt tổng mới
+                decimal truocGiam = datTour.HanhKhachDatTours.Where(h => h.NgayNha == null).Sum(h => h.GiaLucDat);
+                datTour.SoTienGiam = Math.Min(datTour.SoTienGiam, truocGiam);
+                decimal phaiTra = truocGiam - datTour.SoTienGiam;
+
+                // Cột cũ, ghi kèm đến bước thu hẹp
+                datTour.SoNguoi = soNguoiLon + soTreNho;
+                datTour.TongTienTruocGiam = truocGiam;
+                datTour.TongTien = phaiTra;
+
+                foreach (var gd in _context.GiaoDichThanhToans.Where(g => g.DatTourId == id && g.TrangThai == "ChoXacNhan"))
+                {
+                    gd.SoTien = phaiTra > 0 ? phaiTra : gd.SoTien;
+                }
+
+                _context.SaveChanges();
+
+                if (chenhLech < 0)
+                {
+                    _context.Database.ExecuteSqlInterpolated(
+                        $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {-chenhLech} WHERE Id = {lich.Id}");
+                }
+
+                giaoDichCsdl.Commit();
+            }
+
+            TempData["success"] = $"Đã cập nhật đơn thành {soNguoiLon} người lớn, {soTreNho} trẻ nhỏ.";
+            return RedirectToAction("SuaDonDatTour", new { id });
         }
 
         // Đây là action hiển thị danh sách tài khoản người dùng trong trang quản trị. Admin có thể tìm kiếm tài khoản theo họ tên, email hoặc số điện thoại đăng nhập, vai trò. Admin cũng có thể chỉnh sửa hoặc xóa tài khoản người dùng từ trang này.
@@ -1047,25 +1193,27 @@ namespace webdulich.Controllers
             var ngayMai = homNay.AddDays(1);
             var sau30Ngay = homNay.AddDays(30);
 
-            // Doanh thu: cùng cách tính với trang Doanh thu (đơn "Đã thanh toán", theo ngày đi)
-            var doanhThuTheoThang = _context.DatTours
-                .AsNoTracking()
-                .Where(x => x.TrangThaiThanhToan == "Đã thanh toán" && x.NgayDi.Year == homNay.Year)
+            // Doanh thu: cùng cách tính với trang Doanh thu (đơn đã thanh toán, theo ngày đi)
+            var dsDonDaTra = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan && x.NgayDi.Year == homNay.Year)
+                .Select(x => new { x.NgayDi, x.TongTien })
+                .ToList();
+            var doanhThuTheoThang = dsDonDaTra
                 .GroupBy(x => x.NgayDi.Month)
                 .Select(g => new { Thang = g.Key, DoanhThu = g.Sum(d => d.TongTien), SoDon = g.Count() })
                 .ToList();
 
             var thangNay = doanhThuTheoThang.FirstOrDefault(x => x.Thang == homNay.Month);
 
-            var donChoXacNhan = _context.DatTours
-                .AsNoTracking()
-                .Where(x => x.TrangThaiThanhToan == "Đang kiểm tra")
+            var donDangKiemTra = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DangKiemTra);
+            var donChoXacNhan = donDangKiemTra
                 .OrderByDescending(x => x.Id)
                 .Select(x => new DonChoXacNhanItem
                 {
                     Id = x.Id,
                     TenKhach = x.TenKhach,
-                    TenTour = x.Tour != null ? x.Tour.TenTour : "Chưa cập nhật",
+                    TenTour = x.TenTour,
                     NgayDi = x.NgayDi,
                     TongTien = x.TongTien,
                     PhuongThucThanhToan = x.PhuongThucThanhToan
@@ -1088,7 +1236,7 @@ namespace webdulich.Controllers
                 Nam = homNay.Year,
                 DoanhThuThang = thangNay?.DoanhThu ?? 0,
                 SoDonDaThanhToanThang = thangNay?.SoDon ?? 0,
-                SoDonChoXacNhan = _context.DatTours.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra"),
+                SoDonChoXacNhan = donDangKiemTra.Count(),
                 SoLichSapKhoiHanh = lichSapKhoiHanhQuery.Count(),
                 SoTour = _context.Tours.Count(),
                 TinNhanChuaDoc = _context.TinNhanLienHes.Count(x =>
@@ -1128,12 +1276,9 @@ namespace webdulich.Controllers
             }
             int thangChon = thang ?? DateTime.Today.Month;
             int namChon = nam ?? DateTime.Today.Year;
-            var query = _context.DatTours
-                .AsNoTracking()
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
-                .Where(x => x.TrangThaiThanhToan == "Đã thanh toán");
+            // Đơn đã thanh toán (có giao dịch thành công), tính theo ngày đi của lịch
+            var query = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan);
             var danhSachDon = query
                 .Where(x => x.NgayDi.Month == thangChon &&
                             x.NgayDi.Year == namChon)
@@ -1156,14 +1301,14 @@ namespace webdulich.Controllers
             decimal trungBinhDon = soDonDaThanhToan > 0
                 ? tongDoanhThu / soDonDaThanhToan
                 : 0;
+            // TongTien là tổng tính từ ghế, SQL Server không SUM lồng được nên cộng sau khi lấy về
             decimal doanhThuNam = query
                 .Where(x => x.NgayDi.Year == namChon)
-                .Select(x => (decimal?)x.TongTien)
-                .Sum() ?? 0;
+                .Select(x => x.TongTien)
+                .AsEnumerable()
+                .Sum();
             var tourBanChay = danhSachDon
-                .GroupBy(x => x.Tour != null
-                    ? x.Tour.TenTour
-                    : "Chưa cập nhật")
+                .GroupBy(x => x.TenTour)
                 .Select(x => new
                 {
                     TenTour = x.Key,
@@ -1171,11 +1316,10 @@ namespace webdulich.Controllers
                 })
                 .OrderByDescending(x => x.SoDon)
                 .FirstOrDefault();
-            var thongKeTheoThang = _context.DatTours
-                .AsNoTracking()
-                .Where(x =>
-                    x.TrangThaiThanhToan == "Đã thanh toán" &&
-                    x.NgayDi.Year == namChon)
+            var thongKeTheoThang = query
+                .Where(x => x.NgayDi.Year == namChon)
+                .Select(x => new { x.NgayDi, x.TongTien })
+                .AsEnumerable()
                 .GroupBy(x => x.NgayDi.Month)
                 .Select(x => new
                 {
@@ -1224,12 +1368,9 @@ namespace webdulich.Controllers
             int thangChon = thang ?? DateTime.Today.Month;
             int namChon = nam ?? DateTime.Today.Year;
             // 
-            var danhSachDon = _context.DatTours
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
+            var danhSachDon = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x =>
-                    x.TrangThaiThanhToan == "Đã thanh toán" &&
+                    x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan &&
                     x.NgayDi.Month == thangChon &&
                     x.NgayDi.Year == namChon)
                 .OrderByDescending(x => x.NgayDi)// Sắp xếp theo ngày đi giảm dần để những đơn đặt tour mới nhất sẽ hiển thị ở đầu danh sách và cũng sẽ xuất ra file Excel ở đầu tiên. Điều này giúp admin dễ dàng xem và phân tích các đơn đặt tour mới nhất trong tháng đó.
@@ -1248,18 +1389,18 @@ namespace webdulich.Controllers
             // Duyệt qua từng đơn đặt tour trong danh sách đã được lọc theo tháng và năm, sau đó xây dựng một dòng dữ liệu cho mỗi đơn đặt tour với các thông tin như STT, khách hàng, tour, ngày đi, giờ đi, phương tiện, phương thức thanh toán, trạng thái và doanh thu. Mỗi dòng dữ liệu sẽ được phân tách bằng dấu phẩy để tạo thành định dạng CSV. Các giá trị sẽ được xử lý qua hàm Csv để đảm bảo rằng các ký tự đặc biệt được xử lý đúng cách trong file CSV.
             foreach (var item in danhSachDon)
             {
-                string gioDi = item.LichKhoiHanhTour?.GioKhoiHanh.HasValue == true
-                    ? item.LichKhoiHanhTour.GioKhoiHanh.Value.ToString(@"hh\:mm")
+                string gioDi = item.GioKhoiHanh.HasValue
+                    ? item.GioKhoiHanh.Value.ToString(@"hh\:mm")
                     : "Chưa cập nhật";
 
                 sb.AppendLine(string.Join(",", new[]
                 {
             stt.ToString(),
             Csv(item.TenKhach),
-            Csv(item.Tour?.TenTour ?? "Chưa cập nhật"),
+            Csv(item.TenTour),
             Csv(item.NgayDi.ToString("dd/MM/yyyy")),
             Csv(gioDi),
-            Csv(item.Tour?.PhuongTienHienThi ?? "Chưa cập nhật"),
+            Csv(item.PhuongTien),
             Csv(item.PhuongThucThanhToan),
             Csv(item.TrangThaiThanhToan),
             item.TongTien.ToString("N0")
@@ -1287,12 +1428,9 @@ namespace webdulich.Controllers
             int thangChon = thang ?? DateTime.Today.Month;
             int namChon = nam ?? DateTime.Today.Year;
 
-            var danhSachDon = _context.DatTours
-                .Include(x => x.Tour)
-                    .ThenInclude(x => x.PhuongTienInfo)
-                .Include(x => x.LichKhoiHanhTour)
+            var danhSachDon = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x =>
-                    x.TrangThaiThanhToan == "Đã thanh toán" &&
+                    x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan &&
                     x.NgayDi.Month == thangChon &&
                     x.NgayDi.Year == namChon)
                 .OrderByDescending(x => x.NgayDi)

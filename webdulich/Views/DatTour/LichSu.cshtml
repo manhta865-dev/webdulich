@@ -1,4 +1,4 @@
-﻿@model List<webdulich.Models.DatTours>
+﻿@model List<webdulich.Models.DonDatTourDoc>
 
 @{
     ViewData["Title"] = "Lịch sử đặt tour";
@@ -66,12 +66,12 @@
                     cssStatus = "status-cancelled";
                 }
 
-                var gioDi = item.LichKhoiHanhTour?.GioKhoiHanh;
+                var gioDi = item.GioKhoiHanh;
 
                 <article class="ls-card">
                     <header class="ls-card-head">
                         <div>
-                            <h2>@item.Tour?.TenTour</h2>
+                            <h2>@item.TenTour</h2>
                             <div class="ls-code">Mã chuyến đi: @(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có" : item.MaChuyenDi)</div>
                         </div>
 

@@ -1,32 +1,24 @@
-﻿@model webdulich.Models.DatTours
+﻿@model webdulich.Models.ChiTietDonViewModel
 
 @{
-    ViewData["Title"] = "Sửa đơn đặt tour";
+    var don = Model.Don;
+    ViewData["Title"] = "Chi tiết đơn " + don.MaChuyenDi;
 
-    var tours = ViewBag.Tours as List<webdulich.Models.Tour>;
-    var trangThaiList = ViewBag.TrangThaiList as List<string>;
-
-    var danhSachHanhKhach = Model.HanhKhachDatTours != null
-        ? Model.HanhKhachDatTours.OrderBy(x => x.Id).ToList()
-        : new List<webdulich.Models.HanhKhachDatTour>();
-
-    var cssStatus = "status-unpaid";
-
-    if (Model.TrangThaiThanhToan == "Đang kiểm tra")
+    var cssStatus = don.TrangThaiThanhToan switch
     {
-        cssStatus = "status-checking";
-    }
-    else if (Model.TrangThaiThanhToan == "Đã thanh toán")
+        "Đang kiểm tra" => "status-checking",
+        "Đã thanh toán" => "status-paid",
+        "Đã hủy" => "status-cancelled",
+        _ => "status-unpaid"
+    };
+    var gioDi = don.GioKhoiHanh.HasValue ? don.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa cập nhật";
+    var tenTrangThaiGiaoDich = new Dictionary<string, string>
     {
-        cssStatus = "status-paid";
-    }
-
-    var gioDiHienThi = "Chưa cập nhật";
-    if (Model.LichKhoiHanhTour != null && Model.LichKhoiHanhTour.GioKhoiHanh.HasValue)
-    {
-        gioDiHienThi = Model.LichKhoiHanhTour.GioKhoiHanh.Value.ToString(@"hh\:mm");
-    }
-    var phuongTienHienThi = Model.Tour?.PhuongTienHienThi ?? "Chưa cập nhật";
+        ["ChoXacNhan"] = "Chờ xác nhận",
+        ["ThanhCong"] = "Thành công",
+        ["ThatBai"] = "Không hiệu lực"
+    };
+    bool choXacNhanTien = !don.DaHuy && !don.DaThanhToan;
 }
 
 @section Styles {
@@ -37,192 +29,209 @@
 <div class="ad-page ad-form-page">
     <div class="ad-pagehead">
         <div>
-            <h1>Sửa đơn đặt tour</h1>
-            <p>Cập nhật thông tin khách hàng, lịch đi, tour và trạng thái thanh toán.</p>
+            <h1>Đơn @don.MaChuyenDi</h1>
+            <p>@don.TenTour, khởi hành @don.NgayDi.ToString("dd/MM/yyyy") lúc @gioDi. Đặt ngày @don.NgayDat.ToString("dd/MM/yyyy HH:mm").</p>
+        </div>
+        <span class="badge-status @cssStatus">@don.TrangThaiThanhToan</span>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="ad-info-tiles">
+        <div class="ad-info-tile">
+            <span>Số người</span>
+            <strong>@don.SoNguoi (@don.SoNguoiLon người lớn, @don.SoTreNho trẻ nhỏ)</strong>
+        </div>
+        <div class="ad-info-tile">
+            <span>Phải trả</span>
+            <strong>@don.TongTien.ToString("N0") VNĐ</strong>
+        </div>
+        <div class="ad-info-tile">
+            <span>Khuyến mãi</span>
+            <strong>@(string.IsNullOrEmpty(don.MaKhuyenMai) ? "Không có" : $"{don.MaKhuyenMai} (-{don.SoTienGiam:N0} VNĐ)")</strong>
+        </div>
+        <div class="ad-info-tile">
+            <span>Thanh toán bằng</span>
+            <strong>@don.PhuongThucThanhToan</strong>
         </div>
     </div>
 
-    <form asp-controller="Admin" asp-action="SuaDonDatTour" method="post" class="ad-form">
-        <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="MaChuyenDi" />
-        <input type="hidden" asp-for="PhuongThucThanhToan" />
-        <input type="hidden" asp-for="LichKhoiHanhTourId" />
-        <input type="hidden" asp-for="TaiKhoanId" />
+    @* ---------- Thanh toán ---------- *@
+    <section class="ad-form-block">
+        <h2>Thanh toán</h2>
 
-        <div class="ad-info-tiles">
-            <div class="ad-info-tile">
-                <span>Mã chuyến đi</span>
-                <strong>@(string.IsNullOrEmpty(Model.MaChuyenDi) ? "Chưa có" : Model.MaChuyenDi)</strong>
+        @if (Model.DsGiaoDich.Any())
+        {
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày tạo</th>
+                            <th>Phương thức</th>
+                            <th>Số tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Xác nhận lúc</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var gd in Model.DsGiaoDich)
+                        {
+                            <tr>
+                                <td>@gd.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@gd.PhuongThuc</td>
+                                <td class="ad-price">@gd.SoTien.ToString("N0") VNĐ</td>
+                                <td>@(tenTrangThaiGiaoDich.TryGetValue(gd.TrangThai, out var ten) ? ten : gd.TrangThai)</td>
+                                <td>@(gd.NgayXacNhan?.ToString("dd/MM/yyyy HH:mm") ?? "")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
+        }
+        else
+        {
+            <p class="ad-note">Chưa có giao dịch nào cho đơn này.</p>
+        }
 
-            <div class="ad-info-tile">
-                <span>Giờ khởi hành</span>
-                <strong>@gioDiHienThi</strong>
-            </div>
+        <div class="ad-form-actions ad-form-actions-trai">
+            @if (choXacNhanTien)
+            {
+                <form method="post" asp-action="XacNhanDaNhanTien" asp-route-id="@don.Id"
+                      onsubmit="return confirm('Xác nhận đã nhận đủ @don.TongTien.ToString("N0") VNĐ cho đơn @don.MaChuyenDi?');">
+                    <button type="submit" class="tv-btn tv-btn-chinh">Xác nhận đã nhận tiền</button>
+                </form>
+            }
 
-            <div class="ad-info-tile">
-                <span>Phương tiện</span>
-                <strong>@phuongTienHienThi</strong>
-            </div>
-
-            <div class="ad-info-tile">
-                <span>Thanh toán bằng</span>
-                <strong>@(string.IsNullOrEmpty(Model.PhuongThucThanhToan) ? "Chưa cập nhật" : Model.PhuongThucThanhToan)</strong>
-            </div>
+            @if (!don.DaHuy)
+            {
+                <form method="post" asp-action="HuyDonDatTour" asp-route-id="@don.Id"
+                      onsubmit="return confirm('Hủy đơn này? Ghế sẽ được nhả và chỗ trả lại cho lịch.');">
+                    <button type="submit" class="tv-btn tv-btn-huy">Hủy đơn</button>
+                </form>
+            }
         </div>
 
-        <section class="ad-form-block">
-            <h2>Thông tin khách hàng</h2>
+        @if (don.DaThanhToan && !don.DaHuy)
+        {
+            <p class="ad-note">Đơn đã thanh toán. Nếu hủy, tiền đã nhận cần hoàn ngoài hệ thống.</p>
+        }
+    </section>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="TenKhach" class="form-label">Tên khách</label>
-                    <input asp-for="TenKhach" class="form-control" />
-                </div>
+    @* ---------- Hành khách ---------- *@
+    <section class="ad-form-block">
+        <h2>Hành khách</h2>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="DienThoai" class="form-label">Điện thoại</label>
-                    <input asp-for="DienThoai" class="form-control" />
-                </div>
+        @if (Model.DsGhe.Any())
+        {
+            <div class="ad-passengers">
+                @for (int i = 0; i < Model.DsGhe.Count; i++)
+                {
+                    var ghe = Model.DsGhe[i];
+                    var typeClass = ghe.LoaiHanhKhach == "Trẻ nhỏ" ? "child" : "adult";
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" />
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="DiaChi" class="form-label">Địa chỉ</label>
-                    <input asp-for="DiaChi" class="form-control" />
-                </div>
-
-                <div class="col-12">
-                    <label asp-for="GhiChu" class="form-label">Ghi chú</label>
-                    <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-        </section>
-
-        <section class="ad-form-block">
-            <h2>Danh sách hành khách</h2>
-            <p class="ad-note">Tổng cộng @Model.SoNguoi người trong đơn đặt tour này.</p>
-
-            @if (danhSachHanhKhach.Any())
-            {
-                <div class="ad-passengers">
-                    @for (int i = 0; i < danhSachHanhKhach.Count; i++)
-                    {
-                        var hanhKhach = danhSachHanhKhach[i];
-                        var typeClass = hanhKhach.LoaiHanhKhach == "Trẻ nhỏ" ? "child" : "adult";
-
-                        <div class="ad-passenger">
-                            <div class="ad-passenger-head">
-                                <strong>Hành khách @(i + 1): @hanhKhach.HoTen</strong>
-
-                                <span class="ad-type @typeClass">@hanhKhach.LoaiHanhKhach</span>
-                            </div>
-
-                            <div class="ad-passenger-info">
-                                <div>
-                                    <span>Loại giấy tờ</span>
-                                    <strong>@hanhKhach.LoaiGiayTo</strong>
-                                </div>
-
-                                <div>
-                                    <span>Số giấy tờ</span>
-                                    <strong>@hanhKhach.SoGiayTo</strong>
-                                </div>
-                            </div>
+                    <div class="ad-passenger@(ghe.NgayNha.HasValue && !don.DaHuy ? " ad-passenger-nha" : "")">
+                        <div class="ad-passenger-head">
+                            <strong>Hành khách @(i + 1): @(string.IsNullOrWhiteSpace(ghe.HoTen) ? "Chưa điền tên" : ghe.HoTen)</strong>
+                            <span class="ad-type @typeClass">@ghe.LoaiHanhKhach</span>
                         </div>
-                    }
+
+                        <div class="ad-passenger-info">
+                            <div>
+                                <span>Giấy tờ</span>
+                                <strong>@(string.IsNullOrWhiteSpace(ghe.SoGiayTo) ? "Chưa điền" : $"{ghe.LoaiGiayTo} {ghe.SoGiayTo}")</strong>
+                            </div>
+                            <div>
+                                <span>Giá lúc đặt</span>
+                                <strong>@ghe.GiaLucDat.ToString("N0") VNĐ</strong>
+                            </div>
+                            @if (ghe.NgayNha.HasValue && !don.DaHuy)
+                            {
+                                <div>
+                                    <span>Đã bỏ khỏi đơn</span>
+                                    <strong>@ghe.NgayNha.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="ad-note">Đơn này chưa có hành khách.</p>
+        }
+    </section>
+
+    @* ---------- Đổi số người ---------- *@
+    @if (Model.DuocDoiSoNguoi)
+    {
+        <section class="ad-form-block">
+            <h2>Đổi số người</h2>
+            <p class="ad-note">
+                Giá hiện tại của lịch: người lớn @Model.GiaNguoiLon.ToString("N0") VNĐ, trẻ nhỏ @Model.GiaTreEm.ToString("N0") VNĐ.
+                Lịch còn @Model.SoChoCon chỗ. Người thêm mới chưa có tên và giấy tờ; người bớt đi là người thêm sau cùng.
+            </p>
+
+            <form method="post" asp-action="DoiSoNguoiDon" asp-route-id="@don.Id" class="ad-form">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="soNguoiLon">Người lớn</label>
+                        <input type="number" id="soNguoiLon" name="soNguoiLon" class="form-control" min="1" value="@don.SoNguoiLon" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="soTreNho">Trẻ nhỏ</label>
+                        <input type="number" id="soTreNho" name="soTreNho" class="form-control" min="0" value="@don.SoTreNho" required />
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button type="submit" class="tv-btn tv-btn-vien">Cập nhật số người</button>
+                    </div>
                 </div>
-            }
-            else
-            {
-                <div class="tv-empty">
-                    <p>Đơn này chưa có dữ liệu hành khách chi tiết. Có thể đây là đơn được tạo trước khi thêm chức năng nhập thông tin từng hành khách.</p>
-                </div>
-            }
+            </form>
         </section>
+    }
+
+    @* ---------- Thông tin liên hệ ---------- *@
+    <form asp-controller="Admin" asp-action="SuaDonDatTour" method="post" class="ad-form">
+        <input type="hidden" name="Id" value="@don.Id" />
 
         <section class="ad-form-block">
-            <h2>Thông tin đơn đặt tour</h2>
+            <h2>Thông tin liên hệ</h2>
 
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label asp-for="SoNguoi" class="form-label">Số người</label>
-                    <input asp-for="SoNguoi" type="number" min="1" class="form-control" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="NgayDi" class="form-label">Ngày đi</label>
-                    <input asp-for="NgayDi" type="date" class="form-control" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="TourId" class="form-label">Tour</label>
-                    <select asp-for="TourId" class="form-select">
-                        @if (tours != null)
-                        {
-                            foreach (var tour in tours)
-                            {
-                                <option value="@tour.Id">@tour.TenTour</option>
-                            }
-                        }
-                    </select>
-                </div>
-
                 <div class="col-md-6 mb-3">
-                    <label asp-for="TongTien" class="form-label">Giá tiền</label>
-                    <input asp-for="TongTien" class="form-control money-input" />
+                    <label class="form-label" for="TenKhach">Tên người liên hệ</label>
+                    <input id="TenKhach" name="TenKhach" class="form-control" value="@don.TenKhach" required />
                 </div>
-
                 <div class="col-md-6 mb-3">
-                    <label asp-for="TrangThaiThanhToan" class="form-label">Trạng thái thanh toán</label>
-
-                    <div class="ad-status-row">
-                        <select asp-for="TrangThaiThanhToan" class="form-select" id="trangThaiSelect">
-                            @if (trangThaiList != null)
-                            {
-                                foreach (var tt in trangThaiList)
-                                {
-                                    <option value="@tt">@tt</option>
-                                }
-                            }
-                        </select>
-
-                        <span id="statusBadge" class="badge-status @cssStatus">@Model.TrangThaiThanhToan</span>
-                    </div>
+                    <label class="form-label" for="DienThoai">Điện thoại</label>
+                    <input id="DienThoai" name="DienThoai" class="form-control" value="@don.DienThoai" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="Email">Email</label>
+                    <input id="Email" name="Email" type="email" class="form-control" value="@don.Email" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="DiaChi">Địa chỉ</label>
+                    <input id="DiaChi" name="DiaChi" class="form-control" value="@don.DiaChi" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="GhiChu">Ghi chú</label>
+                    <textarea id="GhiChu" name="GhiChu" class="form-control" rows="3">@don.GhiChu</textarea>
                 </div>
             </div>
         </section>
 
         <div class="ad-form-actions">
-            <button type="submit" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
+            <button type="submit" class="tv-btn tv-btn-chinh">Lưu thông tin liên hệ</button>
             <a asp-controller="Admin" asp-action="DonDatTour" class="tv-btn tv-btn-vien">Quay lại</a>
         </div>
     </form>
 </div>
-
-<script>
-    const trangThaiSelect = document.getElementById("trangThaiSelect");
-    const statusBadge = document.getElementById("statusBadge");
-
-    function updateStatusBadge() {
-        const value = trangThaiSelect.value;
-        statusBadge.textContent = value;
-
-        statusBadge.classList.remove("status-unpaid", "status-checking", "status-paid");
-
-        if (value === "Đang kiểm tra") {
-            statusBadge.classList.add("status-checking");
-        } else if (value === "Đã thanh toán") {
-            statusBadge.classList.add("status-paid");
-        } else {
-            statusBadge.classList.add("status-unpaid");
-        }
-    }
-
-    if (trangThaiSelect && statusBadge) {
-        trangThaiSelect.addEventListener("change", updateStatusBadge);
-    }
-</script>

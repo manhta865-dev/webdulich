@@ -1,4 +1,4 @@
-﻿@model List<webdulich.Models.DatTours>
+﻿@model List<webdulich.Models.DonDatTourDoc>
 
 @{
     ViewData["Title"] = "Danh sách khách đặt tour";
@@ -20,6 +20,16 @@
             <p>Quản lý đơn đặt tour, theo dõi mã chuyến đi, ngày giờ khởi hành và trạng thái thanh toán. Trang này chỉ liệt kê đơn chưa thanh toán; đơn đã thanh toán xem ở mục Doanh thu.</p>
         </div>
     </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
 
     <div class="ad-kpis">
         <div class="ad-kpi">
@@ -97,12 +107,12 @@
                                 cssStatus = "status-cancelled";
                             }
 
-                            var gioDi = item.LichKhoiHanhTour?.GioKhoiHanh;
+                            var gioDi = item.GioKhoiHanh;
 
                             <tr>
                                 <td>
                                     <div class="ad-cell-stack">
-                                        <strong>@item.Tour?.TenTour</strong>
+                                        <strong>@item.TenTour</strong>
                                         <span class="ad-mono">@(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có mã" : item.MaChuyenDi)</span>
                                     </div>
                                 </td>
@@ -156,13 +166,7 @@
                                         <a asp-controller="Admin"
                                            asp-action="SuaDonDatTour"
                                            asp-route-id="@item.Id"
-                                           class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
-
-                                        <a asp-controller="Admin"
-                                           asp-action="XoaDonDatTour"
-                                           asp-route-id="@item.Id"
-                                           class="tv-btn tv-btn-huy ad-btn-nho"
-                                           onclick="return confirm('Bạn chắc chắn muốn xóa đơn này?')">Xóa</a>
+                                           class="tv-btn tv-btn-vien ad-btn-nho">Chi tiết</a>
                                     </div>
                                 </td>
                             </tr>

@@ -116,9 +116,10 @@ namespace webdulich.Controllers
         {
             var tours = LayQueryTourDayDu().ToList();
             // Tạo một dictionary để đếm số lượt đặt cho mỗi tour, giúp việc truy cập nhanh khi tính điểm gợi ý
+            // Tour của đơn lấy qua lịch khởi hành
             var bookingDict = _context.DatTours
-                .Where(x => x.TourId > 0)
-                .GroupBy(x => x.TourId)
+                .Where(x => x.LichKhoiHanhTour != null)
+                .GroupBy(x => x.LichKhoiHanhTour!.TourId)
                 .ToDictionary(g => g.Key, g => g.Count());
             // Danh sách kết quả gợi ý sẽ chứa các tour cùng với điểm gợi ý, số lượt đặt và lý do gợi ý
             var ketQua = new List<TourGoiYItemViewModel>();

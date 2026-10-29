@@ -840,3 +840,6 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     .message-bubble { max-width: 88%; }
     .ad-chat-head, .chat-reply { padding: var(--tv-k4); }
 }
+
+/* Chi tiết đơn: ghế đã bỏ khỏi đơn (khi đổi số người) */
+.ad-passenger-nha { opacity: 0.55; }

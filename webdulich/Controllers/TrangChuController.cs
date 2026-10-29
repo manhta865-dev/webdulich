@@ -62,9 +62,10 @@ namespace webdulich.Controllers
                 .Take(5)
                 .ToList();
 
+            // Tour của đơn lấy qua lịch khởi hành
             ViewBag.TopTour = _context.DatTours
-                .Include(x => x.Tour)
-                .GroupBy(x => x.Tour!.TenTour)
+                .Where(x => x.LichKhoiHanhTour != null && x.LichKhoiHanhTour.Tour != null)
+                .GroupBy(x => x.LichKhoiHanhTour!.Tour!.TenTour)
                 .Select(g => new
                 {
                     TenTour = g.Key,

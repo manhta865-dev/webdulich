@@ -1,4 +1,4 @@
-﻿@model List<webdulich.Models.DatTours>
+﻿@model List<webdulich.Models.DonDatTourDoc>
 
 @{
     Layout = null;
@@ -82,17 +82,17 @@
 
                     foreach (var item in Model)
                     {
-                        var gioDi = item.LichKhoiHanhTour?.GioKhoiHanh.HasValue == true
-                        ? item.LichKhoiHanhTour.GioKhoiHanh.Value.ToString(@"hh\:mm")
+                        var gioDi = item.GioKhoiHanh.HasValue
+                        ? item.GioKhoiHanh.Value.ToString(@"hh\:mm")
                         : "Chưa cập nhật";
 
                         <tr>
                             <td class="col-giua">@stt</td>
                             <td>@item.TenKhach</td>
-                            <td>@item.Tour?.TenTour</td>
+                            <td>@item.TenTour</td>
                             <td>@item.NgayDi.ToString("dd/MM/yyyy")</td>
                             <td>@gioDi</td>
-                            <td>@(item.Tour?.PhuongTienHienThi ?? "Chưa cập nhật")</td>
+                            <td>@(item.PhuongTien ?? "Chưa cập nhật")</td>
                             <td>@item.PhuongThucThanhToan</td>
                             <td><span class="paid-badge">@item.TrangThaiThanhToan</span></td>
                             <td class="money">@item.TongTien.ToString("N0") VNĐ</td>

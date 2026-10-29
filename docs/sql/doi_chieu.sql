@@ -23,7 +23,7 @@ HAVING COUNT(h.Id) <> d.SoNguoi;
 
 -- E. Tổng giá ghế khác tổng tiền cũ (tổng trước giảm − giảm phải bằng TongTien)
 SELECT d.Id, d.TongTien, SUM(h.GiaLucDat) - d.SoTienGiam AS TinhLai
-FROM DatTours d JOIN HanhKhachDatTours h ON h.DatTourId = d.Id
+FROM DatTours d JOIN HanhKhachDatTours h ON h.DatTourId = d.Id AND h.NgayNha IS NULL
 WHERE d.TrangThai <> 'DaHuy'
 GROUP BY d.Id, d.TongTien, d.SoTienGiam
 HAVING SUM(h.GiaLucDat) - d.SoTienGiam <> d.TongTien;

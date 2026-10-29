@@ -675,8 +675,9 @@ namespace webdulich.Controllers
                 _context.DatTours.Add(model);
                 _context.SaveChanges();
 
-                // Chuyển khoản, ví: ghi một giao dịch chờ admin xác nhận. Tiền mặt: admin ghi khi nhận tiền.
-                if (phuongThucThanhToan != "Tiền mặt" && tongTien > 0)
+                // Ghi một giao dịch chờ admin xác nhận (kể cả tiền mặt, để biết khách chọn cách trả nào).
+                // Tiền mặt chờ xác nhận hiển thị là "Chưa thanh toán", chuyển khoản hoặc ví là "Đang kiểm tra".
+                if (tongTien > 0)
                 {
                     _context.GiaoDichThanhToans.Add(new GiaoDichThanhToan
                     {
@@ -751,20 +752,18 @@ namespace webdulich.Controllers
             // Lấy thông tin tài khoản của người dùng đang đăng nhập để lọc lịch sử đặt tour. Nếu có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tài khoản hoặc tên khách hàng. Nếu không có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tên khách hàng. Sau đó sắp xếp lịch sử đặt tour theo ngày đi giảm dần và trả về danh sách để hiển thị trên giao diện người dùng.
             var taiKhoanId = LayTaiKhoanIdDangNhap(user);
 
-            var query = _context.DatTours
-                .Include(x => x.Tour)
-                .Include(x => x.LichKhoiHanhTour)
-                .Include(x => x.HanhKhachDatTours)
-                .AsQueryable();
-            // Nếu có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tài khoản hoặc tên khách hàng. Nếu không có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tên khách hàng. Sau đó sắp xếp lịch sử đặt tour theo ngày đi giảm dần và trả về danh sách để hiển thị trên giao diện người dùng.
             if (!taiKhoanId.HasValue)
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            query = query.Where(x => x.TaiKhoanId == taiKhoanId.Value);
-            // Sắp xếp lịch sử đặt tour theo ngày đi giảm dần và trả về danh sách để hiển thị trên giao diện người dùng.
-            var ds = query
+
+            // Chỉ đơn của tài khoản đang đăng nhập; số người, tiền, trạng thái tính từ ghế và giao dịch
+            var ds = _context.DatTours
+                .AsNoTracking()
+                .Where(x => x.TaiKhoanId == taiKhoanId.Value)
+                .ChonDon(_context)
                 .OrderByDescending(x => x.NgayDi)
+                .ThenByDescending(x => x.Id)
                 .ToList();
 
             return View(ds);
@@ -814,38 +813,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichSu");
             }
 
-            using (var giaoDichCsdl = _context.Database.BeginTransaction())
-            {
-                // Nhả mọi ghế chưa nhả, bỏ chỗ ngồi đã chọn, trả đúng số ghế đó cho lịch
-                var bayGio = DateTime.Now;
-                var dsGhe = datTour.HanhKhachDatTours.Where(h => h.NgayNha == null).ToList();
-                var dsGheId = dsGhe.Select(h => h.Id).ToList();
-                foreach (var ghe in dsGhe)
-                {
-                    ghe.NgayNha = bayGio;
-                }
-                _context.ChoNgoiChuyenDis.RemoveRange(
-                    _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)));
-
-                // Giao dịch còn chờ xác nhận thì không còn hiệu lực. Giao dịch đã thành công giữ nguyên
-                // (tiền đã nhận, hoàn tiền xử lý ngoài hệ thống).
-                foreach (var gd in _context.GiaoDichThanhToans.Where(g => g.DatTourId == datTour.Id && g.TrangThai == "ChoXacNhan"))
-                {
-                    gd.TrangThai = "ThatBai";
-                }
-
-                datTour.TrangThai = "DaHuy";
-                datTour.TrangThaiThanhToan = "Đã hủy"; // cột cũ, ghi kèm đến bước thu hẹp
-                _context.SaveChanges();
-
-                if (datTour.LichKhoiHanhTourId.HasValue && dsGhe.Count > 0)
-                {
-                    _context.Database.ExecuteSqlInterpolated(
-                        $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {dsGhe.Count} WHERE Id = {datTour.LichKhoiHanhTourId.Value} AND TrangThai <> {TrangThaiLich.DaHuy}");
-                }
-
-                giaoDichCsdl.Commit();
-            }
+            XuLyDon.HuyDon(_context, datTour);
 
             TempData["ThanhCong"] = "Hủy đơn đặt tour thành công.";
             return RedirectToAction("LichSu");
