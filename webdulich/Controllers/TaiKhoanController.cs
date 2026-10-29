@@ -121,7 +121,6 @@ namespace webdulich.Controllers
             }
 
             tk.HoTen = tk.HoTen.Trim();
-            tk.TaiKhoanDangNhap = tk.TaiKhoanDangNhap.Trim();
             tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(tk.MatKhau.Trim()); // Mã hóa mật khẩu
             tk.VaiTro = "user"; // Tài khoản tự đăng ký mặc định là user.
             tk.NgayTao = DateTime.Now;
@@ -310,7 +309,6 @@ namespace webdulich.Controllers
             user.HoTen = model.HoTen.Trim();
             user.Email = email;
             user.SoDienThoai = soDienThoai;
-            user.TaiKhoanDangNhap = DinhDanhTaiKhoan.GiaTriCot(email, soDienThoai);
             if (doiMatKhau)
             {
                 user.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi!.Trim());

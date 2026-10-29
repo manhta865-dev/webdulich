@@ -81,7 +81,7 @@ namespace webdulich.Controllers
                     x.TrangThai == TrangThaiKhuyenMai.HoatDong &&
                     x.NgayBatDau <= homNay &&
                     x.NgayKetThuc >= homNay &&
-                    (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy" && d.TrangThaiThanhToan != "Đã hủy") < x.SoLuotDungToiDa.Value))
+                    (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy") < x.SoLuotDungToiDa.Value))
                 .OrderBy(x => x.ThuTu)
                 .ThenByDescending(x => x.Id)
                 .Take(8)

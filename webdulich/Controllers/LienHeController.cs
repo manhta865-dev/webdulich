@@ -29,13 +29,10 @@ namespace webdulich.Controllers
             {
                 return Json(new { success = false, message = "Vui lòng nhập nội dung tin nhắn." });
             }
-            // Tạo đối tượng tin nhắn mới. Tên và email người gửi lấy qua TaiKhoanId khi hiển thị,
-            // HoTen và Email của tin nhắn để trống (sẽ bỏ cột ở bước thu hẹp).
+            // Tạo đối tượng tin nhắn mới. Tên và email người gửi lấy qua TaiKhoanId khi hiển thị.
             var tinNhan = new TinNhanLienHe
             {
                 TaiKhoanId = taiKhoanId.Value,
-                HoTen = string.Empty,
-                Email = string.Empty,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "user",
                 NgayGui = DateTime.Now,

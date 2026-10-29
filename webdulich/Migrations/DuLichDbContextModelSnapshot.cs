@@ -291,7 +291,7 @@ namespace webdulich.Migrations
                     b.Property<int?>("KhuyenMaiId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LichKhoiHanhTourId")
+                    b.Property<int>("LichKhoiHanhTourId")
                         .HasColumnType("int");
 
                     b.Property<string>("LoaiDon")
@@ -303,10 +303,8 @@ namespace webdulich.Migrations
 
                     b.Property<string>("MaChuyenDi")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaKhuyenMai")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("MaMoi")
                         .HasMaxLength(30)
@@ -317,17 +315,8 @@ namespace webdulich.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<DateTime>("NgayDi")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PhuongThucThanhToan")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SoNguoi")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("SoTienGiam")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("TaiKhoanId")
@@ -337,25 +326,12 @@ namespace webdulich.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("TongTien")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TongTienTruocGiam")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TourId")
-                        .HasColumnType("int");
-
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("DaXacNhan");
-
-                    b.Property<string>("TrangThaiThanhToan")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasDefaultValue("GiuCho");
 
                     b.HasKey("Id");
 
@@ -363,11 +339,23 @@ namespace webdulich.Migrations
 
                     b.HasIndex("LichKhoiHanhTourId");
 
+                    b.HasIndex("MaChuyenDi")
+                        .IsUnique();
+
+                    b.HasIndex("MaMoi")
+                        .IsUnique()
+                        .HasFilter("[MaMoi] IS NOT NULL");
+
                     b.HasIndex("TaiKhoanId");
 
-                    b.HasIndex("TourId");
+                    b.ToTable("DatTours", t =>
+                        {
+                            t.HasCheckConstraint("CK_DatTours_LoaiDon", "[LoaiDon] IN ('CaNhan','Nhom')");
 
-                    b.ToTable("DatTours");
+                            t.HasCheckConstraint("CK_DatTours_SoTienGiam", "[SoTienGiam] >= 0");
+
+                            t.HasCheckConstraint("CK_DatTours_TrangThai", "[TrangThai] IN ('GiuCho','DaXacNhan','DaHuy')");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.DiaDiem", b =>
@@ -485,16 +473,15 @@ namespace webdulich.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("HoTen")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LoaiGiayTo")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LoaiHanhKhach")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("MaThanhToan")
                         .HasMaxLength(30)
@@ -504,7 +491,6 @@ namespace webdulich.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SoGiayTo")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TaiKhoanId")
@@ -512,11 +498,24 @@ namespace webdulich.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DatTourId");
+                    b.HasIndex("MaThanhToan")
+                        .IsUnique()
+                        .HasFilter("[MaThanhToan] IS NOT NULL");
 
                     b.HasIndex("TaiKhoanId");
 
-                    b.ToTable("HanhKhachDatTours");
+                    b.HasIndex("DatTourId", "TaiKhoanId")
+                        .IsUnique()
+                        .HasFilter("[TaiKhoanId] IS NOT NULL");
+
+                    b.HasIndex(new[] { "DatTourId" }, "IX_HanhKhachDatTours_DatTourId");
+
+                    b.ToTable("HanhKhachDatTours", t =>
+                        {
+                            t.HasCheckConstraint("CK_HanhKhach_GiaLucDat", "[GiaLucDat] >= 0");
+
+                            t.HasCheckConstraint("CK_HanhKhach_Loai", "[LoaiHanhKhach] IN (N'Người lớn', N'Trẻ nhỏ')");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.KhuyenMai", b =>
@@ -554,9 +553,6 @@ namespace webdulich.Migrations
                     b.Property<DateTime>("NgayTao")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SoLuotDaDung")
-                        .HasColumnType("int");
-
                     b.Property<int?>("SoLuotDungToiDa")
                         .HasColumnType("int");
 
@@ -569,14 +565,18 @@ namespace webdulich.Migrations
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MaKhuyenMai")
                         .IsUnique();
 
-                    b.ToTable("KhuyenMais");
+                    b.ToTable("KhuyenMais", t =>
+                        {
+                            t.HasCheckConstraint("CK_KhuyenMai_TrangThai", "[TrangThai] IN ('HoatDong','TamNgung')");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.LichKhoiHanhTour", b =>
@@ -613,7 +613,8 @@ namespace webdulich.Migrations
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -621,7 +622,12 @@ namespace webdulich.Migrations
 
                     b.HasIndex("TourId");
 
-                    b.ToTable("LichKhoiHanhTours");
+                    b.ToTable("LichKhoiHanhTours", t =>
+                        {
+                            t.HasCheckConstraint("CK_Lich_SoCho", "[SoChoCon] >= 0 AND [SoChoCon] <= [SoChoToiDa]");
+
+                            t.HasCheckConstraint("CK_Lich_TrangThai", "[TrangThai] IN ('MoBan','TamNgung','DaHuy')");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.LichTrinhTour", b =>
@@ -686,20 +692,8 @@ namespace webdulich.Migrations
                     b.Property<string>("GhiChu")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("HoTen")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LoaiNhanVien")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("NgayTao")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("SoDienThoai")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TaiKhoanId")
                         .HasColumnType("int");
@@ -843,17 +837,24 @@ namespace webdulich.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("TaiKhoanDangNhap")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("VaiTro")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TaiKhoans");
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("[Email] IS NOT NULL");
+
+                    b.HasIndex("SoDienThoai")
+                        .IsUnique()
+                        .HasFilter("[SoDienThoai] IS NOT NULL");
+
+                    b.ToTable("TaiKhoans", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaiKhoan_DinhDanh", "[Email] IS NOT NULL OR [SoDienThoai] IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.TinNhanLienHe", b =>
@@ -866,14 +867,6 @@ namespace webdulich.Migrations
 
                     b.Property<bool>("DaDoc")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HoTen")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("NgayDoc")
                         .HasColumnType("datetime2");
@@ -889,7 +882,7 @@ namespace webdulich.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TaiKhoanId")
+                    b.Property<int>("TaiKhoanId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1117,30 +1110,24 @@ namespace webdulich.Migrations
                     b.HasOne("webdulich.Models.KhuyenMai", "KhuyenMai")
                         .WithMany("DatTours")
                         .HasForeignKey("KhuyenMaiId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("webdulich.Models.LichKhoiHanhTour", "LichKhoiHanhTour")
                         .WithMany()
-                        .HasForeignKey("LichKhoiHanhTourId");
+                        .HasForeignKey("LichKhoiHanhTourId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("webdulich.Models.TaiKhoan", "TaiKhoan")
                         .WithMany("DatTours")
                         .HasForeignKey("TaiKhoanId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("webdulich.Models.Tour", "Tour")
-                        .WithMany()
-                        .HasForeignKey("TourId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("KhuyenMai");
 
                     b.Navigation("LichKhoiHanhTour");
 
                     b.Navigation("TaiKhoan");
-
-                    b.Navigation("Tour");
                 });
 
             modelBuilder.Entity("webdulich.Models.GiaoDichThanhToan", b =>
@@ -1195,7 +1182,7 @@ namespace webdulich.Migrations
                     b.HasOne("webdulich.Models.Tour", "Tour")
                         .WithMany("LichKhoiHanhTours")
                         .HasForeignKey("TourId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("SoDoChoNgoi");
@@ -1266,7 +1253,8 @@ namespace webdulich.Migrations
                     b.HasOne("webdulich.Models.TaiKhoan", "TaiKhoan")
                         .WithMany()
                         .HasForeignKey("TaiKhoanId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("TaiKhoan");
                 });

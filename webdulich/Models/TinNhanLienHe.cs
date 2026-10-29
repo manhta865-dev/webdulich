@@ -8,11 +8,8 @@ namespace webdulich.Models
         [Key]
         public int Id { get; set; }
 
-        public int? TaiKhoanId { get; set; }
-
-        public string HoTen { get; set; } = string.Empty;
-
-        public string Email { get; set; } = string.Empty;
+        // Khách của cuộc trò chuyện (tin admin trả lời cũng gắn tài khoản khách); tên, email lấy qua đây
+        public int TaiKhoanId { get; set; }
 
         [Required]
         public string NoiDung { get; set; } = string.Empty;

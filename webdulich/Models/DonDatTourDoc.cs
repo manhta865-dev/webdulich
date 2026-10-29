@@ -83,7 +83,10 @@ namespace webdulich.Models
                 SoTreNho = x.HanhKhachDatTours.Count(h => (x.TrangThai == "DaHuy" || h.NgayNha == null) && h.LoaiHanhKhach == "Trẻ nhỏ"),
                 TongTienTruocGiam = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat),
                 SoTienGiam = x.SoTienGiam,
-                TongTien = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat) - x.SoTienGiam,
+                // Số phải trả không âm: tiền giảm không bao giờ vượt tổng giá các ghế
+                TongTien = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat) > x.SoTienGiam
+                    ? x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat) - x.SoTienGiam
+                    : 0,
                 MaKhuyenMai = x.KhuyenMai != null ? x.KhuyenMai.MaKhuyenMai : null,
 
                 // Phương thức của giao dịch gần nhất; đơn tiền mặt cũ chưa có giao dịch thì coi là tiền mặt
@@ -127,13 +130,12 @@ namespace webdulich.Models
             }
 
             don.TrangThai = "DaHuy";
-            don.TrangThaiThanhToan = TrangThaiThanhToanDon.DaHuy; // cột cũ, ghi kèm đến bước thu hẹp
             db.SaveChanges();
 
-            if (don.LichKhoiHanhTourId.HasValue && dsGhe.Count > 0)
+            if (dsGhe.Count > 0)
             {
                 db.Database.ExecuteSqlInterpolated(
-                    $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {dsGhe.Count} WHERE Id = {don.LichKhoiHanhTourId.Value} AND TrangThai <> {TrangThaiLich.DaHuy}");
+                    $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {dsGhe.Count} WHERE Id = {don.LichKhoiHanhTourId} AND TrangThai <> {TrangThaiLich.DaHuy}");
             }
 
             giaoDichCsdl.Commit();

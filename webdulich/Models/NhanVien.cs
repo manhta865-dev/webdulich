@@ -10,12 +10,7 @@ namespace webdulich.Models
 
         public int TaiKhoanId { get; set; }
 
-        public string HoTen { get; set; } = string.Empty;
-
-        public string SoDienThoai { get; set; } = string.Empty;
-
-        public string LoaiNhanVien { get; set; } = string.Empty;
-        // HuongDanVien hoặc TaiXe
+        // Họ tên, số điện thoại, vai trò (hướng dẫn viên, tài xế) lấy từ TaiKhoan
 
         public bool DangLamViec { get; set; } = true;
 

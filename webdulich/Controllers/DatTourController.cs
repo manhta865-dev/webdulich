@@ -118,7 +118,7 @@ namespace webdulich.Controllers
                 x.NgayBatDau <= homNay &&
                 x.NgayKetThuc >= homNay &&
                 // Lượt đã dùng = số đơn chưa hủy dùng mã (hủy đơn tự trả lượt)
-                (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy" && d.TrangThaiThanhToan != "Đã hủy") < x.SoLuotDungToiDa.Value));
+                (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy") < x.SoLuotDungToiDa.Value));
         }
         // Hàm này sẽ tính số tiền giảm dựa trên kiểu giảm giá của khuyến mãi (theo phần trăm hoặc theo số tiền cố định) và đảm bảo rằng số tiền giảm không vượt quá tổng tiền
         private decimal TinhTienGiam(KhuyenMai khuyenMai, decimal tongTien)
@@ -240,11 +240,11 @@ namespace webdulich.Controllers
             // Kiểm tra tính hợp lệ của lịch khởi hành nếu người dùng đã chọn, và thêm lỗi vào ModelState nếu lịch khởi hành không hợp lệ hoặc không còn đủ chỗ. Nếu lịch khởi hành hợp lệ, gán ngày đi từ lịch khởi hành để đảm bảo tính nhất quán
             LichKhoiHanhTour? lich = null;
             // Nếu người dùng đã chọn lịch khởi hành, truy vấn cơ sở dữ liệu để lấy thông tin lịch khởi hành dựa trên model.LichKhoiHanhTourId và model.TourId. Nếu không tìm thấy lịch khởi hành hoặc lịch khởi hành không thuộc tour đang đặt, thêm lỗi vào ModelState để thông báo rằng lịch khởi hành không hợp lệ. Nếu tìm thấy lịch khởi hành, gán ngày đi từ lịch khởi hành và kiểm tra xem lịch khởi hành còn đủ chỗ cho số người đặt hay không. Nếu không còn đủ chỗ, thêm lỗi vào ModelState để thông báo rằng lịch này không còn đủ chỗ. Nếu lịch khởi hành hợp lệ và còn đủ chỗ, lưu thông tin lịch khởi hành vào ViewBag để hiển thị trên giao diện người dùng
-            if (model.LichKhoiHanhTourId.HasValue)
+            if (model.LichKhoiHanhTourId > 0)
             {
                 // Truy vấn cơ sở dữ liệu để lấy thông tin lịch khởi hành dựa trên model.LichKhoiHanhTourId và model.TourId. Nếu không tìm thấy lịch khởi hành hoặc lịch khởi hành không thuộc tour đang đặt, thêm lỗi vào ModelState để thông báo rằng lịch khởi hành không hợp lệ. Nếu tìm thấy lịch khởi hành, gán ngày đi từ lịch khởi hành và kiểm tra xem lịch khởi hành còn đủ chỗ cho số người đặt hay không. Nếu không còn đủ chỗ, thêm lỗi vào ModelState để thông báo rằng lịch này không còn đủ chỗ. Nếu lịch khởi hành hợp lệ và còn đủ chỗ, lưu thông tin lịch khởi hành vào ViewBag để hiển thị trên giao diện người dùng
                 lich = _context.LichKhoiHanhTours
-                    .FirstOrDefault(x => x.Id == model.LichKhoiHanhTourId.Value && x.TourId == model.TourId);
+                    .FirstOrDefault(x => x.Id == model.LichKhoiHanhTourId && x.TourId == model.TourId);
                 // Nếu không tìm thấy lịch khởi hành hoặc lịch khởi hành không thuộc tour đang đặt, thêm lỗi vào ModelState để thông báo rằng lịch khởi hành không hợp lệ. Nếu tìm thấy lịch khởi hành, gán ngày đi từ lịch khởi hành và kiểm tra xem lịch khởi hành còn đủ chỗ cho số người đặt hay không. Nếu không còn đủ chỗ, thêm lỗi vào ModelState để thông báo rằng lịch này không còn đủ chỗ. Nếu lịch khởi hành hợp lệ và còn đủ chỗ, lưu thông tin lịch khởi hành vào ViewBag để hiển thị trên giao diện người dùng
                 if (lich == null)
                 {
@@ -318,9 +318,9 @@ namespace webdulich.Controllers
                 HttpContext.Session.Remove("DatTour_TaiKhoanId");
             }
 
-            if (model.LichKhoiHanhTourId.HasValue)
+            if (model.LichKhoiHanhTourId > 0)
             {
-                HttpContext.Session.SetInt32("DatTour_LichKhoiHanhTourId", model.LichKhoiHanhTourId.Value);
+                HttpContext.Session.SetInt32("DatTour_LichKhoiHanhTourId", model.LichKhoiHanhTourId);
             }
             else
             {
@@ -604,8 +604,7 @@ namespace webdulich.Controllers
 
             var model = new DatTours
             {
-                TourId = tourId.Value,
-                LichKhoiHanhTourId = lichId,
+                LichKhoiHanhTourId = lich.Id,
                 TaiKhoanId = taiKhoanId,
                 MaChuyenDi = maChuyenDiDon,
                 TenKhach = HttpContext.Session.GetString("DatTour_TenKhach") ?? user,
@@ -613,16 +612,9 @@ namespace webdulich.Controllers
                 Email = HttpContext.Session.GetString("DatTour_Email") ?? "",
                 DiaChi = HttpContext.Session.GetString("DatTour_DiaChi") ?? "",
                 GhiChu = HttpContext.Session.GetString("DatTour_GhiChu") ?? "",
-                SoNguoi = soNguoi,
-                NgayDi = ngayDi,
-                TongTienTruocGiam = tongTienTruocGiam,
                 SoTienGiam = soTienGiam,
                 KhuyenMaiId = khuyenMai?.Id,
-                MaKhuyenMai = khuyenMai?.MaKhuyenMai,
-                TongTien = tongTien,
-                PhuongThucThanhToan = phuongThucThanhToan,
-                TrangThaiThanhToan = phuongThucThanhToan == "Tiền mặt" ? "Chưa thanh toán" : "Đang kiểm tra",
-                // Cột mới: đơn cá nhân chờ admin xác nhận đã nhận tiền
+                // Đơn cá nhân chờ admin xác nhận đã nhận tiền
                 LoaiDon = "CaNhan",
                 TrangThai = "GiuCho",
                 NgayDat = DateTime.Now
@@ -807,7 +799,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichSu");
             }
 
-            if (datTour.TrangThai == "DaHuy" || datTour.TrangThaiThanhToan == "Đã hủy")
+            if (datTour.TrangThai == "DaHuy")
             {
                 TempData["Loi"] = "Đơn này đã được hủy trước đó.";
                 return RedirectToAction("LichSu");

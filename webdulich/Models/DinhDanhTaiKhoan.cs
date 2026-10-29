@@ -3,8 +3,7 @@ using System.Text.RegularExpressions;
 namespace webdulich.Models
 {
     // Quy tắc chung cho email và số điện thoại của tài khoản (dùng ở đăng ký, đăng nhập, hồ sơ, admin).
-    // Mỗi tài khoản có Email hoặc SoDienThoai hoặc cả hai; cột TaiKhoanDangNhap chỉ còn ghi kèm
-    // cho đến khi bị bỏ ở bước thu hẹp (docs/MO_HINH_DU_LIEU.md).
+    // Mỗi tài khoản có Email hoặc SoDienThoai hoặc cả hai (RB-06, docs/MO_HINH_DU_LIEU.md).
     public static class DinhDanhTaiKhoan
     {
         private static readonly Regex MauEmail = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
@@ -35,10 +34,6 @@ namespace webdulich.Models
             return ds.Any(x => x.Id != boQuaId &&
                 ((email != null && x.Email == email) || (soDienThoai != null && x.SoDienThoai == soDienThoai)));
         }
-
-        // Giá trị ghi kèm vào cột cũ TaiKhoanDangNhap (ưu tiên email)
-        public static string GiaTriCot(string? email, string? soDienThoai) =>
-            ChuanHoa(email) ?? ChuanHoa(soDienThoai) ?? string.Empty;
 
         // Hiển thị ở các bảng admin
         public static string HienThi(TaiKhoan? tk) =>

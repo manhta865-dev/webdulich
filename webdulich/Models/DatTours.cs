@@ -3,12 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace webdulich.Models
 {
+    // Đơn đặt tour (cá nhân hoặc nhóm). Tour, ngày đi lấy qua lịch; số người, tiền lấy từ ghế;
+    // trạng thái thanh toán lấy từ giao dịch (docs/MO_HINH_DU_LIEU.md, mục 5).
     public class DatTours
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        // Thông tin liên hệ do người đặt nhập cho đơn này (độc lập với hồ sơ tài khoản)
         [Required(ErrorMessage = "Vui lòng nhập tên khách")]
         public string TenKhach { get; set; } = string.Empty;
 
@@ -23,39 +26,26 @@ namespace webdulich.Models
 
         public string? GhiChu { get; set; }
 
-        [Range(1, 100, ErrorMessage = "Số người phải từ 1 trở lên")]
-        public int SoNguoi { get; set; }
-
-        public DateTime NgayDi { get; set; }
-
-        public int TourId { get; set; }
-
-        public decimal TongTien { get; set; }
         public int? KhuyenMaiId { get; set; }
 
-        public string? MaKhuyenMai { get; set; }
-
-        public decimal TongTienTruocGiam { get; set; }
-
+        // Snapshot số tiền giảm lúc đặt
         public decimal SoTienGiam { get; set; }
 
         [ForeignKey("KhuyenMaiId")]
         public KhuyenMai? KhuyenMai { get; set; }
-        public string PhuongThucThanhToan { get; set; } = "Chuyển khoản";
 
-        public string TrangThaiThanhToan { get; set; } = "Chưa thanh toán";
-
-        [ForeignKey("TourId")]
-        public Tour? Tour { get; set; }
         public string MaChuyenDi { get; set; } = string.Empty;
-        public int? LichKhoiHanhTourId { get; set; }
+
+        public int LichKhoiHanhTourId { get; set; }
 
         [ForeignKey("LichKhoiHanhTourId")]
         public LichKhoiHanhTour? LichKhoiHanhTour { get; set; }
-        // Cột mới của mô hình đơn nhóm (bước mở rộng, chưa dùng trong code cũ)
+
+        // CaNhan hoặc Nhom
         public string LoaiDon { get; set; } = "CaNhan";
 
-        public string TrangThai { get; set; } = "DaXacNhan";
+        // GiuCho, DaXacNhan, DaHuy
+        public string TrangThai { get; set; } = "GiuCho";
 
         public string? MaMoi { get; set; }
 
@@ -67,6 +57,18 @@ namespace webdulich.Models
 
         [ForeignKey("TaiKhoanId")]
         public TaiKhoan? TaiKhoan { get; set; }
+
         public ICollection<HanhKhachDatTour> HanhKhachDatTours { get; set; } = new List<HanhKhachDatTour>();
+
+        // ---------- Chỉ dùng cho form đặt tour, không lưu (đã bỏ cột ở bước thu hẹp) ----------
+        [NotMapped]
+        public int TourId { get; set; }
+
+        [NotMapped]
+        [Range(1, 100, ErrorMessage = "Số người phải từ 1 trở lên")]
+        public int SoNguoi { get; set; }
+
+        [NotMapped]
+        public DateTime NgayDi { get; set; }
     }
 }

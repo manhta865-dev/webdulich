@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace webdulich.Models
 {
+    // Ghế: suất đi của một người trong một đơn. Thông tin cá nhân có thể trống cho đến khi
+    // thành viên tự điền (đơn nhóm) hoặc admin thêm người vào đơn.
     public class HanhKhachDatTour
     {
         [Key]
@@ -10,25 +12,26 @@ namespace webdulich.Models
 
         public int DatTourId { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập họ tên hành khách")]
-        public string HoTen { get; set; } = string.Empty;
+        public string? HoTen { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn loại giấy tờ")]
-        public string LoaiGiayTo { get; set; } = "CCCD";
+        public string? LoaiGiayTo { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập số giấy tờ")]
-        public string SoGiayTo { get; set; } = string.Empty;
+        public string? SoGiayTo { get; set; }
 
+        // "Người lớn" hoặc "Trẻ nhỏ"
         [Required(ErrorMessage = "Vui lòng chọn loại hành khách")]
         public string LoaiHanhKhach { get; set; } = "Người lớn";
 
-        // Cột mới của mô hình ghế (bước mở rộng, chưa dùng trong code cũ)
+        // Tài khoản đã nhận ghế (đơn nhóm)
         public int? TaiKhoanId { get; set; }
 
+        // Snapshot giá lúc đặt
         public decimal GiaLucDat { get; set; }
 
+        // Nội dung chuyển khoản riêng của ghế
         public string? MaThanhToan { get; set; }
 
+        // Có giá trị nghĩa là ghế đã nhả
         public DateTime? NgayNha { get; set; }
 
         [ForeignKey("DatTourId")]

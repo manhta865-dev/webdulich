@@ -35,9 +35,6 @@ namespace webdulich.Models
 
         public int? SoLuotDungToiDa { get; set; }
 
-        // Cột cũ, không còn đọc: số lượt đã dùng được đếm từ các đơn chưa hủy (sẽ bỏ ở bước thu hẹp)
-        public int SoLuotDaDung { get; set; }
-
         // Số đơn chưa hủy đang dùng mã này; nơi truy vấn điền vào để hiển thị
         [NotMapped]
         public int SoLuotDaDungThucTe { get; set; }

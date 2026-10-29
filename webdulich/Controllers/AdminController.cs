@@ -677,7 +677,7 @@ namespace webdulich.Controllers
                 search = search.Trim();
                 // Đơn có hành khách trùng tên hoặc số giấy tờ
                 var donTheoHanhKhach = _context.HanhKhachDatTours
-                    .Where(h => h.HoTen.Contains(search) || h.SoGiayTo.Contains(search))
+                    .Where(h => (h.HoTen != null && h.HoTen.Contains(search)) || (h.SoGiayTo != null && h.SoGiayTo.Contains(search)))
                     .Select(h => h.DatTourId);
 
                 ds = ds.Where(x =>
@@ -831,7 +831,6 @@ namespace webdulich.Controllers
             }
 
             datTour.TrangThai = "DaXacNhan";
-            datTour.TrangThaiThanhToan = TrangThaiThanhToanDon.DaThanhToan; // cột cũ, ghi kèm đến bước thu hẹp
             _context.SaveChanges();
 
             TempData["success"] = $"Đã xác nhận nhận {don.TongTien:N0} VNĐ cho đơn {don.MaChuyenDi}.";
@@ -879,12 +878,12 @@ namespace webdulich.Controllers
 
             var don = _context.DatTours.AsNoTracking().Where(x => x.Id == id).ChonDon(_context).FirstOrDefault();
             var datTour = _context.DatTours.Include(x => x.HanhKhachDatTours).FirstOrDefault(x => x.Id == id);
-            if (don == null || datTour == null || !datTour.LichKhoiHanhTourId.HasValue)
+            if (don == null || datTour == null)
             {
                 return NotFound();
             }
 
-            var lich = _context.LichKhoiHanhTours.Include(x => x.Tour).First(x => x.Id == datTour.LichKhoiHanhTourId.Value);
+            var lich = _context.LichKhoiHanhTours.Include(x => x.Tour).First(x => x.Id == datTour.LichKhoiHanhTourId);
             if (don.DaHuy || don.DaThanhToan || !lich.ChoPhepDatTour)
             {
                 TempData["error"] = "Chỉ đổi được số người khi đơn chưa thanh toán và lịch còn mở bán.";
@@ -956,11 +955,6 @@ namespace webdulich.Controllers
                 decimal truocGiam = datTour.HanhKhachDatTours.Where(h => h.NgayNha == null).Sum(h => h.GiaLucDat);
                 datTour.SoTienGiam = Math.Min(datTour.SoTienGiam, truocGiam);
                 decimal phaiTra = truocGiam - datTour.SoTienGiam;
-
-                // Cột cũ, ghi kèm đến bước thu hẹp
-                datTour.SoNguoi = soNguoiLon + soTreNho;
-                datTour.TongTienTruocGiam = truocGiam;
-                datTour.TongTien = phaiTra;
 
                 foreach (var gd in _context.GiaoDichThanhToans.Where(g => g.DatTourId == id && g.TrangThai == "ChoXacNhan"))
                 {
@@ -1092,7 +1086,6 @@ namespace webdulich.Controllers
             tk.HoTen = model.HoTen.Trim();
             tk.Email = email;
             tk.SoDienThoai = soDienThoai;
-            tk.TaiKhoanDangNhap = DinhDanhTaiKhoan.GiaTriCot(email, soDienThoai);
             // Trước đây mật khẩu được lưu thẳng chuỗi nhập vào (không băm); giờ băm như đăng ký
             if (!string.IsNullOrWhiteSpace(model.MatKhauMoi))
             {
@@ -1240,7 +1233,7 @@ namespace webdulich.Controllers
                 SoLichSapKhoiHanh = lichSapKhoiHanhQuery.Count(),
                 SoTour = _context.Tours.Count(),
                 TinNhanChuaDoc = _context.TinNhanLienHes.Count(x =>
-                    x.TaiKhoanId != null && x.NguoiGui != "admin" && !x.DaDoc),
+                    x.NguoiGui != "admin" && !x.DaDoc),
                 DoanhThu12Thang = Enumerable.Range(1, 12)
                     .Select(m => doanhThuTheoThang.FirstOrDefault(x => x.Thang == m)?.DoanhThu ?? 0)
                     .ToList(),
@@ -1750,7 +1743,7 @@ namespace webdulich.Controllers
 
             var dsDon = _context.DatTours
                 .Include(x => x.HanhKhachDatTours)
-                .Where(x => x.LichKhoiHanhTourId == id && x.TrangThai != "DaHuy" && x.TrangThaiThanhToan != "Đã hủy")
+                .Where(x => x.LichKhoiHanhTourId == id && x.TrangThai != "DaHuy")
                 .ToList();
 
             // Mọi đơn của lịch bị hủy theo: nhả ghế, bỏ chỗ ngồi đã chọn (RB-16, RB-17).
@@ -1769,7 +1762,6 @@ namespace webdulich.Controllers
             foreach (var don in dsDon)
             {
                 don.TrangThai = "DaHuy";
-                don.TrangThaiThanhToan = "Đã hủy"; // cột cũ, ghi kèm đến bước thu hẹp
                 don.GhiChu = string.IsNullOrWhiteSpace(don.GhiChu)
                     ? "Lịch khởi hành đã bị admin hủy."
                     : don.GhiChu + "\nLịch khởi hành đã bị admin hủy.";
@@ -2097,7 +2089,7 @@ namespace webdulich.Controllers
             var dsKem = ds
                 .OrderBy(x => x.ThuTu)
                 .ThenByDescending(x => x.Id)
-                .Select(x => new { KhuyenMai = x, DaDung = x.DatTours.Count(d => d.TrangThai != "DaHuy" && d.TrangThaiThanhToan != "Đã hủy") })
+                .Select(x => new { KhuyenMai = x, DaDung = x.DatTours.Count(d => d.TrangThai != "DaHuy") })
                 .ToList();
             foreach (var x in dsKem)
             {
@@ -2133,7 +2125,6 @@ namespace webdulich.Controllers
             }
             // Nếu chưa tồn tại thì hệ thống sẽ tạo một đối tượng KhuyenMai mới với các thông tin đã nhận được từ form cùng với ngày tạo hiện tại và số lượt đã dùng ban đầu bằng 0. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng khuyến mãi đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi mới đã xuất hiện trong danh sách.
             model.NgayTao = DateTime.Now;
-            model.SoLuotDaDung = 0;
             // Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng khuyến mãi đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi mới đã xuất hiện trong danh sách.
             _context.KhuyenMais.Add(model);
             _context.SaveChanges();
@@ -2340,7 +2331,6 @@ namespace webdulich.Controllers
             // Đoạn này truy vấn danh sách các cuộc trò chuyện liên hệ giữa khách hàng và admin từ database, bao gồm các thông tin liên quan như tên khách hàng, email, nội dung tin nhắn, người gửi, ngày gửi và trạng thái đã đọc. Sau đó áp dụng bộ lọc tìm kiếm theo tên khách hàng, email hoặc nội dung tin nhắn nếu admin nhập vào ô tìm kiếm. Tiếp theo nhóm các tin nhắn theo tài khoản khách hàng để tạo thành các cuộc trò chuyện riêng biệt. Mỗi cuộc trò chuyện sẽ lấy thông tin của tin nhắn cuối cùng để hiển thị trong danh sách cuộc trò chuyện, đồng thời đếm số lượng tin nhắn chưa đọc trong cuộc trò chuyện đó. Cuối cùng trả về view TinNhan.cshtml cùng với danh sách các cuộc trò chuyện đã được lọc và sắp xếp theo thời gian gửi của tin nhắn cuối cùng để hiển thị trên trang quản lý tin nhắn.
             var ds = _context.TinNhanLienHes
                 .Include(x => x.TaiKhoan)
-                .Where(x => x.TaiKhoanId != null)
                 .AsQueryable();
             // Sau đó áp dụng bộ lọc tìm kiếm theo tên khách hàng, email hoặc nội dung tin nhắn nếu admin nhập vào ô tìm kiếm. Tiếp theo nhóm các tin nhắn theo tài khoản khách hàng để tạo thành các cuộc trò chuyện riêng biệt. Mỗi cuộc trò chuyện sẽ lấy thông tin của tin nhắn cuối cùng để hiển thị trong danh sách cuộc trò chuyện, đồng thời đếm số lượng tin nhắn chưa đọc trong cuộc trò chuyện đó. Cuối cùng trả về view TinNhan.cshtml cùng với danh sách các cuộc trò chuyện đã được lọc và sắp xếp theo thời gian gửi của tin nhắn cuối cùng để hiển thị trên trang quản lý tin nhắn.
             if (!string.IsNullOrWhiteSpace(search))
@@ -2356,7 +2346,7 @@ namespace webdulich.Controllers
             // Tiếp theo nhóm các tin nhắn theo tài khoản khách hàng để tạo thành các cuộc trò chuyện riêng biệt. Mỗi cuộc trò chuyện sẽ lấy thông tin của tin nhắn cuối cùng để hiển thị trong danh sách cuộc trò chuyện, đồng thời đếm số lượng tin nhắn chưa đọc trong cuộc trò chuyện đó. Cuối cùng trả về view TinNhan.cshtml cùng với danh sách các cuộc trò chuyện đã được lọc và sắp xếp theo thời gian gửi của tin nhắn cuối cùng để hiển thị trên trang quản lý tin nhắn.
             var cuocTroChuyen = ds
                 .AsEnumerable()
-                .GroupBy(x => x.TaiKhoanId!.Value)
+                .GroupBy(x => x.TaiKhoanId)
                 .Select(g =>
                 {
                     var tinCuoi = g.OrderByDescending(x => x.NgayGui).First();
@@ -2430,9 +2420,6 @@ namespace webdulich.Controllers
             var tinNhan = new TinNhanLienHe
             {
                 TaiKhoanId = taiKhoanId,
-                // HoTen, Email của tin nhắn không còn được đọc (sẽ bỏ cột ở bước thu hẹp)
-                HoTen = string.Empty,
-                Email = string.Empty,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
                 NgayGui = DateTime.Now,
@@ -2516,9 +2503,6 @@ namespace webdulich.Controllers
             var tinNhan = new TinNhanLienHe
             {
                 TaiKhoanId = taiKhoanId,
-                // HoTen, Email của tin nhắn không còn được đọc (sẽ bỏ cột ở bước thu hẹp)
-                HoTen = string.Empty,
-                Email = string.Empty,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
                 NgayGui = DateTime.Now,
@@ -2606,7 +2590,6 @@ namespace webdulich.Controllers
                 HoTen = hoTen.Trim(),
                 Email = email,
                 SoDienThoai = soDienThoaiTk,
-                TaiKhoanDangNhap = dangNhap,
                 MatKhau = BCrypt.Net.BCrypt.HashPassword(matKhau),
                 VaiTro = vaiTro,
                 NgayTao = DateTime.Now
@@ -2618,9 +2601,6 @@ namespace webdulich.Controllers
             var nhanVien = new NhanVien
             {
                 TaiKhoanId = taiKhoan.Id,
-                HoTen = hoTen.Trim(),
-                SoDienThoai = soDienThoai ?? "",
-                LoaiNhanVien = loaiNhanVien,
                 DangLamViec = true,
                 GhiChu = ghiChu,
                 NgayTao = DateTime.Now
