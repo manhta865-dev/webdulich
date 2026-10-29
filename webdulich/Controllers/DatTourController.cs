@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using System.Text.Json;
 using webdulich.Models;
 
@@ -28,22 +29,33 @@ namespace webdulich.Controllers
         // Hàm này sẽ lấy thông tin tài khoản đang đăng nhập dựa trên session hoặc tham số user
         private int? LayTaiKhoanIdDangNhap(string? user)
         {
-            // Đầu tiên, cố gắng lấy taiKhoanId từ session
-            var taiKhoanId = HttpContext.Session.GetInt32("taiKhoanId");
-            // Nếu taiKhoanId tồn tại trong session, trả về nó
-            if (taiKhoanId.HasValue)
-            {
-                return taiKhoanId.Value;
-            }
-
-            if (string.IsNullOrWhiteSpace(user))
-            {
-                return null;
-            }
-            // Nếu không có taiKhoanId trong session, cố gắng tìm tài khoản dựa trên tên đăng nhập (user)
-            var taiKhoan = _context.TaiKhoans.FirstOrDefault(x => x.HoTen == user);
-            return taiKhoan?.Id;
+            // Chỉ tin taiKhoanId trong Session. Trước đây còn tìm theo họ tên nên người trùng tên
+            // có thể thấy hoặc hủy đơn của nhau (lỗi 7).
+            return HttpContext.Session.GetInt32("taiKhoanId");
         }
+
+        // Mã chuyến đi dạng TV-XXXXXX: ngắn để làm nội dung chuyển khoản, bỏ các ký tự dễ nhầm (0, O, 1, I),
+        // tạo một lần ở trang thanh toán và kiểm tra chưa có đơn nào dùng (lỗi 2).
+        private const string KyTuMa = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+        private string TaoMaChuyenDi()
+        {
+            for (int lan = 0; lan < 20; lan++)
+            {
+                var ma = "TV-" + new string(Enumerable.Range(0, 6)
+                    .Select(_ => KyTuMa[RandomNumberGenerator.GetInt32(KyTuMa.Length)])
+                    .ToArray());
+                if (!_context.DatTours.Any(x => x.MaChuyenDi == ma))
+                {
+                    return ma;
+                }
+            }
+            throw new InvalidOperationException("Không tạo được mã chuyến đi chưa dùng.");
+        }
+
+        // Giá lúc đặt của một ghế theo loại hành khách
+        private static decimal GiaGhe(string? loaiHanhKhach, decimal giaNguoiLon, decimal giaTreEm) =>
+            loaiHanhKhach == "Trẻ nhỏ" ? giaTreEm : giaNguoiLon;
         // Hàm này sẽ lấy danh sách hành khách từ form dựa trên số người đã nhập
         private List<HanhKhachDatTour> LayDanhSachHanhKhachTuForm(int soNguoi)
         {
@@ -439,10 +451,10 @@ namespace webdulich.Controllers
             ViewBag.SoTreNho = HttpContext.Session.GetInt32("DatTour_SoTreNho") ?? 0;
             // Mã chuyến đi được tạo mới nếu chưa có trong session để đảm bảo rằng mỗi đơn đặt tour có một mã chuyến đi duy nhất. Mã chuyến đi được định dạng theo mẫu "TRAVELVN-{TourId}-{Timestamp}" để đảm bảo tính duy nhất và dễ nhận biết.
             var maChuyenDi = HttpContext.Session.GetString("MaChuyenDi");
-            // Nếu mã chuyến đi chưa tồn tại trong session, tạo mới mã chuyến đi dựa trên id của tour và timestamp hiện tại để đảm bảo tính duy nhất, sau đó lưu mã chuyến đi vào session để sử dụng cho các bước tiếp theo trong quá trình đặt tour và thanh toán.
-            if (string.IsNullOrEmpty(maChuyenDi))
+            // Tạo mã một lần và giữ trong Session; bước xác nhận dùng lại đúng mã này
+            if (string.IsNullOrEmpty(maChuyenDi) || _context.DatTours.Any(x => x.MaChuyenDi == maChuyenDi))
             {
-                maChuyenDi = $"TRAVELVN-{tour.Id}-{DateTime.Now:yyyyMMddHHmmss}";
+                maChuyenDi = TaoMaChuyenDi();
                 HttpContext.Session.SetString("MaChuyenDi", maChuyenDi);
             }
             // Lưu mã chuyến đi vào ViewBag để hiển thị trên giao diện người dùng, giúp khách hàng dễ dàng nhận biết và tham chiếu đến đơn đặt tour của mình trong quá trình thanh toán và sau khi hoàn tất đặt tour.
@@ -502,8 +514,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("Index", "TrangChu");
             }
             // Lấy thông tin tour đang đặt từ session để xử lý thanh toán. Nếu không tìm thấy thông tin tour, chuyển hướng về trang chủ. Nếu tìm thấy tour, tiếp tục lấy thông tin lịch khởi hành nếu có, và chuẩn bị dữ liệu cần thiết để lưu thông tin đặt tour vào cơ sở dữ liệu, bao gồm thông tin tour, lịch khởi hành, thông tin khách hàng, số người, ngày đi, mã chuyến đi, tổng tiền trước khi giảm, số tiền giảm, tổng tiền sau khi giảm, và phương thức thanh toán.
-            var taiKhoanId = HttpContext.Session.GetInt32("DatTour_TaiKhoanId")
-                ?? LayTaiKhoanIdDangNhap(user);
+            var taiKhoanId = LayTaiKhoanIdDangNhap(user);
             // Lấy thông tin tour đang đặt từ session để xử lý thanh toán. Nếu không tìm thấy thông tin tour, chuyển hướng về trang chủ. Nếu tìm thấy tour, tiếp tục lấy thông tin lịch khởi hành nếu có, và chuẩn bị dữ liệu cần thiết để lưu thông tin đặt tour vào cơ sở dữ liệu, bao gồm thông tin tour, lịch khởi hành, thông tin khách hàng, số người, ngày đi, mã chuyến đi, tổng tiền trước khi giảm, số tiền giảm, tổng tiền sau khi giảm, và phương thức thanh toán.
             var tourId = HttpContext.Session.GetInt32("DatTour_TourId");
 
@@ -535,27 +546,37 @@ namespace webdulich.Controllers
             // Lấy thông tin lịch khởi hành từ session để xử lý thanh toán. Nếu có thông tin lịch khởi hành, truy vấn cơ sở dữ liệu để lấy thông tin lịch khởi hành dựa trên lichId và tourId. Nếu tìm thấy lịch khởi hành, lưu thông tin lịch khởi hành vào biến để sử dụng trong quá trình lưu thông tin đặt tour vào cơ sở dữ liệu và cập nhật số chỗ còn lại của lịch khởi hành nếu có.
             LichKhoiHanhTour? lich = null;
             // Nếu người dùng đã chọn lịch khởi hành, truy vấn cơ sở dữ liệu để lấy thông tin lịch khởi hành dựa trên lichId và tourId. Nếu không tìm thấy lịch khởi hành hoặc lịch khởi hành không thuộc tour đang đặt, chuyển hướng về trang chủ. Nếu tìm thấy lịch khởi hành, gán ngày đi từ lịch khởi hành để đảm bảo tính nhất quán, và kiểm tra xem lịch khởi hành còn đủ chỗ cho số người đặt hay không. Nếu không còn đủ chỗ, chuyển hướng về trang đặt tour với thông báo lỗi. Nếu lịch khởi hành hợp lệ và còn đủ chỗ, lưu thông tin lịch khởi hành vào biến để sử dụng trong quá trình lưu thông tin đặt tour vào cơ sở dữ liệu và cập nhật số chỗ còn lại của lịch khởi hành nếu có.
-            if (lichId.HasValue)
+            if (!lichId.HasValue)
             {
-                lich = _context.LichKhoiHanhTours
-                    .FirstOrDefault(x => x.Id == lichId.Value && x.TourId == tour.Id);
-
-                if (lich == null)
-                {
-                    return RedirectToAction("Index", "TrangChu");
-                }
-
-                if (lich.SoChoCon < soNguoi)
-                {
-                    TempData["Loi"] = "Lịch khởi hành này không còn đủ chỗ.";
-                    return RedirectToAction("DatTour", new { id = tour.Id, lichId = lich.Id });
-                }
-
-                ngayDi = lich.NgayKhoiHanh;
+                return RedirectToAction("ChiTiet", "DiaDiem", new { id = tour.Id });
             }
+
+            lich = _context.LichKhoiHanhTours
+                .Include(x => x.Tour)
+                .FirstOrDefault(x => x.Id == lichId.Value && x.TourId == tour.Id);
+
+            if (lich == null)
+            {
+                return RedirectToAction("Index", "TrangChu");
+            }
+
+            // Kiểm tra lại lúc xác nhận: tour còn bán, lịch còn mở bán và chưa tới ngày (lỗi 5, RB-19)
+            if (tour.NgungBan || !lich.ChoPhepDatTour)
+            {
+                TempData["Loi"] = "Lịch khởi hành này không còn nhận đặt tour.";
+                return RedirectToAction("ChiTiet", "DiaDiem", new { id = tour.Id });
+            }
+
+            if (lich.SoChoCon < soNguoi)
+            {
+                TempData["Loi"] = "Lịch khởi hành này không còn đủ chỗ.";
+                return RedirectToAction("DatTour", new { id = tour.Id, lichId = lich.Id });
+            }
+
+            ngayDi = lich.NgayKhoiHanh;
             // Tính tổng tiền trước khi áp dụng khuyến mãi dựa trên giá người lớn và giá trẻ em của tour hoặc lịch khởi hành, và số lượng người lớn và trẻ em. Nếu lịch khởi hành có giá người lớn và giá trẻ em, sử dụng chúng để tính tổng tiền. Nếu không, sử dụng giá của tour để tính tổng tiền, với giả định rằng giá trẻ em bằng một nửa giá người lớn.
-            decimal giaNguoiLon = lich?.GiaNguoiLon ?? tour.Gia;
-            decimal giaTreEm = lich?.GiaTreEm ?? giaNguoiLon * 0.5m;
+            decimal giaNguoiLon = lich.GiaNguoiLon ?? tour.Gia;
+            decimal giaTreEm = lich.GiaTreEm ?? giaNguoiLon * 0.5m;
             decimal tongTien = (soNguoiLon * giaNguoiLon) + (soTreNho * giaTreEm);
             decimal tongTienTruocGiam = tongTien;
             decimal soTienGiam = 0;
@@ -574,13 +595,19 @@ namespace webdulich.Controllers
                 XoaSessionKhuyenMai();
             }
             // Tạo mới đối tượng DatTours để lưu thông tin đặt tour vào cơ sở dữ liệu, bao gồm thông tin tour, lịch khởi hành, tài khoản người đặt (nếu có), mã chuyến đi, thông tin khách hàng, số người, ngày đi, tổng tiền trước khi giảm, số tiền giảm, tổng tiền sau khi giảm, phương thức thanh toán, và trạng thái thanh toán. Nếu có thông tin hành khách trong session, phân tích chuỗi JSON để lấy danh sách hành khách và lưu vào thuộc tính HanhKhachDatTours của đối tượng DatTours. Sau đó thêm đối tượng DatTours vào DbContext và lưu thay đổi vào cơ sở dữ liệu.
-            var model = new DatTours
+            // Dùng đúng mã đã hiện ở trang thanh toán; nếu mất Session hoặc mã đã bị dùng thì tạo mã mới
+            var maChuyenDiDon = HttpContext.Session.GetString("MaChuyenDi");
+            if (string.IsNullOrEmpty(maChuyenDiDon) || _context.DatTours.Any(x => x.MaChuyenDi == maChuyenDiDon))
+            {
+                maChuyenDiDon = TaoMaChuyenDi();
+            }
 
+            var model = new DatTours
             {
                 TourId = tourId.Value,
                 LichKhoiHanhTourId = lichId,
                 TaiKhoanId = taiKhoanId,
-                MaChuyenDi = $"TRAVELVN-{tour.Id}-{DateTime.Now:yyyyMMddHHmmss}",
+                MaChuyenDi = maChuyenDiDon,
                 TenKhach = HttpContext.Session.GetString("DatTour_TenKhach") ?? user,
                 DienThoai = HttpContext.Session.GetString("DatTour_DienThoai") ?? "",
                 Email = HttpContext.Session.GetString("DatTour_Email") ?? "",
@@ -594,7 +621,11 @@ namespace webdulich.Controllers
                 MaKhuyenMai = khuyenMai?.MaKhuyenMai,
                 TongTien = tongTien,
                 PhuongThucThanhToan = phuongThucThanhToan,
-                TrangThaiThanhToan = phuongThucThanhToan == "Tiền mặt" ? "Chưa thanh toán" : "Đang kiểm tra"
+                TrangThaiThanhToan = phuongThucThanhToan == "Tiền mặt" ? "Chưa thanh toán" : "Đang kiểm tra",
+                // Cột mới: đơn cá nhân chờ admin xác nhận đã nhận tiền
+                LoaiDon = "CaNhan",
+                TrangThai = "GiuCho",
+                NgayDat = DateTime.Now
             };
             // Lấy danh sách hành khách từ session, nếu có, phân tích chuỗi JSON để lấy danh sách hành khách và lưu vào thuộc tính HanhKhachDatTours của đối tượng DatTours. Nếu không có thông tin hành khách trong session, thuộc tính HanhKhachDatTours sẽ là một danh sách rỗng.
             var hanhKhachJson = HttpContext.Session.GetString("DatTour_HanhKhach");
@@ -611,24 +642,55 @@ namespace webdulich.Controllers
                         HoTen = hanhKhach.HoTen,
                         LoaiGiayTo = hanhKhach.LoaiGiayTo,
                         SoGiayTo = hanhKhach.SoGiayTo,
-                        LoaiHanhKhach = hanhKhach.LoaiHanhKhach
+                        LoaiHanhKhach = hanhKhach.LoaiHanhKhach,
+                        TaiKhoanId = null,
+                        GiaLucDat = GiaGhe(hanhKhach.LoaiHanhKhach, giaNguoiLon, giaTreEm)
                     });
                 }
             }
             // Thêm đối tượng DatTours vào DbContext và lưu thay đổi vào cơ sở dữ liệu. Nếu có khuyến mãi được áp dụng, tăng số lượt đã dùng của khuyến mãi lên 1. Nếu có lịch khởi hành được chọn, giảm số chỗ còn lại của lịch khởi hành đi số người đặt, và đảm bảo rằng số chỗ còn lại không âm. Sau khi lưu thay đổi vào cơ sở dữ liệu, xóa các session liên quan đến đặt tour để dọn dẹp dữ liệu tạm thời, và chuyển hướng đến trang xác nhận sau khi thanh toán thành công.
-            _context.DatTours.Add(model);
-            // Nếu có lịch khởi hành được chọn, giảm số chỗ còn lại của lịch khởi hành đi số người đặt, và đảm bảo rằng số chỗ còn lại không âm. Sau khi lưu thay đổi vào cơ sở dữ liệu, xóa các session liên quan đến đặt tour để dọn dẹp dữ liệu tạm thời, và chuyển hướng đến trang xác nhận sau khi thanh toán thành công.
-            if (lich != null)
+            // Số ghế phải khớp số người đã khai ở bước đặt tour
+            // và tổng giá các ghế phải bằng đúng số tiền đã hiện ở trang thanh toán
+            if (model.HanhKhachDatTours.Count != soNguoi
+                || model.HanhKhachDatTours.Sum(h => h.GiaLucDat) != tongTienTruocGiam)
             {
-                lich.SoChoCon -= soNguoi;
-
-                if (lich.SoChoCon < 0)
-                {
-                    lich.SoChoCon = 0;
-                }
+                TempData["Loi"] = "Thông tin hành khách không khớp, vui lòng nhập lại.";
+                return RedirectToAction("DatTour", new { id = tour.Id, lichId = lich.Id });
             }
-            // Lưu thay đổi vào cơ sở dữ liệu để cập nhật thông tin đặt tour, khuyến mãi, và lịch khởi hành nếu có. Sau khi lưu thay đổi, xóa các session liên quan đến đặt tour để dọn dẹp dữ liệu tạm thời, và chuyển hướng đến trang xác nhận sau khi thanh toán thành công.
-            _context.SaveChanges();
+
+            // Trừ chỗ, tạo đơn, ghế và giao dịch trong MỘT giao dịch CSDL. Câu UPDATE chỉ trừ khi còn đủ chỗ
+            // và lịch còn mở bán, nên hai người đặt cùng lúc không làm vượt số chỗ (lỗi 4, RB-12).
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                int soDongDaTru = _context.Database.ExecuteSqlInterpolated(
+                    $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon - {soNguoi} WHERE Id = {lich.Id} AND SoChoCon >= {soNguoi} AND TrangThai = {TrangThaiLich.MoBan}");
+
+                if (soDongDaTru == 0)
+                {
+                    giaoDichCsdl.Rollback();
+                    TempData["Loi"] = "Lịch khởi hành này vừa hết chỗ, vui lòng chọn lịch khác hoặc giảm số người.";
+                    return RedirectToAction("DatTour", new { id = tour.Id, lichId = lich.Id });
+                }
+
+                _context.DatTours.Add(model);
+                _context.SaveChanges();
+
+                // Chuyển khoản, ví: ghi một giao dịch chờ admin xác nhận. Tiền mặt: admin ghi khi nhận tiền.
+                if (phuongThucThanhToan != "Tiền mặt" && tongTien > 0)
+                {
+                    _context.GiaoDichThanhToans.Add(new GiaoDichThanhToan
+                    {
+                        DatTourId = model.Id,
+                        SoTien = tongTien,
+                        PhuongThuc = phuongThucThanhToan ?? string.Empty,
+                        TrangThai = "ChoXacNhan",
+                        NgayTao = DateTime.Now
+                    });
+                    _context.SaveChanges();
+                }
+
+                giaoDichCsdl.Commit();
+            }
 
             HttpContext.Session.Remove("DatTour_TourId");
             HttpContext.Session.Remove("DatTour_LichKhoiHanhTourId");
@@ -648,6 +710,7 @@ namespace webdulich.Controllers
 
             TempData["PhuongThucThanhToan"] = phuongThucThanhToan;
             TempData["TenTour"] = tour.TenTour;
+            TempData["MaChuyenDi"] = model.MaChuyenDi;
 
             return RedirectToAction("ThanhCong");
         }
@@ -694,17 +757,11 @@ namespace webdulich.Controllers
                 .Include(x => x.HanhKhachDatTours)
                 .AsQueryable();
             // Nếu có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tài khoản hoặc tên khách hàng. Nếu không có thông tin tài khoản, lọc lịch sử đặt tour dựa trên tên khách hàng. Sau đó sắp xếp lịch sử đặt tour theo ngày đi giảm dần và trả về danh sách để hiển thị trên giao diện người dùng.
-            if (taiKhoanId.HasValue)
+            if (!taiKhoanId.HasValue)
             {
-                query = query.Where(x =>
-                    x.TaiKhoanId == taiKhoanId.Value ||
-                    (x.TaiKhoanId == null && x.TenKhach == user)
-                );
+                return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            else
-            {
-                query = query.Where(x => x.TenKhach == user);
-            }
+            query = query.Where(x => x.TaiKhoanId == taiKhoanId.Value);
             // Sắp xếp lịch sử đặt tour theo ngày đi giảm dần và trả về danh sách để hiển thị trên giao diện người dùng.
             var ds = query
                 .OrderByDescending(x => x.NgayDi)
@@ -734,6 +791,7 @@ namespace webdulich.Controllers
 
             var datTour = _context.DatTours
                 .Include(x => x.LichKhoiHanhTour)
+                .Include(x => x.HanhKhachDatTours)
                 .FirstOrDefault(x => x.Id == id);
 
             if (datTour == null)
@@ -742,9 +800,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichSu");
             }
 
-            bool dungChuDon = taiKhoanId.HasValue
-                ? datTour.TaiKhoanId == taiKhoanId.Value || (datTour.TaiKhoanId == null && datTour.TenKhach == user)
-                : datTour.TenKhach == user;
+            bool dungChuDon = taiKhoanId.HasValue && datTour.TaiKhoanId == taiKhoanId.Value;
 
             if (!dungChuDon)
             {
@@ -752,20 +808,44 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichSu");
             }
 
-            if (datTour.TrangThaiThanhToan == "Đã hủy")
+            if (datTour.TrangThai == "DaHuy" || datTour.TrangThaiThanhToan == "Đã hủy")
             {
                 TempData["Loi"] = "Đơn này đã được hủy trước đó.";
                 return RedirectToAction("LichSu");
             }
 
-            if (datTour.LichKhoiHanhTour != null && datTour.SoNguoi > 0)
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
             {
-                datTour.LichKhoiHanhTour.SoChoCon += datTour.SoNguoi;
+                // Nhả mọi ghế chưa nhả, bỏ chỗ ngồi đã chọn, trả đúng số ghế đó cho lịch
+                var bayGio = DateTime.Now;
+                var dsGhe = datTour.HanhKhachDatTours.Where(h => h.NgayNha == null).ToList();
+                var dsGheId = dsGhe.Select(h => h.Id).ToList();
+                foreach (var ghe in dsGhe)
+                {
+                    ghe.NgayNha = bayGio;
+                }
+                _context.ChoNgoiChuyenDis.RemoveRange(
+                    _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)));
+
+                // Giao dịch còn chờ xác nhận thì không còn hiệu lực. Giao dịch đã thành công giữ nguyên
+                // (tiền đã nhận, hoàn tiền xử lý ngoài hệ thống).
+                foreach (var gd in _context.GiaoDichThanhToans.Where(g => g.DatTourId == datTour.Id && g.TrangThai == "ChoXacNhan"))
+                {
+                    gd.TrangThai = "ThatBai";
+                }
+
+                datTour.TrangThai = "DaHuy";
+                datTour.TrangThaiThanhToan = "Đã hủy"; // cột cũ, ghi kèm đến bước thu hẹp
+                _context.SaveChanges();
+
+                if (datTour.LichKhoiHanhTourId.HasValue && dsGhe.Count > 0)
+                {
+                    _context.Database.ExecuteSqlInterpolated(
+                        $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {dsGhe.Count} WHERE Id = {datTour.LichKhoiHanhTourId.Value} AND TrangThai <> {TrangThaiLich.DaHuy}");
+                }
+
+                giaoDichCsdl.Commit();
             }
-
-            datTour.TrangThaiThanhToan = "Đã hủy";
-
-            _context.SaveChanges();
 
             TempData["ThanhCong"] = "Hủy đơn đặt tour thành công.";
             return RedirectToAction("LichSu");

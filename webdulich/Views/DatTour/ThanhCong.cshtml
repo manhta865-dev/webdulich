@@ -20,6 +20,13 @@
             Bạn đã đặt tour <strong>@TempData["TenTour"]</strong>.
         </p>
 
+        @if (TempData["MaChuyenDi"] != null)
+        {
+            <p>
+                Mã chuyến đi: <strong>@TempData["MaChuyenDi"]</strong>
+            </p>
+        }
+
         <p>
             Phương thức thanh toán: <strong>@TempData["PhuongThucThanhToan"]</strong>
         </p>
