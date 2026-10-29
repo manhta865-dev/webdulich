@@ -92,8 +92,8 @@
                 </div>
 
                 <div>
-                    <label class="form-label">Số chỗ còn</label>
-                    <input type="number" name="soChoCon" class="form-control" min="0" required />
+                    <label class="form-label">Số chỗ tối đa</label>
+                    <input type="number" name="soChoToiDa" class="form-control" min="1" required />
                 </div>
 
                 <div>
@@ -117,8 +117,9 @@
         </form>
 
         <p class="ad-hint">
-            Mỗi lịch khởi hành có thể đặt giá riêng. Trạng thái sẽ tự tính theo ngày thật:
-            sắp khởi hành, đang diễn ra, đã hoàn thành. Riêng trạng thái đã hủy là do admin bấm hủy.
+            Mỗi lịch khởi hành có thể đặt giá riêng. Số chỗ còn lại do hệ thống tự tính từ số chỗ tối đa trừ số khách đã đặt.
+            Trạng thái tự tính theo ngày thật: sắp khởi hành, đang diễn ra, đã hoàn thành.
+            Tạm ngưng bán và hủy lịch là do admin bấm.
         </p>
     </section>
 
@@ -129,7 +130,7 @@
                     <tr>
                         <th>Ngày khởi hành</th>
                         <th>Giờ</th>
-                        <th>Số chỗ còn</th>
+                        <th>Số chỗ tối đa</th>
                         <th>Giá người lớn</th>
                         <th>Giá trẻ em</th>
                         <th>Trạng thái</th>
@@ -158,6 +159,11 @@
 
                             var choPhepSua = trangThai == "Sắp khởi hành";
                             var choPhepHuy = trangThai == "Sắp khởi hành";
+                            var nhanTrangThai = choPhepSua && item.DangTamNgung ? "Tạm ngưng bán" : trangThai;
+                            if (choPhepSua && item.DangTamNgung)
+                            {
+                                badgeClass = "status-paused";
+                            }
 
                             <tr class="@(trangThai == "Đã hủy" ? "schedule-cancelled" : "")">
                                 <td>
@@ -190,12 +196,13 @@
                                 <td>
                                     <input form="@formId"
                                            type="number"
-                                           name="soChoCon"
+                                           name="soChoToiDa"
                                            class="form-control"
-                                           min="0"
-                                           value="@item.SoChoCon"
+                                           min="@Math.Max(1, item.SoChoToiDa - item.SoChoCon)"
+                                           value="@item.SoChoToiDa"
                                            disabled="@(!choPhepSua)"
                                            required />
+                                    <small class="ad-hint-nho">Còn @item.SoChoCon chỗ</small>
                                 </td>
 
                                 <td>
@@ -223,7 +230,7 @@
                                 </td>
 
                                 <td>
-                                    <span class="ad-status @badgeClass">@trangThai</span>
+                                    <span class="ad-status @badgeClass">@nhanTrangThai</span>
                                 </td>
 
                                 <td>
@@ -239,6 +246,16 @@
 
                                         @if (choPhepHuy)
                                         {
+                                            <form asp-controller="Admin"
+                                                  asp-action="DoiTrangThaiBanLich"
+                                                  asp-route-id="@item.Id"
+                                                  method="post">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">
+                                                    @(item.DangTamNgung ? "Mở bán lại" : "Tạm ngưng bán")
+                                                </button>
+                                            </form>
+
                                             <form asp-controller="Admin"
                                                   asp-action="HuyLichKhoiHanh"
                                                   asp-route-id="@item.Id"

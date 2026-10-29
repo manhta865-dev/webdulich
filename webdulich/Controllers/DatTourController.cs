@@ -171,14 +171,14 @@ namespace webdulich.Controllers
             // 
             var lich = _context.LichKhoiHanhTours
                 .FirstOrDefault(x => x.Id == lichId.Value && x.TourId == tour.Id);
-            if (lich.TrangThai == "Đã hủy" || lich.NgayKhoiHanh.Date <= DateTime.Today)
-            {
-                TempData["Loi"] = "Lịch khởi hành này không còn nhận đặt tour.";
-                return RedirectToAction("ChiTiet", "DiaDiem", new { id = tour.Id });
-            }
             if (lich == null)
             {
                 return NotFound();
+            }
+            if (tour.NgungBan || lich.TrangThai != TrangThaiLich.MoBan || lich.NgayKhoiHanh.Date <= DateTime.Today)
+            {
+                TempData["Loi"] = "Lịch khởi hành này không còn nhận đặt tour.";
+                return RedirectToAction("ChiTiet", "DiaDiem", new { id = tour.Id });
             }
 
             ViewBag.Tour = tour;

@@ -20,6 +20,16 @@
         <a asp-controller="Admin" asp-action="Create" class="tv-btn tv-btn-chinh">Thêm tour</a>
     </div>
 
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
     <div class="ad-toolbar">
         <form asp-controller="Admin" asp-action="Index" method="get" class="ad-search">
             <input type="text"
@@ -80,7 +90,7 @@
                     {
                         foreach (var item in Model)
                         {
-                            <tr>
+                            <tr class="@(item.NgungBan ? "ad-row-ngung" : "")">
                                 <td>
                                     <div class="ad-tour-cell">
                                         <img src="~/images/dulich/@item.HinhAnh" class="ad-thumb" alt="" loading="lazy" />
@@ -93,6 +103,10 @@
                                             else
                                             {
                                                 <span class="ad-tag trong">Trong nước</span>
+                                            }
+                                            @if (item.NgungBan)
+                                            {
+                                                <span class="ad-tag ngung">Ngừng bán</span>
                                             }
                                         </div>
                                     </div>
@@ -111,9 +125,12 @@
 
                                         <a asp-controller="Admin" asp-action="Edit" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
 
-                                        <a asp-controller="Admin" asp-action="Delete" asp-route-id="@item.Id"
-                                           class="tv-btn tv-btn-huy ad-btn-nho"
-                                           onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</a>
+                                        <form method="post" asp-controller="Admin" asp-action="DoiNgungBan" asp-route-id="@item.Id"
+                                              onsubmit="return confirm('@(item.NgungBan ? "Mở bán lại tour này?" : "Ngừng bán tour này? Khách sẽ không thấy và không đặt được nữa.")');">
+                                            <button type="submit" class="tv-btn @(item.NgungBan ? "tv-btn-vien" : "tv-btn-huy") ad-btn-nho">
+                                                @(item.NgungBan ? "Mở bán lại" : "Ngừng bán")
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

@@ -601,24 +601,62 @@ namespace webdulich.Controllers
             return RedirectToAction("Edit", new { id = tourId });
         }
 
-        // Hàm này dùng để xóa một tour khỏi database. Khi admin nhấn nút xóa ở một tour nào đó trong trang danh sách tour, action này sẽ được gọi với Id của tour đó để xác định chính xác tour cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm tour trong database theo Id. Nếu không tìm thấy tour thì trả về lỗi NotFound. Nếu tìm thấy tour, hệ thống sẽ xóa bản ghi của tour đó khỏi bảng Tours, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tour đó trong các bảng khác như TourLoaiDiaHinhs, TourPhongCachs, TourHinhAnhs và các đơn đặt tour liên quan để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tour để thấy rằng tour đã bị xóa.
+        // Xóa hẳn tour: chỉ cho khi tour chưa có lịch khởi hành và chưa có đơn nào.
+        // Trước đây là liên kết GET và xóa luôn cả đơn đặt của tour (xóa dây chuyền).
+        // Tour đã có lịch hoặc đơn thì dùng Ngừng bán (DoiNgungBan).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            // Tìm tour trong database theo Id để xác định chính xác tour cần xóa. Nếu không tìm thấy tour nào thỏa mãn điều kiện này thì trả về lỗi NotFound.
             var tour = _context.Tours.Find(id);
 
             if (tour == null)
             {
                 return NotFound();
             }
-            // Xóa tất cả các liên kết và dữ liệu liên quan đến tour đó trong các bảng khác như TourLoaiDiaHinhs, TourPhongCachs, TourHinhAnhs và các đơn đặt tour liên quan để đảm bảo tính toàn vẹn dữ liệu. Việc xóa các liên kết và dữ liệu liên quan này giúp tránh tình trạng dữ liệu rác hoặc lỗi khi có các bản ghi liên quan đến tour đã bị xóa nhưng vẫn tồn tại trong database.
+
+            bool coDuLieu = _context.LichKhoiHanhTours.Any(x => x.TourId == id)
+                || _context.DatTours.Any(x => x.TourId == id);
+            if (coDuLieu)
+            {
+                TempData["error"] = "Tour đã có lịch khởi hành hoặc đơn đặt, không xóa được. Hãy chọn Ngừng bán.";
+                return RedirectToAction("Index");
+            }
+
             _context.Tours.Remove(tour);
             _context.SaveChanges();
 
+            TempData["success"] = "Đã xóa tour.";
+            return RedirectToAction("Index");
+        }
+
+        // Ngừng bán hoặc mở bán lại một tour. Tour ngừng bán không hiện với khách và không đặt được,
+        // nhưng đơn cũ, lịch và báo cáo vẫn giữ nguyên.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DoiNgungBan(int id)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+            var tour = _context.Tours.Find(id);
+
+            if (tour == null)
+            {
+                return NotFound();
+            }
+
+            tour.NgungBan = !tour.NgungBan;
+            _context.SaveChanges();
+
+            TempData["success"] = tour.NgungBan
+                ? $"Đã ngừng bán tour {tour.TenTour}."
+                : $"Đã mở bán lại tour {tour.TenTour}.";
             return RedirectToAction("Index");
         }
 
@@ -1037,12 +1075,12 @@ namespace webdulich.Controllers
 
             var lichSapKhoiHanhQuery = _context.LichKhoiHanhTours
                 .AsNoTracking()
-                .Where(x => x.TrangThai != "Đã hủy" && x.NgayKhoiHanh >= homNay && x.NgayKhoiHanh <= sau30Ngay);
+                .Where(x => x.TrangThai != TrangThaiLich.DaHuy && x.NgayKhoiHanh >= homNay && x.NgayKhoiHanh <= sau30Ngay);
 
             var tourThieuLichQuery = _context.Tours
                 .AsNoTracking()
                 .Where(t => !_context.LichKhoiHanhTours.Any(l =>
-                    l.TourId == t.Id && l.TrangThai != "Đã hủy" && l.NgayKhoiHanh >= ngayMai));
+                    l.TourId == t.Id && l.TrangThai != TrangThaiLich.DaHuy && l.NgayKhoiHanh >= ngayMai));
 
             var model = new TongQuanAdminViewModel
             {
@@ -1450,7 +1488,8 @@ namespace webdulich.Controllers
         }
         // Đây là action dùng để thêm mới một lịch khởi hành cho một tour cụ thể trong trang quản trị. Khi admin điền thông tin ngày khởi hành, giờ khởi hành, số chỗ còn, giá người lớn và giá trẻ em vào form thêm lịch khởi hành và nhấn nút lưu, action này sẽ được gọi với các thông tin đó cùng với Id của tour để xác định tour cần thêm lịch khởi hành. Hàm sẽ kiểm tra quyền admin, sau đó sẽ tạo một đối tượng LichKhoiHanhTour mới với các thông tin đã nhận được từ form. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng lịch khởi hành mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng lịch khởi hành mới đã xuất hiện trong danh sách.
         [HttpPost]
-        public IActionResult ThemLichKhoiHanh(int tourId, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoCon, decimal? giaNguoiLon, decimal? giaTreEm)
+        [ValidateAntiForgeryToken]
+        public IActionResult ThemLichKhoiHanh(int tourId, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoToiDa, decimal? giaNguoiLon, decimal? giaTreEm)
         {
             if (!LaAdmin())
             {
@@ -1472,15 +1511,23 @@ namespace webdulich.Controllers
                 ? giaTreEm.Value
                 : giaLon * 0.5m;
 
+            if (soChoToiDa <= 0)
+            {
+                TempData["error"] = "Số chỗ tối đa phải lớn hơn 0.";
+                return RedirectToAction("LichKhoiHanh", new { id = tourId });
+            }
+
+            // Lịch mới chưa có ai đặt nên số chỗ còn bằng số chỗ tối đa
             var lich = new LichKhoiHanhTour
             {
                 TourId = tourId,
                 NgayKhoiHanh = ngayKhoiHanh,
                 GioKhoiHanh = gioKhoiHanh,
-                SoChoCon = soChoCon,
+                SoChoToiDa = soChoToiDa,
+                SoChoCon = soChoToiDa,
                 GiaNguoiLon = giaLon,
                 GiaTreEm = giaTre,
-                TrangThai = "Sắp khởi hành",
+                TrangThai = TrangThaiLich.MoBan,
             };
 
             _context.LichKhoiHanhTours.Add(lich);
@@ -1490,7 +1537,8 @@ namespace webdulich.Controllers
         }
         // Đây là action dùng để cập nhật thông tin một lịch khởi hành của một tour cụ thể trong trang quản trị. Khi admin chỉnh sửa thông tin ngày khởi hành, giờ khởi hành, số chỗ còn, giá người lớn hoặc giá trẻ em của một lịch khởi hành nào đó trong trang danh sách lịch khởi hành của tour và nhấn nút lưu, action này sẽ được gọi với các thông tin đã chỉnh sửa cùng với Id của lịch khởi hành đó để xác định chính xác lịch khởi hành cần cập nhật. Hàm sẽ kiểm tra quyền admin, sau đó tìm lịch khởi hành trong database theo Id. Nếu không tìm thấy lịch khởi hành thì trả về lỗi NotFound. Nếu tìm thấy lịch khởi hành, hệ thống sẽ cập nhật các thông tin của lịch khởi hành đó với các giá trị đã nhận được từ form chỉnh sửa. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng thông tin của lịch khởi hành đã được cập nhật thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng thông tin của lịch khởi hành đã được cập nhật trong danh sách.
         [HttpPost]
-        public IActionResult CapNhatLichKhoiHanh(int id, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoCon, decimal? giaNguoiLon, decimal? giaTreEm)
+        [ValidateAntiForgeryToken]
+        public IActionResult CapNhatLichKhoiHanh(int id, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoToiDa, decimal? giaNguoiLon, decimal? giaTreEm)
         {
             if (!LaAdmin())
             {
@@ -1514,9 +1562,18 @@ namespace webdulich.Controllers
                 ? giaTreEm.Value
                 : giaLon * 0.5m;
             // Cập nhật các thông tin của lịch khởi hành đó với các giá trị đã nhận được từ form chỉnh sửa. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng thông tin của lịch khởi hành đã được cập nhật thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng thông tin của lịch khởi hành đã được cập nhật trong danh sách.
+            // Số chỗ đã có khách giữ không đổi; chỉ đổi sức chứa, chỗ còn tính lại (RB-12)
+            int daGiu = lich.SoChoToiDa - lich.SoChoCon;
+            if (soChoToiDa < Math.Max(1, daGiu))
+            {
+                TempData["error"] = $"Lịch này đã có {daGiu} khách đặt, số chỗ tối đa không được nhỏ hơn {Math.Max(1, daGiu)}.";
+                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+            }
+
             lich.NgayKhoiHanh = ngayKhoiHanh;
             lich.GioKhoiHanh = gioKhoiHanh;
-            lich.SoChoCon = soChoCon < 0 ? 0 : soChoCon;
+            lich.SoChoToiDa = soChoToiDa;
+            lich.SoChoCon = soChoToiDa - daGiu;
             lich.GiaNguoiLon = giaLon;
             lich.GiaTreEm = giaTre;
 
@@ -1545,22 +1602,36 @@ namespace webdulich.Controllers
             // Lấy Id của tour mà lịch khởi hành đó thuộc về để có thể chuyển hướng lại đúng trang danh sách lịch khởi hành của tour đó sau khi hủy. Sau đó hệ thống sẽ cập nhật trạng thái của lịch khởi hành đó thành "Đã hủy" và đặt số chỗ còn lại về 0 để đảm bảo rằng không còn chỗ nào có thể đặt cho lịch khởi hành đã bị hủy. Đồng thời, hệ thống sẽ tìm tất cả các đơn đặt tour liên quan đến lịch khởi hành đó mà chưa bị hủy và cập nhật trạng thái thanh toán của các đơn đặt tour này thành "Đã hủy" cùng với ghi chú giải thích rằng lý do hủy là do admin đã hủy lịch khởi hành. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng lịch khởi hành đã được cập nhật trạng thái thành "Đã hủy" trong danh sách.
             var tourId = lich.TourId;
 
-            if (lich.TrangThai == "Đã hủy")
+            if (lich.TrangThai == TrangThaiLich.DaHuy)
             {
                 TempData["error"] = "Lịch này đã được hủy trước đó.";
                 return RedirectToAction("LichKhoiHanh", new { id = tourId });
             }
 
-            lich.TrangThai = "Đã hủy";
-            lich.SoChoCon = 0;
+            lich.TrangThai = TrangThaiLich.DaHuy;
 
             var dsDon = _context.DatTours
-                .Where(x => x.LichKhoiHanhTourId == id && x.TrangThaiThanhToan != "Đã hủy")
+                .Include(x => x.HanhKhachDatTours)
+                .Where(x => x.LichKhoiHanhTourId == id && x.TrangThai != "DaHuy" && x.TrangThaiThanhToan != "Đã hủy")
                 .ToList();
+
+            // Mọi đơn của lịch bị hủy theo: nhả ghế, bỏ chỗ ngồi đã chọn (RB-16, RB-17).
+            // Lịch đã hủy không ai giữ chỗ nữa nên số chỗ còn bằng sức chứa (RB-12).
+            var bayGio = DateTime.Now;
+            var dsGhe = dsDon.SelectMany(d => d.HanhKhachDatTours).Where(h => h.NgayNha == null).ToList();
+            var dsGheId = dsGhe.Select(h => h.Id).ToList();
+            foreach (var ghe in dsGhe)
+            {
+                ghe.NgayNha = bayGio;
+            }
+            _context.ChoNgoiChuyenDis.RemoveRange(
+                _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)));
+            lich.SoChoCon = lich.SoChoToiDa;
             // Cập nhật trạng thái thanh toán của các đơn đặt tour liên quan thành "Đã hủy" và thêm ghi chú giải thích lý do hủy là do admin đã hủy lịch khởi hành. Điều này sẽ giúp khách hàng hiểu được lý do tại sao đơn đặt tour của họ bị hủy và cũng giúp admin quản lý các đơn đặt tour liên quan đến lịch khởi hành đã bị hủy một cách hiệu quả hơn.
             foreach (var don in dsDon)
             {
-                don.TrangThaiThanhToan = "Đã hủy";
+                don.TrangThai = "DaHuy";
+                don.TrangThaiThanhToan = "Đã hủy"; // cột cũ, ghi kèm đến bước thu hẹp
                 don.GhiChu = string.IsNullOrWhiteSpace(don.GhiChu)
                     ? "Lịch khởi hành đã bị admin hủy."
                     : don.GhiChu + "\nLịch khởi hành đã bị admin hủy.";
@@ -1571,6 +1642,37 @@ namespace webdulich.Controllers
             TempData["success"] = "Đã hủy lịch khởi hành thành công.";
             return RedirectToAction("LichKhoiHanh", new { id = tourId });
         }
+
+        // Tạm ngưng nhận đặt hoặc mở bán lại một lịch sắp khởi hành. Đơn đã đặt giữ nguyên.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DoiTrangThaiBanLich(int id)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var lich = _context.LichKhoiHanhTours.FirstOrDefault(x => x.Id == id);
+            if (lich == null)
+            {
+                return NotFound();
+            }
+
+            if (lich.TrangThai == TrangThaiLich.DaHuy)
+            {
+                TempData["error"] = "Lịch đã hủy, không đổi trạng thái bán được.";
+                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+            }
+
+            lich.TrangThai = lich.TrangThai == TrangThaiLich.TamNgung ? TrangThaiLich.MoBan : TrangThaiLich.TamNgung;
+            _context.SaveChanges();
+
+            TempData["success"] = lich.TrangThai == TrangThaiLich.TamNgung
+                ? "Đã tạm ngưng bán lịch này. Khách không đặt mới được, đơn cũ giữ nguyên."
+                : "Đã mở bán lại lịch này.";
+            return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+        }
         // Hàm phụ để nạp dữ liệu cho các dropdown list trong trang thêm hoặc chỉnh sửa phân công hướng dẫn viên và tài xế cho lịch khởi hành của tour. Hàm này sẽ lấy danh sách các lịch khởi hành của tour hiện tại (hoặc tất cả nếu không có lịch khởi hành cụ thể nào được chọn) để hiển thị trong dropdown chọn lịch khởi hành. Đồng thời, hàm cũng sẽ lấy danh sách các nhân viên đang làm việc và có loại nhân viên là "HuongDanVien" để hiển thị trong dropdown chọn hướng dẫn viên, và danh sách các nhân viên đang làm việc và có loại nhân viên là "TaiXe" để hiển thị trong dropdown chọn tài xế. Dữ liệu này sẽ được lưu vào ViewBag để có thể sử dụng trong view khi hiển thị form thêm hoặc chỉnh sửa phân công.
         private void NapDuLieuPhanCong(int? lichHienTaiId = null)
         {
@@ -1580,7 +1682,7 @@ namespace webdulich.Controllers
                 .AsNoTracking()
                 .Include(x => x.Tour)
                 .Where(x =>
-                    x.TrangThai != "Đã hủy" &&
+                    x.TrangThai != TrangThaiLich.DaHuy &&
                     x.NgayKhoiHanh >= homNay &&
                     x.SoChoCon > 0 &&
                     (
@@ -1716,7 +1818,7 @@ namespace webdulich.Controllers
             }
             else
             {
-                if (lich.TrangThai == "Đã hủy")
+                if (lich.TrangThai == TrangThaiLich.DaHuy)
                 {
                     ModelState.AddModelError(
                         "LichKhoiHanhTourId",

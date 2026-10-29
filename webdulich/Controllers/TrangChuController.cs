@@ -16,7 +16,9 @@ namespace webdulich.Controllers
         // Hàm này tạo truy vấn lấy tour kèm đầy đủ dữ liệu liên quan.
         private IQueryable<Tour> LayQueryTourDayDu()
         {
+            // Trang chủ chỉ hiện tour đang bán
             return _context.Tours
+                .Where(x => !x.NgungBan)
                 .Include(x => x.DiaDiemInfo)
                 .Include(x => x.DanhMuc)
                 .Include(x => x.PhuongTienInfo)

@@ -45,7 +45,9 @@ namespace webdulich.Controllers
         // Phương thức này trả về một truy vấn IQueryable<Tour> đã bao gồm tất cả các quan hệ cần thiết để hiển thị thông tin chi tiết của tour, bao gồm địa điểm, danh mục, phương tiện, loại địa hình và phong cách. Đây là cơ sở để các phương thức khác có thể truy vấn và lọc dữ liệu tour một cách hiệu quả.
         private IQueryable<Tour> LayQueryTourDayDu()
         {
+            // Chỉ gợi ý tour đang bán
             return _context.Tours
+                .Where(x => !x.NgungBan)
                 .Include(x => x.DiaDiemInfo)
                 .Include(x => x.DanhMuc)
                 .Include(x => x.PhuongTienInfo)

@@ -36,13 +36,15 @@ namespace webdulich.Models
 
         [NotMapped]
         public decimal GiaTreEmHienThi => GiaTreEm ?? GiaNguoiLonHienThi * 0.5m;
-        public string TrangThai { get; set; } = "Sắp khởi hành";
+        // Chỉ lưu quyết định của admin: MoBan, TamNgung, DaHuy (xem TrangThaiLich).
+        // "Sắp khởi hành", "Đang diễn ra", "Đã hoàn thành" tính từ ngày ở TrangThaiHienThi.
+        public string TrangThai { get; set; } = TrangThaiLich.MoBan;
         [NotMapped]
         public string TrangThaiHienThi
         {
             get
             {
-                if (TrangThai == "Đã hủy")
+                if (TrangThai == TrangThaiLich.DaHuy)
                 {
                     return "Đã hủy";
                 }
@@ -72,7 +74,19 @@ namespace webdulich.Models
             }
         }
 
+        // Admin tạm ngưng nhận đặt (lịch vẫn diễn ra, đơn cũ giữ nguyên)
         [NotMapped]
-        public bool ChoPhepDatTour => TrangThaiHienThi == "Sắp khởi hành";
+        public bool DangTamNgung => TrangThai == TrangThaiLich.TamNgung;
+
+        // Khách chỉ đặt được lịch đang mở bán và chưa tới ngày khởi hành (RB-19)
+        [NotMapped]
+        public bool ChoPhepDatTour => TrangThai == TrangThaiLich.MoBan && TrangThaiHienThi == "Sắp khởi hành";
+    }
+
+    public static class TrangThaiLich
+    {
+        public const string MoBan = "MoBan";
+        public const string TamNgung = "TamNgung";
+        public const string DaHuy = "DaHuy";
     }
 }

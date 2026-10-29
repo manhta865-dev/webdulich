@@ -30,8 +30,10 @@ namespace webdulich.Controllers
         // Bỏ lịch trình và hình ảnh phụ vì danh sách không dùng; tách thành nhiều câu SQL nhỏ và không theo dõi thay đổi để SQL Server không phải xin nhiều bộ nhớ.
         private IQueryable<Tour> LayQueryTourChoDanhSach()
         {
+            // Danh sách chỉ hiện tour đang bán
             return _context.Tours
                 .AsNoTracking()
+                .Where(x => !x.NgungBan)
                 .Include(x => x.DiaDiemInfo)
                 .Include(x => x.DanhMuc)
                 .Include(x => x.PhuongTienInfo)
@@ -98,9 +100,11 @@ namespace webdulich.Controllers
             // Lấy danh sách lịch khởi hành sắp tới của tour, loại bỏ những lịch đã hủy và những lịch đã khởi hành trước ngày hôm nay
             var ngayMai = DateTime.Today.AddDays(1);
 
+            // Tour ngừng bán thì không còn lịch để đặt; lịch tạm ngưng hoặc đã hủy cũng không hiện
             ViewBag.LichKhoiHanh = _context.LichKhoiHanhTours
                 .Where(x => x.TourId == id
-                    && x.TrangThai != "Đã hủy"
+                    && !tour.NgungBan
+                    && x.TrangThai == TrangThaiLich.MoBan
                     && x.NgayKhoiHanh >= ngayMai)
                 .OrderBy(x => x.NgayKhoiHanh)
                 .ToList();

@@ -244,6 +244,11 @@
 
 .ad-tag.trong { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
 .ad-tag.ngoai { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-tag.ngung { background: #FBE9E7; color: var(--tv-loi); }
+
+/* Tour ngừng bán: làm mờ ảnh và chữ, giữ nút thao tác rõ */
+.ad-row-ngung .ad-tour-cell img,
+.ad-row-ngung td:not(:last-child) { opacity: 0.6; }
 
 .ad-price { font-weight: 700; color: var(--tv-gia); white-space: nowrap; }
 
@@ -403,6 +408,8 @@
 .ad-status.status-running { background: #FBF1DC; color: var(--tv-canh-bao); }
 .ad-status.status-done { background: #E4F4EC; color: var(--tv-thanh-cong); }
 .ad-status.status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
+.ad-status.status-paused { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-hint-nho { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); white-space: nowrap; }
 
 /* ---------- Bảng có ô nhập ngay trong dòng ---------- */
 .ad-table .form-control {
