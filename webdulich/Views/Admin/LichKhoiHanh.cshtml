@@ -120,6 +120,8 @@
             Mỗi lịch khởi hành có thể đặt giá riêng. Số chỗ còn lại do hệ thống tự tính từ số chỗ tối đa trừ số khách đã đặt.
             Trạng thái tự tính theo ngày thật: sắp khởi hành, đang diễn ra, đã hoàn thành.
             Tạm ngưng bán và hủy lịch là do admin bấm.
+            Xe hoặc máy bay được gán tự động theo số chỗ tối đa: xe du lịch đến 16 chỗ dùng xe 16 chỗ,
+            đến 29 chỗ dùng xe 29 chỗ, đến 45 chỗ dùng xe 45 chỗ.
         </p>
     </section>
 
@@ -203,6 +205,7 @@
                                            disabled="@(!choPhepSua)"
                                            required />
                                     <small class="ad-hint-nho">Còn @item.SoChoCon chỗ</small>
+                                    <small class="ad-hint-nho">@(item.SoDoChoNgoi?.TenSoDo ?? "Chưa có sơ đồ chỗ ngồi")</small>
                                 </td>
 
                                 <td>

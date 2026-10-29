@@ -1589,6 +1589,7 @@ namespace webdulich.Controllers
 
             var dsTatCa = _context.LichKhoiHanhTours
                 .Include(x => x.Tour)
+                .Include(x => x.SoDoChoNgoi)
                 .Where(x => x.TourId == id)
                 .OrderBy(x => x.NgayKhoiHanh)
                 .ToList();
@@ -1648,9 +1649,18 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichKhoiHanh", new { id = tourId });
             }
 
+            // Sơ đồ chỗ ngồi tự gán theo phương tiện của tour và số chỗ tối đa (RB-14)
+            var soDo = GanSoDoChoNgoi.Chon(_context, tourId, soChoToiDa);
+            if (soDo.Loi != null)
+            {
+                TempData["error"] = soDo.Loi;
+                return RedirectToAction("LichKhoiHanh", new { id = tourId });
+            }
+
             // Lịch mới chưa có ai đặt nên số chỗ còn bằng số chỗ tối đa
             var lich = new LichKhoiHanhTour
             {
+                SoDoChoNgoiId = soDo.SoDoChoNgoiId,
                 TourId = tourId,
                 NgayKhoiHanh = ngayKhoiHanh,
                 GioKhoiHanh = gioKhoiHanh,
@@ -1701,10 +1711,24 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
             }
 
+            // Đổi số chỗ có thể đổi xe; không đổi xe khi đã có khách chọn chỗ trên xe hiện tại
+            var soDo = GanSoDoChoNgoi.Chon(_context, lich.TourId, soChoToiDa);
+            if (soDo.Loi != null)
+            {
+                TempData["error"] = soDo.Loi;
+                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+            }
+            if (soDo.SoDoChoNgoiId != lich.SoDoChoNgoiId && _context.ChoNgoiChuyenDis.Any(c => c.LichKhoiHanhTourId == lich.Id))
+            {
+                TempData["error"] = "Lịch đã có khách chọn chỗ ngồi nên không đổi xe được. Hãy giữ số chỗ tối đa trong sức chứa của xe hiện tại.";
+                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+            }
+
             lich.NgayKhoiHanh = ngayKhoiHanh;
             lich.GioKhoiHanh = gioKhoiHanh;
             lich.SoChoToiDa = soChoToiDa;
             lich.SoChoCon = soChoToiDa - daGiu;
+            lich.SoDoChoNgoiId = soDo.SoDoChoNgoiId;
             lich.GiaNguoiLon = giaLon;
             lich.GiaTreEm = giaTre;
 
