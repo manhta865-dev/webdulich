@@ -4,6 +4,9 @@
     var actionName = ViewContext.RouteData.Values["action"]?.ToString();
     bool moDangKy = actionName == "DangKy";
     ViewData["Title"] = moDangKy ? "Đăng ký" : "Đăng nhập";
+    // Trang cần quay lại sau đăng nhập (đã kiểm là đường dẫn nội bộ trong controller)
+    var returnUrl = ViewBag.ReturnUrl as string;
+    var tuLinkMoi = returnUrl?.StartsWith("/DonNhom/Moi") == true;
 }
 
 <style>
@@ -149,6 +152,24 @@
         font-weight: 800;
         margin-top: 2px;
     }
+
+    /* Dòng chuyển đăng nhập / đăng ký: cần trên điện thoại vì tấm che có nút chuyển bị ẩn */
+    .auth-switch-text {
+        text-align: center;
+        color: #6b5b2e;
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-top: 16px;
+    }
+
+        .auth-switch-text button {
+            border: 0;
+            background: none;
+            padding: 0;
+            color: #071638;
+            font-weight: 950;
+            text-decoration: underline;
+        }
 
     .auth-cover {
         position: absolute;
@@ -310,10 +331,11 @@
                 <span>x</span>
             </div>
 
-            <p class="auth-desc">Đăng nhập bằng email hoặc số điện thoại</p>
+            <p class="auth-desc">@(tuLinkMoi ? "Đăng nhập để nhận ghế trong đơn nhóm. Xong bạn sẽ quay lại trang mời." : "Đăng nhập bằng email hoặc số điện thoại")</p>
 
             <form asp-controller="TaiKhoan" asp-action="DangNhap" method="post">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                 <input name="taiKhoanDangNhap"
                        class="auth-input"
@@ -328,6 +350,8 @@
 
                 <button type="submit" class="auth-submit-btn">SIGN IN</button>
             </form>
+
+            <p class="auth-switch-text">Chưa có tài khoản? <button type="button" onclick="showSignUp()">Đăng ký</button></p>
 
             @if (TempData["ThanhCong"] != null)
             {
@@ -353,6 +377,7 @@
 
             <form asp-controller="TaiKhoan" asp-action="DangKy" method="post">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                 <input asp-for="HoTen"
                        class="auth-input"
@@ -372,6 +397,8 @@
 
                 <button type="submit" class="auth-submit-btn">SIGN UP</button>
             </form>
+
+            <p class="auth-switch-text">Đã có tài khoản? <button type="button" onclick="showSignIn()">Đăng nhập</button></p>
 
             @if (ViewBag.Loi != null && moDangKy)
             {
@@ -398,14 +425,15 @@
 <script>
     const authBox = document.getElementById("authBox");
 
+    // Giữ ?returnUrl=... khi chuyển qua lại giữa đăng nhập và đăng ký
     function showSignUp() {
         authBox.classList.add("active");
-        history.replaceState(null, "", "/TaiKhoan/DangKy");
+        history.replaceState(null, "", "/TaiKhoan/DangKy" + location.search);
     }
 
     function showSignIn() {
         authBox.classList.remove("active");
-        history.replaceState(null, "", "/TaiKhoan/DangNhap");
+        history.replaceState(null, "", "/TaiKhoan/DangNhap" + location.search);
     }
 </script>
 

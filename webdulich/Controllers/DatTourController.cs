@@ -1146,6 +1146,44 @@ namespace webdulich.Controllers
                 .GroupBy(x => x.DatTourId)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.MaViTri).OrderBy(m => m.Length).ThenBy(m => m).ToList());
 
+            // Ghế mình nhận trong đơn nhóm của người khác (đơn đứng tên trưởng nhóm nên không có trong ds ở trên)
+            var dsGheNhom = _context.HanhKhachDatTours.AsNoTracking()
+                .Where(h => h.TaiKhoanId == taiKhoanId.Value && h.NgayNha == null
+                    && h.DatTour!.LoaiDon == "Nhom" && h.DatTour.TaiKhoanId != taiKhoanId.Value)
+                .Select(h => new
+                {
+                    Ghe = h,
+                    h.DatTour!.MaChuyenDi,
+                    TenTruongNhom = h.DatTour.TenKhach,
+                    DonTrangThai = h.DatTour.TrangThai,
+                    h.DatTour.LichKhoiHanhTour!.NgayKhoiHanh,
+                    h.DatTour.LichKhoiHanhTour.GioKhoiHanh,
+                    TenTour = h.DatTour.LichKhoiHanhTour.Tour!.TenTour,
+                    MaCho = _context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == h.Id).Select(c => c.ViTriChoNgoi!.MaViTri).FirstOrDefault()
+                })
+                .ToList();
+            var dsGheNhomId = dsGheNhom.Select(x => x.Ghe.Id).ToList();
+            var giaoDichGheNhom = _context.GiaoDichThanhToans.AsNoTracking()
+                .Where(g => g.HanhKhachDatTourId != null && dsGheNhomId.Contains(g.HanhKhachDatTourId.Value))
+                .ToList();
+            ViewBag.GheNhom = dsGheNhom
+                .OrderByDescending(x => x.NgayKhoiHanh)
+                .Select(x => new GheNhomTrongLichSu
+                {
+                    GheId = x.Ghe.Id,
+                    TenTour = x.TenTour,
+                    MaChuyenDi = x.MaChuyenDi,
+                    TenTruongNhom = x.TenTruongNhom,
+                    NgayDi = x.NgayKhoiHanh,
+                    GioKhoiHanh = x.GioKhoiHanh,
+                    LoaiHanhKhach = x.Ghe.LoaiHanhKhach,
+                    GiaLucDat = x.Ghe.GiaLucDat,
+                    MaCho = x.MaCho,
+                    TrangThai = TrangThaiGhe.Tinh(x.Ghe, giaoDichGheNhom),
+                    DonDaHuy = x.DonTrangThai == "DaHuy"
+                })
+                .ToList();
+
             return View(ds);
         }
         // Hàm này sẽ xử lý yêu cầu POST khi người dùng muốn hủy đơn đặt tour, kiểm tra quyền truy cập của người dùng, xác minh rằng người dùng có quyền hủy đơn đặt tour này, cập nhật trạng thái thanh toán của đơn đặt tour thành "Đã hủy", và nếu có lịch khởi hành liên quan, tăng số chỗ còn lại của lịch khởi hành lên số người đã đặt. Sau khi cập nhật thông tin, lưu thay đổi vào cơ sở dữ liệu và chuyển hướng về trang lịch sử với thông báo kết quả.

@@ -1,0 +1,162 @@
+@model webdulich.Models.GheCuaToiViewModel
+@using webdulich.Models
+@{
+    ViewData["Title"] = (Model.DienHo ? "Điền hộ ghế " : "Ghế của tôi, ghế ") + Model.ThuTu;
+    string cssTrangThai = Model.TrangThai switch
+    {
+        TrangThaiGhe.DaTra => "da-tra",
+        TrangThaiGhe.ChoXacNhan => "cho",
+        TrangThaiGhe.DaDien => "da-dien",
+        _ => "da-nhan"
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <div class="dn-head">
+        <div>
+            <span class="dn-ma">Đơn nhóm @Model.MaChuyenDi, ghế @Model.ThuTu</span>
+            <h1>@(Model.DienHo ? "Điền hộ ghế " + Model.ThuTu : "Ghế của tôi")</h1>
+            <p>@Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "").</p>
+        </div>
+        @if (Model.HanGiuCho.HasValue && Model.TrangThai != TrangThaiGhe.DaTra)
+        {
+            <div class="dn-dong-ho" data-han="@Model.HanGiuCho.Value.ToString("o")">
+                <span>Trả trước hạn, còn</span>
+                <strong data-dem>--:--:--</strong>
+                <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
+            </div>
+        }
+    </div>
+
+    @if (TempData["ThanhCong"] != null)
+    {
+        <div class="dn-alert ok" role="status">@TempData["ThanhCong"]</div>
+    }
+    @if (TempData["Loi"] != null)
+    {
+        <div class="dn-alert loi" role="alert">@TempData["Loi"]</div>
+    }
+
+    <div class="dt-layout">
+        <div>
+            <section class="dt-block">
+                <div class="dn-tien-do-head">
+                    <h2>Thông tin hành khách</h2>
+                    <span class="dn-nhan dn-ghe-nhan @cssTrangThai">@Model.TrangThai</span>
+                </div>
+
+                @if (Model.DuocSua)
+                {
+                    <p class="dt-note">Thông tin phải trùng giấy tờ mang theo khi đi. Chỉ bạn và TravelVN xem được số giấy tờ.</p>
+                    <form asp-action="ThongTinGhe" asp-route-id="@Model.GheId" method="post" novalidate>
+                        <div class="dn-fields">
+                            <div class="dn-field full">
+                                <label asp-for="Form.HoTen">Họ tên</label>
+                                <input asp-for="Form.HoTen" autocomplete="name" />
+                                <span asp-validation-for="Form.HoTen" class="dn-err"></span>
+                            </div>
+                            <div class="dn-field">
+                                <label asp-for="Form.LoaiGiayTo">Loại giấy tờ</label>
+                                <select asp-for="Form.LoaiGiayTo" class="dn-select">
+                                    @foreach (var loai in ThongTinGheForm.DsLoaiGiayTo)
+                                    {
+                                        <option value="@loai">@loai</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Form.LoaiGiayTo" class="dn-err"></span>
+                            </div>
+                            <div class="dn-field">
+                                <label asp-for="Form.SoGiayTo">Số giấy tờ</label>
+                                <input asp-for="Form.SoGiayTo" autocomplete="off" />
+                                <span asp-validation-for="Form.SoGiayTo" class="dn-err"></span>
+                            </div>
+                        </div>
+                        <div class="dt-actions">
+                            <button type="submit" class="tv-btn tv-btn-chinh">@(Model.DaDien ? "Lưu thay đổi" : "Lưu thông tin")</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <dl class="dn-xem">
+                        <div><dt>Họ tên</dt><dd>@(string.IsNullOrWhiteSpace(Model.Form.HoTen) ? "Chưa điền" : Model.Form.HoTen)</dd></div>
+                        <div><dt>Giấy tờ</dt><dd>@Model.Form.LoaiGiayTo @Model.Form.SoGiayTo</dd></div>
+                    </dl>
+                    <p class="dn-hint">Ghế đã trả tiền hoặc đơn không còn giữ chỗ nên không sửa được. Cần sửa thì liên hệ TravelVN.</p>
+                }
+            </section>
+
+            @if (Model.CoSoDo)
+            {
+                <section class="dt-block">
+                    <h2>Chỗ ngồi</h2>
+                    @if (Model.MaCho != null)
+                    {
+                        <p class="dt-note">Chỗ hiện tại: <strong>@Model.MaCho</strong></p>
+                    }
+                    else
+                    {
+                        <p class="dt-note">Chưa chọn chỗ.</p>
+                    }
+                    @if (Model.DuocDoiCho)
+                    {
+                        <a asp-action="ChoNgoiGhe" asp-route-id="@Model.GheId" class="tv-btn tv-btn-vien">@(Model.MaCho != null ? "Đổi chỗ ngồi" : "Chọn chỗ ngồi")</a>
+                    }
+                </section>
+            }
+        </div>
+
+        <aside>
+            <section class="dt-block">
+                <h2>Phần phải trả</h2>
+                <div class="dt-line"><span>@Model.LoaiHanhKhach</span><span>@Model.GiaLucDat.ToString("N0") VNĐ</span></div>
+                <div class="dt-line"><span>Nội dung chuyển khoản</span><span class="dn-ma-tt">@Model.MaThanhToan</span></div>
+                <p class="dn-hint">Mã QR chuyển khoản cho riêng ghế này sẽ hiện ở đây (đang hoàn thiện). Mỗi ghế một mã, không ai phải trả cho cả nhóm.</p>
+            </section>
+
+            @if (Model.DuocSua)
+            {
+                <section class="dt-block">
+                    <h2>@(Model.DienHo ? "Xóa thông tin ghế" : "Không đi nữa?")</h2>
+                    <p class="dt-note">@(Model.DienHo ? "Ghế trở về trống để thành viên khác nhận qua link." : "Trả lại ghế để người khác trong nhóm nhận. Chỗ ngồi đã chọn vẫn giữ cho ghế.")</p>
+                    <form asp-action="TraLaiGhe" asp-route-id="@Model.GheId" method="post"
+                          onsubmit="return confirm('@(Model.DienHo ? "Xóa thông tin và để ghế trống?" : "Bạn chắc muốn trả lại ghế này?")');">
+                        <button type="submit" class="tv-btn tv-btn-huy">@(Model.DienHo ? "Để ghế trống" : "Trả lại ghế")</button>
+                    </form>
+                </section>
+            }
+
+            <div class="dn-lien-ket">
+                @if (Model.LaTruongNhom)
+                {
+                    <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="tv-link">Về trang tiến độ của nhóm</a>
+                }
+                else
+                {
+                    <a asp-controller="DatTour" asp-action="LichSu" class="tv-link">Về lịch sử đặt tour</a>
+                }
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var dongHo = document.querySelector("[data-han]");
+        if (!dongHo) return;
+        var han = new Date(dongHo.dataset.han).getTime(), o = dongHo.querySelector("[data-dem]");
+        var hai = function (n) { return (n < 10 ? "0" : "") + n; };
+        var chay = function () {
+            var con = Math.max(0, Math.floor((han - Date.now()) / 1000));
+            o.textContent = hai(Math.floor(con / 3600)) + ":" + hai(Math.floor(con % 3600 / 60)) + ":" + hai(con % 60);
+            dongHo.classList.toggle("sap-het", con < 3600);
+        };
+        chay();
+        setInterval(chay, 1000);
+    })();
+</script>

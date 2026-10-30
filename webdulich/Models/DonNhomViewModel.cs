@@ -61,8 +61,105 @@ namespace webdulich.Models
         public string? TenChu { get; set; }
         public bool LaCuaToi { get; set; }
         public bool DaCoChu { get; set; }
+        public bool CoTaiKhoan { get; set; }
         public string? MaCho { get; set; }
         public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
+
+        // Trưởng nhóm mở được ghế của mình và ghế không có tài khoản (điền hộ trẻ nhỏ, ông bà), không mở ghế người khác (RB-20)
+        public bool TruongNhomMoDuoc => TrangThai != TrangThaiGhe.DaNha && (LaCuaToi || !CoTaiKhoan);
+    }
+
+    // Trang link mời. Ai có link cũng xem được nên không có tên người đã nhận ghế (quy tắc N3).
+    public class MoiNhomViewModel
+    {
+        public string Ma { get; set; } = string.Empty;
+        public string MaChuyenDi { get; set; } = string.Empty;
+        public string TenTour { get; set; } = string.Empty;
+        public string? HinhAnh { get; set; }
+        public DateTime NgayDi { get; set; }
+        public TimeSpan? GioKhoiHanh { get; set; }
+        public string TenTruongNhom { get; set; } = string.Empty;
+        public DateTime HanGiuCho { get; set; }
+        public bool DaGiaHan { get; set; }
+        public bool DaDangNhap { get; set; }
+        public bool LaTruongNhom { get; set; }
+        public int DonId { get; set; }
+        public List<GheMoiHienThi> DsGhe { get; set; } = new List<GheMoiHienThi>();
+        public int SoGheTrong => DsGhe.Count(g => g.NhanDuoc);
+    }
+
+    public class GheMoiHienThi
+    {
+        public int Id { get; set; }
+        public int ThuTu { get; set; }
+        public string LoaiHanhKhach { get; set; } = string.Empty;
+        public decimal GiaLucDat { get; set; }
+        public string? MaCho { get; set; }
+        public bool ConTrong { get; set; }
+
+        // Ghế trẻ nhỏ không nhận qua link: trưởng nhóm điền hộ (quy tắc N3)
+        public bool NhanDuoc => ConTrong && LoaiHanhKhach != "Trẻ nhỏ";
+    }
+
+    // Thông tin hành khách của một ghế, do chủ ghế hoặc trưởng nhóm (ghế không có tài khoản) điền
+    public class ThongTinGheForm
+    {
+        [Required(ErrorMessage = "Vui lòng nhập họ tên.")]
+        [StringLength(100, ErrorMessage = "Họ tên tối đa 100 ký tự.")]
+        public string HoTen { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng chọn loại giấy tờ.")]
+        public string LoaiGiayTo { get; set; } = "CCCD";
+
+        [Required(ErrorMessage = "Vui lòng nhập số giấy tờ.")]
+        [StringLength(20, ErrorMessage = "Số giấy tờ tối đa 20 ký tự.")]
+        public string SoGiayTo { get; set; } = string.Empty;
+
+        public static readonly string[] DsLoaiGiayTo = { "CCCD", "CMND", "Hộ chiếu", "Giấy khai sinh" };
+    }
+
+    // Trang một ghế: thông tin, chỗ ngồi, trả lại ghế. Thanh toán thêm ở phần N4.
+    public class GheCuaToiViewModel
+    {
+        public int GheId { get; set; }
+        public int DonId { get; set; }
+        public int ThuTu { get; set; }
+        public string MaChuyenDi { get; set; } = string.Empty;
+        public string? MaThanhToan { get; set; }
+        public string? MaMoi { get; set; }
+        public string TenTour { get; set; } = string.Empty;
+        public DateTime NgayDi { get; set; }
+        public TimeSpan? GioKhoiHanh { get; set; }
+        public DateTime? HanGiuCho { get; set; }
+        public string LoaiHanhKhach { get; set; } = string.Empty;
+        public decimal GiaLucDat { get; set; }
+        public string? MaCho { get; set; }
+        public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
+
+        // Trưởng nhóm đang điền hộ ghế không có tài khoản
+        public bool DienHo { get; set; }
+        public bool LaTruongNhom { get; set; }
+        public bool DuocSua { get; set; }
+        public bool DuocDoiCho { get; set; }
+        public bool CoSoDo { get; set; }
+        public bool DaDien { get; set; }
+        public ThongTinGheForm Form { get; set; } = new ThongTinGheForm();
+    }
+
+    // Ghế mình nhận trong đơn nhóm của người khác, hiện ở Lịch sử
+    public class GheNhomTrongLichSu
+    {
+        public int GheId { get; set; }
+        public string TenTour { get; set; } = string.Empty;
+        public string MaChuyenDi { get; set; } = string.Empty;
+        public string TenTruongNhom { get; set; } = string.Empty;
+        public DateTime NgayDi { get; set; }
+        public TimeSpan? GioKhoiHanh { get; set; }
+        public string LoaiHanhKhach { get; set; } = string.Empty;
+        public decimal GiaLucDat { get; set; }
+        public string? MaCho { get; set; }
+        public string TrangThai { get; set; } = string.Empty;
+        public bool DonDaHuy { get; set; }
     }
 
     // Trạng thái ghế: tính từ dữ liệu, không lưu cột (docs/MO_HINH_DU_LIEU.md, mục 4)

@@ -212,6 +212,11 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | Ghế của trưởng nhóm | Không bắt buộc: người đặt hộ có thể không đi |
 | Nhận ghế qua link | Xem thông tin chuyến không cần đăng nhập; nhận ghế phải đăng nhập (mỗi tài khoản tối đa một ghế trong một đơn, RB-03). Người không có tài khoản (trẻ nhỏ) do trưởng nhóm điền và trả hộ |
 | QR | Ảnh VietQR theo mã thanh toán của ghế, tài khoản ngân hàng là thông tin minh họa trong cấu hình |
+| Trang link mời | Không hiện tên người đã nhận ghế, chỉ ghi "Đã có người nhận" (ai có link cũng xem được) |
+| Ghế trẻ nhỏ | Không nhận qua link; trưởng nhóm điền hộ. Trưởng nhóm cũng điền hộ được ghế người lớn chưa ai nhận (người không có tài khoản) |
+| Trả lại ghế | Thành viên tự trả lại ghế khi chưa trả tiền: ghế về trống, xóa thông tin, giữ chỗ ngồi đã chọn |
+| Sửa thông tin ghế | Được sửa khi đơn còn giữ chỗ và ghế chưa trả, chưa chờ xác nhận; sau đó liên hệ TravelVN |
+| Thứ tự làm | N3 (link mời) trước, rồi N4 (QR từng ghế, gồm trả hộ), N2 (quản lý đơn), N5 (tự động hết hạn), N6 (admin) |
 
 Ràng buộc thêm (kiểm trong code):
 
@@ -220,3 +225,5 @@ Ràng buộc thêm (kiểm trong code):
 | RB-21 | Chỉ trưởng nhóm (người tạo đơn) được thu hồi link, trả hộ, chốt sớm, hủy đơn nhóm |
 | RB-22 | Ghế đã có giao dịch thành công thì không bị nhả khi hết hạn |
 | RB-23 | Mã mời (`MaMoi`) đủ dài và ngẫu nhiên; thu hồi thì đổi mã, link cũ hết hiệu lực |
+| RB-24 | Nhận ghế chỉ thành công khi ghế còn trống (chưa có tài khoản, chưa có họ tên, chưa nhả), không phải ghế trẻ nhỏ và đơn còn giữ chỗ chưa quá hạn; kiểm bằng một câu UPDATE có điều kiện nên hai người không nhận trùng một ghế |
+| RB-25 | Người xem và sửa một ghế: chủ ghế (`TaiKhoanId`), hoặc trưởng nhóm khi ghế chưa có tài khoản. Trưởng nhóm không mở được ghế thành viên khác đã nhận (cụ thể hóa RB-20) |

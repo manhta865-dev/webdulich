@@ -76,6 +76,14 @@
 .ls-details dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
 .ls-money { color: var(--tv-gia); }
 
+.ls-nhom-khu { margin-bottom: var(--tv-k6); }
+
+.ls-nhom-khu > h2,
+.ls-khu-tieu-de {
+    margin: 0 0 var(--tv-k4);
+    font-size: 1.25rem;
+}
+
 .ls-nhom {
     display: inline-block;
     margin-top: var(--tv-k1);

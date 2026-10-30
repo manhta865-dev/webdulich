@@ -80,10 +80,17 @@
                                 <small>@g.LoaiHanhKhach, @g.GiaLucDat.ToString("N0") VNĐ@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
                             </div>
                             <span class="dn-nhan">@g.TrangThai</span>
+                            @if (g.TruongNhomMoDuoc)
+                            {
+                                @* Ghế của mình, hoặc ghế không có tài khoản để điền hộ (RB-20: không mở ghế người khác) *@
+                                <a asp-action="GheCuaToi" asp-route-id="@g.Id" class="dn-ghe-mo">
+                                    @(g.LaCuaToi ? "Ghế của tôi" : g.DaCoChu ? "Sửa" : "Điền hộ")
+                                </a>
+                            }
                         </li>
                     }
                 </ol>
-                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác.</p>
+                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác. Ghế trẻ nhỏ và người không có tài khoản thì bấm "Điền hộ".</p>
             </section>
         </div>
 

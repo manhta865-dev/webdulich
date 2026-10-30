@@ -344,6 +344,7 @@ namespace webdulich.Controllers
                     TenChu = !string.IsNullOrWhiteSpace(h.HoTen) ? h.HoTen : h.TaiKhoan?.HoTen,
                     LaCuaToi = h.TaiKhoanId == taiKhoanId.Value,
                     DaCoChu = h.TaiKhoanId.HasValue || !string.IsNullOrWhiteSpace(h.HoTen),
+                    CoTaiKhoan = h.TaiKhoanId.HasValue,
                     MaCho = choTheoGhe.TryGetValue(h.Id, out var ma) ? ma : null,
                     TrangThai = TrangThaiGhe.Tinh(h, dsGiaoDich)
                 }).ToList()
@@ -351,16 +352,423 @@ namespace webdulich.Controllers
             return View(model);
         }
 
-        // Trang link mời: làm ở phần N3 (nhận ghế qua link)
-        public IActionResult Moi(string ma)
+        // ---------- Link mời: xem không cần đăng nhập, nhận ghế phải đăng nhập (N3) ----------
+
+        // Đơn còn nhận người: đang giữ chỗ, chưa quá hạn, lịch chưa hủy và chưa tới ngày đi
+        private static bool DonConNhanGhe(DatTours don) =>
+            don.LoaiDon == "Nhom"
+            && don.TrangThai == "GiuCho"
+            && don.HanGiuCho > DateTime.Now
+            && don.LichKhoiHanhTour != null
+            && don.LichKhoiHanhTour.TrangThai != TrangThaiLich.DaHuy
+            && don.LichKhoiHanhTour.NgayKhoiHanh.Date > DateTime.Today;
+
+        private DatTours? LayDonTheoMaMoi(string? ma) =>
+            string.IsNullOrEmpty(ma)
+                ? null
+                : _context.DatTours.AsNoTracking()
+                    .Include(x => x.LichKhoiHanhTour).ThenInclude(l => l!.Tour)
+                    .FirstOrDefault(x => x.MaMoi == ma && x.LoaiDon == "Nhom");
+
+        public IActionResult Moi(string? ma)
         {
-            var don = _context.DatTours.AsNoTracking().FirstOrDefault(x => x.MaMoi == ma && x.LoaiDon == "Nhom");
-            if (don == null)
+            var don = LayDonTheoMaMoi(ma);
+            // Link sai, đã đổi mã, đơn đã chốt, hủy hoặc quá hạn: báo dễ hiểu thay vì lỗi 404
+            if (don == null || !DonConNhanGhe(don))
+            {
+                return View("LinkHetHan");
+            }
+
+            var taiKhoanId = TaiKhoanDangNhap();
+            var dsGhe = _context.HanhKhachDatTours.AsNoTracking()
+                .Where(h => h.DatTourId == don.Id).OrderBy(h => h.Id).ToList();
+
+            // Đã có ghế trong đơn thì vào thẳng trang ghế của mình
+            var gheCuaToi = taiKhoanId.HasValue ? dsGhe.FirstOrDefault(h => h.TaiKhoanId == taiKhoanId.Value && h.NgayNha == null) : null;
+            if (gheCuaToi != null)
+            {
+                return RedirectToAction("GheCuaToi", new { id = gheCuaToi.Id });
+            }
+
+            var dsGheId = dsGhe.Select(h => h.Id).ToList();
+            var choTheoGhe = _context.ChoNgoiChuyenDis.AsNoTracking()
+                .Where(c => dsGheId.Contains(c.HanhKhachDatTourId))
+                .Select(c => new { c.HanhKhachDatTourId, c.ViTriChoNgoi!.MaViTri })
+                .ToDictionary(c => c.HanhKhachDatTourId, c => c.MaViTri);
+            var lich = don.LichKhoiHanhTour!;
+
+            var model = new MoiNhomViewModel
+            {
+                Ma = ma!,
+                DonId = don.Id,
+                MaChuyenDi = don.MaChuyenDi,
+                TenTour = lich.Tour?.TenTour ?? string.Empty,
+                HinhAnh = lich.Tour?.HinhAnh,
+                NgayDi = lich.NgayKhoiHanh,
+                GioKhoiHanh = lich.GioKhoiHanh,
+                TenTruongNhom = don.TenKhach,
+                HanGiuCho = don.HanGiuCho!.Value,
+                DaGiaHan = don.DaGiaHan,
+                DaDangNhap = taiKhoanId.HasValue,
+                LaTruongNhom = taiKhoanId.HasValue && don.TaiKhoanId == taiKhoanId.Value,
+                // Số thứ tự đếm cả ghế đã nhả để khớp với trang của trưởng nhóm
+                DsGhe = dsGhe.Select((h, i) => new { h, i })
+                    .Where(x => x.h.NgayNha == null)
+                    .Select(x => new GheMoiHienThi
+                    {
+                        Id = x.h.Id,
+                        ThuTu = x.i + 1,
+                        LoaiHanhKhach = x.h.LoaiHanhKhach,
+                        GiaLucDat = x.h.GiaLucDat,
+                        MaCho = choTheoGhe.TryGetValue(x.h.Id, out var maCho) ? maCho : null,
+                        ConTrong = !x.h.TaiKhoanId.HasValue && string.IsNullOrWhiteSpace(x.h.HoTen)
+                    }).ToList()
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult NhanGhe(string ma, int gheId)
+        {
+            var quayLai = Url.Action("Moi", new { ma })!;
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                // Đăng nhập xong quay lại đúng link mời
+                return RedirectToAction("DangNhap", "TaiKhoan", new { returnUrl = quayLai });
+            }
+            if (!LaKhach())
+            {
+                TempData["Loi"] = "Tài khoản quản trị hoặc nhân viên không nhận ghế trong đơn nhóm được.";
+                return Redirect(quayLai);
+            }
+
+            var don = LayDonTheoMaMoi(ma);
+            if (don == null || !DonConNhanGhe(don))
+            {
+                return View("LinkHetHan");
+            }
+
+            // Nhận ghế bằng một câu UPDATE có điều kiện "ghế còn trống": hai người bấm cùng lúc thì chỉ một người được.
+            // Ghế trẻ nhỏ không nhận qua link; mỗi tài khoản một ghế trong một đơn (RB-03, có chỉ mục duy nhất chặn thêm).
+            int soDong;
+            try
+            {
+                soDong = _context.Database.ExecuteSqlInterpolated($@"
+                    UPDATE HanhKhachDatTours SET TaiKhoanId = {taiKhoanId.Value}
+                    WHERE Id = {gheId} AND DatTourId = {don.Id} AND NgayNha IS NULL
+                      AND TaiKhoanId IS NULL AND (HoTen IS NULL OR HoTen = '')
+                      AND LoaiHanhKhach <> {"Trẻ nhỏ"}
+                      AND NOT EXISTS (SELECT 1 FROM HanhKhachDatTours WHERE DatTourId = {don.Id} AND TaiKhoanId = {taiKhoanId.Value})");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException)
+            {
+                soDong = 0;
+            }
+
+            if (soDong == 0)
+            {
+                TempData["Loi"] = "Ghế này vừa có người nhận hoặc bạn đã có ghế trong đơn. Bạn xem lại danh sách nhé.";
+                return Redirect(quayLai);
+            }
+
+            TempData["ThanhCong"] = "Bạn đã nhận ghế. Điền thông tin hành khách để hoàn tất phần của mình.";
+            return RedirectToAction("GheCuaToi", new { id = gheId });
+        }
+
+        // ---------- Một ghế: thông tin, chỗ ngồi, trả lại ghế ----------
+
+        // Ghế người đang đăng nhập được mở: ghế của chính họ, hoặc ghế chưa có tài khoản trong đơn họ là trưởng nhóm.
+        // Trưởng nhóm không mở được ghế người khác đã nhận, nên không thấy giấy tờ của họ (RB-20).
+        private HanhKhachDatTour? LayGheDuocMo(int gheId, int taiKhoanId, out bool laTruongNhom)
+        {
+            var ghe = _context.HanhKhachDatTours
+                .Include(h => h.DatTour).ThenInclude(d => d!.LichKhoiHanhTour).ThenInclude(l => l!.Tour).ThenInclude(t => t!.PhuongTienInfo)
+                .Include(h => h.DatTour).ThenInclude(d => d!.LichKhoiHanhTour).ThenInclude(l => l!.SoDoChoNgoi)
+                .Include(h => h.TaiKhoan)
+                .FirstOrDefault(h => h.Id == gheId && h.DatTour!.LoaiDon == "Nhom");
+
+            laTruongNhom = ghe?.DatTour?.TaiKhoanId == taiKhoanId;
+            if (ghe == null || ghe.NgayNha.HasValue)
+            {
+                return null;
+            }
+            if (ghe.TaiKhoanId == taiKhoanId)
+            {
+                return ghe;
+            }
+            return laTruongNhom && !ghe.TaiKhoanId.HasValue ? ghe : null;
+        }
+
+        private string TinhTrangThaiGhe(HanhKhachDatTour ghe) =>
+            TrangThaiGhe.Tinh(ghe, _context.GiaoDichThanhToans.AsNoTracking().Where(g => g.HanhKhachDatTourId == ghe.Id).ToList());
+
+        // Thông tin sửa được khi đơn còn giữ chỗ và ghế chưa trả, chưa chờ xác nhận
+        private static bool GheDuocSua(DatTours don, string trangThai) =>
+            DonConNhanGhe(don) && trangThai != TrangThaiGhe.DaTra && trangThai != TrangThaiGhe.ChoXacNhan;
+
+        // Chỗ ngồi đổi được tới trước ngày đi, khi đơn chưa hủy và lịch có sơ đồ
+        private static bool GheDuocDoiCho(DatTours don) =>
+            don.TrangThai != "DaHuy"
+            && don.LichKhoiHanhTour?.SoDoChoNgoiId != null
+            && don.LichKhoiHanhTour.TrangThai != TrangThaiLich.DaHuy
+            && don.LichKhoiHanhTour.NgayKhoiHanh.Date > DateTime.Today;
+
+        private GheCuaToiViewModel TaoTrangGhe(HanhKhachDatTour ghe, int taiKhoanId, bool laTruongNhom, ThongTinGheForm? form = null)
+        {
+            var don = ghe.DatTour!;
+            var lich = don.LichKhoiHanhTour!;
+            var trangThai = TinhTrangThaiGhe(ghe);
+            int thuTu = _context.HanhKhachDatTours.Count(h => h.DatTourId == don.Id && h.Id < ghe.Id) + 1;
+            var maCho = _context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == ghe.Id).Select(c => c.ViTriChoNgoi!.MaViTri).FirstOrDefault();
+            bool laTreNho = ghe.LoaiHanhKhach == "Trẻ nhỏ";
+
+            return new GheCuaToiViewModel
+            {
+                GheId = ghe.Id,
+                DonId = don.Id,
+                ThuTu = thuTu,
+                MaChuyenDi = don.MaChuyenDi,
+                MaThanhToan = ghe.MaThanhToan,
+                MaMoi = DonConNhanGhe(don) ? don.MaMoi : null,
+                TenTour = lich.Tour?.TenTour ?? string.Empty,
+                NgayDi = lich.NgayKhoiHanh,
+                GioKhoiHanh = lich.GioKhoiHanh,
+                HanGiuCho = don.TrangThai == "GiuCho" ? don.HanGiuCho : null,
+                LoaiHanhKhach = ghe.LoaiHanhKhach,
+                GiaLucDat = ghe.GiaLucDat,
+                MaCho = maCho,
+                TrangThai = trangThai,
+                DienHo = ghe.TaiKhoanId != taiKhoanId,
+                LaTruongNhom = laTruongNhom,
+                DuocSua = GheDuocSua(don, trangThai),
+                DuocDoiCho = GheDuocDoiCho(don),
+                CoSoDo = lich.SoDoChoNgoiId != null,
+                DaDien = !string.IsNullOrWhiteSpace(ghe.HoTen),
+                Form = form ?? new ThongTinGheForm
+                {
+                    // Chủ ghế chưa điền thì gợi ý sẵn họ tên tài khoản
+                    HoTen = ghe.HoTen ?? (ghe.TaiKhoanId == taiKhoanId ? ghe.TaiKhoan?.HoTen ?? string.Empty : string.Empty),
+                    LoaiGiayTo = ghe.LoaiGiayTo ?? (laTreNho ? "Giấy khai sinh" : "CCCD"),
+                    SoGiayTo = ghe.SoGiayTo ?? string.Empty
+                }
+            };
+        }
+
+        public IActionResult GheCuaToi(int id)
+        {
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan", new { returnUrl = Url.Action("GheCuaToi", new { id }) });
+            }
+
+            var ghe = LayGheDuocMo(id, taiKhoanId.Value, out var laTruongNhom);
+            if (ghe == null)
             {
                 return NotFound();
             }
-            TempData["Loi"] = "Trang nhận ghế qua link mời đang được làm (phần N3).";
-            return RedirectToAction("Index", "TrangChu");
+            return View(TaoTrangGhe(ghe, taiKhoanId.Value, laTruongNhom));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ThongTinGhe(int id, [Bind(Prefix = "Form")] ThongTinGheForm form)
+        {
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var ghe = LayGheDuocMo(id, taiKhoanId.Value, out var laTruongNhom);
+            if (ghe == null)
+            {
+                return NotFound();
+            }
+
+            if (!GheDuocSua(ghe.DatTour!, TinhTrangThaiGhe(ghe)))
+            {
+                TempData["Loi"] = "Ghế đã trả tiền hoặc đơn không còn giữ chỗ, không sửa thông tin được nữa.";
+                return RedirectToAction("GheCuaToi", new { id });
+            }
+            if (!ThongTinGheForm.DsLoaiGiayTo.Contains(form.LoaiGiayTo))
+            {
+                ModelState.AddModelError("Form.LoaiGiayTo", "Loại giấy tờ không hợp lệ.");
+            }
+            if (!ModelState.IsValid)
+            {
+                return View("GheCuaToi", TaoTrangGhe(ghe, taiKhoanId.Value, laTruongNhom, form));
+            }
+
+            // Ghi có điều kiện: trưởng nhóm điền hộ chỉ thành công khi ghế vẫn chưa có ai nhận
+            int soDong = _context.Database.ExecuteSqlInterpolated($@"
+                UPDATE HanhKhachDatTours SET HoTen = {form.HoTen.Trim()}, LoaiGiayTo = {form.LoaiGiayTo}, SoGiayTo = {form.SoGiayTo.Trim()}
+                WHERE Id = {id} AND NgayNha IS NULL
+                  AND (TaiKhoanId = {taiKhoanId.Value} OR (TaiKhoanId IS NULL AND {(laTruongNhom ? 1 : 0)} = 1))");
+
+            if (soDong == 0)
+            {
+                TempData["Loi"] = "Ghế vừa có thành viên nhận, thông tin chưa được lưu.";
+                return RedirectToAction("ChiTiet", new { id = ghe.DatTourId });
+            }
+
+            TempData["ThanhCong"] = "Đã lưu thông tin hành khách.";
+            return ghe.TaiKhoanId == taiKhoanId.Value
+                ? RedirectToAction("GheCuaToi", new { id })
+                : RedirectToAction("ChiTiet", new { id = ghe.DatTourId });
+        }
+
+        // Trả lại ghế khi chưa trả tiền: ghế về trống, xóa thông tin, giữ chỗ ngồi đã chọn để người sau nhận
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult TraLaiGhe(int id)
+        {
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var ghe = LayGheDuocMo(id, taiKhoanId.Value, out var laTruongNhom);
+            if (ghe == null)
+            {
+                return NotFound();
+            }
+            var don = ghe.DatTour!;
+            if (!GheDuocSua(don, TinhTrangThaiGhe(ghe)))
+            {
+                TempData["Loi"] = "Ghế đã trả tiền hoặc đơn không còn giữ chỗ, không trả lại ghế được.";
+                return RedirectToAction("GheCuaToi", new { id });
+            }
+
+            _context.Database.ExecuteSqlInterpolated($@"
+                UPDATE HanhKhachDatTours SET TaiKhoanId = NULL, HoTen = NULL, LoaiGiayTo = NULL, SoGiayTo = NULL
+                WHERE Id = {id} AND NgayNha IS NULL
+                  AND (TaiKhoanId = {taiKhoanId.Value} OR (TaiKhoanId IS NULL AND {(laTruongNhom ? 1 : 0)} = 1))");
+
+            TempData["ThanhCong"] = "Ghế đã trở về trống, người khác có thể nhận qua link mời.";
+            if (laTruongNhom)
+            {
+                return RedirectToAction("ChiTiet", new { id = don.Id });
+            }
+            return RedirectToAction("Moi", new { ma = don.MaMoi });
+        }
+
+        public IActionResult ChoNgoiGhe(int id)
+        {
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var ghe = LayGheDuocMo(id, taiKhoanId.Value, out _);
+            if (ghe == null)
+            {
+                return NotFound();
+            }
+            var don = ghe.DatTour!;
+            if (!GheDuocDoiCho(don))
+            {
+                TempData["Loi"] = "Chuyến này không chọn chỗ được nữa.";
+                return RedirectToAction("GheCuaToi", new { id });
+            }
+
+            var lich = don.LichKhoiHanhTour!;
+            var choHienTai = _context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == ghe.Id).Select(c => (int?)c.ViTriChoNgoiId).FirstOrDefault();
+            // Chỗ của chính ghế này vẫn hiện là chọn được
+            var cuaNguoiKhac = _context.ChoNgoiChuyenDis
+                .Where(c => c.LichKhoiHanhTourId == lich.Id && c.HanhKhachDatTourId != ghe.Id)
+                .Select(c => c.ViTriChoNgoiId)
+                .ToHashSet();
+
+            var model = new ChonChoNgoiViewModel
+            {
+                TenTour = lich.Tour?.TenTour ?? string.Empty,
+                NgayDi = lich.NgayKhoiHanh,
+                TenSoDo = lich.SoDoChoNgoi!.TenSoDo,
+                LaMayBay = lich.Tour?.PhuongTienInfo?.TenPhuongTien?.StartsWith("Máy bay") == true,
+                SoHang = lich.SoDoChoNgoi.SoHang,
+                SoCot = lich.SoDoChoNgoi.SoCot,
+                DsViTri = _context.ViTriChoNgois
+                    .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoi.Id)
+                    .OrderBy(v => v.Hang).ThenBy(v => v.Cot)
+                    .Select(v => new ViTriHienThi { Id = v.Id, MaViTri = v.MaViTri, Hang = v.Hang, Cot = v.Cot })
+                    .ToList(),
+                DsHanhKhach = new List<HanhKhachChonCho>
+                {
+                    new HanhKhachChonCho
+                    {
+                        ThuTu = 0,
+                        HoTen = !string.IsNullOrWhiteSpace(ghe.HoTen) ? ghe.HoTen : "Ghế của bạn",
+                        LoaiHanhKhach = ghe.LoaiHanhKhach,
+                        ViTriId = choHienTai
+                    }
+                },
+                DatTourId = ghe.Id,
+                ChoTuDongXep = false
+            };
+            foreach (var v in model.DsViTri)
+            {
+                v.DaCoNguoi = cuaNguoiKhac.Contains(v.Id);
+            }
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChoNgoiGhe(int id, List<int?> viTri)
+        {
+            var taiKhoanId = TaiKhoanDangNhap();
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var ghe = LayGheDuocMo(id, taiKhoanId.Value, out _);
+            if (ghe == null)
+            {
+                return NotFound();
+            }
+            var don = ghe.DatTour!;
+            if (!GheDuocDoiCho(don))
+            {
+                TempData["Loi"] = "Chuyến này không chọn chỗ được nữa.";
+                return RedirectToAction("GheCuaToi", new { id });
+            }
+
+            int? chon = viTri != null && viTri.Count > 0 ? viTri[0] : null;
+            // Ô để trống: giữ chỗ hiện tại. RB-18: chỗ phải thuộc sơ đồ của lịch.
+            if (chon.HasValue && _context.ViTriChoNgois.Any(v => v.Id == chon.Value && v.SoDoChoNgoiId == don.LichKhoiHanhTour!.SoDoChoNgoiId))
+            {
+                using var giaoDichCsdl = _context.Database.BeginTransaction();
+                _context.ChoNgoiChuyenDis.RemoveRange(_context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == ghe.Id));
+                _context.SaveChanges();
+                _context.ChoNgoiChuyenDis.Add(new ChoNgoiChuyenDi
+                {
+                    LichKhoiHanhTourId = don.LichKhoiHanhTourId,
+                    ViTriChoNgoiId = chon.Value,
+                    HanhKhachDatTourId = ghe.Id
+                });
+                try
+                {
+                    _context.SaveChanges();
+                    giaoDichCsdl.Commit();
+                }
+                catch (DbUpdateException)
+                {
+                    giaoDichCsdl.Rollback();
+                    TempData["Loi"] = "Chỗ bạn chọn vừa có người đặt, chỗ cũ vẫn giữ nguyên. Bạn chọn lại nhé.";
+                    return RedirectToAction("ChoNgoiGhe", new { id });
+                }
+                TempData["ThanhCong"] = "Đã lưu chỗ ngồi.";
+            }
+
+            return ghe.TaiKhoanId == taiKhoanId.Value
+                ? RedirectToAction("GheCuaToi", new { id })
+                : RedirectToAction("ChiTiet", new { id = don.Id });
         }
     }
 }

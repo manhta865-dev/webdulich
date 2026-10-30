@@ -8,6 +8,7 @@
     var dangKiemTra = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra") : 0;
     var daHuy = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đã hủy") : 0;
     var choTheoDon = ViewBag.ChoTheoDon as Dictionary<int, List<string>> ?? new Dictionary<int, List<string>>();
+    var gheNhom = ViewBag.GheNhom as List<webdulich.Models.GheNhomTrongLichSu> ?? new List<webdulich.Models.GheNhomTrongLichSu>();
 }
 
 @section Styles {
@@ -47,8 +48,59 @@
         </div>
     </div>
 
+    @if (gheNhom.Any())
+    {
+        @* Không tính vào các con số ở trên: đó là đơn của người khác, bạn chỉ giữ một ghế *@
+        <section class="ls-nhom-khu">
+            <h2>Ghế bạn nhận trong đơn nhóm</h2>
+            <div class="ls-list">
+                @foreach (var g in gheNhom)
+                {
+                    <article class="ls-card">
+                        <header class="ls-card-head">
+                            <div>
+                                <h2>@g.TenTour</h2>
+                                <span class="ls-nhom">Nhóm của @g.TenTruongNhom</span>
+                                <div class="ls-code">Mã chuyến đi: @g.MaChuyenDi</div>
+                            </div>
+                            <span class="badge-status @(g.DonDaHuy ? "status-cancelled" : g.TrangThai == "Đã trả" ? "status-paid" : g.TrangThai == "Chờ xác nhận thanh toán" ? "status-checking" : "status-unpaid")">@(g.DonDaHuy ? "Đơn đã hủy" : g.TrangThai)</span>
+                        </header>
+                        <dl class="ls-details">
+                            <div>
+                                <dt>Ngày đi</dt>
+                                <dd>@g.NgayDi.ToString("dd/MM/yyyy")</dd>
+                            </div>
+                            <div>
+                                <dt>Giờ đi</dt>
+                                <dd>@(g.GioKhoiHanh.HasValue ? g.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa cập nhật")</dd>
+                            </div>
+                            <div>
+                                <dt>Phần của bạn</dt>
+                                <dd class="ls-money">@g.GiaLucDat.ToString("N0") VNĐ</dd>
+                            </div>
+                            <div>
+                                <dt>Chỗ ngồi</dt>
+                                <dd>@(g.MaCho ?? "Chưa chọn")</dd>
+                            </div>
+                        </dl>
+                        @if (!g.DonDaHuy)
+                        {
+                            <footer class="ls-card-foot">
+                                <a asp-controller="DonNhom" asp-action="GheCuaToi" asp-route-id="@g.GheId" class="tv-btn tv-btn-chinh">Xem ghế của tôi</a>
+                            </footer>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+
     @if (Model != null && Model.Count > 0)
     {
+        if (gheNhom.Any())
+        {
+            <h2 class="ls-khu-tieu-de">Đơn bạn đặt</h2>
+        }
         <div class="ls-list">
             @foreach (var item in Model)
             {
@@ -164,7 +216,7 @@
             }
         </div>
     }
-    else
+    else if (!gheNhom.Any())
     {
         <div class="tv-empty">
             <h3>Bạn chưa có đơn đặt tour nào</h3>

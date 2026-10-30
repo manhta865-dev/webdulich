@@ -62,15 +62,23 @@ namespace webdulich.Controllers
         }
         // Dùng để mở giao diện đăng ký.
         [HttpGet]
-        public IActionResult DangKy()
+        public IActionResult DangKy(string? returnUrl)
         {
+            ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
             return View();
         }
+
+        // Trang cần quay lại sau đăng nhập (ví dụ link mời đơn nhóm). Chỉ nhận đường dẫn nội bộ
+        // để link không bị lợi dụng chuyển người dùng sang trang web khác.
+        private string? TrangQuayLai(string? returnUrl) =>
+            !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
         // Dùng khi người dùng bấm nút Đăng ký.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DangKy(TaiKhoan tk)
+        public IActionResult DangKy(TaiKhoan tk, string? returnUrl)
         {
+            ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
             // Nếu chưa nhập họ tên thì báo lỗi.
             if (string.IsNullOrWhiteSpace(tk.HoTen))
             {
@@ -130,19 +138,21 @@ namespace webdulich.Controllers
             _context.SaveChanges();
 
             TempData["ThanhCong"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
-            return RedirectToAction("DangNhap");
+            return RedirectToAction("DangNhap", new { returnUrl = TrangQuayLai(returnUrl) });
         }
         // Dùng để mở trang đăng nhập.
         [HttpGet]
-        public IActionResult DangNhap()
+        public IActionResult DangNhap(string? returnUrl)
         {
+            ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
             return View();
         }
         // Dùng khi người dùng bấm Đăng nhập.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DangNhap(string taiKhoanDangNhap, string matKhau)
+        public IActionResult DangNhap(string taiKhoanDangNhap, string matKhau, string? returnUrl)
         {
+            ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
             if (string.IsNullOrWhiteSpace(taiKhoanDangNhap))
             {
                 ModelState.AddModelError("taiKhoanDangNhap", "Vui lòng nhập email hoặc số điện thoại!");
@@ -178,6 +188,12 @@ namespace webdulich.Controllers
             if (user.VaiTro == "huongdanvien" || user.VaiTro == "taixe")
             {
                 return RedirectToAction("LichLamViec", "NhanVien");
+            }
+
+            // Khách đăng nhập từ link mời (hoặc trang khác) thì quay lại đúng trang đó
+            if (ViewBag.ReturnUrl is string quayLai)
+            {
+                return Redirect(quayLai);
             }
 
             return RedirectToAction("Index", "TrangChu");

@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Link mời không còn hiệu lực";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page dn-het-han">
+    <section class="dt-block">
+        <h1>Link mời không còn hiệu lực</h1>
+        <p>Đơn nhóm của link này không còn nhận thêm người. Thường là vì một trong các lý do sau:</p>
+        <ul>
+            <li>Trưởng nhóm đã tạo link mới, link cũ không dùng được nữa.</li>
+            <li>Đã hết thời gian giữ chỗ, hoặc trưởng nhóm đã chốt hay hủy đơn.</li>
+            <li>Link bị sao chép thiếu ký tự.</li>
+        </ul>
+        <p>Bạn nhắn trưởng nhóm gửi lại link mới nhất nhé. Nếu bạn đã nhận ghế trước đó, xem lại trong Lịch sử đặt tour.</p>
+        <div class="dt-actions">
+            <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-vien">Lịch sử đặt tour</a>
+            <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-chinh">Xem các tour khác</a>
+        </div>
+    </section>
+</div>
