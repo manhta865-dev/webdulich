@@ -300,6 +300,49 @@
 .dn-ma-tt { font-family: ui-monospace, Consolas, monospace; font-weight: 700; }
 .dn-lien-ket { margin-top: var(--tv-k4); }
 
+/* ---------- Trả tiền theo ghế (N4) ---------- */
+.dn-qr {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--tv-k3);
+    padding: var(--tv-k3);
+    background: #fff;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+}
+
+/* Ảnh mẫu compact2 của VietQR có tỉ lệ 27:32 (QR kèm logo ngân hàng) */
+.dn-qr img { display: block; width: 100%; max-width: 240px; height: auto; aspect-ratio: 27 / 32; }
+.dn-qr-huong-dan { text-align: center; }
+
+.dn-ck { display: grid; gap: var(--tv-k2); margin: var(--tv-k4) 0 0; }
+.dn-ck > div { display: flex; justify-content: space-between; gap: var(--tv-k3); }
+.dn-ck dt { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dn-ck dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+
+.dn-canh-bao {
+    margin: var(--tv-k3) 0 0;
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: #FBF1DC;
+    color: var(--tv-canh-bao);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}
+
+.dn-tra-tien form { margin-top: var(--tv-k4); }
+.dn-nut-day { width: 100%; }
+
+.dn-tra-ket-qua {
+    margin: var(--tv-k3) 0 0;
+    padding: var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    font-weight: 600;
+}
+
+.dn-tra-ket-qua.da-tra { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.dn-tra-ket-qua.cho { background: #FBF1DC; color: var(--tv-canh-bao); }
+
 .dn-het-han ul { margin: var(--tv-k3) 0; padding-left: var(--tv-k5); display: grid; gap: var(--tv-k1); }
 
 /* Cột lưới không được nở theo tên dài (chữ nowrap), nếu không trang tràn ngang trên điện thoại */

@@ -18,7 +18,10 @@
         ["ThanhCong"] = "Thành công",
         ["ThatBai"] = "Không hiệu lực"
     };
-    bool choXacNhanTien = !don.DaHuy && !don.DaThanhToan;
+    // Đơn nhóm: tiền xác nhận theo từng ghế ngay trong bảng giao dịch, không có nút xác nhận cả đơn
+    bool laNhom = don.LoaiDon == "Nhom";
+    bool choXacNhanTien = !don.DaHuy && !don.DaThanhToan && !laNhom;
+    var thuTuGhe = Model.DsGhe.Select((g, i) => new { g.Id, ThuTu = i + 1 }).ToDictionary(x => x.Id, x => x.ThuTu);
 }
 
 @section Styles {
@@ -60,7 +63,7 @@
         </div>
         <div class="ad-info-tile">
             <span>Thanh toán bằng</span>
-            <strong>@don.PhuongThucThanhToan</strong>
+            <strong>@(laNhom ? "Chuyển khoản theo từng ghế" : don.PhuongThucThanhToan)</strong>
         </div>
     </div>
 
@@ -75,21 +78,65 @@
                     <thead>
                         <tr>
                             <th>Ngày tạo</th>
+                            @if (laNhom)
+                            {
+                                <th>Ghế</th>
+                                <th>Người trả</th>
+                            }
                             <th>Phương thức</th>
                             <th>Số tiền</th>
                             <th>Trạng thái</th>
                             <th>Xác nhận lúc</th>
+                            @if (laNhom)
+                            {
+                                <th>Xử lý</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var gd in Model.DsGiaoDich)
                         {
+                            var gheGd = gd.HanhKhachDatTourId.HasValue ? Model.DsGhe.FirstOrDefault(g => g.Id == gd.HanhKhachDatTourId.Value) : null;
                             <tr>
                                 <td>@gd.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                @if (laNhom)
+                                {
+                                    <td>
+                                        @if (gheGd != null)
+                                        {
+                                            <span>Ghế @thuTuGhe[gheGd.Id]</span><br />
+                                            <small class="ad-note">@gheGd.MaThanhToan</small>
+                                        }
+                                    </td>
+                                    <td>@(gd.NguoiTra?.HoTen ?? "")@(gheGd != null && gd.NguoiTraId.HasValue && gd.NguoiTraId != gheGd.TaiKhoanId ? " (trả hộ)" : "")</td>
+                                }
                                 <td>@gd.PhuongThuc</td>
                                 <td class="ad-price">@gd.SoTien.ToString("N0") VNĐ</td>
                                 <td>@(tenTrangThaiGiaoDich.TryGetValue(gd.TrangThai, out var ten) ? ten : gd.TrangThai)</td>
                                 <td>@(gd.NgayXacNhan?.ToString("dd/MM/yyyy HH:mm") ?? "")</td>
+                                @if (laNhom)
+                                {
+                                    <td>
+                                        @if (gd.TrangThai == "ChoXacNhan")
+                                        {
+                                            <div class="ad-gd-nut">
+                                                @if (gheGd?.NgayNha == null)
+                                                {
+                                                    <form method="post" asp-action="XacNhanGiaoDichGhe" asp-route-id="@gd.Id"
+                                                          onsubmit="return confirm('Sao kê đã có @gd.SoTien.ToString("N0") VNĐ với nội dung @gheGd?.MaThanhToan?');">
+                                                        <input type="hidden" name="dongY" value="true" />
+                                                        <button type="submit" class="tv-btn tv-btn-chinh">Đã nhận</button>
+                                                    </form>
+                                                }
+                                                <form method="post" asp-action="XacNhanGiaoDichGhe" asp-route-id="@gd.Id"
+                                                      onsubmit="return confirm('Từ chối giao dịch này? Người trả sẽ phải báo chuyển khoản lại.');">
+                                                    <input type="hidden" name="dongY" value="false" />
+                                                    <button type="submit" class="tv-btn tv-btn-vien">Từ chối</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>

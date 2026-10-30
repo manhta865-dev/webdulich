@@ -84,13 +84,17 @@
                             {
                                 @* Ghế của mình, hoặc ghế không có tài khoản để điền hộ (RB-20: không mở ghế người khác) *@
                                 <a asp-action="GheCuaToi" asp-route-id="@g.Id" class="dn-ghe-mo">
-                                    @(g.LaCuaToi ? "Ghế của tôi" : g.DaCoChu ? "Sửa" : "Điền hộ")
+                                    @(g.LaCuaToi ? "Ghế của tôi" : g.TrangThai is TrangThaiGhe.DaTra or TrangThaiGhe.ChoXacNhan ? "Xem" : g.DaCoChu ? "Sửa" : "Điền hộ")
                                 </a>
+                            }
+                            else if (g.TruongNhomTraHoDuoc && conGiuCho)
+                            {
+                                <a asp-action="TraHo" asp-route-id="@g.Id" class="dn-ghe-mo">Trả hộ</a>
                             }
                         </li>
                     }
                 </ol>
-                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác. Ghế trẻ nhỏ và người không có tài khoản thì bấm "Điền hộ".</p>
+                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác. Ghế trẻ nhỏ và người không có tài khoản thì bấm "Điền hộ". Thành viên đã điền xong mà chưa chuyển được thì bạn bấm "Trả hộ".</p>
             </section>
         </div>
 

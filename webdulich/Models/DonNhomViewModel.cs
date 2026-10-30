@@ -67,6 +67,9 @@ namespace webdulich.Models
 
         // Trưởng nhóm mở được ghế của mình và ghế không có tài khoản (điền hộ trẻ nhỏ, ông bà), không mở ghế người khác (RB-20)
         public bool TruongNhomMoDuoc => TrangThai != TrangThaiGhe.DaNha && (LaCuaToi || !CoTaiKhoan);
+
+        // Ghế thành viên khác đã điền xong, chưa trả: trưởng nhóm trả hộ được qua trang riêng, không thấy giấy tờ
+        public bool TruongNhomTraHoDuoc => !TruongNhomMoDuoc && TrangThai == TrangThaiGhe.DaDien;
     }
 
     // Trang link mời. Ai có link cũng xem được nên không có tên người đã nhận ghế (quy tắc N3).
@@ -118,7 +121,61 @@ namespace webdulich.Models
         public static readonly string[] DsLoaiGiayTo = { "CCCD", "CMND", "Hộ chiếu", "Giấy khai sinh" };
     }
 
-    // Trang một ghế: thông tin, chỗ ngồi, trả lại ghế. Thanh toán thêm ở phần N4.
+    // Thông tin chuyển khoản cho một ghế: tài khoản nhận lấy từ cấu hình "ThanhToan", số tiền và nội dung riêng của ghế
+    public class ThongTinChuyenKhoan
+    {
+        public string MaNganHang { get; set; } = string.Empty;
+        public string SoTaiKhoan { get; set; } = string.Empty;
+        public string TenTaiKhoan { get; set; } = string.Empty;
+        public string? GhiChu { get; set; }
+        public decimal SoTien { get; set; }
+        public string NoiDung { get; set; } = string.Empty;
+
+        // Ảnh QR theo chuẩn VietQR: app ngân hàng quét là điền sẵn số tiền và nội dung
+        public string LinkQr =>
+            $"https://img.vietqr.io/image/{Uri.EscapeDataString(MaNganHang)}-{Uri.EscapeDataString(SoTaiKhoan)}-compact2.png"
+            + $"?amount={decimal.ToInt64(SoTien)}&addInfo={Uri.EscapeDataString(NoiDung)}&accountName={Uri.EscapeDataString(TenTaiKhoan)}";
+
+        public static ThongTinChuyenKhoan Tao(IConfiguration cauHinh, decimal soTien, string noiDung) => new ThongTinChuyenKhoan
+        {
+            MaNganHang = cauHinh["ThanhToan:MaNganHang"] ?? string.Empty,
+            SoTaiKhoan = cauHinh["ThanhToan:SoTaiKhoan"] ?? string.Empty,
+            TenTaiKhoan = cauHinh["ThanhToan:TenTaiKhoan"] ?? string.Empty,
+            GhiChu = cauHinh["ThanhToan:GhiChu"],
+            SoTien = soTien,
+            NoiDung = noiDung
+        };
+    }
+
+    // Khung trả tiền của một ghế, dùng chung cho trang "Ghế của tôi" và trang trả hộ của trưởng nhóm
+    public class TraTienGheViewModel
+    {
+        public int GheId { get; set; }
+        public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
+        public decimal GiaLucDat { get; set; }
+        public string LoaiHanhKhach { get; set; } = string.Empty;
+        public string? MaThanhToan { get; set; }
+
+        // Có QR và nút báo đã chuyển khi ghế đã điền thông tin, chưa trả, và đơn còn giữ chỗ
+        public bool DuocTra { get; set; }
+
+        // Người đang xem trả cho ghế không phải của mình (trưởng nhóm trả hộ)
+        public bool TraHo { get; set; }
+        public ThongTinChuyenKhoan? ChuyenKhoan { get; set; }
+    }
+
+    // Trang trả hộ: trưởng nhóm thấy tên, giá và QR của ghế, không thấy giấy tờ (RB-20)
+    public class TraHoViewModel
+    {
+        public int DonId { get; set; }
+        public string MaChuyenDi { get; set; } = string.Empty;
+        public string TenTour { get; set; } = string.Empty;
+        public int ThuTu { get; set; }
+        public string? TenChu { get; set; }
+        public TraTienGheViewModel TraTien { get; set; } = new TraTienGheViewModel();
+    }
+
+    // Trang một ghế: thông tin, chỗ ngồi, trả lại ghế, trả tiền
     public class GheCuaToiViewModel
     {
         public int GheId { get; set; }
@@ -144,6 +201,7 @@ namespace webdulich.Models
         public bool CoSoDo { get; set; }
         public bool DaDien { get; set; }
         public ThongTinGheForm Form { get; set; } = new ThongTinGheForm();
+        public TraTienGheViewModel TraTien { get; set; } = new TraTienGheViewModel();
     }
 
     // Ghế mình nhận trong đơn nhóm của người khác, hiện ở Lịch sử

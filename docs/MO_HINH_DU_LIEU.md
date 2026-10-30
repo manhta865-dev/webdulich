@@ -212,6 +212,10 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | Ghế của trưởng nhóm | Không bắt buộc: người đặt hộ có thể không đi |
 | Nhận ghế qua link | Xem thông tin chuyến không cần đăng nhập; nhận ghế phải đăng nhập (mỗi tài khoản tối đa một ghế trong một đơn, RB-03). Người không có tài khoản (trẻ nhỏ) do trưởng nhóm điền và trả hộ |
 | QR | Ảnh VietQR theo mã thanh toán của ghế, tài khoản ngân hàng là thông tin minh họa trong cấu hình |
+| Trả tiền một ghế (N4) | QR hiện khi ghế đã điền đủ thông tin và đơn còn giữ chỗ. Người trả bấm "Tôi đã chuyển khoản": tạo giao dịch `ChoXacNhan` gắn với ghế (`HanhKhachDatTourId`, `DatTourId` rỗng), ghi `NguoiTraId`. Sau đó thông tin ghế khóa, không trả lại ghế được |
+| Trả hộ ghế thành viên khác | Trưởng nhóm mở trang trả hộ: chỉ thấy tên, giá, QR của ghế, không thấy giấy tờ. Chỉ trả hộ được ghế đã điền xong |
+| Admin xác nhận đơn nhóm | Theo từng giao dịch của ghế: "Đã nhận" thành `ThanhCong`, "Từ chối" thành `ThatBai` (ghế về "Đã điền, chưa trả", trả lại được). Không có nút xác nhận cả đơn. Ghế đã nhả chỉ được từ chối |
+| Trạng thái thanh toán của đơn nhóm | Tính, không lưu: mọi ghế còn hiệu lực đã có giao dịch thành công thì "Đã thanh toán"; có ghế chờ xác nhận thì "Đang kiểm tra"; còn lại "Chưa thanh toán" |
 | Trang link mời | Không hiện tên người đã nhận ghế, chỉ ghi "Đã có người nhận" (ai có link cũng xem được) |
 | Ghế trẻ nhỏ | Không nhận qua link; trưởng nhóm điền hộ. Trưởng nhóm cũng điền hộ được ghế người lớn chưa ai nhận (người không có tài khoản) |
 | Trả lại ghế | Thành viên tự trả lại ghế khi chưa trả tiền: ghế về trống, xóa thông tin, giữ chỗ ngồi đã chọn |
@@ -227,3 +231,5 @@ Ràng buộc thêm (kiểm trong code):
 | RB-23 | Mã mời (`MaMoi`) đủ dài và ngẫu nhiên; thu hồi thì đổi mã, link cũ hết hiệu lực |
 | RB-24 | Nhận ghế chỉ thành công khi ghế còn trống (chưa có tài khoản, chưa có họ tên, chưa nhả), không phải ghế trẻ nhỏ và đơn còn giữ chỗ chưa quá hạn; kiểm bằng một câu UPDATE có điều kiện nên hai người không nhận trùng một ghế |
 | RB-25 | Người xem và sửa một ghế: chủ ghế (`TaiKhoanId`), hoặc trưởng nhóm khi ghế chưa có tài khoản. Trưởng nhóm không mở được ghế thành viên khác đã nhận (cụ thể hóa RB-20) |
+| RB-26 | Mỗi ghế có tối đa một giao dịch đang chờ hoặc thành công. Báo chuyển khoản là một câu INSERT có điều kiện (ghế chưa nhả, đã điền họ tên và số giấy tờ, chưa có giao dịch `ChoXacNhan`/`ThanhCong`), nên chủ ghế và trưởng nhóm cùng bấm chỉ tạo một giao dịch. Sửa thông tin và trả lại ghế cũng kiểm điều kiện này trong câu UPDATE |
+| RB-27 | Người báo chuyển khoản cho một ghế: chủ ghế, hoặc trưởng nhóm của đơn. Admin xác nhận hay từ chối bằng câu UPDATE có điều kiện `TrangThai = 'ChoXacNhan'`, nên một giao dịch chỉ được xử lý một lần |

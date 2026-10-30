@@ -1,0 +1,44 @@
+@model webdulich.Models.TraHoViewModel
+@{
+    ViewData["Title"] = "Trả hộ ghế " + Model.ThuTu;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <div class="dn-head">
+        <div>
+            <span class="dn-ma">Đơn nhóm @Model.MaChuyenDi, ghế @Model.ThuTu</span>
+            <h1>Trả hộ @(Model.TenChu ?? "ghế " + Model.ThuTu)</h1>
+            <p>@Model.TenTour. Bạn chuyển khoản phần của ghế này thay cho thành viên, rồi tự thu lại với họ.</p>
+        </div>
+    </div>
+
+    @if (TempData["Loi"] != null)
+    {
+        <div class="dn-alert loi" role="alert">@TempData["Loi"]</div>
+    }
+
+    <div class="dt-layout">
+        <div>
+            <section class="dt-block">
+                <h2>Trước khi trả hộ</h2>
+                <ul class="dn-cach">
+                    <li>Mỗi ghế có mã QR và nội dung chuyển khoản riêng. Quét đúng mã của ghế này để TravelVN ghi nhận đúng người.</li>
+                    <li>Bạn chỉ thấy tên thành viên, không thấy giấy tờ của họ.</li>
+                    <li>Sau khi bạn báo đã chuyển, thành viên không sửa được thông tin và không trả lại ghế được nữa.</li>
+                </ul>
+            </section>
+        </div>
+
+        <aside>
+            <partial name="_TraTienGhe" model="Model.TraTien" />
+            <div class="dn-lien-ket">
+                <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="tv-link">Về trang tiến độ của nhóm</a>
+            </div>
+        </aside>
+    </div>
+</div>

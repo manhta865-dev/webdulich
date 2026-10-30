@@ -735,7 +735,10 @@ namespace webdulich.Controllers
             {
                 Don = don,
                 DsGhe = _context.HanhKhachDatTours.AsNoTracking().Where(h => h.DatTourId == id).OrderBy(h => h.Id).ToList(),
-                DsGiaoDich = _context.GiaoDichThanhToans.AsNoTracking().Where(g => g.DatTourId == id).OrderBy(g => g.Id).ToList(),
+                // Đơn cá nhân: giao dịch gắn với đơn. Đơn nhóm: giao dịch gắn với từng ghế (N4).
+                DsGiaoDich = _context.GiaoDichThanhToans.AsNoTracking().Include(g => g.NguoiTra)
+                    .Where(g => g.DatTourId == id || (g.HanhKhachDatTour != null && g.HanhKhachDatTour.DatTourId == id))
+                    .OrderBy(g => g.Id).ToList(),
                 GiaNguoiLon = lich?.GiaNguoiLonHienThi ?? 0,
                 GiaTreEm = lich?.GiaTreEmHienThi ?? 0,
                 SoChoCon = lich?.SoChoCon ?? 0,
@@ -805,6 +808,12 @@ namespace webdulich.Controllers
                 TempData["error"] = don.DaHuy ? "Đơn đã hủy." : "Đơn này đã được xác nhận thanh toán.";
                 return RedirectToAction("SuaDonDatTour", new { id });
             }
+            // Đơn nhóm xác nhận theo từng ghế (XacNhanGiaoDichGhe), không xác nhận cả đơn một lần
+            if (don.LoaiDon == "Nhom")
+            {
+                TempData["error"] = "Đơn nhóm xác nhận tiền theo từng ghế trong bảng Thanh toán.";
+                return RedirectToAction("SuaDonDatTour", new { id });
+            }
 
             var bayGio = DateTime.Now;
             var nguoiXacNhan = HttpContext.Session.GetInt32("taiKhoanId");
@@ -839,6 +848,61 @@ namespace webdulich.Controllers
 
             TempData["success"] = $"Đã xác nhận nhận {don.TongTien:N0} VNĐ cho đơn {don.MaChuyenDi}.";
             return RedirectToAction("SuaDonDatTour", new { id });
+        }
+
+        // Đơn nhóm: admin đối chiếu sao kê rồi xác nhận hoặc từ chối từng giao dịch của một ghế (N4).
+        // Câu UPDATE có điều kiện "đang chờ" nên hai admin bấm cùng lúc không ghi đè nhau;
+        // chỉ mục duy nhất có lọc chặn ghế có hai giao dịch thành công (RB-05).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult XacNhanGiaoDichGhe(int id, bool dongY)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var gd = _context.GiaoDichThanhToans.AsNoTracking().Include(g => g.HanhKhachDatTour)
+                .FirstOrDefault(g => g.Id == id && g.HanhKhachDatTourId != null);
+            if (gd?.HanhKhachDatTour == null)
+            {
+                return NotFound();
+            }
+            int donId = gd.HanhKhachDatTour.DatTourId;
+
+            // Ghế đã nhả (hủy đơn, quá hạn) thì không nhận tiền vào ghế đó nữa, chỉ được từ chối
+            if (dongY && gd.HanhKhachDatTour.NgayNha.HasValue)
+            {
+                TempData["error"] = "Ghế này đã bị nhả, không xác nhận được. Hãy từ chối và hoàn tiền ngoài hệ thống.";
+                return RedirectToAction("SuaDonDatTour", new { id = donId });
+            }
+
+            int soDong;
+            try
+            {
+                soDong = _context.Database.ExecuteSqlInterpolated($@"
+                    UPDATE GiaoDichThanhToans
+                    SET TrangThai = {(dongY ? "ThanhCong" : "ThatBai")}, NgayXacNhan = {DateTime.Now}, NguoiXacNhanId = {HttpContext.Session.GetInt32("taiKhoanId")}
+                    WHERE Id = {id} AND TrangThai = 'ChoXacNhan'");
+            }
+            // Chỉ bắt lỗi trùng chỉ mục duy nhất (ghế đã có giao dịch thành công khác); lỗi khác để hiện ra
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number is 2601 or 2627)
+            {
+                TempData["error"] = "Ghế này đã có một giao dịch thành công khác. Hãy từ chối giao dịch này.";
+                return RedirectToAction("SuaDonDatTour", new { id = donId });
+            }
+
+            if (soDong == 0)
+            {
+                TempData["error"] = "Giao dịch này đã được xử lý trước đó.";
+            }
+            else
+            {
+                TempData["success"] = dongY
+                    ? $"Đã xác nhận nhận {gd.SoTien:N0} VNĐ cho ghế {gd.HanhKhachDatTour.MaThanhToan}."
+                    : $"Đã từ chối giao dịch của ghế {gd.HanhKhachDatTour.MaThanhToan}. Người trả có thể báo chuyển khoản lại.";
+            }
+            return RedirectToAction("SuaDonDatTour", new { id = donId });
         }
 
         // Admin hủy đơn: cùng cách xử lý với khách hủy (XuLyDon.HuyDon). Thay cho xóa đơn trước đây.

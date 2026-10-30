@@ -87,7 +87,7 @@
                         <div><dt>Họ tên</dt><dd>@(string.IsNullOrWhiteSpace(Model.Form.HoTen) ? "Chưa điền" : Model.Form.HoTen)</dd></div>
                         <div><dt>Giấy tờ</dt><dd>@Model.Form.LoaiGiayTo @Model.Form.SoGiayTo</dd></div>
                     </dl>
-                    <p class="dn-hint">Ghế đã trả tiền hoặc đơn không còn giữ chỗ nên không sửa được. Cần sửa thì liên hệ TravelVN.</p>
+                    <p class="dn-hint">Ghế đã báo chuyển khoản, đã trả, hoặc đơn không còn giữ chỗ nên không sửa được. Cần sửa thì liên hệ TravelVN.</p>
                 }
             </section>
 
@@ -112,12 +112,7 @@
         </div>
 
         <aside>
-            <section class="dt-block">
-                <h2>Phần phải trả</h2>
-                <div class="dt-line"><span>@Model.LoaiHanhKhach</span><span>@Model.GiaLucDat.ToString("N0") VNĐ</span></div>
-                <div class="dt-line"><span>Nội dung chuyển khoản</span><span class="dn-ma-tt">@Model.MaThanhToan</span></div>
-                <p class="dn-hint">Mã QR chuyển khoản cho riêng ghế này sẽ hiện ở đây (đang hoàn thiện). Mỗi ghế một mã, không ai phải trả cho cả nhóm.</p>
-            </section>
+            <partial name="_TraTienGhe" model="Model.TraTien" />
 
             @if (Model.DuocSua)
             {

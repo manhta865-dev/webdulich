@@ -1,0 +1,53 @@
+@model webdulich.Models.TraTienGheViewModel
+@using webdulich.Models
+@* Khung "Phần phải trả" của một ghế: QR riêng, thông tin chuyển khoản, nút báo đã chuyển (N4) *@
+
+<section class="dt-block dn-tra-tien">
+    <h2>@(Model.TraHo ? "Trả hộ ghế này" : "Phần phải trả")</h2>
+    <div class="dt-line"><span>@Model.LoaiHanhKhach</span><span>@Model.GiaLucDat.ToString("N0") VNĐ</span></div>
+
+    @if (Model.TrangThai == TrangThaiGhe.DaTra)
+    {
+        <p class="dn-tra-ket-qua da-tra">TravelVN đã nhận tiền của ghế này.</p>
+    }
+    else if (Model.TrangThai == TrangThaiGhe.ChoXacNhan)
+    {
+        <p class="dn-tra-ket-qua cho">Đã báo chuyển khoản. TravelVN đang đối chiếu sao kê, xác nhận xong ghế sẽ chuyển sang "Đã trả".</p>
+    }
+    else if (Model.DuocTra && Model.ChuyenKhoan != null)
+    {
+        var ck = Model.ChuyenKhoan;
+        <div class="dn-qr">
+            <img src="@ck.LinkQr" width="270" height="320"
+                 alt="Mã QR chuyển khoản @ck.SoTien.ToString("N0") VNĐ, nội dung @ck.NoiDung" />
+        </div>
+        <p class="dn-hint dn-qr-huong-dan">Mở app ngân hàng, chọn quét QR. Số tiền và nội dung đã điền sẵn.</p>
+
+        <dl class="dn-ck">
+            <div><dt>Mã ngân hàng</dt><dd>@ck.MaNganHang</dd></div>
+            <div><dt>Số tài khoản</dt><dd>@ck.SoTaiKhoan</dd></div>
+            <div><dt>Chủ tài khoản</dt><dd>@ck.TenTaiKhoan</dd></div>
+            <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
+            <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
+        </dl>
+        @if (!string.IsNullOrEmpty(ck.GhiChu))
+        {
+            <p class="dn-canh-bao">@ck.GhiChu</p>
+        }
+
+        <form asp-controller="DonNhom" asp-action="DaChuyenKhoan" asp-route-id="@Model.GheId" method="post"
+              onsubmit="return confirm('Bạn đã chuyển @ck.SoTien.ToString("N0") VNĐ với nội dung @ck.NoiDung?');">
+            <button type="submit" class="tv-btn tv-btn-chinh dn-nut-day">Tôi đã chuyển khoản</button>
+        </form>
+        <p class="dn-hint">Chỉ bấm sau khi chuyển xong. Sau khi bấm, thông tin hành khách không sửa được nữa.</p>
+    }
+    else
+    {
+        <div class="dt-line"><span>Nội dung chuyển khoản</span><span class="dn-ma-tt">@Model.MaThanhToan</span></div>
+        <p class="dn-hint">
+            @(Model.TrangThai == TrangThaiGhe.DaNhan || Model.TrangThai == TrangThaiGhe.ChuaNhan
+                ? "Điền thông tin hành khách trước, mã QR của ghế sẽ hiện ở đây."
+                : "Đơn không còn giữ chỗ nên không trả qua web được. Cần hỗ trợ thì liên hệ TravelVN.")
+        </p>
+    }
+</section>

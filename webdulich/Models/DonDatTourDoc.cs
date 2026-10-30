@@ -100,8 +100,17 @@ namespace webdulich.Models
                     .OrderByDescending(g => g.Id)
                     .Select(g => g.PhuongThuc)
                     .FirstOrDefault() ?? "Tiền mặt",
+                // Đơn nhóm tính theo ghế còn hiệu lực: mọi ghế đã có giao dịch thành công thì đã thanh toán,
+                // có ghế đang chờ xác nhận thì đang kiểm tra (N4)
                 TrangThaiThanhToan =
                     x.TrangThai == "DaHuy" ? TrangThaiThanhToanDon.DaHuy
+                    : x.LoaiDon == "Nhom"
+                        ? (x.HanhKhachDatTours.Any(h => h.NgayNha == null)
+                           && x.HanhKhachDatTours.All(h => h.NgayNha != null || db.GiaoDichThanhToans.Any(g => g.HanhKhachDatTourId == h.Id && g.TrangThai == "ThanhCong"))
+                            ? TrangThaiThanhToanDon.DaThanhToan
+                            : db.GiaoDichThanhToans.Any(g => g.HanhKhachDatTour != null && g.HanhKhachDatTour.DatTourId == x.Id && g.HanhKhachDatTour.NgayNha == null && g.TrangThai == "ChoXacNhan")
+                                ? TrangThaiThanhToanDon.DangKiemTra
+                                : TrangThaiThanhToanDon.ChuaThanhToan)
                     : db.GiaoDichThanhToans.Any(g => g.DatTourId == x.Id && g.TrangThai == "ThanhCong") ? TrangThaiThanhToanDon.DaThanhToan
                     : db.GiaoDichThanhToans.Any(g => g.DatTourId == x.Id && g.TrangThai == "ChoXacNhan" && g.PhuongThuc != "Tiền mặt") ? TrangThaiThanhToanDon.DangKiemTra
                     : TrangThaiThanhToanDon.ChuaThanhToan
