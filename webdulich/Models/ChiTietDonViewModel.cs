@@ -6,6 +6,9 @@ namespace webdulich.Models
         public DonDatTourDoc Don { get; set; } = new DonDatTourDoc();
         public List<HanhKhachDatTour> DsGhe { get; set; } = new List<HanhKhachDatTour>();
         public List<GiaoDichThanhToan> DsGiaoDich { get; set; } = new List<GiaoDichThanhToan>();
+
+        // Mã chỗ ngồi theo Id ghế (ghế chưa chọn chỗ thì không có trong từ điển)
+        public Dictionary<int, string> ChoTheoGhe { get; set; } = new Dictionary<int, string>();
         public decimal GiaNguoiLon { get; set; }
         public decimal GiaTreEm { get; set; }
         public int SoChoCon { get; set; }

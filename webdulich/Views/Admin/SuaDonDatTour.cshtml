@@ -148,6 +148,13 @@
                                 <span>Giấy tờ</span>
                                 <strong>@(string.IsNullOrWhiteSpace(ghe.SoGiayTo) ? "Chưa điền" : $"{ghe.LoaiGiayTo} {ghe.SoGiayTo}")</strong>
                             </div>
+                            @if (Model.ChoTheoGhe.TryGetValue(ghe.Id, out var maCho))
+                            {
+                                <div>
+                                    <span>Chỗ ngồi</span>
+                                    <strong>@maCho</strong>
+                                </div>
+                            }
                             <div>
                                 <span>Giá lúc đặt</span>
                                 <strong>@ghe.GiaLucDat.ToString("N0") VNĐ</strong>

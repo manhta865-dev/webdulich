@@ -25,6 +25,10 @@ namespace webdulich.Models
         public string PhuongTien { get; set; } = string.Empty;
         public DateTime NgayDi { get; set; }
         public TimeSpan? GioKhoiHanh { get; set; }
+        public bool CoSoDoChoNgoi { get; set; }
+
+        // Chủ đơn còn chọn hoặc đổi chỗ được: đơn chưa hủy, lịch có sơ đồ, chưa tới ngày đi
+        public bool DuocDoiCho => !DaHuy && CoSoDoChoNgoi && NgayDi.Date > DateTime.Today;
 
         public int SoNguoi { get; set; }
         public int SoNguoiLon { get; set; }
@@ -77,6 +81,7 @@ namespace webdulich.Models
                     ? x.LichKhoiHanhTour.Tour.PhuongTienInfo.TenPhuongTien : "Chưa cập nhật",
                 NgayDi = x.LichKhoiHanhTour != null ? x.LichKhoiHanhTour.NgayKhoiHanh : x.NgayDat,
                 GioKhoiHanh = x.LichKhoiHanhTour != null ? x.LichKhoiHanhTour.GioKhoiHanh : null,
+                CoSoDoChoNgoi = x.LichKhoiHanhTour != null && x.LichKhoiHanhTour.SoDoChoNgoiId != null && x.LichKhoiHanhTour.TrangThai != "DaHuy",
 
                 SoNguoi = x.HanhKhachDatTours.Count(h => x.TrangThai == "DaHuy" || h.NgayNha == null),
                 SoNguoiLon = x.HanhKhachDatTours.Count(h => (x.TrangThai == "DaHuy" || h.NgayNha == null) && h.LoaiHanhKhach != "Trẻ nhỏ"),

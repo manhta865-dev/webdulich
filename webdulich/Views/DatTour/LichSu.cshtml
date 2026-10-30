@@ -7,6 +7,7 @@
     var daThanhToan = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đã thanh toán") : 0;
     var dangKiemTra = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra") : 0;
     var daHuy = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đã hủy") : 0;
+    var choTheoDon = ViewBag.ChoTheoDon as Dictionary<int, List<string>> ?? new Dictionary<int, List<string>>();
 }
 
 @section Styles {
@@ -107,23 +108,40 @@
                             <dt>Điện thoại</dt>
                             <dd>@item.DienThoai</dd>
                         </div>
+                        @if (item.CoSoDoChoNgoi && !item.DaHuy)
+                        {
+                            <div>
+                                <dt>Chỗ ngồi</dt>
+                                <dd>@(choTheoDon.TryGetValue(item.Id, out var dsCho) && dsCho.Any() ? string.Join(", ", dsCho) : "Chưa chọn")</dd>
+                            </div>
+                        }
                     </dl>
 
-                    @if (item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
+                    @if (item.DuocDoiCho || item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
                     {
                         <footer class="ls-card-foot">
-                            <form asp-controller="DatTour"
-                                  asp-action="HuyDatTour"
-                                  asp-route-id="@item.Id"
-                                  method="post">
-                                @Html.AntiForgeryToken()
+                            @if (item.DuocDoiCho)
+                            {
+                                var daCoCho = choTheoDon.ContainsKey(item.Id);
+                                <a asp-controller="DatTour" asp-action="DoiChoNgoi" asp-route-id="@item.Id" class="tv-btn tv-btn-vien">
+                                    @(daCoCho ? "Đổi chỗ ngồi" : "Chọn chỗ ngồi")
+                                </a>
+                            }
+                            @if (item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
+                            {
+                                <form asp-controller="DatTour"
+                                      asp-action="HuyDatTour"
+                                      asp-route-id="@item.Id"
+                                      method="post">
+                                    @Html.AntiForgeryToken()
 
-                                <button type="submit"
-                                        class="tv-btn tv-btn-huy"
-                                        onclick="return confirm('Bạn có chắc muốn hủy đơn này?');">
-                                    Hủy đơn
-                                </button>
-                            </form>
+                                    <button type="submit"
+                                            class="tv-btn tv-btn-huy"
+                                            onclick="return confirm('Bạn có chắc muốn hủy đơn này?');">
+                                        Hủy đơn
+                                    </button>
+                                </form>
+                            }
                         </footer>
                     }
                 </article>

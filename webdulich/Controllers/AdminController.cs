@@ -739,7 +739,11 @@ namespace webdulich.Controllers
                 GiaNguoiLon = lich?.GiaNguoiLonHienThi ?? 0,
                 GiaTreEm = lich?.GiaTreEmHienThi ?? 0,
                 SoChoCon = lich?.SoChoCon ?? 0,
-                DuocDoiSoNguoi = lich != null && !don.DaHuy && !don.DaThanhToan && lich.ChoPhepDatTour
+                DuocDoiSoNguoi = lich != null && !don.DaHuy && !don.DaThanhToan && lich.ChoPhepDatTour,
+                ChoTheoGhe = _context.ChoNgoiChuyenDis.AsNoTracking()
+                    .Where(c => c.HanhKhachDatTour!.DatTourId == id)
+                    .Select(c => new { c.HanhKhachDatTourId, c.ViTriChoNgoi!.MaViTri })
+                    .ToDictionary(c => c.HanhKhachDatTourId, c => c.MaViTri)
             };
 
             return View(model);

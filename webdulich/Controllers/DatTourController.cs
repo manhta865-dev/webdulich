@@ -966,6 +966,163 @@ namespace webdulich.Controllers
             return View();
         }
         // Hàm này sẽ hiển thị trang xác nhận sau khi thanh toán thành công, kiểm tra quyền truy cập của người dùng, và dọn dẹp các session liên quan đến đặt tour để đảm bảo rằng dữ liệu tạm thời không còn tồn tại sau khi hoàn tất quá trình đặt tour.
+// ---------- Đổi chỗ ngồi sau khi đặt (từ Lịch sử) ----------
+        // Chủ đơn chọn hoặc đổi chỗ cho các ghế còn trong đơn, khi đơn chưa hủy, lịch có sơ đồ và chưa tới ngày đi.
+        private DatTours? LayDonDuocDoiCho(int id, out string? loi)
+        {
+            loi = null;
+            var taiKhoanId = LayTaiKhoanIdDangNhap(HttpContext.Session.GetString("user"));
+            var don = _context.DatTours
+                .Include(x => x.HanhKhachDatTours)
+                .Include(x => x.LichKhoiHanhTour).ThenInclude(l => l!.Tour).ThenInclude(t => t!.PhuongTienInfo)
+                .Include(x => x.LichKhoiHanhTour).ThenInclude(l => l!.SoDoChoNgoi)
+                .FirstOrDefault(x => x.Id == id);
+
+            if (don == null || !taiKhoanId.HasValue || don.TaiKhoanId != taiKhoanId.Value)
+            {
+                loi = "Không tìm thấy đơn của bạn.";
+            }
+            else if (don.TrangThai == "DaHuy")
+            {
+                loi = "Đơn đã hủy, không chọn chỗ được.";
+            }
+            else if (don.LichKhoiHanhTour?.SoDoChoNgoi == null)
+            {
+                loi = "Chuyến này không có sơ đồ chỗ ngồi.";
+            }
+            else if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= DateTime.Today || don.LichKhoiHanhTour.TrangThai == TrangThaiLich.DaHuy)
+            {
+                loi = "Chuyến đã tới ngày hoặc đã hủy, không đổi chỗ được nữa.";
+            }
+            return loi == null ? don : null;
+        }
+
+        public IActionResult DoiChoNgoi(int id)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("user")))
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var don = LayDonDuocDoiCho(id, out var loi);
+            if (don == null)
+            {
+                TempData["Loi"] = loi;
+                return RedirectToAction("LichSu");
+            }
+
+            var lich = don.LichKhoiHanhTour!;
+            var dsGhe = don.HanhKhachDatTours.Where(h => h.NgayNha == null).OrderBy(h => h.Id).ToList();
+            var dsGheId = dsGhe.Select(h => h.Id).ToList();
+            var choHienTai = _context.ChoNgoiChuyenDis
+                .Where(c => dsGheId.Contains(c.HanhKhachDatTourId))
+                .ToDictionary(c => c.HanhKhachDatTourId, c => c.ViTriChoNgoiId);
+            // Chỗ của chính đơn này vẫn hiện là chọn được (để đổi qua lại giữa các hành khách)
+            var cuaNguoiKhac = _context.ChoNgoiChuyenDis
+                .Where(c => c.LichKhoiHanhTourId == lich.Id && !dsGheId.Contains(c.HanhKhachDatTourId))
+                .Select(c => c.ViTriChoNgoiId)
+                .ToHashSet();
+
+            var model = new ChonChoNgoiViewModel
+            {
+                TenTour = lich.Tour?.TenTour ?? string.Empty,
+                NgayDi = lich.NgayKhoiHanh,
+                TenSoDo = lich.SoDoChoNgoi!.TenSoDo,
+                LaMayBay = lich.Tour?.PhuongTienInfo?.TenPhuongTien?.StartsWith("Máy bay") == true,
+                SoHang = lich.SoDoChoNgoi.SoHang,
+                SoCot = lich.SoDoChoNgoi.SoCot,
+                DsViTri = _context.ViTriChoNgois
+                    .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoi.Id)
+                    .OrderBy(v => v.Hang).ThenBy(v => v.Cot)
+                    .Select(v => new ViTriHienThi { Id = v.Id, MaViTri = v.MaViTri, Hang = v.Hang, Cot = v.Cot })
+                    .ToList(),
+                DsHanhKhach = dsGhe.Select((h, i) => new HanhKhachChonCho
+                {
+                    ThuTu = i,
+                    HoTen = h.HoTen ?? string.Empty,
+                    LoaiHanhKhach = h.LoaiHanhKhach,
+                    ViTriId = choHienTai.TryGetValue(h.Id, out var vt) ? vt : null
+                }).ToList(),
+                ActionLuu = "DoiChoNgoi",
+                DatTourId = don.Id,
+                ChoTuDongXep = false
+            };
+            foreach (var v in model.DsViTri)
+            {
+                v.DaCoNguoi = cuaNguoiKhac.Contains(v.Id);
+            }
+
+            ViewBag.MaChuyenDi = don.MaChuyenDi;
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DoiChoNgoi(int id, List<int?> viTri)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("user")))
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var don = LayDonDuocDoiCho(id, out var loi);
+            if (don == null)
+            {
+                TempData["Loi"] = loi;
+                return RedirectToAction("LichSu");
+            }
+
+            var lich = don.LichKhoiHanhTour!;
+            var dsGhe = don.HanhKhachDatTours.Where(h => h.NgayNha == null).OrderBy(h => h.Id).ToList();
+            var dsGheId = dsGhe.Select(h => h.Id).ToList();
+            var choCu = _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)).ToList();
+            var hopLe = _context.ViTriChoNgois.Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId).Select(v => v.Id).ToHashSet();
+
+            // Ô để trống nghĩa là giữ chỗ hiện tại; RB-18: chỗ phải thuộc sơ đồ của lịch, không trùng nhau
+            viTri ??= new List<int?>();
+            var moi = new Dictionary<int, int>();
+            var daDung = new HashSet<int>();
+            for (int i = 0; i < dsGhe.Count; i++)
+            {
+                int? chon = i < viTri.Count ? viTri[i] : null;
+                chon ??= choCu.FirstOrDefault(c => c.HanhKhachDatTourId == dsGhe[i].Id)?.ViTriChoNgoiId;
+                if (chon.HasValue && hopLe.Contains(chon.Value) && daDung.Add(chon.Value))
+                {
+                    moi[dsGhe[i].Id] = chon.Value;
+                }
+            }
+
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                // Bỏ chỗ cũ rồi ghi chỗ mới trong một giao dịch; chỗ vừa bị người khác lấy thì khóa chính chặn
+                _context.ChoNgoiChuyenDis.RemoveRange(choCu);
+                _context.SaveChanges();
+                foreach (var cap in moi)
+                {
+                    _context.ChoNgoiChuyenDis.Add(new ChoNgoiChuyenDi
+                    {
+                        LichKhoiHanhTourId = lich.Id,
+                        ViTriChoNgoiId = cap.Value,
+                        HanhKhachDatTourId = cap.Key
+                    });
+                }
+                try
+                {
+                    _context.SaveChanges();
+                    giaoDichCsdl.Commit();
+                }
+                catch (DbUpdateException)
+                {
+                    giaoDichCsdl.Rollback();
+                    TempData["Loi"] = "Có chỗ bạn chọn vừa được người khác đặt, chỗ cũ của bạn vẫn giữ nguyên. Bạn chọn lại nhé.";
+                    return RedirectToAction("DoiChoNgoi", new { id });
+                }
+            }
+
+            TempData["ThanhCong"] = $"Đã lưu chỗ ngồi cho đơn {don.MaChuyenDi}.";
+            return RedirectToAction("LichSu");
+        }
+
         public IActionResult LichSu()
         {
             var user = HttpContext.Session.GetString("user");
@@ -996,6 +1153,15 @@ namespace webdulich.Controllers
                 .OrderByDescending(x => x.NgayDi)
                 .ThenByDescending(x => x.Id)
                 .ToList();
+
+            // Mã chỗ ngồi của từng đơn (ghế chưa nhả)
+            var dsDonId = ds.Select(x => x.Id).ToList();
+            ViewBag.ChoTheoDon = _context.ChoNgoiChuyenDis
+                .Where(c => dsDonId.Contains(c.HanhKhachDatTour!.DatTourId) && c.HanhKhachDatTour.NgayNha == null)
+                .Select(c => new { c.HanhKhachDatTour!.DatTourId, c.ViTriChoNgoi!.MaViTri })
+                .AsEnumerable()
+                .GroupBy(x => x.DatTourId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.MaViTri).OrderBy(m => m.Length).ThenBy(m => m).ToList());
 
             return View(ds);
         }
