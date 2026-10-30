@@ -1,0 +1,437 @@
+/* Sơ đồ chỗ ngồi (partial _SoDoChoNgoi): vẽ khoang xe hoặc máy bay như thật, nhìn từ trên xuống,
+   đầu xe / mũi máy bay ở phía trên. Dùng token trong tokens.css. Sơ đồ lớn cuộn bên trong khung,
+   trang không cuộn ngang. */
+
+.cn-alert {
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k3) var(--tv-k4);
+    border-radius: var(--tv-bo-nut);
+    background: #FBE9E7;
+    color: var(--tv-loi);
+    font-weight: 600;
+}
+
+.cn-tom-tat {
+    margin: 0 0 var(--tv-k5);
+    color: var(--tv-chu-phu);
+    line-height: 1.6;
+}
+
+.cn-tom-tat strong { color: var(--tv-chu); }
+
+/* ---------- Màu ghế (dùng chung cho sơ đồ và chú thích) ---------- */
+.cn-wrap {
+    --ghe-trong: #E6F1F2;
+    --ghe-trong-lung: #B9D3D7;
+    --ghe-chon: var(--tv-nhan);
+    --ghe-chon-lung: var(--tv-nhan-dam);
+    --ghe-co-nguoi: #E3E6E7;
+    --ghe-co-nguoi-lung: #C9CFD1;
+    --vo-than: #C9D4D7;
+    --kinh: #BFE2EA;
+}
+
+/* ---------- Chú thích ---------- */
+.cn-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k4);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
+.cn-legend span { display: inline-flex; align-items: center; gap: var(--tv-k2); }
+
+.cn-mau {
+    display: inline-block;
+    width: 16px;
+    height: 18px;
+    border-radius: 5px 5px 3px 3px;
+    background: var(--ghe-trong);
+    box-shadow: inset 0 -5px 0 var(--ghe-trong-lung);
+}
+
+.cn-mau.chon { background: var(--ghe-chon); box-shadow: inset 0 -5px 0 var(--ghe-chon-lung); }
+.cn-mau.co-nguoi { background: var(--ghe-co-nguoi); box-shadow: inset 0 -5px 0 var(--ghe-co-nguoi-lung); }
+
+/* ---------- Bố cục: sơ đồ bên trái, danh sách hành khách bên phải ---------- */
+.cn-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--tv-k5);
+    align-items: start;
+}
+
+.cn-khung {
+    overflow-x: auto;
+    padding: var(--tv-k5) var(--tv-k4);
+    background:
+        radial-gradient(circle at 1px 1px, rgba(31, 110, 120, 0.08) 1px, transparent 0) 0 0 / 16px 16px,
+        var(--tv-nen);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+/* ---------- Thân xe / thân máy bay ---------- */
+.cn-than {
+    position: relative;
+    width: max-content;
+    margin: 0 auto;
+    padding: 0 30px 18px;
+    background: #fff;
+    border: 3px solid var(--vo-than);
+    box-shadow: 0 10px 24px rgba(16, 36, 44, 0.08);
+}
+
+.cn-than.xe { border-radius: 30px 30px 18px 18px; }
+
+/* Máy bay: thân dài, mũi tròn nhọn, đuôi thu hẹp; chừa chỗ hai bên cho cánh */
+.cn-than.may-bay {
+    margin: 0 96px;
+    border-radius: 50% 50% 46px 46px / 150px 150px 60px 60px;
+}
+
+/* Dãy cửa sổ hai bên thân */
+.cn-cua-so {
+    position: absolute;
+    top: 96px;
+    bottom: 46px;
+    width: 6px;
+    border-radius: 3px;
+    background: repeating-linear-gradient(to bottom, var(--kinh) 0 20px, transparent 20px 34px);
+}
+
+.cn-cua-so.trai { left: 10px; }
+.cn-cua-so.phai { right: 10px; }
+
+.cn-than.may-bay .cn-cua-so {
+    top: 190px;
+    width: 5px;
+    background: repeating-linear-gradient(to bottom, var(--kinh) 0 9px, transparent 9px 23px);
+}
+
+/* ---------- Đầu xe ---------- */
+.cn-dau-xe { padding-top: 12px; }
+
+.cn-kinh {
+    display: block;
+    height: 16px;
+    margin: 0 -14px 12px;
+    border-radius: 40px 40px 6px 6px;
+    background: linear-gradient(180deg, #D7EFF4, var(--kinh));
+}
+
+.cn-buong-xe {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 2px dashed var(--tv-vien);
+}
+
+.cn-tai-xe {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 52px;
+    padding: 6px 0 4px;
+    border-radius: 10px 10px 6px 6px;
+    background: var(--ghe-co-nguoi);
+    box-shadow: inset 0 -8px 0 var(--ghe-co-nguoi-lung);
+    font-size: 0.6875rem;
+    color: var(--tv-chu-phu);
+}
+
+.cn-vo-lang { width: 22px; height: 22px; color: #6E7D82; }
+
+/* Cửa lên xe: khoảng trống trên vách phải */
+.cn-cua-xe {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    margin-right: -33px;
+    border: 2px solid #E8C26B;
+    border-right: 0;
+    border-radius: 8px 0 0 8px;
+    background: #FFF8E6;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #9A6B00;
+    white-space: nowrap;
+}
+
+.cn-duoi-xe {
+    margin: 14px -14px 0;
+    padding: 6px 0;
+    border-radius: 6px 6px 14px 14px;
+    background: linear-gradient(180deg, var(--kinh), #D7EFF4);
+    text-align: center;
+    font-size: 0.6875rem;
+    color: #4E6E76;
+}
+
+/* ---------- Mũi và đuôi máy bay ---------- */
+.cn-mui {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 120px;
+}
+
+.cn-buong-lai {
+    width: 76px;
+    height: 20px;
+    margin-bottom: 22px;
+    border-radius: 40px 40px 8px 8px;
+    background: linear-gradient(180deg, #D7EFF4, var(--kinh));
+    box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--vo-than);
+}
+
+.cn-tien-ich {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k2);
+    margin-bottom: 16px;
+}
+
+.cn-tien-ich.cuoi { margin: 16px 0 0; }
+
+.cn-tien-ich span {
+    padding: 4px 8px;
+    border: 1px dashed var(--tv-vien);
+    border-radius: 6px;
+    background: var(--tv-nen);
+    font-size: 0.6875rem;
+    color: var(--tv-chu-phu);
+    white-space: nowrap;
+}
+
+.cn-duoi-mb { height: 46px; }
+
+/* Cánh: dải bên ngoài thân ở các hàng ngang cánh */
+.cn-hang.canh::before,
+.cn-hang.canh::after {
+    content: "";
+    position: absolute;
+    top: -5px;
+    bottom: -5px;
+    width: 90px;
+    background: #E4EBED;
+}
+
+.cn-hang.canh::before { right: calc(100% + 36px); }
+.cn-hang.canh::after { left: calc(100% + 36px); }
+
+/* Mép trước cánh bo tròn, mép sau vát nhẹ cho giống cánh thật */
+.cn-hang:not(.canh) + .cn-hang.canh::before { border-top-left-radius: 60px 30px; }
+.cn-hang:not(.canh) + .cn-hang.canh::after { border-top-right-radius: 60px 30px; }
+.cn-hang.canh:has(+ .cn-hang:not(.canh))::before { border-bottom-left-radius: 14px; }
+.cn-hang.canh:has(+ .cn-hang:not(.canh))::after { border-bottom-right-radius: 14px; }
+
+/* ---------- Lưới ghế ---------- */
+.cn-luoi {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cn-hang {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cn-loi-di {
+    width: 26px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #9AA8AC;
+}
+
+.cn-than.may-bay .cn-loi-di { width: 24px; }
+
+/* Hàng thoát hiểm: vạch đỏ trên vách và nhãn nhỏ */
+.cn-thoat {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: #FBE9E7;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: var(--tv-loi);
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+}
+
+.cn-thoat.trai { right: calc(100% + 8px); }
+.cn-thoat.phai { left: calc(100% + 8px); }
+
+/* ---------- Ghế: đệm ngồi phía trên, lưng tựa phía dưới (khách ngồi quay mặt về đầu xe), hai tay vịn ---------- */
+.cn-ghe {
+    --ghe: var(--ghe-trong);
+    --lung: var(--ghe-trong-lung);
+    position: relative;
+    width: 40px;
+    height: 46px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #2F4B52;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.cn-dem {
+    position: absolute;
+    inset: 0 3px;
+    border-radius: 11px 11px 7px 7px;
+    background: var(--ghe);
+    box-shadow: inset 0 -13px 0 var(--lung);
+    transition: background var(--tv-nhanh), box-shadow var(--tv-nhanh), transform var(--tv-nhanh);
+}
+
+/* Tay vịn */
+.cn-ghe::before,
+.cn-ghe::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    width: 4px;
+    height: 26px;
+    border-radius: 3px;
+    background: var(--lung);
+    transition: background var(--tv-nhanh);
+}
+
+.cn-ghe::before { left: 0; }
+.cn-ghe::after { right: 0; }
+
+.cn-ma {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    right: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cn-ghe:hover:not(:disabled) .cn-dem { transform: translateY(-2px); box-shadow: inset 0 -13px 0 var(--lung), 0 4px 8px rgba(16, 36, 44, 0.15); }
+.cn-ghe:focus-visible { outline: 2px solid var(--tv-nhan); outline-offset: 3px; border-radius: 10px; }
+
+.cn-ghe.chon { --ghe: var(--ghe-chon); --lung: var(--ghe-chon-lung); color: #fff; }
+
+.cn-ghe.co-nguoi {
+    --ghe: var(--ghe-co-nguoi);
+    --lung: var(--ghe-co-nguoi-lung);
+    color: #A3ADB0;
+    cursor: not-allowed;
+}
+
+/* Số thứ tự hành khách đang giữ chỗ này */
+.cn-ai:empty { display: none; }
+.cn-ai {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    z-index: 1;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--tv-gia);
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 14px;
+}
+
+/* ---------- Danh sách hành khách ---------- */
+.cn-hanh-khach {
+    min-width: 0;
+    position: sticky;
+    top: 88px;
+    padding: var(--tv-k5);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+}
+
+.cn-hanh-khach h2 { margin: 0 0 var(--tv-k2); font-size: var(--tv-cs-vua); font-weight: 700; }
+.cn-note { margin: 0 0 var(--tv-k4); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+.cn-ds {
+    display: grid;
+    gap: var(--tv-k2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cn-hk {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k2) var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+}
+
+.cn-hk.dang-chon { border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); }
+
+.cn-hk-chon {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    min-width: 0;
+    cursor: pointer;
+}
+
+.cn-hk-ten { display: flex; flex-direction: column; min-width: 0; }
+.cn-hk-ten strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cn-hk-ten small { color: var(--tv-chu-phu); }
+
+.cn-select {
+    flex: 0 0 88px;
+    width: 88px;
+    min-height: 40px;
+    padding: 0 var(--tv-k2);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+}
+
+.cn-actions { justify-content: flex-end; }
+
+@media (max-width: 900px) {
+    .cn-layout { grid-template-columns: 1fr; }
+    .cn-hanh-khach { position: static; }
+}
+
+@media (max-width: 576px) {
+    .cn-khung { padding: var(--tv-k4) var(--tv-k2); }
+    .cn-than { padding: 0 24px 14px; }
+    .cn-than.may-bay { margin: 0 70px; }
+    .cn-hang.canh::before, .cn-hang.canh::after { width: 64px; }
+    .cn-hang.canh::before { right: calc(100% + 30px); }
+    .cn-hang.canh::after { left: calc(100% + 30px); }
+    .cn-cua-xe { margin-right: -27px; }
+    .cn-ghe { width: 36px; height: 42px; }
+    .cn-actions .tv-btn { flex: 1 1 100%; }
+}

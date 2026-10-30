@@ -1,0 +1,35 @@
+@model webdulich.Models.ChonChoNgoiViewModel
+@{
+    ViewData["Title"] = "Chọn chỗ ngồi";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cho-ngoi.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <h1>Chọn chỗ ngồi</h1>
+
+    <partial name="_BuocDatTour" model="2" />
+
+    @if (TempData["Loi"] != null)
+    {
+        <div class="cn-alert" role="alert">@TempData["Loi"]</div>
+    }
+
+    <p class="cn-tom-tat">
+        @Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy"). Phương tiện: <strong>@Model.TenSoDo</strong>.
+        Chỗ chỉ được giữ cho bạn khi bạn bấm xác nhận ở bước thanh toán.
+    </p>
+
+    <form asp-action="ChonChoNgoi" method="post">
+        <partial name="_SoDoChoNgoi" model="Model" />
+
+        <div class="dt-actions cn-actions">
+            <a href="@ViewBag.QuayLai" class="tv-btn tv-btn-vien">Quay lại</a>
+            <button type="submit" name="tuDong" value="true" class="tv-btn tv-btn-vien" formnovalidate>Để TravelVN xếp chỗ</button>
+            <button type="submit" class="tv-btn tv-btn-chinh">Tiếp tục thanh toán</button>
+        </div>
+    </form>
+</div>

@@ -327,8 +327,12 @@ namespace webdulich.Controllers
                 HttpContext.Session.Remove("DatTour_LichKhoiHanhTourId");
             }
             XoaSessionKhuyenMai();
+            HttpContext.Session.Remove(KhoaChoNgoi);
 
-            return RedirectToAction("ThanhToan");
+            // Lịch có sơ đồ thì sang bước chọn chỗ ngồi, không có thì sang thanh toán
+            return lich?.SoDoChoNgoiId != null
+                ? RedirectToAction("ChonChoNgoi")
+                : RedirectToAction("ThanhToan");
         }
         // Hàm này sẽ xử lý yêu cầu AJAX để áp dụng mã khuyến mãi cho tour đang đặt, kiểm tra tính hợp lệ của mã khuyến mãi, tính toán số tiền giảm và tổng tiền sau khi áp dụng khuyến mãi, và trả về kết quả dưới dạng JSON để cập nhật giao diện người dùng một cách động mà không cần tải lại trang
         [HttpPost]
@@ -402,6 +406,170 @@ namespace webdulich.Controllers
                 tongTien = FormatTien(tongTienSauGiam)
             });
         }
+        // ---------- Chọn chỗ ngồi (bước 2 của luồng đặt tour) ----------
+        // Chỗ khách chọn chỉ nhớ trong Session, chưa ghi DB; chỗ thật sự thuộc về khách khi bấm
+        // "Xác nhận đặt tour" (ghi cùng giao dịch với đơn). Mỗi phần tử ứng với một hành khách theo thứ tự;
+        // null nghĩa là để TravelVN xếp.
+        private const string KhoaChoNgoi = "DatTour_ChoNgoi";
+
+        private List<int?> DocChoNgoiSession()
+        {
+            var json = HttpContext.Session.GetString(KhoaChoNgoi);
+            return string.IsNullOrEmpty(json) ? new List<int?>() : JsonSerializer.Deserialize<List<int?>>(json) ?? new List<int?>();
+        }
+
+        private void LuuChoNgoiSession(List<int?> ds) =>
+            HttpContext.Session.SetString(KhoaChoNgoi, JsonSerializer.Serialize(ds));
+
+        private List<HanhKhachDatTour> DocHanhKhachSession()
+        {
+            var json = HttpContext.Session.GetString("DatTour_HanhKhach");
+            return string.IsNullOrEmpty(json)
+                ? new List<HanhKhachDatTour>()
+                : JsonSerializer.Deserialize<List<HanhKhachDatTour>>(json) ?? new List<HanhKhachDatTour>();
+        }
+
+        // Lịch đang đặt trong Session (kèm tour, phương tiện, sơ đồ)
+        private LichKhoiHanhTour? LayLichDangDat()
+        {
+            var lichId = HttpContext.Session.GetInt32("DatTour_LichKhoiHanhTourId");
+            if (!lichId.HasValue)
+            {
+                return null;
+            }
+            return _context.LichKhoiHanhTours
+                .Include(x => x.Tour).ThenInclude(t => t!.PhuongTienInfo)
+                .Include(x => x.SoDoChoNgoi)
+                .FirstOrDefault(x => x.Id == lichId.Value);
+        }
+
+        public IActionResult ChonChoNgoi()
+        {
+            var user = HttpContext.Session.GetString("user");
+            if (string.IsNullOrEmpty(user))
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+            if (HttpContext.Session.GetString("role") == "admin")
+            {
+                return RedirectToAction("Index", "TrangChu");
+            }
+
+            var lich = LayLichDangDat();
+            if (lich == null || lich.Tour == null)
+            {
+                return RedirectToAction("Index", "TrangChu");
+            }
+            // Lịch không có sơ đồ (tour chưa có phương tiện): bỏ qua bước này
+            if (lich.SoDoChoNgoi == null)
+            {
+                return RedirectToAction("ThanhToan");
+            }
+
+            var dsHanhKhach = DocHanhKhachSession();
+            if (!dsHanhKhach.Any())
+            {
+                return RedirectToAction("DatTour", new { id = lich.TourId, lichId = lich.Id });
+            }
+
+            var daCoNguoi = _context.ChoNgoiChuyenDis
+                .Where(c => c.LichKhoiHanhTourId == lich.Id)
+                .Select(c => c.ViTriChoNgoiId)
+                .ToHashSet();
+            var chon = DocChoNgoiSession();
+
+            var model = new ChonChoNgoiViewModel
+            {
+                TenTour = lich.Tour.TenTour,
+                NgayDi = lich.NgayKhoiHanh,
+                TenSoDo = lich.SoDoChoNgoi.TenSoDo,
+                LaMayBay = lich.Tour.PhuongTienInfo?.TenPhuongTien?.StartsWith("Máy bay") == true,
+                SoHang = lich.SoDoChoNgoi.SoHang,
+                SoCot = lich.SoDoChoNgoi.SoCot,
+                DsViTri = _context.ViTriChoNgois
+                    .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoi.Id)
+                    .OrderBy(v => v.Hang).ThenBy(v => v.Cot)
+                    .Select(v => new ViTriHienThi { Id = v.Id, MaViTri = v.MaViTri, Hang = v.Hang, Cot = v.Cot })
+                    .ToList(),
+                DsHanhKhach = dsHanhKhach.Select((h, i) => new HanhKhachChonCho
+                {
+                    ThuTu = i,
+                    HoTen = h.HoTen ?? string.Empty,
+                    LoaiHanhKhach = h.LoaiHanhKhach,
+                    // Chỗ đã chọn trước đó, bỏ đi nếu vừa có người khác đặt mất
+                    ViTriId = i < chon.Count && chon[i].HasValue && !daCoNguoi.Contains(chon[i]!.Value) ? chon[i] : null
+                }).ToList()
+            };
+            foreach (var v in model.DsViTri)
+            {
+                v.DaCoNguoi = daCoNguoi.Contains(v.Id);
+            }
+
+            ViewBag.QuayLai = Url.Action("DatTour", new { id = lich.TourId, lichId = lich.Id });
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChonChoNgoi(List<int?> viTri, bool tuDong = false)
+        {
+            var user = HttpContext.Session.GetString("user");
+            if (string.IsNullOrEmpty(user))
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var lich = LayLichDangDat();
+            if (lich == null || lich.SoDoChoNgoi == null)
+            {
+                return RedirectToAction("ThanhToan");
+            }
+
+            int soHanhKhach = DocHanhKhachSession().Count;
+            if (tuDong)
+            {
+                LuuChoNgoiSession(Enumerable.Repeat<int?>(null, soHanhKhach).ToList());
+                return RedirectToAction("ThanhToan");
+            }
+
+            viTri ??= new List<int?>();
+            var chon = Enumerable.Range(0, soHanhKhach).Select(i => i < viTri.Count ? viTri[i] : null).ToList();
+
+            // RB-18: chỗ phải thuộc sơ đồ của lịch; chưa có người; không trùng giữa các hành khách
+            var maTheoId = _context.ViTriChoNgois
+                .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoi.Id)
+                .ToDictionary(v => v.Id, v => v.MaViTri);
+            var daCoNguoi = _context.ChoNgoiChuyenDis
+                .Where(c => c.LichKhoiHanhTourId == lich.Id)
+                .Select(c => c.ViTriChoNgoiId)
+                .ToHashSet();
+            var loi = new List<string>();
+            var daDung = new HashSet<int>();
+            for (int i = 0; i < chon.Count; i++)
+            {
+                if (!chon[i].HasValue) continue;
+                int id = chon[i]!.Value;
+                if (!maTheoId.ContainsKey(id) || !daDung.Add(id))
+                {
+                    chon[i] = null;
+                }
+                else if (daCoNguoi.Contains(id))
+                {
+                    loi.Add($"Chỗ {maTheoId[id]} vừa có người đặt.");
+                    chon[i] = null;
+                }
+            }
+
+            LuuChoNgoiSession(chon);
+            if (loi.Any())
+            {
+                TempData["Loi"] = string.Join(" ", loi) + " Bạn chọn chỗ khác nhé.";
+                return RedirectToAction("ChonChoNgoi");
+            }
+
+            return RedirectToAction("ThanhToan");
+        }
+
         // Hàm này sẽ hiển thị trang thanh toán cho tour đang đặt, kiểm tra quyền truy cập của người dùng, lấy thông tin tour và lịch khởi hành từ session, tính toán tổng tiền trước khi áp dụng khuyến mãi, số tiền giảm, và tổng tiền sau khi áp dụng khuyến mãi dựa trên thông tin tour, lịch khởi hành, số người lớn và trẻ nhỏ, và mã khuyến mãi nếu có. Sau đó chuẩn bị dữ liệu cần thiết để hiển thị trên giao diện người dùng.
         public IActionResult ThanhToan()
         {
@@ -438,6 +606,18 @@ namespace webdulich.Controllers
             {
                 ViewBag.LichKhoiHanh = _context.LichKhoiHanhTours
                     .FirstOrDefault(x => x.Id == lichId.Value && x.TourId == tour.Id);
+            }
+
+            // Chỗ ngồi đã chọn ở bước trước (null: TravelVN xếp khi xác nhận)
+            if ((ViewBag.LichKhoiHanh as LichKhoiHanhTour)?.SoDoChoNgoiId != null)
+            {
+                var chonTT = DocChoNgoiSession();
+                var idsTT = chonTT.Where(x => x.HasValue).Select(x => x!.Value).ToList();
+                var maTT = _context.ViTriChoNgois.Where(v => idsTT.Contains(v.Id)).ToDictionary(v => v.Id, v => v.MaViTri);
+                int soHk = DocHanhKhachSession().Count;
+                ViewBag.DsMaCho = Enumerable.Range(0, soHk)
+                    .Select(i => i < chonTT.Count && chonTT[i].HasValue && maTT.ContainsKey(chonTT[i]!.Value) ? maTT[chonTT[i]!.Value] : "TravelVN xếp")
+                    .ToList();
             }
             // Chuẩn bị dữ liệu cần thiết để hiển thị trên giao diện người dùng, bao gồm thông tin tour, lịch khởi hành, thông tin khách hàng, số người, ngày đi, mã chuyến đi, tổng tiền trước khi giảm, số tiền giảm, và tổng tiền sau khi giảm. Thông tin khách hàng và số người được lấy từ session để đảm bảo tính nhất quán với bước đặt tour trước đó. Mã chuyến đi được tạo mới nếu chưa có trong session để đảm bảo rằng mỗi đơn đặt tour có một mã chuyến đi duy nhất.
             ViewBag.Tour = tour;
@@ -667,6 +847,55 @@ namespace webdulich.Controllers
                 _context.DatTours.Add(model);
                 _context.SaveChanges();
 
+                if (lich.SoDoChoNgoiId.HasValue)
+                {
+                    var chon = DocChoNgoiSession();
+                    var dsGhe = model.HanhKhachDatTours.ToList(); // cùng thứ tự với danh sách hành khách
+                    var chonTay = chon.Where(x => x.HasValue).Select(x => x!.Value).ToList();
+                    // RB-18: chỉ nhận chỗ thuộc sơ đồ của lịch
+                    var hopLe = _context.ViTriChoNgois
+                        .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId.Value && chonTay.Contains(v.Id))
+                        .Select(v => v.Id)
+                        .ToHashSet();
+                    var conTrong = XepChoNgoi.ViTriTrong(_context, lich.Id, lich.SoDoChoNgoiId.Value, chonTay);
+                    int k = 0;
+                    for (int i = 0; i < dsGhe.Count; i++)
+                    {
+                        int? viTri = i < chon.Count && chon[i].HasValue && hopLe.Contains(chon[i]!.Value) ? chon[i] : null;
+                        if (!viTri.HasValue && k < conTrong.Count)
+                        {
+                            viTri = conTrong[k++]; // TravelVN xếp: chỗ trống đầu tiên theo hàng
+                        }
+                        if (viTri.HasValue)
+                        {
+                            _context.ChoNgoiChuyenDis.Add(new ChoNgoiChuyenDi
+                            {
+                                LichKhoiHanhTourId = lich.Id,
+                                ViTriChoNgoiId = viTri.Value,
+                                HanhKhachDatTourId = dsGhe[i].Id
+                            });
+                        }
+                    }
+
+                    try
+                    {
+                        _context.SaveChanges();
+                    }
+                    catch (DbUpdateException)
+                    {
+                        // Khóa chính (lịch, vị trí) chặn: có người vừa lấy một chỗ. Hủy cả đơn vừa tạo,
+                        // bỏ các chỗ đã bị lấy khỏi lựa chọn rồi cho khách chọn lại.
+                        giaoDichCsdl.Rollback();
+                        var daCoNguoi = _context.ChoNgoiChuyenDis.AsNoTracking()
+                            .Where(c => c.LichKhoiHanhTourId == lich.Id)
+                            .Select(c => c.ViTriChoNgoiId)
+                            .ToHashSet();
+                        LuuChoNgoiSession(chon.Select(x => x.HasValue && daCoNguoi.Contains(x.Value) ? null : x).ToList());
+                        TempData["Loi"] = "Có chỗ bạn chọn vừa được người khác đặt. Bạn chọn lại chỗ khác nhé.";
+                        return RedirectToAction("ChonChoNgoi");
+                    }
+                }
+
                 // Ghi một giao dịch chờ admin xác nhận (kể cả tiền mặt, để biết khách chọn cách trả nào).
                 // Tiền mặt chờ xác nhận hiển thị là "Chưa thanh toán", chuyển khoản hoặc ví là "Đang kiểm tra".
                 if (tongTien > 0)
@@ -699,7 +928,17 @@ namespace webdulich.Controllers
             HttpContext.Session.Remove("DatTour_NgayDi");
             HttpContext.Session.Remove("DatTour_HanhKhach");
             HttpContext.Session.Remove("MaChuyenDi");
+            HttpContext.Session.Remove(KhoaChoNgoi);
             XoaSessionKhuyenMai();
+
+            var maChoDaGhi = _context.ChoNgoiChuyenDis
+                .Where(c => c.HanhKhachDatTour!.DatTourId == model.Id)
+                .Select(c => c.ViTriChoNgoi!.MaViTri)
+                .ToList();
+            if (maChoDaGhi.Any())
+            {
+                TempData["DsCho"] = string.Join(", ", maChoDaGhi.OrderBy(x => x.Length).ThenBy(x => x));
+            }
 
             TempData["PhuongThucThanhToan"] = phuongThucThanhToan;
             TempData["TenTour"] = tour.TenTour;

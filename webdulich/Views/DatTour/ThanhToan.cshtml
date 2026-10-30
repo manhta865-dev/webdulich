@@ -33,7 +33,7 @@
 <div class="dt-page">
     <h1>Thanh toán</h1>
 
-    <partial name="_BuocDatTour" model="2" />
+    <partial name="_BuocDatTour" model="3" />
 
     <div class="dt-layout">
         <div>
@@ -182,6 +182,13 @@
                 <div class="dt-line"><span>Trẻ nhỏ</span><span>@soTreNho</span></div>
                 <div class="dt-line"><span>Tổng số người</span><span>@soNguoi</span></div>
                 <div class="dt-line"><span>Mã chuyến đi</span><span>@ViewBag.MaChuyenDi</span></div>
+                @if (ViewBag.DsMaCho is List<string> dsMaCho && dsMaCho.Any())
+                {
+                    <div class="dt-line">
+                        <span>Chỗ ngồi</span>
+                        <span>@string.Join(", ", dsMaCho) <a asp-action="ChonChoNgoi" class="tv-link">Đổi</a></span>
+                    </div>
+                }
                 <div class="dt-line"><span>Tạm tính</span><span id="subtotalText">@tongTienTruocGiam.ToString("N0") VNĐ</span></div>
                 <div class="dt-line summary-line-discount"><span>Giảm giá</span><span id="discountText">-@soTienGiam.ToString("N0") VNĐ</span></div>
                 <div class="dt-line"><span>Mã khuyến mãi</span><span id="promoCodeSummary">@(string.IsNullOrWhiteSpace(maKhuyenMai) ? "Chưa áp dụng" : maKhuyenMai)</span></div>

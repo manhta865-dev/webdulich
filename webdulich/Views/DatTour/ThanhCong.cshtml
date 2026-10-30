@@ -7,7 +7,7 @@
 }
 
 <div class="dt-page">
-    <partial name="_BuocDatTour" model="3" />
+    <partial name="_BuocDatTour" model="4" />
 
     <div class="dt-success">
         <div class="dt-success-icon" aria-hidden="true">
@@ -19,6 +19,13 @@
         <p>
             Bạn đã đặt tour <strong>@TempData["TenTour"]</strong>.
         </p>
+
+        @if (TempData["DsCho"] != null)
+        {
+            <p>
+                Chỗ ngồi: <strong>@TempData["DsCho"]</strong>
+            </p>
+        }
 
         @if (TempData["MaChuyenDi"] != null)
         {

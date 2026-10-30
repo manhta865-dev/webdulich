@@ -1,0 +1,205 @@
+@* Sơ đồ chỗ ngồi dùng chung (chọn chỗ khi đặt tour, đổi chỗ sau khi đặt).
+   Mỗi hành khách có một ô chọn (select) để dùng được cả khi không có JavaScript;
+   bấm vào sơ đồ chỉ là cách chọn nhanh, đồng bộ vào đúng ô chọn đó. *@
+@model webdulich.Models.ChonChoNgoiViewModel
+@{
+    var theoViTri = Model.DsViTri.ToDictionary(v => (v.Hang, v.Cot));
+    var chuDau = Model.LaMayBay ? "Mũi máy bay" : "Đầu xe";
+}
+
+<div class="cn-wrap" data-so-do>
+    <div class="cn-legend" aria-hidden="true">
+        <span><i class="cn-mau trong"></i>Trống</span>
+        <span><i class="cn-mau chon"></i>Bạn chọn</span>
+        <span><i class="cn-mau co-nguoi"></i>Đã có người</span>
+    </div>
+
+    <div class="cn-layout">
+        <div class="cn-khung" role="group" aria-label="Sơ đồ @Model.TenSoDo, phía trên là @chuDau.ToLower()">
+            <div class="cn-than @(Model.LaMayBay ? "may-bay" : "xe")">
+                <span class="cn-cua-so trai" aria-hidden="true"></span>
+                <span class="cn-cua-so phai" aria-hidden="true"></span>
+
+                @if (Model.LaMayBay)
+                {
+                    @* Mũi máy bay với buồng lái, khu bếp ở đầu khoang *@
+                    <div class="cn-mui" aria-hidden="true">
+                        <span class="cn-buong-lai"></span>
+                    </div>
+                    <div class="cn-tien-ich" aria-hidden="true">
+                        <span>Bếp</span>
+                        <span>Cửa lên máy bay</span>
+                        <span>WC</span>
+                    </div>
+                }
+                else
+                {
+                    @* Đầu xe: kính chắn gió, ghế tài xế có vô lăng, cửa lên xe bên phải *@
+                    <div class="cn-dau-xe" aria-hidden="true">
+                        <span class="cn-kinh"></span>
+                        <div class="cn-buong-xe">
+                            <span class="cn-tai-xe">
+                                <svg viewBox="0 0 24 24" class="cn-vo-lang">
+                                    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" />
+                                    <circle cx="12" cy="12" r="2.2" fill="currentColor" />
+                                    <path d="M12 14.2v6.6M9.9 11.3 3.4 9.6M14.1 11.3l6.5-1.7" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                                Tài xế
+                            </span>
+                            <span class="cn-cua-xe">Cửa lên xe</span>
+                        </div>
+                    </div>
+                }
+
+                <div class="cn-luoi">
+                    @for (int hang = 1; hang <= Model.SoHang; hang++)
+                    {
+                        bool hangThoat = Model.LaMayBay && (hang == 12 || hang == 13);
+                        bool hangCanh = Model.LaMayBay && hang >= 11 && hang <= 17;
+                        <div class="cn-hang@(hangThoat ? " thoat" : "")@(hangCanh ? " canh" : "")">
+                            @if (hangThoat)
+                            {
+                                <span class="cn-thoat trai" aria-hidden="true">Thoát hiểm</span>
+                            }
+                            @for (int cot = 1; cot <= Model.SoCot; cot++)
+                            {
+                                if (theoViTri.TryGetValue((hang, cot), out var v))
+                                {
+                                    <button type="button"
+                                            class="cn-ghe@(v.DaCoNguoi ? " co-nguoi" : "")"
+                                            data-id="@v.Id"
+                                            data-ma="@v.MaViTri"
+                                            title="Chỗ @v.MaViTri"
+                                            aria-label="Chỗ @v.MaViTri@(v.DaCoNguoi ? ", đã có người" : "")"
+                                            disabled="@(v.DaCoNguoi ? "disabled" : null)">
+                                        <span class="cn-dem"></span>
+                                        <span class="cn-ma">@v.MaViTri</span>
+                                        <span class="cn-ai" aria-hidden="true"></span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    @* Lối đi: hiện số hàng như biển số trên khoang *@
+                                    <span class="cn-loi-di" aria-hidden="true">@hang</span>
+                                }
+                            }
+                            @if (hangThoat)
+                            {
+                                <span class="cn-thoat phai" aria-hidden="true">Thoát hiểm</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (Model.LaMayBay)
+                {
+                    <div class="cn-tien-ich cuoi" aria-hidden="true"><span>WC</span><span>Bếp</span><span>WC</span></div>
+                    <div class="cn-duoi-mb" aria-hidden="true"></div>
+                }
+                else
+                {
+                    <div class="cn-duoi-xe" aria-hidden="true">Đuôi xe</div>
+                }
+            </div>
+        </div>
+
+        <div class="cn-hanh-khach">
+            <h2>Chỗ của từng hành khách</h2>
+            <p class="cn-note">Chọn một hành khách rồi bấm vào chỗ trống trên sơ đồ, hoặc chọn trong danh sách.</p>
+
+            <ol class="cn-ds">
+                @foreach (var hk in Model.DsHanhKhach)
+                {
+                    <li class="cn-hk" data-thu-tu="@hk.ThuTu">
+                        <label class="cn-hk-chon">
+                            <input type="radio" name="cnDangChon" value="@hk.ThuTu" @(hk.ThuTu == 0 ? "checked" : "") />
+                            <span class="cn-hk-ten">
+                                <strong>@(string.IsNullOrWhiteSpace(hk.HoTen) ? $"Hành khách {hk.ThuTu + 1}" : hk.HoTen)</strong>
+                                <small>@hk.LoaiHanhKhach</small>
+                            </span>
+                        </label>
+                        <select name="viTri[@hk.ThuTu]" class="cn-select" aria-label="Chỗ của hành khách @(hk.ThuTu + 1)">
+                            <option value="">@(Model.ChoTuDongXep ? "TravelVN xếp" : "Giữ chỗ hiện tại")</option>
+                            @foreach (var v in Model.DsViTri.Where(x => !x.DaCoNguoi))
+                            {
+                                <option value="@v.Id" selected="@(hk.ViTriId == v.Id ? "selected" : null)">@v.MaViTri</option>
+                            }
+                        </select>
+                    </li>
+                }
+            </ol>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var goc = document.querySelector("[data-so-do]");
+        if (!goc) return;
+        var gheBtns = goc.querySelectorAll(".cn-ghe:not(.co-nguoi)");
+        var dsHk = goc.querySelectorAll(".cn-hk");
+
+        function dangChon() {
+            var r = goc.querySelector("input[name=cnDangChon]:checked");
+            return r ? parseInt(r.value, 10) : 0;
+        }
+
+        // Vẽ lại sơ đồ theo các ô chọn: chỗ của hành khách nào thì hiện số thứ tự người đó
+        function veLai() {
+            var theoId = {};
+            dsHk.forEach(function (li) {
+                var sel = li.querySelector("select");
+                if (sel.value) theoId[sel.value] = parseInt(li.dataset.thuTu, 10) + 1;
+                li.classList.toggle("dang-chon", parseInt(li.dataset.thuTu, 10) === dangChon());
+            });
+            gheBtns.forEach(function (b) {
+                var so = theoId[b.dataset.id];
+                b.classList.toggle("chon", !!so);
+                b.setAttribute("aria-pressed", so ? "true" : "false");
+                b.querySelector(".cn-ai").textContent = so ? so : "";
+            });
+        }
+
+        gheBtns.forEach(function (b) {
+            b.addEventListener("click", function () {
+                var i = dangChon();
+                // Chỗ đang thuộc hành khách khác trong đơn thì bỏ khỏi người đó
+                dsHk.forEach(function (li) {
+                    var sel = li.querySelector("select");
+                    if (sel.value === b.dataset.id) sel.value = "";
+                });
+                goc.querySelector('.cn-hk[data-thu-tu="' + i + '"] select').value = b.dataset.id;
+                // Chuyển sang hành khách kế tiếp chưa có chỗ
+                for (var k = 1; k <= dsHk.length; k++) {
+                    var j = (i + k) % dsHk.length;
+                    if (!dsHk[j].querySelector("select").value) {
+                        dsHk[j].querySelector("input[type=radio]").checked = true;
+                        break;
+                    }
+                }
+                veLai();
+            });
+        });
+
+        dsHk.forEach(function (li) {
+            li.querySelector("input[type=radio]").addEventListener("change", veLai);
+            li.querySelector("select").addEventListener("change", function () {
+                // Không để hai hành khách cùng một chỗ
+                var sel = this;
+                dsHk.forEach(function (khac) {
+                    var s2 = khac.querySelector("select");
+                    if (s2 !== sel && sel.value && s2.value === sel.value) s2.value = "";
+                });
+                veLai();
+            });
+        });
+
+        veLai();
+
+        // Màn hình hẹp: sơ đồ rộng hơn khung thì cuộn sẵn vào giữa thân xe / máy bay
+        var khung = goc.querySelector(".cn-khung");
+        if (khung && khung.scrollWidth > khung.clientWidth) {
+            khung.scrollLeft = (khung.scrollWidth - khung.clientWidth) / 2;
+        }
+    })();
+</script>

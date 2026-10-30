@@ -142,7 +142,7 @@
                 </section>
 
                 <div class="dt-actions">
-                    <button type="submit" class="tv-btn tv-btn-chinh">Tiếp tục thanh toán</button>
+                    <button type="submit" class="tv-btn tv-btn-chinh">@(lichKhoiHanh?.SoDoChoNgoiId != null ? "Tiếp tục chọn chỗ ngồi" : "Tiếp tục thanh toán")</button>
                     <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Quay lại</a>
                 </div>
             </form>

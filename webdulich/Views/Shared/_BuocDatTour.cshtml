@@ -1,4 +1,4 @@
-@* Thanh ba bước của luồng đặt tour. Model: số bước hiện tại (1, 2 hoặc 3). *@
+@* Thanh bốn bước của luồng đặt tour. Model: số bước hiện tại (1 đến 4). *@
 @model int
 @{
     string TrangThai(int buoc) => Model == buoc ? "active" : (Model > buoc ? "done" : "");
@@ -11,10 +11,14 @@
     </li>
     <li class="@TrangThai(2)" aria-current="@(Model == 2 ? "step" : null)">
         <span class="dt-step-no">2</span>
-        <span class="dt-step-text">Thanh toán</span>
+        <span class="dt-step-text">Chọn chỗ ngồi</span>
     </li>
     <li class="@TrangThai(3)" aria-current="@(Model == 3 ? "step" : null)">
         <span class="dt-step-no">3</span>
+        <span class="dt-step-text">Thanh toán</span>
+    </li>
+    <li class="@TrangThai(4)" aria-current="@(Model == 4 ? "step" : null)">
+        <span class="dt-step-no">4</span>
         <span class="dt-step-text">Hoàn tất</span>
     </li>
 </ol>
