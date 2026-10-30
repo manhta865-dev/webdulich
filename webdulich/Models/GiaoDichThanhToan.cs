@@ -15,6 +15,9 @@ namespace webdulich.Models
 
         public int? NguoiXacNhanId { get; set; }
 
+        // Ai đã trả (chủ ghế, hoặc trưởng nhóm trả hộ); rỗng với giao dịch cũ hoặc tiền mặt tại quầy
+        public int? NguoiTraId { get; set; }
+
         public decimal SoTien { get; set; }
 
         public string PhuongThuc { get; set; } = string.Empty;
@@ -36,5 +39,8 @@ namespace webdulich.Models
 
         [ForeignKey("NguoiXacNhanId")]
         public TaiKhoan? NguoiXacNhan { get; set; }
+
+        [ForeignKey("NguoiTraId")]
+        public TaiKhoan? NguoiTra { get; set; }
     }
 }

@@ -243,6 +243,10 @@ namespace webdulich.Models
                     .WithMany()
                     .HasForeignKey(x => x.NguoiXacNhanId)
                     .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiTra)
+                    .WithMany()
+                    .HasForeignKey(x => x.NguoiTraId)
+                    .OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(x => x.MaThamChieuNganHang).IsUnique();
                 // Mỗi đơn hoặc ghế tối đa một giao dịch thành công
                 e.HasIndex(x => x.DatTourId).IsUnique().HasFilter("[TrangThai] = 'ThanhCong' AND [DatTourId] IS NOT NULL");

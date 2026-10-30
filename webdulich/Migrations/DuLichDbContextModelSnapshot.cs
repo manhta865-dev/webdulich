@@ -270,6 +270,9 @@ namespace webdulich.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("DaGiaHan")
+                        .HasColumnType("bit");
+
                     b.Property<string>("DiaChi")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -414,6 +417,9 @@ namespace webdulich.Migrations
                     b.Property<DateTime?>("NgayXacNhan")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("NguoiTraId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("NguoiXacNhanId")
                         .HasColumnType("int");
 
@@ -444,6 +450,8 @@ namespace webdulich.Migrations
                     b.HasIndex("MaThamChieuNganHang")
                         .IsUnique()
                         .HasFilter("[MaThamChieuNganHang] IS NOT NULL");
+
+                    b.HasIndex("NguoiTraId");
 
                     b.HasIndex("NguoiXacNhanId");
 
@@ -1142,6 +1150,11 @@ namespace webdulich.Migrations
                         .HasForeignKey("HanhKhachDatTourId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("webdulich.Models.TaiKhoan", "NguoiTra")
+                        .WithMany()
+                        .HasForeignKey("NguoiTraId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("webdulich.Models.TaiKhoan", "NguoiXacNhan")
                         .WithMany()
                         .HasForeignKey("NguoiXacNhanId")
@@ -1150,6 +1163,8 @@ namespace webdulich.Migrations
                     b.Navigation("DatTour");
 
                     b.Navigation("HanhKhachDatTour");
+
+                    b.Navigation("NguoiTra");
 
                     b.Navigation("NguoiXacNhan");
                 });

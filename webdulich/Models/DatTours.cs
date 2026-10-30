@@ -51,6 +51,9 @@ namespace webdulich.Models
 
         public DateTime? HanGiuCho { get; set; }
 
+        // Đơn nhóm đã được gia hạn một lần khi hết hạn giữ chỗ (nhắc rồi mới nhả)
+        public bool DaGiaHan { get; set; }
+
         public DateTime NgayDat { get; set; } = DateTime.Now;
 
         public int? TaiKhoanId { get; set; }

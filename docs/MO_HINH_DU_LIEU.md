@@ -32,7 +32,8 @@ Ký hiệu: PK khóa chính, FK khóa ngoại, UQ duy nhất (với cột cho ph
 | LoaiDon | string | `CaNhan` hoặc `Nhom` |
 | TrangThai | string | Xem mục 4 |
 | MaMoi | string? UQ | Mã link mời của đơn nhóm |
-| HanGiuCho | datetime? | Hạn giữ chỗ (đề xuất 24 giờ, là tham số cấu hình) |
+| HanGiuCho | datetime? | Hạn giữ chỗ của đơn nhóm (24 giờ, tham số cấu hình) |
+| DaGiaHan | bit | Đơn nhóm đã được gia hạn một lần khi hết hạn (nhắc rồi mới nhả); thêm ở Mo9 |
 | NgayDat | datetime | |
 | TenKhach, DienThoai, Email, DiaChi, GhiChu? | string | Thông tin liên hệ do người đặt nhập độc lập, không suy ra từ `TaiKhoans` |
 | SoTienGiam | decimal | Snapshot số tiền giảm lúc đặt |
@@ -61,6 +62,7 @@ Bỏ: `TourId`, `NgayDi`, `MaKhuyenMai`, `TongTien`, `TongTienTruocGiam`, `SoNgu
 | DatTourId | int? FK → DatTours | Restrict |
 | HanhKhachDatTourId | int? FK → HanhKhachDatTours | Restrict |
 | NguoiXacNhanId | int? FK → TaiKhoans | Restrict |
+| NguoiTraId | int? FK → TaiKhoans | Restrict. Ai đã trả: chủ ghế, hoặc trưởng nhóm trả hộ (thêm ở Mo9) |
 | SoTien | decimal | |
 | PhuongThuc | string | |
 | TrangThai | string | `ChoXacNhan`, `ThanhCong`, `ThatBai` |
@@ -197,6 +199,24 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 - `SoLuotDaDung` của khuyến mãi khớp số đơn thực tế.
 - `Tours`: 10 tour dùng `Xe du lịch`, 2 tour dùng `Máy bay`.
 
-## 9. Việc chưa chốt
+## 9. Quyết định cho đơn nhóm (chốt ngày 30/10/2026, cần báo giáo viên)
 
-Xem danh sách câu hỏi trong phản hồi kế hoạch; sau khi chốt sẽ cập nhật bảng ở mục 4 và 6.
+| Nội dung | Quyết định |
+|---|---|
+| Hạn giữ chỗ | 24 giờ, tham số trong `appsettings.json` |
+| Nhắc trước khi nhả | Hết hạn thì gia hạn thêm 6 giờ một lần (`DaGiaHan`) và nhắc trong web; hết 6 giờ mới nhả ghế chưa trả. Chưa gửi email, SMS |
+| Ghế đang chờ admin xác nhận khi hết hạn | Không nhả, giữ đến khi admin xác nhận hoặc từ chối |
+| Luật chốt (F9) | Hết hạn: nhả ghế chưa trả, chốt đơn với ghế đã trả; không ai trả thì hủy đơn. Trưởng nhóm được chốt sớm |
+| Trả hộ | Trưởng nhóm trả thay cho ghế bất kỳ trong đơn (`GiaoDichThanhToan.NguoiTraId`); mặc định ai trả phần người đó |
+| Chọn chỗ cho nhóm | Trưởng nhóm chọn sẵn chỗ cho các ghế lúc tạo đơn; thành viên đổi được khi nhận ghế |
+| Ghế của trưởng nhóm | Không bắt buộc: người đặt hộ có thể không đi |
+| Nhận ghế qua link | Xem thông tin chuyến không cần đăng nhập; nhận ghế phải đăng nhập (mỗi tài khoản tối đa một ghế trong một đơn, RB-03). Người không có tài khoản (trẻ nhỏ) do trưởng nhóm điền và trả hộ |
+| QR | Ảnh VietQR theo mã thanh toán của ghế, tài khoản ngân hàng là thông tin minh họa trong cấu hình |
+
+Ràng buộc thêm (kiểm trong code):
+
+| Mã | Ràng buộc |
+|---|---|
+| RB-21 | Chỉ trưởng nhóm (người tạo đơn) được thu hồi link, trả hộ, chốt sớm, hủy đơn nhóm |
+| RB-22 | Ghế đã có giao dịch thành công thì không bị nhả khi hết hạn |
+| RB-23 | Mã mời (`MaMoi`) đủ dài và ngẫu nhiên; thu hồi thì đổi mã, link cũ hết hiệu lực |
