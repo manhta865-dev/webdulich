@@ -16,6 +16,9 @@ namespace webdulich.Models
         public string ActionLuu { get; set; } = "ChonChoNgoi";
         public int? DatTourId { get; set; }
         public bool ChoTuDongXep { get; set; } = true;
+
+        // Chữ của lựa chọn "không chọn chỗ" trong ô danh sách (mặc định theo ChoTuDongXep)
+        public string? NhanKhongChon { get; set; }
     }
 
     public class ViTriHienThi

@@ -112,6 +112,44 @@ namespace webdulich.Models
     // Các thao tác ghi dùng chung cho một đơn (khách hủy ở Lịch sử, admin hủy ở trang đơn)
     public static class XuLyDon
     {
+        // Mã chuyến đi dạng TV-XXXXXX: ngắn để làm nội dung chuyển khoản, bỏ các ký tự dễ nhầm (0, O, 1, I),
+        // kiểm tra chưa có đơn nào dùng (lỗi 2).
+        private const string KyTuMa = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+        public static string TaoMaChuyenDi(DuLichDbContext db)
+        {
+            for (int lan = 0; lan < 20; lan++)
+            {
+                var ma = "TV-" + new string(Enumerable.Range(0, 6)
+                    .Select(_ => KyTuMa[System.Security.Cryptography.RandomNumberGenerator.GetInt32(KyTuMa.Length)])
+                    .ToArray());
+                if (!db.DatTours.Any(x => x.MaChuyenDi == ma))
+                {
+                    return ma;
+                }
+            }
+            throw new InvalidOperationException("Không tạo được mã chuyến đi chưa dùng.");
+        }
+
+        // Mã mời của đơn nhóm: 24 ký tự ngẫu nhiên an toàn cho URL, khó đoán (RB-23)
+        public static string TaoMaMoi(DuLichDbContext db)
+        {
+            for (int lan = 0; lan < 20; lan++)
+            {
+                var ma = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(18))
+                    .Replace('+', '-').Replace('/', '_');
+                if (!db.DatTours.Any(x => x.MaMoi == ma))
+                {
+                    return ma;
+                }
+            }
+            throw new InvalidOperationException("Không tạo được mã mời chưa dùng.");
+        }
+
+        // Giá lúc đặt của một ghế theo loại hành khách
+        public static decimal GiaGhe(string? loaiHanhKhach, decimal giaNguoiLon, decimal giaTreEm) =>
+            loaiHanhKhach == "Trẻ nhỏ" ? giaTreEm : giaNguoiLon;
+
         // Hủy đơn: nhả mọi ghế chưa nhả, bỏ chỗ ngồi đã chọn, giao dịch còn chờ thành ThatBai,
         // trả đúng số ghế cho lịch, tất cả trong một giao dịch CSDL (RB-16, RB-17).
         // Giao dịch đã thành công giữ nguyên (tiền đã nhận, hoàn tiền xử lý ngoài hệ thống).

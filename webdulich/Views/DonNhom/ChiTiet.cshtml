@@ -1,0 +1,184 @@
+@model webdulich.Models.DonNhomChiTietViewModel
+@using webdulich.Models
+@{
+    var don = Model.Don;
+    ViewData["Title"] = "Đơn nhóm " + don.MaChuyenDi;
+    int tongGhe = Model.DsGhe.Count(g => g.TrangThai != TrangThaiGhe.DaNha);
+    int phanTram = tongGhe == 0 ? 0 : Model.SoGheDaTra * 100 / tongGhe;
+    string CssTrangThai(string t) => t switch
+    {
+        TrangThaiGhe.DaTra => "da-tra",
+        TrangThaiGhe.ChoXacNhan => "cho",
+        TrangThaiGhe.DaDien => "da-dien",
+        TrangThaiGhe.DaNhan => "da-nhan",
+        TrangThaiGhe.DaNha => "da-nha",
+        _ => "trong"
+    };
+    var conGiuCho = don.TrangThai == "GiuCho" && Model.HanGiuCho.HasValue;
+    int soGheTrong = Model.DsGhe.Count(g => g.TrangThai == TrangThaiGhe.ChuaNhan);
+    // Lời mời soạn sẵn để dán vào nhóm chat; link đặt cuối để ứng dụng chat tự nhận thành liên kết
+    var loiMoi = conGiuCho
+        ? $"Mình đã giữ {Model.DsGhe.Count} chỗ tour {don.TenTour}, khởi hành {don.NgayDi:dd/MM/yyyy}. "
+          + $"Mỗi người bấm link, nhận một ghế, điền thông tin và tự chuyển khoản phần của mình trước {Model.HanGiuCho!.Value:HH:mm dd/MM}. "
+          + $"Quá hạn ghế chưa trả sẽ bị nhả.\n{Model.LinkMoi}"
+        : "";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <div class="dn-head">
+        <div>
+            <span class="dn-ma">Đơn nhóm @don.MaChuyenDi</span>
+            <h1>@don.TenTour</h1>
+            <p>Khởi hành @don.NgayDi.ToString("dd/MM/yyyy")@(don.GioKhoiHanh.HasValue ? " lúc " + don.GioKhoiHanh.Value.ToString(@"hh\:mm") : ""), @Model.DsGhe.Count ghế.</p>
+        </div>
+        @if (conGiuCho)
+        {
+            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@Model.HanGiuCho!.Value.ToString("o")">
+                <span>@(Model.DaGiaHan ? "Đã gia hạn, còn" : "Giữ chỗ còn")</span>
+                <strong data-dem>--:--:--</strong>
+                <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
+            </div>
+        }
+        else
+        {
+            <span class="dn-trang-thai @(don.DaHuy ? "huy" : "chot")">@(don.DaHuy ? "Đơn đã hủy" : "Đơn đã chốt")</span>
+        }
+    </div>
+
+    @if (TempData["ThanhCong"] != null)
+    {
+        <div class="dn-alert ok" role="status">@TempData["ThanhCong"]</div>
+    }
+    @if (TempData["Loi"] != null)
+    {
+        <div class="dn-alert loi" role="alert">@TempData["Loi"]</div>
+    }
+
+    <div class="dt-layout">
+        <div>
+            <section class="dt-block">
+                <div class="dn-tien-do-head">
+                    <h2>Tiến độ của nhóm</h2>
+                    <span>@Model.SoGheDaTra/@tongGhe ghế đã trả</span>
+                </div>
+                <div class="dn-thanh" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@phanTram" aria-label="Tỉ lệ ghế đã trả">
+                    <span class="dn-thanh-gia-tri" data-phan-tram="@phanTram"></span>
+                </div>
+
+                <ol class="dn-ghe-ds">
+                    @foreach (var g in Model.DsGhe)
+                    {
+                        <li class="dn-ghe @CssTrangThai(g.TrangThai)">
+                            <span class="dn-ghe-so">@g.ThuTu</span>
+                            <div class="dn-ghe-ten">
+                                <strong>@(g.TenChu ?? "Ghế trống")@(g.LaCuaToi ? " (bạn)" : "")</strong>
+                                <small>@g.LoaiHanhKhach, @g.GiaLucDat.ToString("N0") VNĐ@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
+                            </div>
+                            <span class="dn-nhan">@g.TrangThai</span>
+                        </li>
+                    }
+                </ol>
+                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác.</p>
+            </section>
+        </div>
+
+        <aside>
+            @if (Model.LinkMoi != null && conGiuCho)
+            {
+                <section class="dt-block dn-moi">
+                    <h2>Mời cả nhóm</h2>
+                    <p class="dt-note">Còn @soGheTrong ghế chưa có người nhận. Gửi lời mời dưới đây vào nhóm chat của cả đoàn.</p>
+
+                    <blockquote class="dn-loi-moi" id="loiMoi">@loiMoi</blockquote>
+
+                    <div class="dn-nut-moi">
+                        <button type="button" class="tv-btn tv-btn-chinh" data-chep="loi-moi">Sao chép lời mời</button>
+                        <button type="button" class="tv-btn tv-btn-vien" id="nutChiaSe" hidden>Chia sẻ qua ứng dụng</button>
+                    </div>
+                    <span class="dn-da-chep" id="daChep" role="status" hidden></span>
+
+                    <div class="dn-link-tho">
+                        <span>Chỉ cần link?</span>
+                        <button type="button" class="dn-nut-chu" data-chep="link">Sao chép link</button>
+                    </div>
+                    <input type="hidden" id="linkMoi" value="@Model.LinkMoi" />
+                </section>
+            }
+
+            <section class="dt-block">
+                <h2>Tổng tiền</h2>
+                <div class="dt-line"><span>Tổng cả nhóm</span><span>@don.TongTien.ToString("N0") VNĐ</span></div>
+                <div class="dt-line"><span>Đã trả</span><span>@Model.DsGhe.Where(g => g.TrangThai == TrangThaiGhe.DaTra).Sum(g => g.GiaLucDat).ToString("N0") VNĐ</span></div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<script>
+    (function () {
+        // Đồng hồ đếm ngược tới hạn giữ chỗ
+        var dongHo = document.querySelector("[data-han]");
+        if (dongHo) {
+            var han = new Date(dongHo.dataset.han).getTime(), o = dongHo.querySelector("[data-dem]");
+            var hai = function (n) { return (n < 10 ? "0" : "") + n; };
+            var chay = function () {
+                var con = Math.max(0, Math.floor((han - Date.now()) / 1000));
+                o.textContent = hai(Math.floor(con / 3600)) + ":" + hai(Math.floor(con % 3600 / 60)) + ":" + hai(con % 60);
+                dongHo.classList.toggle("sap-het", con < 3600);
+            };
+            chay();
+            setInterval(chay, 1000);
+        }
+
+        var thanh = document.querySelector(".dn-thanh-gia-tri");
+        if (thanh) thanh.style.width = thanh.dataset.phanTram + "%";
+
+        var loiMoi = document.getElementById("loiMoi"), link = document.getElementById("linkMoi");
+        if (!loiMoi) return;
+        var baoChep = document.getElementById("daChep");
+
+        // Web host chạy HTTP nên Clipboard API có thể không dùng được hoặc bị từ chối: chép qua ô ẩn
+        function chep(chu, thongBao) {
+            var xong = function () { baoChep.textContent = thongBao; baoChep.hidden = false; };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(chu).then(xong, function () { chepQuaO(chu); xong(); });
+                return;
+            }
+            chepQuaO(chu);
+            xong();
+        }
+
+        function chepQuaO(chu) {
+            var o = document.createElement("textarea");
+            o.value = chu;
+            o.setAttribute("readonly", "");
+            o.className = "dn-an";
+            document.body.appendChild(o);
+            o.select();
+            document.execCommand("copy");
+            document.body.removeChild(o);
+        }
+
+        document.querySelectorAll("[data-chep]").forEach(function (nut) {
+            nut.addEventListener("click", function () {
+                if (nut.dataset.chep === "link") chep(link.value, "Đã sao chép link.");
+                else chep(loiMoi.textContent, "Đã sao chép lời mời, dán vào nhóm chat là xong.");
+            });
+        });
+
+        // Bảng chia sẻ của điện thoại (Zalo, Messenger...), chỉ có trên HTTPS và trình duyệt hỗ trợ
+        var nutChiaSe = document.getElementById("nutChiaSe");
+        if (navigator.share) {
+            nutChiaSe.hidden = false;
+            nutChiaSe.addEventListener("click", function () {
+                var chu = loiMoi.textContent.replace(link.value, "").trim();
+                navigator.share({ title: document.title, text: chu, url: link.value }).catch(function () { });
+            });
+        }
+    })();
+</script>

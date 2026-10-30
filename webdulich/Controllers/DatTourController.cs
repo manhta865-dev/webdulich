@@ -34,28 +34,11 @@ namespace webdulich.Controllers
             return HttpContext.Session.GetInt32("taiKhoanId");
         }
 
-        // Mã chuyến đi dạng TV-XXXXXX: ngắn để làm nội dung chuyển khoản, bỏ các ký tự dễ nhầm (0, O, 1, I),
-        // tạo một lần ở trang thanh toán và kiểm tra chưa có đơn nào dùng (lỗi 2).
-        private const string KyTuMa = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        // Mã chuyến đi và giá ghế dùng chung với đơn nhóm (XuLyDon)
+        private string TaoMaChuyenDi() => XuLyDon.TaoMaChuyenDi(_context);
 
-        private string TaoMaChuyenDi()
-        {
-            for (int lan = 0; lan < 20; lan++)
-            {
-                var ma = "TV-" + new string(Enumerable.Range(0, 6)
-                    .Select(_ => KyTuMa[RandomNumberGenerator.GetInt32(KyTuMa.Length)])
-                    .ToArray());
-                if (!_context.DatTours.Any(x => x.MaChuyenDi == ma))
-                {
-                    return ma;
-                }
-            }
-            throw new InvalidOperationException("Không tạo được mã chuyến đi chưa dùng.");
-        }
-
-        // Giá lúc đặt của một ghế theo loại hành khách
         private static decimal GiaGhe(string? loaiHanhKhach, decimal giaNguoiLon, decimal giaTreEm) =>
-            loaiHanhKhach == "Trẻ nhỏ" ? giaTreEm : giaNguoiLon;
+            XuLyDon.GiaGhe(loaiHanhKhach, giaNguoiLon, giaTreEm);
         // Hàm này sẽ lấy danh sách hành khách từ form dựa trên số người đã nhập
         private List<HanhKhachDatTour> LayDanhSachHanhKhachTuForm(int soNguoi)
         {

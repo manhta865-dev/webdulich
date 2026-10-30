@@ -119,7 +119,7 @@
                             </span>
                         </label>
                         <select name="viTri[@hk.ThuTu]" class="cn-select" aria-label="Chỗ của hành khách @(hk.ThuTu + 1)">
-                            <option value="">@(Model.ChoTuDongXep ? "TravelVN xếp" : "Giữ chỗ hiện tại")</option>
+                            <option value="">@(Model.NhanKhongChon ?? (Model.ChoTuDongXep ? "TravelVN xếp" : "Giữ chỗ hiện tại"))</option>
                             @foreach (var v in Model.DsViTri.Where(x => !x.DaCoNguoi))
                             {
                                 <option value="@v.Id" selected="@(hk.ViTriId == v.Id ? "selected" : null)">@v.MaViTri</option>

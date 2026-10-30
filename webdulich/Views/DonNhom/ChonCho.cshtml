@@ -1,0 +1,35 @@
+@model webdulich.Models.ChonChoNgoiViewModel
+@{
+    ViewData["Title"] = "Chọn sẵn chỗ cho nhóm";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cho-ngoi.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <h1>Chọn sẵn chỗ cho nhóm</h1>
+
+    <partial name="_BuocDonNhom" model="2" />
+
+    @if (TempData["Loi"] != null)
+    {
+        <div class="cn-alert" role="alert">@TempData["Loi"]</div>
+    }
+
+    <p class="cn-tom-tat">
+        @Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy"). Phương tiện: <strong>@Model.TenSoDo</strong>.
+        Bạn có thể chọn sẵn một dãy chỗ để cả nhóm ngồi gần nhau; ghế nào để "Thành viên tự chọn" thì người nhận ghế tự chọn sau.
+        Thành viên vẫn đổi được chỗ khi nhận ghế.
+    </p>
+
+    <form asp-action="ChonCho" method="post">
+        <partial name="_SoDoChoNgoi" model="Model" />
+
+        <div class="dt-actions cn-actions">
+            <a href="@ViewBag.QuayLai" class="tv-btn tv-btn-vien">Quay lại</a>
+            <button type="submit" class="tv-btn tv-btn-chinh">Giữ chỗ @ViewBag.SoGioGiuCho giờ cho nhóm</button>
+        </div>
+    </form>
+</div>

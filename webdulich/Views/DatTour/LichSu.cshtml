@@ -73,6 +73,10 @@
                     <header class="ls-card-head">
                         <div>
                             <h2>@item.TenTour</h2>
+                            @if (item.LoaiDon == "Nhom")
+                            {
+                                <span class="ls-nhom">Đơn nhóm</span>
+                            }
                             <div class="ls-code">Mã chuyến đi: @(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có" : item.MaChuyenDi)</div>
                         </div>
 
@@ -96,10 +100,13 @@
                             <dt>Giá tiền</dt>
                             <dd class="ls-money">@item.TongTien.ToString("N0") VNĐ</dd>
                         </div>
-                        <div>
-                            <dt>Thanh toán bằng</dt>
-                            <dd>@item.PhuongThucThanhToan</dd>
-                        </div>
+                        @if (item.LoaiDon != "Nhom")
+                        {
+                            <div>
+                                <dt>Thanh toán bằng</dt>
+                                <dd>@item.PhuongThucThanhToan</dd>
+                            </div>
+                        }
                         <div>
                             <dt>Tên khách</dt>
                             <dd>@item.TenKhach</dd>
@@ -108,7 +115,7 @@
                             <dt>Điện thoại</dt>
                             <dd>@item.DienThoai</dd>
                         </div>
-                        @if (item.CoSoDoChoNgoi && !item.DaHuy)
+                        @if (item.CoSoDoChoNgoi && !item.DaHuy && item.LoaiDon != "Nhom")
                         {
                             <div>
                                 <dt>Chỗ ngồi</dt>
@@ -117,7 +124,16 @@
                         }
                     </dl>
 
-                    @if (item.DuocDoiCho || item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
+                    @if (item.LoaiDon == "Nhom")
+                    {
+                        @* Đơn nhóm: chỗ ngồi, thanh toán và hủy làm theo từng ghế ở trang đơn nhóm *@
+                        <footer class="ls-card-foot">
+                            <a asp-controller="DonNhom" asp-action="ChiTiet" asp-route-id="@item.Id" class="tv-btn tv-btn-chinh">
+                                @(item.TrangThai == "GiuCho" ? "Xem đơn nhóm và link mời" : "Xem đơn nhóm")
+                            </a>
+                        </footer>
+                    }
+                    else if (item.DuocDoiCho || item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
                     {
                         <footer class="ls-card-foot">
                             @if (item.DuocDoiCho)

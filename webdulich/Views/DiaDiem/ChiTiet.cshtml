@@ -185,6 +185,15 @@
                            asp-route-id="@Model.Id"
                            asp-route-lichId="@lich.Id"
                            class="tv-btn tv-btn-chinh ct-dep-btn">Chọn ngày này</a>
+
+                        @if (lich.SoChoCon >= 2)
+                        {
+                            <a asp-controller="DonNhom"
+                               asp-action="TaoDon"
+                               asp-route-id="@Model.Id"
+                               asp-route-lichId="@lich.Id"
+                               class="tv-btn tv-btn-vien ct-dep-btn">Đặt cho nhóm, mỗi người tự trả</a>
+                        }
                     </div>
                 }
             </div>

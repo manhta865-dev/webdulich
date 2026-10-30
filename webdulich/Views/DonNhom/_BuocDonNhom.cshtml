@@ -1,0 +1,20 @@
+@* Thanh bước của luồng tạo đơn nhóm. Model: bước hiện tại (1 đến 3). *@
+@model int
+@{
+    string TrangThai(int buoc) => Model == buoc ? "active" : (Model > buoc ? "done" : "");
+}
+
+<ol class="dt-steps" aria-label="Các bước tạo đơn nhóm">
+    <li class="@TrangThai(1)" aria-current="@(Model == 1 ? "step" : null)">
+        <span class="dt-step-no">1</span>
+        <span class="dt-step-text">Số ghế, liên hệ</span>
+    </li>
+    <li class="@TrangThai(2)" aria-current="@(Model == 2 ? "step" : null)">
+        <span class="dt-step-no">2</span>
+        <span class="dt-step-text">Chọn sẵn chỗ</span>
+    </li>
+    <li class="@TrangThai(3)" aria-current="@(Model == 3 ? "step" : null)">
+        <span class="dt-step-no">3</span>
+        <span class="dt-step-text">Giữ chỗ, mời nhóm</span>
+    </li>
+</ol>

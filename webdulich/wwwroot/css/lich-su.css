@@ -76,6 +76,17 @@
 .ls-details dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
 .ls-money { color: var(--tv-gia); }
 
+.ls-nhom {
+    display: inline-block;
+    margin-top: var(--tv-k1);
+    padding: 2px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+}
+
 .ls-card-foot {
     display: flex;
     justify-content: flex-end;

@@ -1,0 +1,118 @@
+@model webdulich.Models.TaoDonNhomViewModel
+@{
+    ViewData["Title"] = "Đặt tour cho nhóm";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <h1>Đặt tour cho nhóm</h1>
+
+    <partial name="_BuocDonNhom" model="1" />
+
+    @if (TempData["Loi"] != null)
+    {
+        <div class="dn-alert loi" role="alert">@TempData["Loi"]</div>
+    }
+
+    <div class="dt-layout">
+        <form asp-action="TaoDon" method="post" class="booking-form" id="formNhom" novalidate>
+            <input type="hidden" asp-for="TourId" />
+            <input type="hidden" asp-for="LichId" />
+            <div asp-validation-summary="ModelOnly" class="dn-alert loi"></div>
+
+            <section class="dt-block">
+                <h2>Nhóm của bạn</h2>
+                <p class="dt-note">
+                    TravelVN giữ chỗ cho cả nhóm trong <strong>@Model.SoGioGiuCho giờ</strong>. Trong thời gian đó, mỗi thành viên mở link mời,
+                    nhận một ghế, tự điền thông tin và tự trả phần của mình. Bạn chỉ trả ghế của bạn, hoặc trả hộ ghế nào bạn muốn.
+                </p>
+
+                <div class="dn-dem">
+                    <div class="dn-dem-o">
+                        <label asp-for="SoNguoiLon">Người lớn</label>
+                        <input asp-for="SoNguoiLon" type="number" min="1" max="@Model.SoChoCon" />
+                        <small>@Model.GiaNguoiLon.ToString("N0") VNĐ / người</small>
+                    </div>
+                    <div class="dn-dem-o">
+                        <label asp-for="SoTreNho">Trẻ nhỏ</label>
+                        <input asp-for="SoTreNho" type="number" min="0" max="@Model.SoChoCon" />
+                        <small>@Model.GiaTreEm.ToString("N0") VNĐ / người</small>
+                    </div>
+                </div>
+                <p class="dn-hint">Lịch này còn @Model.SoChoCon chỗ. Đơn nhóm cần ít nhất 2 ghế.</p>
+
+                <label class="dn-check">
+                    <input asp-for="ToiDi" type="checkbox" />
+                    <span>
+                        <strong>Tôi cũng đi chuyến này</strong>
+                        <small>Ghế đầu tiên sẽ là của bạn. Bỏ chọn nếu bạn chỉ đặt hộ cho nhóm.</small>
+                    </span>
+                </label>
+            </section>
+
+            <section class="dt-block">
+                <h2>Người liên hệ</h2>
+                <div class="dn-fields">
+                    <div class="dn-field">
+                        <label asp-for="TenKhach">Họ tên</label>
+                        <input asp-for="TenKhach" autocomplete="name" />
+                        <span asp-validation-for="TenKhach" class="dn-err"></span>
+                    </div>
+                    <div class="dn-field">
+                        <label asp-for="DienThoai">Số điện thoại</label>
+                        <input asp-for="DienThoai" type="tel" autocomplete="tel" />
+                        <span asp-validation-for="DienThoai" class="dn-err"></span>
+                    </div>
+                    <div class="dn-field">
+                        <label asp-for="Email">Email</label>
+                        <input asp-for="Email" type="email" autocomplete="email" />
+                    </div>
+                    <div class="dn-field full">
+                        <label asp-for="GhiChu">Ghi chú cho TravelVN</label>
+                        <textarea asp-for="GhiChu" rows="2"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <div class="dt-actions">
+                <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@Model.TourId" class="tv-btn tv-btn-vien">Quay lại tour</a>
+                <button type="submit" class="tv-btn tv-btn-chinh">@(Model.CoSoDo ? "Tiếp tục chọn chỗ" : "Giữ chỗ cho nhóm")</button>
+            </div>
+        </form>
+
+        <aside class="dt-block dt-summary">
+            <h2>Tóm tắt</h2>
+            <div class="dt-summary-tour">
+                @if (!string.IsNullOrEmpty(Model.HinhAnh))
+                {
+                    <img src="~/images/dulich/@Model.HinhAnh" alt="" loading="lazy" />
+                }
+                <div>
+                    <h3>@Model.TenTour</h3>
+                    <div class="dt-meta">Khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")</div>
+                </div>
+            </div>
+            <div class="dt-line"><span>Số ghế</span><span id="tomTatSoGhe">@(Model.SoNguoiLon + Model.SoTreNho)</span></div>
+            <div class="dt-line total"><span>Tổng cả nhóm</span><span id="tomTatTong">@((Model.SoNguoiLon * Model.GiaNguoiLon + Model.SoTreNho * Model.GiaTreEm).ToString("N0")) VNĐ</span></div>
+            <p class="dn-hint">Mỗi ghế có mã thanh toán và QR riêng. Không ai phải ứng tiền cho cả nhóm.</p>
+        </aside>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var lon = document.getElementById("SoNguoiLon"), tre = document.getElementById("SoTreNho");
+        var giaLon = @Model.GiaNguoiLon.ToString("0"), giaTre = @Model.GiaTreEm.ToString("0");
+        function capNhat() {
+            var a = Math.max(0, parseInt(lon.value || "0", 10)), b = Math.max(0, parseInt(tre.value || "0", 10));
+            document.getElementById("tomTatSoGhe").textContent = a + b;
+            document.getElementById("tomTatTong").textContent = (a * giaLon + b * giaTre).toLocaleString("vi-VN") + " VNĐ";
+        }
+        lon.addEventListener("input", capNhat);
+        tre.addEventListener("input", capNhat);
+    })();
+</script>
