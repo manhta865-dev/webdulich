@@ -124,12 +124,22 @@ namespace webdulich.Models
     // Thông tin chuyển khoản cho một ghế: tài khoản nhận lấy từ cấu hình "ThanhToan", số tiền và nội dung riêng của ghế
     public class ThongTinChuyenKhoan
     {
+        // Phương thức người trả chọn khi báo đã chuyển, ghi vào GiaoDichThanhToan.PhuongThuc
+        public const string NganHang = "Chuyển khoản";
+        public const string Momo = "MoMo";
+
+        public string TenNganHang { get; set; } = string.Empty;
         public string MaNganHang { get; set; } = string.Empty;
         public string SoTaiKhoan { get; set; } = string.Empty;
         public string TenTaiKhoan { get; set; } = string.Empty;
         public string? GhiChu { get; set; }
         public decimal SoTien { get; set; }
         public string NoiDung { get; set; } = string.Empty;
+
+        // Ví MoMo: QR cố định (không tự điền số tiền, nội dung), người trả tự gõ. Để trống trong cấu hình thì ẩn.
+        public string? SoMomo { get; set; }
+        public string? AnhQrMomo { get; set; }
+        public bool CoMomo => !string.IsNullOrEmpty(SoMomo) && !string.IsNullOrEmpty(AnhQrMomo);
 
         // Ảnh QR theo chuẩn VietQR: app ngân hàng quét là điền sẵn số tiền và nội dung
         public string LinkQr =>
@@ -138,6 +148,9 @@ namespace webdulich.Models
 
         public static ThongTinChuyenKhoan Tao(IConfiguration cauHinh, decimal soTien, string noiDung) => new ThongTinChuyenKhoan
         {
+            TenNganHang = cauHinh["ThanhToan:TenNganHang"] ?? string.Empty,
+            SoMomo = cauHinh["ThanhToan:SoMomo"],
+            AnhQrMomo = cauHinh["ThanhToan:AnhQrMomo"],
             MaNganHang = cauHinh["ThanhToan:MaNganHang"] ?? string.Empty,
             SoTaiKhoan = cauHinh["ThanhToan:SoTaiKhoan"] ?? string.Empty,
             TenTaiKhoan = cauHinh["ThanhToan:TenTaiKhoan"] ?? string.Empty,

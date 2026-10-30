@@ -741,8 +741,10 @@ namespace webdulich.Controllers
         // nên bấm hai lần hoặc chủ ghế và trưởng nhóm cùng bấm thì chỉ tạo một giao dịch (RB-26).
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DaChuyenKhoan(int id)
+        public IActionResult DaChuyenKhoan(int id, string? phuongThuc)
         {
+            // Chỉ nhận hai giá trị đã biết, giá trị lạ coi như chuyển khoản ngân hàng
+            phuongThuc = phuongThuc == ThongTinChuyenKhoan.Momo ? ThongTinChuyenKhoan.Momo : ThongTinChuyenKhoan.NganHang;
             var taiKhoanId = TaiKhoanDangNhap();
             if (!taiKhoanId.HasValue)
             {
@@ -767,7 +769,7 @@ namespace webdulich.Controllers
 
             int soDong = _context.Database.ExecuteSqlInterpolated($@"
                 INSERT INTO GiaoDichThanhToans (HanhKhachDatTourId, NguoiTraId, SoTien, PhuongThuc, TrangThai, NgayTao)
-                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat, {"Chuyển khoản"}, 'ChoXacNhan', {DateTime.Now}
+                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat, {phuongThuc}, 'ChoXacNhan', {DateTime.Now}
                 FROM HanhKhachDatTours h
                 WHERE h.Id = {id} AND h.NgayNha IS NULL
                   AND h.HoTen IS NOT NULL AND h.HoTen <> '' AND h.SoGiayTo IS NOT NULL AND h.SoGiayTo <> ''

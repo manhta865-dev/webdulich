@@ -17,26 +17,54 @@
     else if (Model.DuocTra && Model.ChuyenKhoan != null)
     {
         var ck = Model.ChuyenKhoan;
-        <div class="dn-qr">
-            <img src="@ck.LinkQr" width="270" height="320"
-                 alt="Mã QR chuyển khoản @ck.SoTien.ToString("N0") VNĐ, nội dung @ck.NoiDung" />
-        </div>
-        <p class="dn-hint dn-qr-huong-dan">Mở app ngân hàng, chọn quét QR. Số tiền và nội dung đã điền sẵn.</p>
-
-        <dl class="dn-ck">
-            <div><dt>Mã ngân hàng</dt><dd>@ck.MaNganHang</dd></div>
-            <div><dt>Số tài khoản</dt><dd>@ck.SoTaiKhoan</dd></div>
-            <div><dt>Chủ tài khoản</dt><dd>@ck.TenTaiKhoan</dd></div>
-            <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
-            <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
-        </dl>
-        @if (!string.IsNullOrEmpty(ck.GhiChu))
-        {
-            <p class="dn-canh-bao">@ck.GhiChu</p>
-        }
-
-        <form asp-controller="DonNhom" asp-action="DaChuyenKhoan" asp-route-id="@Model.GheId" method="post"
+        <form asp-controller="DonNhom" asp-action="DaChuyenKhoan" asp-route-id="@Model.GheId" method="post" class="dn-pt"
               onsubmit="return confirm('Bạn đã chuyển @ck.SoTien.ToString("N0") VNĐ với nội dung @ck.NoiDung?');">
+            @* Ô chọn đặt trước các khung để CSS hiện đúng khung theo ô đang chọn, không cần JavaScript *@
+            <input type="radio" name="phuongThuc" id="ptNganHang" value="@ThongTinChuyenKhoan.NganHang" class="dn-pt-o" checked />
+            @if (ck.CoMomo)
+            {
+                <input type="radio" name="phuongThuc" id="ptMomo" value="@ThongTinChuyenKhoan.Momo" class="dn-pt-o" />
+                <div class="dn-pt-chon">
+                    <label for="ptNganHang">Ngân hàng</label>
+                    <label for="ptMomo">Ví MoMo</label>
+                </div>
+            }
+
+            <div class="dn-pt-khung dn-pt-ngan-hang">
+                <div class="dn-qr">
+                    <img src="@ck.LinkQr" width="270" height="320"
+                         alt="Mã QR chuyển khoản @ck.SoTien.ToString("N0") VNĐ, nội dung @ck.NoiDung" />
+                </div>
+                <p class="dn-hint dn-qr-huong-dan">Mở app ngân hàng, chọn quét QR. Số tiền và nội dung đã điền sẵn.</p>
+                <dl class="dn-ck">
+                    <div><dt>Ngân hàng</dt><dd>@(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)</dd></div>
+                    <div><dt>Số tài khoản</dt><dd>@ck.SoTaiKhoan</dd></div>
+                    <div><dt>Chủ tài khoản</dt><dd>@ck.TenTaiKhoan</dd></div>
+                    <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
+                    <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
+                </dl>
+            </div>
+
+            @if (ck.CoMomo)
+            {
+                <div class="dn-pt-khung dn-pt-momo">
+                    <div class="dn-qr">
+                        <img src="@ck.AnhQrMomo" width="270" height="443" loading="lazy" alt="Mã QR ví MoMo của TravelVN" />
+                    </div>
+                    <p class="dn-canh-bao">Mã MoMo không tự điền số tiền và nội dung. Bạn gõ đúng hai thông tin dưới đây để TravelVN biết tiền của ghế nào.</p>
+                    <dl class="dn-ck">
+                        <div><dt>Số ví MoMo</dt><dd>@ck.SoMomo</dd></div>
+                        <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
+                        <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
+                    </dl>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(ck.GhiChu))
+            {
+                <p class="dn-canh-bao">@ck.GhiChu</p>
+            }
+
             <button type="submit" class="tv-btn tv-btn-chinh dn-nut-day">Tôi đã chuyển khoản</button>
         </form>
         <p class="dn-hint">Chỉ bấm sau khi chuyển xong. Sau khi bấm, thông tin hành khách không sửa được nữa.</p>
