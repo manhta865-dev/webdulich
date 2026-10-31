@@ -1,0 +1,27 @@
+@startuml state-don-nhom
+' Hình 3.5. State: vòng đời đơn nhóm. Giá trị lưu ở DatTours.TrangThai (CHECK: GiuCho, DaXacNhan, DaHuy)
+' và DatTours.DaGiaHan. Các trạng thái con được tính, không lưu cột.
+[*] --> GiuCho : Trưởng nhóm tạo đơn\n(trừ chỗ có điều kiện)
+
+state GiuCho {
+  [*] --> TrongHan
+  TrongHan : HanGiuCho > bây giờ, DaGiaHan = 0
+  DaGiaHan : HanGiuCho > bây giờ, DaGiaHan = 1
+  DoiAdmin : quá hạn, ghế chưa trả đã nhả,\ncòn ghế chờ xác nhận
+  TrongHan --> DaGiaHan : Hết hạn, còn ghế chưa trả\n[còn gia hạn được]
+  TrongHan --> DoiAdmin : Hết hạn, không gia hạn được,\ncòn ghế chờ
+  DaGiaHan --> DoiAdmin : Hết hạn lần hai,\ncòn ghế chờ
+}
+
+GiuCho --> DaXacNhan : Trưởng nhóm chốt\n[không còn ghế chờ, có ghế đã trả]
+GiuCho --> DaXacNhan : Hết hạn [mọi ghế đã trả,\nhoặc hết lượt và có ghế đã trả]
+GiuCho --> DaHuy : Hết hạn [hết lượt, không ai trả]
+GiuCho --> DaHuy : Trưởng nhóm hủy\n[chưa ai trả hoặc báo chuyển khoản]
+GiuCho --> DaHuy : Admin hủy (hoàn tiền ngoài hệ thống)
+DaXacNhan --> DaHuy : Admin hủy (hoàn tiền ngoài hệ thống)
+
+DaXacNhan : Đơn đã chốt, link mời hết hiệu lực
+DaHuy : Mọi ghế đã nhả, chỗ đã trả lại cho lịch
+DaXacNhan --> [*]
+DaHuy --> [*]
+@enduml

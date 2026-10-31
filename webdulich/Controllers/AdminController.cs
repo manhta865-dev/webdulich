@@ -675,9 +675,11 @@ namespace webdulich.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
-                // Đơn có hành khách trùng tên hoặc số giấy tờ
+                // Đơn có hành khách trùng tên, số giấy tờ, hoặc nội dung chuyển khoản của ghế (TV-XXXXXX-3, đọc từ sao kê)
                 var donTheoHanhKhach = _context.HanhKhachDatTours
-                    .Where(h => (h.HoTen != null && h.HoTen.Contains(search)) || (h.SoGiayTo != null && h.SoGiayTo.Contains(search)))
+                    .Where(h => (h.HoTen != null && h.HoTen.Contains(search))
+                        || (h.SoGiayTo != null && h.SoGiayTo.Contains(search))
+                        || (h.MaThanhToan != null && h.MaThanhToan.Contains(search)))
                     .Select(h => h.DatTourId);
 
                 ds = ds.Where(x =>
@@ -692,7 +694,21 @@ namespace webdulich.Controllers
             }
 
             ViewBag.Search = search;
-            return View(ds.OrderByDescending(x => x.Id).ToList());
+            var list = ds.OrderByDescending(x => x.Id).ToList();
+            NapTienDoNhom(list);
+            return View(list);
+        }
+
+        // Đơn nhóm trong danh sách: số ghế đã trả trên số ghế còn hiệu lực, để admin thấy tiến độ ngay (N6)
+        private void NapTienDoNhom(List<DonDatTourDoc> list)
+        {
+            var dsNhomId = list.Where(x => x.LoaiDon == "Nhom").Select(x => x.Id).ToList();
+            ViewBag.TienDoNhom = _context.HanhKhachDatTours.AsNoTracking()
+                .Where(h => dsNhomId.Contains(h.DatTourId) && h.NgayNha == null)
+                .Select(h => new { h.DatTourId, DaTra = _context.GiaoDichThanhToans.Any(g => g.HanhKhachDatTourId == h.Id && g.TrangThai == "ThanhCong") })
+                .AsEnumerable()
+                .GroupBy(x => x.DatTourId)
+                .ToDictionary(g => g.Key, g => (DaTra: g.Count(x => x.DaTra), Tong: g.Count()));
         }
 
         // Đơn chưa thanh toán của một tour (nút "Khách đặt" ở Quản lý tour)
@@ -710,6 +726,7 @@ namespace webdulich.Controllers
                 .OrderByDescending(x => x.Id)
                 .ToList();
 
+            NapTienDoNhom(list);
             return View("DonDatTour", list);
         }
 
@@ -742,12 +759,26 @@ namespace webdulich.Controllers
                 GiaNguoiLon = lich?.GiaNguoiLonHienThi ?? 0,
                 GiaTreEm = lich?.GiaTreEmHienThi ?? 0,
                 SoChoCon = lich?.SoChoCon ?? 0,
-                DuocDoiSoNguoi = lich != null && !don.DaHuy && !don.DaThanhToan && lich.ChoPhepDatTour,
+                DuocDoiSoNguoi = lich != null && !don.DaHuy && !don.DaThanhToan && lich.ChoPhepDatTour && don.LoaiDon != "Nhom",
                 ChoTheoGhe = _context.ChoNgoiChuyenDis.AsNoTracking()
                     .Where(c => c.HanhKhachDatTour!.DatTourId == id)
                     .Select(c => new { c.HanhKhachDatTourId, c.ViTriChoNgoi!.MaViTri })
                     .ToDictionary(c => c.HanhKhachDatTourId, c => c.MaViTri)
             };
+
+            if (don.LoaiDon == "Nhom")
+            {
+                // Đơn nhóm quá hạn thì xử lý trước (gia hạn, nhả, chốt, hủy) để admin thấy đúng trạng thái (N5)
+                int soGioGiaHan = HttpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue("DonNhom:SoGioGiaHan", 6);
+                if (XuLyDon.XuLyDonQuaHan(_context, id, soGioGiaHan) != XuLyDon.KetQuaHetHan.KhongDoi)
+                {
+                    return RedirectToAction("SuaDonDatTour", new { id });
+                }
+                var dt = _context.DatTours.AsNoTracking().First(x => x.Id == id);
+                model.HanGiuCho = dt.TrangThai == "GiuCho" ? dt.HanGiuCho : null;
+                model.DaGiaHan = dt.DaGiaHan;
+                model.TrangThaiTheoGhe = model.DsGhe.ToDictionary(h => h.Id, h => TrangThaiGhe.Tinh(h, model.DsGiaoDich));
+            }
 
             return View(model);
         }
@@ -949,6 +980,13 @@ namespace webdulich.Controllers
             if (don == null || datTour == null)
             {
                 return NotFound();
+            }
+
+            // Đơn nhóm đổi ghế qua trưởng nhóm (bớt ghế) hoặc hủy đơn; thêm ghế kiểu đơn cá nhân sẽ thiếu mã thanh toán của ghế
+            if (datTour.LoaiDon == "Nhom")
+            {
+                TempData["error"] = "Đơn nhóm không đổi số người ở đây. Trưởng nhóm bớt ghế ở trang đơn nhóm.";
+                return RedirectToAction("SuaDonDatTour", new { id });
             }
 
             var lich = _context.LichKhoiHanhTours.Include(x => x.Tour).First(x => x.Id == datTour.LichKhoiHanhTourId);

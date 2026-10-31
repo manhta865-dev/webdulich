@@ -520,6 +520,24 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 .ad-cell-stack strong { font-weight: 600; }
 .ad-sub { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); overflow-wrap: anywhere; }
 .ad-mono { font-family: ui-monospace, Consolas, monospace; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); overflow-wrap: anywhere; }
+
+/* Nhãn đơn nhóm kèm tiến độ ghế đã trả (N6) */
+.ad-nhom {
+    align-self: flex-start;
+    padding: 2px var(--tv-k2);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+}
+
+/* Nhãn trạng thái ghế ở trang chi tiết đơn nhóm */
+.ad-ghe-tt { padding: 2px var(--tv-k2); border-radius: var(--tv-bo-nhan); font-size: var(--tv-cs-nho); font-weight: 600; background: #EEF1F2; color: var(--tv-chu-phu); }
+.ad-ghe-tt.da-tra { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.ad-ghe-tt.cho { background: #FBF1DC; color: var(--tv-canh-bao); }
+.ad-ghe-tt.da-dien { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
+.ad-ghe-tt.da-nha { background: #FBE9E7; color: var(--tv-loi); }
 .ad-giam { font-size: var(--tv-cs-nho); color: var(--tv-thanh-cong); }
 .ad-table td .badge-status { margin-top: var(--tv-k1); align-self: flex-start; }
 
@@ -550,7 +568,10 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     background: var(--tv-nen);
 }
 
-.ad-passenger-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--tv-k3); margin-bottom: var(--tv-k3); }
+.ad-passenger-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--tv-k2) var(--tv-k3); margin-bottom: var(--tv-k3); }
+.ad-passenger-head strong { flex: 1 1 60%; }
+.ad-info-tile-canh-bao { border-color: var(--tv-canh-bao); }
+.ad-info-tile-canh-bao strong { color: var(--tv-canh-bao); }
 .ad-passenger-head strong { font-weight: 600; overflow-wrap: anywhere; }
 .ad-passenger-info { display: grid; grid-template-columns: 1fr 1fr; gap: var(--tv-k3); }
 .ad-passenger-info span { display: block; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }

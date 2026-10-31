@@ -1,0 +1,61 @@
+@startuml usecase-don-nhom
+' Hình 3.1. Use case đơn nhóm (khớp code N1–N6, ngày 01/11/2026)
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Khách vãng lai" as Vang
+actor "Khách hàng" as Khach
+actor "Trưởng nhóm" as Truong
+actor "Thành viên nhóm" as ThanhVien
+actor "Quản trị viên" as Admin
+actor "Dịch vụ hết hạn\n(chạy nền)" as DichVu
+actor "Dịch vụ xác nhận\nchuyển khoản\n(dự kiến, chưa làm)" as Ngan #line.dashed
+
+Truong -|> Khach
+ThanhVien -|> Khach
+
+rectangle "Đặt tour nhóm, thanh toán chia phần" {
+  usecase "Xem trang mời" as UC_XemMoi
+  usecase "Tạo đơn nhóm\n(giữ chỗ có hạn)" as UC_TaoDon
+  usecase "Chọn sẵn chỗ ngồi\ncho nhóm" as UC_ChonCho
+  usecase "Theo dõi tiến độ\nđơn nhóm" as UC_TienDo
+  usecase "Gửi, đổi link mời" as UC_LinkMoi
+  usecase "Nhận ghế qua link" as UC_NhanGhe
+  usecase "Điền thông tin\nhành khách" as UC_DienTT
+  usecase "Đổi chỗ ngồi của ghế" as UC_DoiCho
+  usecase "Trả lại ghế" as UC_TraLai
+  usecase "Thanh toán phần\ncủa mình (QR)" as UC_TraTien
+  usecase "Trả hộ ghế khác" as UC_TraHo
+  usecase "Mời ra khỏi ghế,\nbớt ghế" as UC_BotGhe
+  usecase "Chốt sớm đơn nhóm" as UC_Chot
+  usecase "Hủy đơn nhóm" as UC_Huy
+  usecase "Xác nhận, từ chối\ntiền từng ghế" as UC_XacNhan
+  usecase "Hết hạn giữ chỗ\n(gia hạn, chốt hoặc hủy)" as UC_HetHan
+  usecase "Đăng nhập" as UC_DangNhap
+}
+
+Vang --> UC_XemMoi
+Truong --> UC_TaoDon
+Truong --> UC_TienDo
+Truong --> UC_LinkMoi
+Truong --> UC_TraHo
+Truong --> UC_BotGhe
+Truong --> UC_Chot
+Truong --> UC_Huy
+ThanhVien --> UC_NhanGhe
+Khach --> UC_DienTT
+Khach --> UC_DoiCho
+Khach --> UC_TraLai
+Khach --> UC_TraTien
+Admin --> UC_XacNhan
+Admin --> UC_Huy
+DichVu --> UC_HetHan
+Ngan ..> UC_XacNhan : dự kiến
+
+UC_TaoDon ..> UC_ChonCho : <<extend>>
+UC_NhanGhe ..> UC_DangNhap : <<include>>
+UC_TaoDon ..> UC_DangNhap : <<include>>
+UC_TraHo ..> UC_TraTien : <<extend>>
+UC_TienDo ..> UC_HetHan : <<include>>\n(xử lý khi mở trang)
+@enduml

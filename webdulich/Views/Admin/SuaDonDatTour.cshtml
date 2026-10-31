@@ -67,6 +67,36 @@
         </div>
     </div>
 
+    @if (laNhom)
+    {
+        int soGheConLai = Model.TrangThaiTheoGhe.Count(t => t.Value != TrangThaiGhe.DaNha);
+        int soGheDaTra = Model.TrangThaiTheoGhe.Count(t => t.Value == TrangThaiGhe.DaTra);
+        int soGheCho = Model.TrangThaiTheoGhe.Count(t => t.Value == TrangThaiGhe.ChoXacNhan);
+        <div class="ad-info-tiles">
+            <div class="ad-info-tile">
+                <span>Trưởng nhóm</span>
+                <strong>@don.TenKhach</strong>
+            </div>
+            <div class="ad-info-tile">
+                <span>Giữ chỗ</span>
+                <strong>
+                    @(don.TrangThai == "DaXacNhan" ? "Đã chốt"
+                        : don.TrangThai == "DaHuy" ? "Đã hủy"
+                        : Model.HanGiuCho > DateTime.Now ? $"Đến {Model.HanGiuCho:HH:mm dd/MM}{(Model.DaGiaHan ? " (đã gia hạn)" : "")}"
+                        : "Hết hạn, đợi xác nhận ghế chờ")
+                </strong>
+            </div>
+            <div class="ad-info-tile">
+                <span>Ghế đã trả</span>
+                <strong>@soGheDaTra/@soGheConLai</strong>
+            </div>
+            <div class="ad-info-tile@(soGheCho > 0 ? " ad-info-tile-canh-bao" : "")">
+                <span>Ghế chờ xác nhận</span>
+                <strong>@soGheCho</strong>
+            </div>
+        </div>
+    }
+
     @* ---------- Thanh toán ---------- *@
     <section class="ad-form-block">
         <h2>Thanh toán</h2>
@@ -196,6 +226,10 @@
                         <div class="ad-passenger-head">
                             <strong>Hành khách @(i + 1): @(string.IsNullOrWhiteSpace(ghe.HoTen) ? "Chưa điền tên" : ghe.HoTen)</strong>
                             <span class="ad-type @typeClass">@ghe.LoaiHanhKhach</span>
+                            @if (Model.TrangThaiTheoGhe.TryGetValue(ghe.Id, out var ttGhe))
+                            {
+                                <span class="ad-ghe-tt @(ttGhe switch { TrangThaiGhe.DaTra => "da-tra", TrangThaiGhe.ChoXacNhan => "cho", TrangThaiGhe.DaDien => "da-dien", TrangThaiGhe.DaNha => "da-nha", _ => "" })">@ttGhe</span>
+                            }
                         </div>
 
                         <div class="ad-passenger-info">

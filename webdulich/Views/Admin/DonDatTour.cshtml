@@ -6,6 +6,7 @@
     var tongDon = Model != null ? Model.Count : 0;
     var dangKiemTra = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra") : 0;
     var chuaThanhToan = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Chưa thanh toán") : 0;
+    var tienDoNhom = ViewBag.TienDoNhom as Dictionary<int, (int DaTra, int Tong)> ?? new Dictionary<int, (int DaTra, int Tong)>();
 }
 
 @section Styles {
@@ -64,7 +65,7 @@
                    value="@ViewBag.Search"
                    class="form-control"
                    aria-label="Tìm đơn đặt tour"
-                   placeholder="Tìm theo mã chuyến đi, khách hàng, SĐT, email, tour, trạng thái..." />
+                   placeholder="Tìm theo mã chuyến đi, nội dung chuyển khoản, khách hàng, SĐT, tour..." />
 
             <button class="tv-btn tv-btn-chinh" type="submit">Tìm kiếm</button>
 
@@ -114,6 +115,10 @@
                                     <div class="ad-cell-stack">
                                         <strong>@item.TenTour</strong>
                                         <span class="ad-mono">@(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có mã" : item.MaChuyenDi)</span>
+                                        @if (item.LoaiDon == "Nhom")
+                                        {
+                                            <span class="ad-nhom">Nhóm@(tienDoNhom.TryGetValue(item.Id, out var td) ? $", {td.DaTra}/{td.Tong} ghế đã trả" : "")</span>
+                                        }
                                     </div>
                                 </td>
 
@@ -156,7 +161,7 @@
 
                                 <td>
                                     <div class="ad-cell-stack">
-                                        <span>@item.PhuongThucThanhToan</span>
+                                        <span>@(item.LoaiDon == "Nhom" ? "Theo từng ghế" : item.PhuongThucThanhToan)</span>
                                         <span class="badge-status @cssStatus">@item.TrangThaiThanhToan</span>
                                     </div>
                                 </td>

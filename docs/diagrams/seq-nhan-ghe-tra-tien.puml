@@ -1,0 +1,51 @@
+@startuml seq-nhan-ghe-tra-tien
+' Hình 3.3. Sequence: thành viên nhận ghế qua link, điền thông tin, trả tiền; admin xác nhận (khớp code N3, N4)
+autonumber
+actor "Thành viên" as TV
+participant "Trình duyệt" as TD
+participant "DonNhomController" as DN
+participant "AdminController" as AD
+participant "XuLyDon" as XL
+database "SQL Server" as DB
+actor "Quản trị viên" as QT
+
+TV -> TD : Mở link /DonNhom/Moi?ma=...
+TD -> DN : GET Moi(ma)
+DN -> XL : XuLyDonQuaHan(don) nếu đã quá hạn
+DN -> DB : Đọc đơn theo MaMoi, danh sách ghế
+alt Mã sai, đơn đã chốt, hủy, quá hạn
+  DN --> TD : Trang "Link mời không còn hiệu lực"
+else Còn nhận ghế
+  DN --> TD : Trang mời (không có tên người đã nhận)
+end
+
+TV -> TD : Bấm "Nhận ghế này"
+TD -> DN : POST NhanGhe(ma, gheId)
+alt Chưa đăng nhập
+  DN --> TD : Chuyển tới Đăng nhập?returnUrl=link mời
+else Đã đăng nhập
+  DN -> DB : UPDATE ghế SET TaiKhoanId\nWHERE còn trống, không phải trẻ nhỏ,\nchưa có ghế trong đơn (RB-24, RB-03)
+  alt 0 dòng
+    DN --> TD : "Ghế vừa có người nhận"
+  else 1 dòng
+    DN --> TD : Chuyển tới GheCuaToi
+  end
+end
+
+TV -> TD : Điền họ tên, giấy tờ
+TD -> DN : POST ThongTinGhe(id, form)
+DN -> DB : UPDATE ghế WHERE chủ ghế\nAND chưa có giao dịch chờ/thành công (RB-26)
+DN --> TD : Trang ghế có QR VietQR\n(số tiền, nội dung = MaThanhToan)
+
+TV -> TV : Quét QR bằng app ngân hàng, chuyển tiền
+TV -> TD : Bấm "Tôi đã chuyển khoản"
+TD -> DN : POST DaChuyenKhoan(id, phuongThuc)
+DN -> DB : INSERT GiaoDichThanhToan(ChoXacNhan, NguoiTraId)\nSELECT ... WHERE ghế chưa nhả, đã điền,\nđơn GiuCho, chưa có giao dịch chờ/thành công
+DN --> TD : Ghế "Chờ xác nhận thanh toán"
+
+QT -> AD : Tìm theo nội dung chuyển khoản (TV-XXXXXX-n)
+QT -> AD : POST XacNhanGiaoDichGhe(id, dongY)
+AD -> DB : UPDATE giao dịch SET ThanhCong hoặc ThatBai\nWHERE TrangThai = 'ChoXacNhan' (RB-27)
+note right of DB : Chỉ mục duy nhất có lọc:\nmỗi ghế tối đa một giao dịch ThanhCong (RB-05)
+AD --> QT : Ghế "Đã trả" hoặc quay về "Đã điền, chưa trả"
+@enduml

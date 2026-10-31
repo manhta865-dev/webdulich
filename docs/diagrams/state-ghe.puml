@@ -1,0 +1,31 @@
+@startuml state-ghe
+' Hình 3.6. State: vòng đời một ghế (HanhKhachDatTour) trong đơn nhóm.
+' Trạng thái được tính bằng TrangThaiGhe.Tinh từ TaiKhoanId, HoTen, SoGiayTo, NgayNha và giao dịch của ghế; không lưu cột.
+' Chưa có trạng thái "Đã hoàn": hoàn tiền xử lý ngoài hệ thống.
+[*] --> ChuaNhan : Tạo đơn nhóm
+
+ChuaNhan : Chưa có người nhận
+DaNhan : Đã nhận, chưa điền thông tin
+DaDien : Đã điền, chưa trả
+ChoXacNhan : Chờ xác nhận thanh toán
+DaTra : Đã trả
+DaNha : Đã nhả (NgayNha có giá trị)
+
+ChuaNhan --> DaNhan : Thành viên nhận ghế qua link
+ChuaNhan --> DaDien : Trưởng nhóm điền hộ\n(trẻ nhỏ, người không có tài khoản)
+DaNhan --> DaDien : Chủ ghế điền họ tên, giấy tờ
+DaNhan --> ChuaNhan : Trả lại ghế / bị mời ra
+DaDien --> ChuaNhan : Trả lại ghế / bị mời ra / để trống
+DaDien --> ChoXacNhan : Báo đã chuyển khoản\n(chủ ghế hoặc trưởng nhóm trả hộ)
+ChoXacNhan --> DaTra : Admin xác nhận
+ChoXacNhan --> DaDien : Admin từ chối
+
+ChuaNhan --> DaNha : Bớt ghế / chốt / hết hạn / hủy
+DaNhan --> DaNha : Bớt ghế / chốt / hết hạn / hủy
+DaDien --> DaNha : Bớt ghế / chốt / hết hạn / hủy
+ChoXacNhan --> DaNha : Hủy đơn (giao dịch thành ThatBai)
+DaTra --> DaNha : Admin hủy đơn
+
+DaTra --> [*]
+DaNha --> [*]
+@enduml

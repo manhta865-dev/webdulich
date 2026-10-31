@@ -1,0 +1,34 @@
+@startuml seq-het-han
+' Hình 3.4. Sequence: xử lý đơn nhóm hết hạn giữ chỗ (khớp code N5)
+autonumber
+participant "XuLyHetHanDonNhom\n(BackgroundService,\n5 phút một lần)" as DV
+participant "DonNhomController\n(khi có người mở trang)" as DN
+participant "XuLyDon" as XL
+database "SQL Server" as DB
+
+DV -> DB : Đơn Nhom, GiuCho, HanGiuCho <= bây giờ
+loop Mỗi đơn quá hạn
+  DV -> XL : XuLyDonQuaHan(donId, 6 giờ)
+end
+DN -> XL : XuLyDonQuaHan(donId, 6 giờ)\n(cùng hàm, gọi trước khi hiện trang)
+
+XL -> DB : Đọc đơn, ghế còn hiệu lực, giao dịch
+XL -> XL : Đếm ghế đã trả, đang chờ, chưa trả
+alt Còn ghế chưa trả, DaGiaHan = 0, còn gia hạn được
+  XL -> DB : UPDATE DatTours SET HanGiuCho = min(bây giờ + 6h, 23:59:59 hôm trước ngày đi),\nDaGiaHan = 1 WHERE GiuCho AND DaGiaHan = 0 (RB-30)
+else Còn ghế chờ admin xác nhận
+  XL -> DB : BEGIN; khóa đơn GiuCho
+  XL -> DB : Nhả ghế chưa có giao dịch chờ/thành công,\nxóa chỗ ngồi, cộng SoChoCon (RB-28, RB-29)
+  XL -> DB : COMMIT (đơn vẫn GiuCho, đợi admin)
+else Có ít nhất 1 ghế đã trả
+  XL -> DB : BEGIN; UPDATE DatTours SET DaXacNhan WHERE GiuCho
+  XL -> DB : Nhả ghế chưa trả, cộng SoChoCon; COMMIT
+else Không ai trả
+  XL -> DB : BEGIN; UPDATE DatTours SET DaHuy WHERE GiuCho
+  XL -> DB : Nhả mọi ghế, xóa chỗ ngồi, cộng SoChoCon; COMMIT
+end
+note over DV, DB
+  Mọi bước đổi trạng thái đều có điều kiện (GiuCho, DaGiaHan = 0),
+  nên dịch vụ nền và lúc mở trang chạy cùng lúc thì chỉ một nơi làm được.
+end note
+@enduml

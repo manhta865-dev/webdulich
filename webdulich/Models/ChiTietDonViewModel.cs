@@ -13,8 +13,13 @@ namespace webdulich.Models
         public decimal GiaTreEm { get; set; }
         public int SoChoCon { get; set; }
 
-        // Chỉ đổi số người khi đơn chưa hủy, chưa thanh toán và lịch chưa khởi hành
+        // Chỉ đổi số người khi đơn chưa hủy, chưa thanh toán và lịch chưa khởi hành (đơn nhóm thì không)
         public bool DuocDoiSoNguoi { get; set; }
+
+        // Đơn nhóm (N6): hạn giữ chỗ, gia hạn, trạng thái từng ghế (tính từ giao dịch, không lưu)
+        public DateTime? HanGiuCho { get; set; }
+        public bool DaGiaHan { get; set; }
+        public Dictionary<int, string> TrangThaiTheoGhe { get; set; } = new Dictionary<int, string>();
     }
 
     // Phần admin được sửa trực tiếp trên đơn: thông tin liên hệ

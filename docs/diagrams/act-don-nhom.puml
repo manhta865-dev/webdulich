@@ -1,0 +1,71 @@
+@startuml act-don-nhom
+' Hình 3.2. Activity: quy trình đặt tour nhóm từ tạo đơn tới chốt (khớp code N1–N6)
+|Trưởng nhóm|
+start
+:Chọn tour và lịch khởi hành;
+:Nhập số người lớn, trẻ nhỏ, thông tin liên hệ;
+if (Ngày đi là hôm nay?) then (có)
+  :Báo "đơn nhóm phải tạo trước ngày khởi hành";
+  stop
+endif
+if (Lịch có sơ đồ chỗ ngồi?) then (có)
+  :Chọn sẵn chỗ cho các ghế (không bắt buộc);
+endif
+|Hệ thống|
+:Trừ chỗ có điều kiện (SoChoCon >= số ghế);
+if (Còn đủ chỗ?) then (không)
+  :Báo hết chỗ;
+  stop
+endif
+:Tạo đơn GiuCho, các ghế, mã thanh toán từng ghế, mã mời;
+:Hạn giữ chỗ = min(bây giờ + 24 giờ, 23:59:59 hôm trước ngày đi);
+|Trưởng nhóm|
+:Gửi lời mời vào nhóm chat;
+fork
+  |Thành viên|
+  :Mở link, đăng nhập;
+  :Nhận một ghế trống (không phải ghế trẻ nhỏ);
+  :Điền họ tên, giấy tờ;
+  :Quét QR, chuyển khoản phần của mình;
+  :Bấm "Tôi đã chuyển khoản";
+fork again
+  |Trưởng nhóm|
+  :Điền hộ ghế trẻ nhỏ, người không có tài khoản;
+  :Trả hộ nếu cần;
+end fork
+|Quản trị viên|
+:Đối chiếu sao kê;
+if (Có khoản tiền đúng số tiền, đúng nội dung?) then (có)
+  :Xác nhận: ghế Đã trả;
+else (không)
+  :Từ chối: ghế về Đã điền, chưa trả;
+endif
+|Hệ thống|
+if (Trưởng nhóm bấm chốt hoặc hết hạn?) then (trưởng nhóm chốt)
+  if (Còn ghế chờ xác nhận hoặc chưa ai trả?) then (có)
+    :Không cho chốt, báo lý do;
+    stop
+  endif
+  :Nhả ghế chưa trả, trả chỗ cho lịch;
+  :Đơn DaXacNhan;
+else (hết hạn)
+  if (Mọi ghế đã trả?) then (có)
+    :Đơn DaXacNhan;
+  elseif (Còn ghế chưa trả và chưa gia hạn?) then (có)
+    :Gia hạn 6 giờ (không vượt mốc hôm trước ngày đi);
+    :Nhắc trong web: lần cuối;
+    stop
+  else (hết lượt)
+    :Nhả ghế chưa trả, trả chỗ cho lịch;
+    if (Còn ghế chờ admin?) then (có)
+      :Đơn giữ GiuCho, đợi admin xử lý xong;
+      stop
+    elseif (Có ghế đã trả?) then (có)
+      :Đơn DaXacNhan;
+    else (không ai trả)
+      :Đơn DaHuy;
+    endif
+  endif
+endif
+stop
+@enduml
