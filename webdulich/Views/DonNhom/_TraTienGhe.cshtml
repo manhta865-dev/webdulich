@@ -18,7 +18,9 @@
     {
         var ck = Model.ChuyenKhoan;
         <form asp-controller="DonNhom" asp-action="DaChuyenKhoan" asp-route-id="@Model.GheId" method="post" class="dn-pt"
-              onsubmit="return confirm('Bạn đã chuyển @ck.SoTien.ToString("N0") VNĐ với nội dung @ck.NoiDung?');">
+              data-xac-nhan-tieu-de="Bạn đã chuyển khoản xong?"
+              data-xac-nhan="Số tiền @ck.SoTien.ToString("N0") VNĐ, nội dung @ck.NoiDung. TravelVN sẽ đối chiếu sao kê rồi xác nhận. Sau khi báo, thông tin hành khách của ghế được khóa."
+              data-xac-nhan-nut="Tôi đã chuyển">
             @* Ô chọn đặt trước các khung để CSS hiện đúng khung theo ô đang chọn, không cần JavaScript *@
             <input type="radio" name="phuongThuc" id="ptNganHang" value="@ThongTinChuyenKhoan.NganHang" class="dn-pt-o" checked />
             @if (ck.CoMomo)
@@ -73,9 +75,7 @@
     {
         <div class="dt-line"><span>Nội dung chuyển khoản</span><span class="dn-ma-tt">@Model.MaThanhToan</span></div>
         <p class="dn-hint">
-            @(Model.TrangThai == TrangThaiGhe.DaNhan || Model.TrangThai == TrangThaiGhe.ChuaNhan
-                ? "Điền thông tin hành khách trước, mã QR của ghế sẽ hiện ở đây."
-                : "Đơn không còn giữ chỗ nên không trả qua web được. Cần hỗ trợ thì liên hệ TravelVN.")
+            @(Model.LyDoKhongTra ?? "Điền họ tên và giấy tờ của hành khách trước, mã QR của ghế sẽ hiện ở đây.")
         </p>
     }
 </section>

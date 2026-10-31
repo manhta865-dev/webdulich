@@ -123,13 +123,17 @@
                                                 @if (gheGd?.NgayNha == null)
                                                 {
                                                     <form method="post" asp-action="XacNhanGiaoDichGhe" asp-route-id="@gd.Id"
-                                                          onsubmit="return confirm('Sao kê đã có @gd.SoTien.ToString("N0") VNĐ với nội dung @gheGd?.MaThanhToan?');">
+                                                          data-xac-nhan-tieu-de="Xác nhận đã nhận tiền ghế @(gheGd != null ? thuTuGhe[gheGd.Id] : 0)?"
+                                                          data-xac-nhan="Chỉ bấm khi sao kê đã có @gd.SoTien.ToString("N0") VNĐ với nội dung @gheGd?.MaThanhToan (@gd.PhuongThuc). Ghế sẽ chuyển sang Đã trả."
+                                                          data-xac-nhan-nut="Đã nhận tiền">
                                                         <input type="hidden" name="dongY" value="true" />
                                                         <button type="submit" class="tv-btn tv-btn-chinh">Đã nhận</button>
                                                     </form>
                                                 }
                                                 <form method="post" asp-action="XacNhanGiaoDichGhe" asp-route-id="@gd.Id"
-                                                      onsubmit="return confirm('Từ chối giao dịch này? Người trả sẽ phải báo chuyển khoản lại.');">
+                                                      data-xac-nhan-tieu-de="Từ chối giao dịch này?"
+                                                      data-xac-nhan="Dùng khi sao kê không có khoản @gd.SoTien.ToString("N0") VNĐ với nội dung @gheGd?.MaThanhToan. Ghế quay về chưa trả, người trả phải báo chuyển khoản lại."
+                                                      data-xac-nhan-nut="Từ chối" data-xac-nhan-nguy-hiem>
                                                     <input type="hidden" name="dongY" value="false" />
                                                     <button type="submit" class="tv-btn tv-btn-vien">Từ chối</button>
                                                 </form>
@@ -152,7 +156,9 @@
             @if (choXacNhanTien)
             {
                 <form method="post" asp-action="XacNhanDaNhanTien" asp-route-id="@don.Id"
-                      onsubmit="return confirm('Xác nhận đã nhận đủ @don.TongTien.ToString("N0") VNĐ cho đơn @don.MaChuyenDi?');">
+                      data-xac-nhan-tieu-de="Xác nhận đã nhận đủ tiền?"
+                      data-xac-nhan="Đơn @don.MaChuyenDi, số tiền @don.TongTien.ToString("N0") VNĐ. Đơn sẽ chuyển sang Đã thanh toán."
+                      data-xac-nhan-nut="Đã nhận đủ">
                     <button type="submit" class="tv-btn tv-btn-chinh">Xác nhận đã nhận tiền</button>
                 </form>
             }
@@ -160,7 +166,9 @@
             @if (!don.DaHuy)
             {
                 <form method="post" asp-action="HuyDonDatTour" asp-route-id="@don.Id"
-                      onsubmit="return confirm('Hủy đơn này? Ghế sẽ được nhả và chỗ trả lại cho lịch.');">
+                      data-xac-nhan-tieu-de="Hủy đơn @don.MaChuyenDi?"
+                      data-xac-nhan="Mọi ghế bị nhả và chỗ trả lại cho lịch, giao dịch đang chờ thành không hiệu lực.@(Model.DsGiaoDich.Any(g => g.TrangThai == "ThanhCong") ? " Đơn đã có tiền nhận: cần hoàn tiền cho khách ngoài hệ thống." : "")"
+                      data-xac-nhan-nut="Hủy đơn" data-xac-nhan-nguy-hiem>
                     <button type="submit" class="tv-btn tv-btn-huy">Hủy đơn</button>
                 </form>
             }

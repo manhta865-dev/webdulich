@@ -1,7 +1,9 @@
 @model webdulich.Models.GheCuaToiViewModel
 @using webdulich.Models
 @{
-    ViewData["Title"] = (Model.DienHo ? "Điền hộ ghế " : "Ghế của tôi, ghế ") + Model.ThuTu;
+    // Trưởng nhóm mở ghế không có tài khoản: "Điền hộ" khi còn sửa được, hết sửa được thì chỉ là "Ghế 3"
+    string tieuDe = !Model.DienHo ? "Ghế của tôi" : Model.DuocSua ? "Điền hộ ghế " + Model.ThuTu : "Ghế " + Model.ThuTu;
+    ViewData["Title"] = Model.DienHo ? tieuDe : "Ghế của tôi, ghế " + Model.ThuTu;
     string cssTrangThai = Model.TrangThai switch
     {
         TrangThaiGhe.DaTra => "da-tra",
@@ -17,13 +19,29 @@
 }
 
 <div class="dt-page">
+    @if (Model.LaTruongNhom)
+    {
+        <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="dn-quay-lai">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>Trang tiến độ của nhóm
+        </a>
+    }
+    else
+    {
+        <a asp-controller="DatTour" asp-action="LichSu" class="dn-quay-lai">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>Lịch sử đặt tour
+        </a>
+    }
     <div class="dn-head">
         <div>
             <span class="dn-ma">Đơn nhóm @Model.MaChuyenDi, ghế @Model.ThuTu</span>
-            <h1>@(Model.DienHo ? "Điền hộ ghế " + Model.ThuTu : "Ghế của tôi")</h1>
+            <h1>@tieuDe</h1>
             <p>@Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "").</p>
         </div>
-        @if (Model.HanGiuCho.HasValue && Model.TrangThai != TrangThaiGhe.DaTra)
+        @if (Model.DonDaChot)
+        {
+            <span class="dn-trang-thai chot">Đơn đã chốt</span>
+        }
+        else if (Model.HanGiuCho.HasValue && Model.TrangThai != TrangThaiGhe.DaTra && Model.TraTien.LyDoKhongTra == null)
         {
             <div class="dn-dong-ho" data-han="@Model.HanGiuCho.Value.ToString("o")">
                 <span>Trả trước hạn, còn</span>
@@ -84,10 +102,11 @@
                 else
                 {
                     <dl class="dn-xem">
-                        <div><dt>Họ tên</dt><dd>@(string.IsNullOrWhiteSpace(Model.Form.HoTen) ? "Chưa điền" : Model.Form.HoTen)</dd></div>
-                        <div><dt>Giấy tờ</dt><dd>@Model.Form.LoaiGiayTo @Model.Form.SoGiayTo</dd></div>
+                        @* Chỉ hiện dữ liệu đã lưu; ô nhập có gợi ý sẵn (họ tên tài khoản, CCCD) nhưng chưa lưu thì là "Chưa điền" *@
+                        <div><dt>Họ tên</dt><dd>@(Model.DaDien ? Model.Form.HoTen : "Chưa điền")</dd></div>
+                        <div><dt>Giấy tờ</dt><dd>@(Model.DaDien && !string.IsNullOrWhiteSpace(Model.Form.SoGiayTo) ? Model.Form.LoaiGiayTo + " " + Model.Form.SoGiayTo : "Chưa điền")</dd></div>
                     </dl>
-                    <p class="dn-hint">Ghế đã báo chuyển khoản, đã trả, hoặc đơn không còn giữ chỗ nên không sửa được. Cần sửa thì liên hệ TravelVN.</p>
+                    <p class="dn-hint">@Model.LyDoKhongSua</p>
                 }
             </section>
 
@@ -120,22 +139,13 @@
                     <h2>@(Model.DienHo ? "Xóa thông tin ghế" : "Không đi nữa?")</h2>
                     <p class="dt-note">@(Model.DienHo ? "Ghế trở về trống để thành viên khác nhận qua link." : "Trả lại ghế để người khác trong nhóm nhận. Chỗ ngồi đã chọn vẫn giữ cho ghế.")</p>
                     <form asp-action="TraLaiGhe" asp-route-id="@Model.GheId" method="post"
-                          onsubmit="return confirm('@(Model.DienHo ? "Xóa thông tin và để ghế trống?" : "Bạn chắc muốn trả lại ghế này?")');">
+                          data-xac-nhan-tieu-de="@(Model.DienHo ? "Để ghế " + Model.ThuTu + " trống?" : "Trả lại ghế này?")"
+                          data-xac-nhan="@(Model.DienHo ? "Thông tin đã điền sẽ bị xóa, ghế trống để thành viên khác nhận qua link." : "Thông tin bạn đã điền sẽ bị xóa và người khác trong nhóm có thể nhận ghế này.")"
+                          data-xac-nhan-nut="@(Model.DienHo ? "Để ghế trống" : "Trả lại ghế")" data-xac-nhan-nguy-hiem>
                         <button type="submit" class="tv-btn tv-btn-huy">@(Model.DienHo ? "Để ghế trống" : "Trả lại ghế")</button>
                     </form>
                 </section>
             }
-
-            <div class="dn-lien-ket">
-                @if (Model.LaTruongNhom)
-                {
-                    <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="tv-link">Về trang tiến độ của nhóm</a>
-                }
-                else
-                {
-                    <a asp-controller="DatTour" asp-action="LichSu" class="tv-link">Về lịch sử đặt tour</a>
-                }
-            </div>
         </aside>
     </div>
 </div>
@@ -155,3 +165,4 @@
         setInterval(chay, 1000);
     })();
 </script>
+

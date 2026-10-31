@@ -36,6 +36,12 @@ namespace webdulich.Models
         public int SoChoCon { get; set; }
         public bool CoSoDo { get; set; }
         public int SoGioGiuCho { get; set; }
+
+        // Hạn giữ chỗ nếu tạo đơn bây giờ: 24 giờ, nhưng không quá 23:59:59 hôm trước ngày đi
+        public DateTime HanGiuChoDuKien { get; set; }
+
+        // Hạn bị rút ngắn vì sát ngày đi (ngắn hơn số giờ cấu hình)
+        public bool HanBiRutNgan { get; set; }
     }
 
     // Trang đơn nhóm của trưởng nhóm
@@ -45,6 +51,10 @@ namespace webdulich.Models
         public DateTime? HanGiuCho { get; set; }
         public bool DaGiaHan { get; set; }
         public string? LinkMoi { get; set; }
+
+        // Lý do đơn không còn nhận thay đổi (cùng điều kiện với máy chủ); null là còn nhận
+        public string? LyDoKhongNhan { get; set; }
+        public bool ConNhanThayDoi => LyDoKhongNhan == null;
         public List<GheNhomHienThi> DsGhe { get; set; } = new List<GheNhomHienThi>();
         public int SoGheDaNhan => DsGhe.Count(g => g.DaCoChu);
         public int SoGheDaTra => DsGhe.Count(g => g.TrangThai == TrangThaiGhe.DaTra);
@@ -70,6 +80,12 @@ namespace webdulich.Models
 
         // Ghế thành viên khác đã điền xong, chưa trả: trưởng nhóm trả hộ được qua trang riêng, không thấy giấy tờ
         public bool TruongNhomTraHoDuoc => !TruongNhomMoDuoc && TrangThai == TrangThaiGhe.DaDien;
+
+        // Ghế chưa báo chuyển khoản, chưa trả, chưa nhả: trưởng nhóm còn bớt được (N2)
+        public bool ChuaTra => TrangThai is TrangThaiGhe.ChuaNhan or TrangThaiGhe.DaNhan or TrangThaiGhe.DaDien;
+
+        // Thành viên khác đã nhận mà chưa trả: trưởng nhóm mời ra được, ghế về trống (N2)
+        public bool DuocMoiRa => CoTaiKhoan && !LaCuaToi && ChuaTra;
     }
 
     // Trang link mời. Ai có link cũng xem được nên không có tên người đã nhận ghế (quy tắc N3).
@@ -172,6 +188,9 @@ namespace webdulich.Models
         // Có QR và nút báo đã chuyển khi ghế đã điền thông tin, chưa trả, và đơn còn giữ chỗ
         public bool DuocTra { get; set; }
 
+        // Đơn không còn nhận thay đổi thì nói lý do thay cho QR
+        public string? LyDoKhongTra { get; set; }
+
         // Người đang xem trả cho ghế không phải của mình (trưởng nhóm trả hộ)
         public bool TraHo { get; set; }
         public ThongTinChuyenKhoan? ChuyenKhoan { get; set; }
@@ -201,6 +220,9 @@ namespace webdulich.Models
         public DateTime NgayDi { get; set; }
         public TimeSpan? GioKhoiHanh { get; set; }
         public DateTime? HanGiuCho { get; set; }
+
+        // Trưởng nhóm đã chốt đơn: chuyến đi chắc chắn với các ghế đã trả (N2)
+        public bool DonDaChot { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
         public string? MaCho { get; set; }
@@ -210,6 +232,7 @@ namespace webdulich.Models
         public bool DienHo { get; set; }
         public bool LaTruongNhom { get; set; }
         public bool DuocSua { get; set; }
+        public string? LyDoKhongSua { get; set; }
         public bool DuocDoiCho { get; set; }
         public bool CoSoDo { get; set; }
         public bool DaDien { get; set; }

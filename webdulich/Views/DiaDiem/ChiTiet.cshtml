@@ -41,6 +41,12 @@
     </a>
 </nav>
 
+@if (TempData["Loi"] != null)
+{
+    @* Lý do không đặt được, gửi về từ DatTour và DonNhom (lịch hết nhận đặt, đơn nhóm sát ngày đi) *@
+    <div class="ct-alert" role="alert">@TempData["Loi"]</div>
+}
+
 <section class="ct-top">
     <div class="ct-gallery">
         @if (danhSachAnh.Any())

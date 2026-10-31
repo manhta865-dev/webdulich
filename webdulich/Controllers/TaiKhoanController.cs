@@ -150,21 +150,20 @@ namespace webdulich.Controllers
         // Dùng khi người dùng bấm Đăng nhập.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DangNhap(string taiKhoanDangNhap, string matKhau, string? returnUrl)
+        // Tham số cho phép rỗng để ASP.NET không tự thêm lỗi tiếng Anh "The ... field is required"; tự kiểm bằng câu tiếng Việt
+        public IActionResult DangNhap(string? taiKhoanDangNhap, string? matKhau, string? returnUrl)
         {
             ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
-            if (string.IsNullOrWhiteSpace(taiKhoanDangNhap))
+            if (string.IsNullOrWhiteSpace(taiKhoanDangNhap) || string.IsNullOrWhiteSpace(matKhau))
             {
-                ModelState.AddModelError("taiKhoanDangNhap", "Vui lòng nhập email hoặc số điện thoại!");
-            }
-
-            if (string.IsNullOrWhiteSpace(matKhau))
-            {
-                ModelState.AddModelError("matKhau", "Vui lòng nhập mật khẩu!");
-            }
-
-            if (!ModelState.IsValid)
-            {
+                if (string.IsNullOrWhiteSpace(taiKhoanDangNhap))
+                {
+                    ModelState.AddModelError("taiKhoanDangNhap", "Vui lòng nhập email hoặc số điện thoại!");
+                }
+                if (string.IsNullOrWhiteSpace(matKhau))
+                {
+                    ModelState.AddModelError("matKhau", "Vui lòng nhập mật khẩu!");
+                }
                 return View();
             }
 

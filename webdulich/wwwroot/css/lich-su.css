@@ -95,6 +95,13 @@
     font-weight: 700;
 }
 
+.ls-ghi-chu {
+    margin: 0;
+    padding: 0 var(--tv-k5) var(--tv-k4);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+
 .ls-card-foot {
     display: flex;
     justify-content: flex-end;

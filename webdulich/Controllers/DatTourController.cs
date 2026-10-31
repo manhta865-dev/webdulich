@@ -965,6 +965,11 @@ namespace webdulich.Controllers
             {
                 loi = "Không tìm thấy đơn của bạn.";
             }
+            else if (don.LoaiDon == "Nhom")
+            {
+                // Đơn nhóm đổi chỗ theo từng ghế ở trang đơn nhóm (DonNhom/ChoNgoiGhe)
+                loi = "Đơn nhóm đổi chỗ theo từng ghế ở trang đơn nhóm.";
+            }
             else if (don.TrangThai == "DaHuy")
             {
                 loi = "Đơn đã hủy, không chọn chỗ được.";
@@ -1146,9 +1151,10 @@ namespace webdulich.Controllers
                 .GroupBy(x => x.DatTourId)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.MaViTri).OrderBy(m => m.Length).ThenBy(m => m).ToList());
 
-            // Ghế mình nhận trong đơn nhóm của người khác (đơn đứng tên trưởng nhóm nên không có trong ds ở trên)
+            // Ghế mình nhận trong đơn nhóm của người khác (đơn đứng tên trưởng nhóm nên không có trong ds ở trên).
+            // Lấy cả ghế đã nhả (chốt đơn, bớt ghế, hủy đơn) để thành viên biết chuyện gì xảy ra với ghế của mình.
             var dsGheNhom = _context.HanhKhachDatTours.AsNoTracking()
-                .Where(h => h.TaiKhoanId == taiKhoanId.Value && h.NgayNha == null
+                .Where(h => h.TaiKhoanId == taiKhoanId.Value
                     && h.DatTour!.LoaiDon == "Nhom" && h.DatTour.TaiKhoanId != taiKhoanId.Value)
                 .Select(h => new
                 {
@@ -1229,6 +1235,13 @@ namespace webdulich.Controllers
             {
                 TempData["Loi"] = "Đơn này đã được hủy trước đó.";
                 return RedirectToAction("LichSu");
+            }
+
+            // Đơn nhóm hủy ở trang đơn nhóm (kiểm ghế đã trả, giao dịch theo ghế), không hủy theo kiểu đơn cá nhân
+            if (datTour.LoaiDon == "Nhom")
+            {
+                TempData["Loi"] = "Đơn nhóm hủy ở trang đơn nhóm.";
+                return RedirectToAction("ChiTiet", "DonNhom", new { id });
             }
 
             XuLyDon.HuyDon(_context, datTour);

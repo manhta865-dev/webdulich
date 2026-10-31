@@ -56,6 +56,7 @@
             <div class="ls-list">
                 @foreach (var g in gheNhom)
                 {
+                    bool gheDaNha = g.TrangThai == webdulich.Models.TrangThaiGhe.DaNha;
                     <article class="ls-card">
                         <header class="ls-card-head">
                             <div>
@@ -63,7 +64,7 @@
                                 <span class="ls-nhom">Nhóm của @g.TenTruongNhom</span>
                                 <div class="ls-code">Mã chuyến đi: @g.MaChuyenDi</div>
                             </div>
-                            <span class="badge-status @(g.DonDaHuy ? "status-cancelled" : g.TrangThai == "Đã trả" ? "status-paid" : g.TrangThai == "Chờ xác nhận thanh toán" ? "status-checking" : "status-unpaid")">@(g.DonDaHuy ? "Đơn đã hủy" : g.TrangThai)</span>
+                            <span class="badge-status @(g.DonDaHuy || gheDaNha ? "status-cancelled" : g.TrangThai == "Đã trả" ? "status-paid" : g.TrangThai == "Chờ xác nhận thanh toán" ? "status-checking" : "status-unpaid")">@(g.DonDaHuy ? "Đơn đã hủy" : gheDaNha ? "Ghế đã bị nhả" : g.TrangThai)</span>
                         </header>
                         <dl class="ls-details">
                             <div>
@@ -83,11 +84,15 @@
                                 <dd>@(g.MaCho ?? "Chưa chọn")</dd>
                             </div>
                         </dl>
-                        @if (!g.DonDaHuy)
+                        @if (!g.DonDaHuy && !gheDaNha)
                         {
                             <footer class="ls-card-foot">
                                 <a asp-controller="DonNhom" asp-action="GheCuaToi" asp-route-id="@g.GheId" class="tv-btn tv-btn-chinh">Xem ghế của tôi</a>
                             </footer>
+                        }
+                        else if (gheDaNha && !g.DonDaHuy)
+                        {
+                            <p class="ls-ghi-chu">Ghế chưa trả tiền nên đã được nhả khi trưởng nhóm chốt đơn hoặc bớt ghế. Bạn không bị trừ tiền.</p>
                         }
                     </article>
                 }

@@ -203,7 +203,8 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 
 | Nội dung | Quyết định |
 |---|---|
-| Hạn giữ chỗ | 24 giờ, tham số trong `appsettings.json` |
+| Hạn giữ chỗ | 24 giờ (tham số trong `appsettings.json`), nhưng muộn nhất 23:59:59 hôm trước ngày đi (`XuLyDon.TinhHanGiuCho`, chốt 31/10/2026). Ngày đi là hôm nay thì không tạo đơn nhóm được. Gia hạn ở N5 cũng không vượt mốc này |
+| Khi nào đơn còn nhận thay đổi | Đơn `GiuCho`, lịch chưa hủy, chưa tới ngày đi, chưa quá hạn giữ chỗ. Một hàm duy nhất (`LyDoDonKhongNhan`) dùng cho cả máy chủ và giao diện; không còn nhận thì trang ẩn nút và nói đúng lý do |
 | Nhắc trước khi nhả | Hết hạn thì gia hạn thêm 6 giờ một lần (`DaGiaHan`) và nhắc trong web; hết 6 giờ mới nhả ghế chưa trả. Chưa gửi email, SMS |
 | Ghế đang chờ admin xác nhận khi hết hạn | Không nhả, giữ đến khi admin xác nhận hoặc từ chối |
 | Luật chốt (F9) | Hết hạn: nhả ghế chưa trả, chốt đơn với ghế đã trả; không ai trả thì hủy đơn. Trưởng nhóm được chốt sớm |
@@ -220,6 +221,12 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | Ghế trẻ nhỏ | Không nhận qua link; trưởng nhóm điền hộ. Trưởng nhóm cũng điền hộ được ghế người lớn chưa ai nhận (người không có tài khoản) |
 | Trả lại ghế | Thành viên tự trả lại ghế khi chưa trả tiền: ghế về trống, xóa thông tin, giữ chỗ ngồi đã chọn |
 | Sửa thông tin ghế | Được sửa khi đơn còn giữ chỗ và ghế chưa trả, chưa chờ xác nhận; sau đó liên hệ TravelVN |
+| Đổi link mời (N2) | Trưởng nhóm tạo mã mời mới khi đơn còn giữ chỗ; link cũ hết hiệu lực, người đã nhận ghế giữ nguyên ghế |
+| Mời ra khỏi ghế (N2) | Trưởng nhóm làm ghế thành viên khác về trống (xóa tài khoản, giấy tờ, giữ chỗ ngồi) khi ghế chưa báo chuyển khoản, chưa trả |
+| Bớt ghế (N2) | Nhả một ghế chưa báo chuyển khoản, chưa trả; bỏ chỗ ngồi; trả 1 chỗ cho lịch; đơn còn ít nhất 1 ghế |
+| Chốt sớm (N2) | Chỉ khi không còn ghế chờ admin xác nhận và có ít nhất 1 ghế đã trả. Nhả ghế chưa trả, trả chỗ cho lịch, đơn thành `DaXacNhan`, link mời hết hiệu lực. Hàm dùng chung `XuLyDon.ChotDonNhom` (N5 gọi lại) |
+| Hủy đơn nhóm (N2) | Trưởng nhóm chỉ hủy được khi chưa ghế nào trả hoặc báo chuyển khoản; đã có tiền thì liên hệ TravelVN để admin hủy và hoàn tiền ngoài hệ thống. Không làm chức năng thêm ghế |
+| Đơn nhóm ở trang đơn cá nhân | `DatTour/HuyDatTour` và `DatTour/DoiChoNgoi` từ chối đơn nhóm, chuyển về trang đơn nhóm |
 | Thứ tự làm | N3 (link mời) trước, rồi N4 (QR từng ghế, gồm trả hộ), N2 (quản lý đơn), N5 (tự động hết hạn), N6 (admin) |
 
 Ràng buộc thêm (kiểm trong code):
@@ -233,3 +240,5 @@ Ràng buộc thêm (kiểm trong code):
 | RB-25 | Người xem và sửa một ghế: chủ ghế (`TaiKhoanId`), hoặc trưởng nhóm khi ghế chưa có tài khoản. Trưởng nhóm không mở được ghế thành viên khác đã nhận (cụ thể hóa RB-20) |
 | RB-26 | Mỗi ghế có tối đa một giao dịch đang chờ hoặc thành công. Báo chuyển khoản là một câu INSERT có điều kiện (ghế chưa nhả, đã điền họ tên và số giấy tờ, chưa có giao dịch `ChoXacNhan`/`ThanhCong`), nên chủ ghế và trưởng nhóm cùng bấm chỉ tạo một giao dịch. Sửa thông tin và trả lại ghế cũng kiểm điều kiện này trong câu UPDATE |
 | RB-27 | Người báo chuyển khoản cho một ghế: chủ ghế, hoặc trưởng nhóm của đơn. Admin xác nhận hay từ chối bằng câu UPDATE có điều kiện `TrangThai = 'ChoXacNhan'`, nên một giao dịch chỉ được xử lý một lần |
+| RB-28 | Nhả ghế (bớt ghế, chốt đơn) chỉ áp dụng cho ghế chưa có giao dịch `ChoXacNhan`/`ThanhCong`, kiểm trong cùng câu UPDATE. Báo chuyển khoản chỉ thành công khi đơn còn `GiuCho`. Chốt đổi trạng thái đơn trước rồi mới nhả ghế, trong một giao dịch CSDL, nên không có giao dịch mới chen vào ghế vừa bị nhả |
+| RB-29 | Số chỗ trả lại cho lịch bằng đúng số ghế vừa nhả (đếm từ câu UPDATE), lịch đã hủy thì không cộng (cụ thể hóa RB-16, RB-17) |

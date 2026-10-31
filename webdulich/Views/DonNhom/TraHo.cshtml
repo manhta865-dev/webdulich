@@ -9,6 +9,9 @@
 }
 
 <div class="dt-page">
+    <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="dn-quay-lai">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>Trang tiến độ của nhóm
+    </a>
     <div class="dn-head">
         <div>
             <span class="dn-ma">Đơn nhóm @Model.MaChuyenDi, ghế @Model.ThuTu</span>
@@ -36,9 +39,7 @@
 
         <aside>
             <partial name="_TraTienGhe" model="Model.TraTien" />
-            <div class="dn-lien-ket">
-                <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="tv-link">Về trang tiến độ của nhóm</a>
-            </div>
         </aside>
     </div>
 </div>
+

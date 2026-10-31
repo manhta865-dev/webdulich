@@ -11,6 +11,27 @@
 .dn-alert.loi { background: #FBE9E7; color: var(--tv-loi); }
 .dn-alert.loi:empty, .dn-alert.loi ul:empty { display: none; }
 .dn-alert ul { margin: 0; padding-left: var(--tv-k4); }
+.dn-alert.canh-bao { background: #FBF1DC; color: var(--tv-canh-bao); }
+
+/* Nút quay lại đầu trang ghế, trang trả hộ */
+.dn-quay-lai {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    margin-bottom: var(--tv-k3);
+    padding: var(--tv-k1) var(--tv-k3) var(--tv-k1) var(--tv-k2);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dn-quay-lai:hover,
+.dn-quay-lai:focus-visible { border-color: var(--tv-nhan); color: var(--tv-nhan-dam); }
+.dn-quay-lai .tv-icon { width: 16px; height: 16px; transform: rotate(180deg); }
 
 .dn-hint { margin: var(--tv-k3) 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 
@@ -216,6 +237,59 @@
     white-space: nowrap;
 }
 
+/* Menu "Thêm" của từng ghế: mời ra, bớt ghế (N2) */
+.dn-ghe-them { position: relative; flex-shrink: 0; }
+
+.dn-ghe-them summary {
+    list-style: none;
+    padding: 2px var(--tv-k2);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    color: var(--tv-chu-phu);
+    cursor: pointer;
+}
+
+.dn-ghe-them summary::-webkit-details-marker { display: none; }
+.dn-ghe-them[open] summary { color: var(--tv-nhan-dam); border-color: var(--tv-nhan); }
+
+.dn-ghe-them-ds {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 5;
+    display: grid;
+    min-width: 170px;
+    padding: var(--tv-k1);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .1);
+}
+
+.dn-ghe-them-ds form { margin: 0; }
+
+.dn-ghe-them-ds button {
+    width: 100%;
+    padding: var(--tv-k2);
+    border: 0;
+    border-radius: var(--tv-bo-nut);
+    background: none;
+    text-align: left;
+    font: inherit;
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    color: var(--tv-chu);
+    cursor: pointer;
+}
+
+.dn-ghe-them-ds button:hover,
+.dn-ghe-them-ds button:focus-visible { background: var(--tv-nen); }
+.dn-ghe-them-ds button.nguy-hiem { color: var(--tv-loi); }
+
+.dn-huy-don { margin-top: var(--tv-k3); }
+
 .dn-moi { border-color: var(--tv-nhan); }
 
 /* Lời mời soạn sẵn: trông như một tin nhắn sắp gửi */
@@ -384,15 +458,18 @@
 /* Cột lưới không được nở theo tên dài (chữ nowrap), nếu không trang tràn ngang trên điện thoại */
 .dt-layout > * { min-width: 0; }
 
-@media (max-width: 700px) {
-    .dn-head { flex-direction: column; }
-    .dn-dong-ho { align-items: flex-start; text-align: left; width: 100%; }
-    .dn-fields { grid-template-columns: 1fr; }
-    /* Nhãn trạng thái xuống dòng dưới tên, thẳng hàng với tên */
+/* Cột trái hẹp khi có cột phải bên cạnh: nhãn trạng thái và các nút xuống dòng dưới tên, thẳng hàng với tên */
+@media (max-width: 1100px) {
     .dn-ghe { flex-wrap: wrap; }
     .dn-ghe-ten { flex-basis: calc(100% - 44px); }
     .dn-ghe .dn-nhan, .dn-nhan-form { margin-left: 44px; }
     .dn-ghe-mo { margin-left: auto; }
+}
+
+@media (max-width: 700px) {
+    .dn-head { flex-direction: column; }
+    .dn-dong-ho { align-items: flex-start; text-align: left; width: 100%; }
+    .dn-fields { grid-template-columns: 1fr; }
     .dn-moi-dau { grid-template-columns: 1fr; }
     .dn-moi-anh { width: 100%; height: 160px; }
 }

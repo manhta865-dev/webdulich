@@ -7,6 +7,18 @@
     // Trang cần quay lại sau đăng nhập (đã kiểm là đường dẫn nội bộ trong controller)
     var returnUrl = ViewBag.ReturnUrl as string;
     var tuLinkMoi = returnUrl?.StartsWith("/DonNhom/Moi") == true;
+
+    // Lỗi của form đăng nhập do controller ghi vào ModelState (sai tài khoản hoặc mật khẩu, bỏ trống ô)
+    // Theo thứ tự các ô trên form: lỗi chung, rồi ô tài khoản, rồi ô mật khẩu
+    var loiDangNhap = moDangKy
+        ? new List<string>()
+        : new[] { "", "taiKhoanDangNhap", "matKhau" }
+            .SelectMany(khoa => ViewData.ModelState.TryGetValue(khoa, out var o) ? o.Errors : Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+            .Select(e => e.ErrorMessage)
+            .Distinct()
+            .ToList();
+    // Gõ sai thì giữ lại email hoặc số điện thoại đã gõ, chỉ xóa mật khẩu
+    var taiKhoanDaGo = !moDangKy && Context.Request.HasFormContentType ? Context.Request.Form["taiKhoanDangNhap"].ToString() : "";
 }
 
 <style>
@@ -262,6 +274,9 @@
         text-align: center;
     }
 
+    /* Lỗi đăng nhập nằm trên các ô nhập, ngay chỗ mắt người dùng đang nhìn */
+    form .error-box { margin: 0 0 12px; }
+
     .success-box {
         margin-top: 14px;
         padding: 10px 12px;
@@ -337,13 +352,21 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
 
+                @if (loiDangNhap.Any())
+                {
+                    <div class="error-box" role="alert">@string.Join(" ", loiDangNhap)</div>
+                }
+
                 <input name="taiKhoanDangNhap"
                        class="auth-input"
+                       value="@taiKhoanDaGo"
+                       autocomplete="username"
                        placeholder="Email hoặc số điện thoại" />
 
                 <input name="matKhau"
                        type="password"
                        class="auth-input"
+                       autocomplete="current-password"
                        placeholder="Mật khẩu" />
 
                 <div class="forgot-text">Forgot your password?</div>

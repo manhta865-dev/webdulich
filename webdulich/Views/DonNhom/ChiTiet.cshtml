@@ -14,7 +14,8 @@
         TrangThaiGhe.DaNha => "da-nha",
         _ => "trong"
     };
-    var conGiuCho = don.TrangThai == "GiuCho" && Model.HanGiuCho.HasValue;
+    // Cùng điều kiện với máy chủ: nút nào hiện ra là bấm được
+    var conGiuCho = Model.ConNhanThayDoi;
     int soGheTrong = Model.DsGhe.Count(g => g.TrangThai == TrangThaiGhe.ChuaNhan);
     // Lời mời soạn sẵn để dán vào nhóm chat; link đặt cuối để ứng dụng chat tự nhận thành liên kết
     var loiMoi = conGiuCho
@@ -44,11 +45,17 @@
                 <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
             </div>
         }
-        else
+        else if (don.TrangThai != "GiuCho")
         {
             <span class="dn-trang-thai @(don.DaHuy ? "huy" : "chot")">@(don.DaHuy ? "Đơn đã hủy" : "Đơn đã chốt")</span>
         }
     </div>
+
+    @if (!conGiuCho && don.TrangThai == "GiuCho")
+    {
+        @* Đơn chưa chốt nhưng đã quá hạn, tới ngày đi hoặc lịch bị hủy: nói rõ vì sao không còn nút thay đổi *@
+        <div class="dn-alert canh-bao" role="status">@Model.LyDoKhongNhan</div>
+    }
 
     @if (TempData["ThanhCong"] != null)
     {
@@ -84,17 +91,50 @@
                             {
                                 @* Ghế của mình, hoặc ghế không có tài khoản để điền hộ (RB-20: không mở ghế người khác) *@
                                 <a asp-action="GheCuaToi" asp-route-id="@g.Id" class="dn-ghe-mo">
-                                    @(g.LaCuaToi ? "Ghế của tôi" : g.TrangThai is TrangThaiGhe.DaTra or TrangThaiGhe.ChoXacNhan ? "Xem" : g.DaCoChu ? "Sửa" : "Điền hộ")
+                                    @(g.LaCuaToi ? "Ghế của tôi" : !conGiuCho || g.TrangThai is TrangThaiGhe.DaTra or TrangThaiGhe.ChoXacNhan ? "Xem" : g.DaCoChu ? "Sửa" : "Điền hộ")
                                 </a>
                             }
                             else if (g.TruongNhomTraHoDuoc && conGiuCho)
                             {
                                 <a asp-action="TraHo" asp-route-id="@g.Id" class="dn-ghe-mo">Trả hộ</a>
                             }
+                            @if (conGiuCho && (g.DuocMoiRa || (g.ChuaTra && tongGhe > 1)))
+                            {
+                                @* Thao tác ít dùng gom vào một menu nhỏ để hàng ghế không rối *@
+                                <details class="dn-ghe-them">
+                                    <summary aria-label="Thao tác khác với ghế @g.ThuTu">Thêm</summary>
+                                    <div class="dn-ghe-them-ds">
+                                        @if (g.DuocMoiRa)
+                                        {
+                                            <form asp-action="MoiRaKhoiGhe" asp-route-id="@g.Id" method="post"
+                                                  data-xac-nhan-tieu-de="Mời @g.TenChu ra khỏi ghế @g.ThuTu?"
+                                                  data-xac-nhan="Thông tin họ đã điền sẽ bị xóa và ghế trở về trống để người khác nhận qua link mời. Bạn nên báo trước cho họ."
+                                                  data-xac-nhan-nut="Mời ra khỏi ghế" data-xac-nhan-nguy-hiem>
+                                                <button type="submit">Mời ra khỏi ghế</button>
+                                            </form>
+                                        }
+                                        @if (g.ChuaTra && tongGhe > 1)
+                                        {
+                                            <form asp-action="BotGhe" asp-route-id="@g.Id" method="post"
+                                                  data-xac-nhan-tieu-de="Bớt ghế @g.ThuTu khỏi đơn?"
+                                                  data-xac-nhan="Đơn sẽ còn @(tongGhe - 1) ghế. Chỗ này trả lại cho lịch để người khác đặt, sau đó không lấy lại được."
+                                                  data-xac-nhan-nut="Bớt ghế" data-xac-nhan-nguy-hiem>
+                                                <button type="submit" class="nguy-hiem">Bớt ghế này</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </details>
+                            }
                         </li>
                     }
                 </ol>
-                <p class="dn-hint">Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác. Ghế trẻ nhỏ và người không có tài khoản thì bấm "Điền hộ". Thành viên đã điền xong mà chưa chuyển được thì bạn bấm "Trả hộ".</p>
+                <p class="dn-hint">
+                    Bạn thấy tên và trạng thái của từng ghế, không thấy giấy tờ của người khác.
+                    @if (conGiuCho)
+                    {
+                        <text>Ghế trẻ nhỏ và người không có tài khoản thì bấm "Điền hộ". Thành viên đã điền xong mà chưa chuyển được thì bạn bấm "Trả hộ".</text>
+                    }
+                </p>
             </section>
         </div>
 
@@ -118,6 +158,14 @@
                         <button type="button" class="dn-nut-chu" data-chep="link">Sao chép link</button>
                     </div>
                     <input type="hidden" id="linkMoi" value="@Model.LinkMoi" />
+
+                    <form asp-action="DoiLinkMoi" asp-route-id="@don.Id" method="post" class="dn-link-tho"
+                          data-xac-nhan-tieu-de="Đổi link mời?"
+                          data-xac-nhan="Link cũ sẽ không mở được nữa. Người đã nhận ghế vẫn giữ ghế của mình. Sau khi đổi, bạn gửi lại lời mời mới vào nhóm chat."
+                          data-xac-nhan-nut="Tạo link mới">
+                        <span>Lỡ gửi link nhầm chỗ?</span>
+                        <button type="submit" class="dn-nut-chu">Đổi link mời</button>
+                    </form>
                 </section>
             }
 
@@ -126,6 +174,48 @@
                 <div class="dt-line"><span>Tổng cả nhóm</span><span>@don.TongTien.ToString("N0") VNĐ</span></div>
                 <div class="dt-line"><span>Đã trả</span><span>@Model.DsGhe.Where(g => g.TrangThai == TrangThaiGhe.DaTra).Sum(g => g.GiaLucDat).ToString("N0") VNĐ</span></div>
             </section>
+
+            @if (don.TrangThai == "GiuCho")
+            {
+                int soGheCho = Model.DsGhe.Count(g => g.TrangThai == TrangThaiGhe.ChoXacNhan);
+                int soGheChuaTra = Model.DsGhe.Count(g => g.ChuaTra);
+                bool coTien = Model.SoGheDaTra > 0 || soGheCho > 0;
+                <section class="dt-block">
+                    <h2>Chốt hoặc hủy đơn</h2>
+                    @if (soGheCho > 0)
+                    {
+                        <p class="dt-note">Còn @soGheCho ghế đang chờ TravelVN xác nhận tiền. Chốt được sau khi xác nhận xong.</p>
+                    }
+                    else if (Model.SoGheDaTra == 0)
+                    {
+                        <p class="dt-note">Chưa ghế nào trả tiền nên chưa chốt được.</p>
+                    }
+                    else
+                    {
+                        <p class="dt-note">Chốt ngay thì đi với @Model.SoGheDaTra ghế đã trả@(soGheChuaTra > 0 ? $", {soGheChuaTra} ghế chưa trả sẽ bị nhả" : "").</p>
+                        <form asp-action="ChotDon" asp-route-id="@don.Id" method="post"
+                              data-xac-nhan-tieu-de="Chốt đơn với @Model.SoGheDaTra ghế đã trả?"
+                              data-xac-nhan="@(soGheChuaTra > 0 ? $"{soGheChuaTra} ghế chưa trả sẽ bị nhả và trả chỗ cho lịch. " : "")Sau khi chốt, link mời hết hiệu lực và danh sách đi không đổi được nữa."
+                              data-xac-nhan-nut="Chốt đơn" data-xac-nhan-nguy-hiem="@(soGheChuaTra > 0 ? "true" : "false")">
+                            <button type="submit" class="tv-btn tv-btn-chinh dn-nut-day">Chốt đơn</button>
+                        </form>
+                    }
+
+                    @if (coTien)
+                    {
+                        <p class="dn-hint">Đã có người trả tiền nên không tự hủy đơn được. Cần hủy và hoàn tiền thì liên hệ TravelVN.</p>
+                    }
+                    else
+                    {
+                        <form asp-action="HuyDonNhom" asp-route-id="@don.Id" method="post" class="dn-huy-don"
+                              data-xac-nhan-tieu-de="Hủy cả đơn nhóm?"
+                              data-xac-nhan="Mọi ghế bị nhả, chỗ trả lại cho lịch và link mời hết hiệu lực. Các thành viên đã nhận ghế cũng mất ghế."
+                              data-xac-nhan-nut="Hủy đơn" data-xac-nhan-nguy-hiem>
+                            <button type="submit" class="tv-btn tv-btn-huy dn-nut-day">Hủy đơn nhóm</button>
+                        </form>
+                    }
+                </section>
+            }
         </aside>
     </div>
 </div>
@@ -193,3 +283,4 @@
         }
     })();
 </script>
+

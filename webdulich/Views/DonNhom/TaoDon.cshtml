@@ -27,7 +27,8 @@
             <section class="dt-block">
                 <h2>Nhóm của bạn</h2>
                 <p class="dt-note">
-                    TravelVN giữ chỗ cho cả nhóm trong <strong>@Model.SoGioGiuCho giờ</strong>. Trong thời gian đó, mỗi thành viên mở link mời,
+                    TravelVN giữ chỗ cho cả nhóm đến <strong>@Model.HanGiuChoDuKien.ToString("HH:mm dd/MM")</strong>@(Model.HanBiRutNgan ?" (sát ngày đi nên ngắn hơn " + Model.SoGioGiuCho + " giờ)" : "").
+                    Trong thời gian đó, mỗi thành viên mở link mời,
                     nhận một ghế, tự điền thông tin và tự trả phần của mình. Bạn chỉ trả ghế của bạn, hoặc trả hộ ghế nào bạn muốn.
                 </p>
 
