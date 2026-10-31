@@ -43,8 +43,8 @@
         }
         else if (Model.HanGiuCho.HasValue && Model.TrangThai != TrangThaiGhe.DaTra && Model.TraTien.LyDoKhongTra == null)
         {
-            <div class="dn-dong-ho" data-han="@Model.HanGiuCho.Value.ToString("o")">
-                <span>Trả trước hạn, còn</span>
+            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@Model.HanGiuCho.Value.ToString("o")">
+                <span>@(Model.DaGiaHan ? "Đã gia hạn lần cuối, còn" : "Trả trước hạn, còn")</span>
                 <strong data-dem>--:--:--</strong>
                 <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
             </div>
@@ -58,6 +58,11 @@
     @if (TempData["Loi"] != null)
     {
         <div class="dn-alert loi" role="alert">@TempData["Loi"]</div>
+    }
+    @if (Model.DaGiaHan && Model.TraTien.LyDoKhongTra == null && Model.TrangThai is TrangThaiGhe.DaNhan or TrangThaiGhe.DaDien)
+    {
+        @* N5: nhắc ghế chưa trả rằng đơn đã gia hạn lần cuối *@
+        <div class="dn-alert canh-bao" role="status">Đơn đã được gia hạn lần cuối. Ghế chưa trả trước @Model.HanGiuCho!.Value.ToString("HH:mm dd/MM") sẽ bị nhả.</div>
     }
 
     <div class="dt-layout">

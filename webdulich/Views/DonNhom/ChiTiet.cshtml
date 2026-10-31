@@ -51,6 +51,11 @@
         }
     </div>
 
+    @if (conGiuCho && Model.DaGiaHan)
+    {
+        @* N5: hết hạn lần đầu mà còn ghế chưa trả thì được gia hạn một lần *@
+        <div class="dn-alert canh-bao" role="status">Đơn đã được gia hạn, đây là lần cuối. Ghế chưa trả trước @Model.HanGiuCho!.Value.ToString("HH:mm dd/MM") sẽ bị nhả, bạn nhắc các thành viên nhé.</div>
+    }
     @if (!conGiuCho && don.TrangThai == "GiuCho")
     {
         @* Đơn chưa chốt nhưng đã quá hạn, tới ngày đi hoặc lịch bị hủy: nói rõ vì sao không còn nút thay đổi *@

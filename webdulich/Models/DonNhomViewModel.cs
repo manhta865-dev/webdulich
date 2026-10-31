@@ -223,6 +223,9 @@ namespace webdulich.Models
 
         // Trưởng nhóm đã chốt đơn: chuyến đi chắc chắn với các ghế đã trả (N2)
         public bool DonDaChot { get; set; }
+
+        // Đơn đã dùng lượt gia hạn duy nhất (N5)
+        public bool DaGiaHan { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
         public string? MaCho { get; set; }

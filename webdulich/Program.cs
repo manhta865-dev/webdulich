@@ -15,6 +15,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<DuLichDbContext>()
     .AddDefaultTokenProviders();
 
+// N5: quét đơn nhóm hết hạn giữ chỗ theo chu kỳ (gia hạn, nhả ghế chưa trả, chốt hoặc hủy)
+builder.Services.AddHostedService<webdulich.Services.XuLyHetHanDonNhom>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

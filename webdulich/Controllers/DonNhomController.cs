@@ -22,6 +22,21 @@ namespace webdulich.Controllers
 
         private int SoGioGiuCho => _cauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
 
+        private int SoGioGiaHan => _cauHinh.GetValue("DonNhom:SoGioGiaHan", 6);
+
+        // Mở trang đơn nhóm thì xử lý hết hạn ngay cho đơn đó, không đợi dịch vụ nền (host có thể đang "ngủ"). N5.
+        // Đơn chưa quá hạn chỉ tốn một câu đọc.
+        private void XuLyNeuQuaHan(int? donId)
+        {
+            if (donId.HasValue)
+            {
+                XuLyDon.XuLyDonQuaHan(_context, donId.Value, SoGioGiaHan);
+            }
+        }
+
+        private int? DonCuaGhe(int gheId) =>
+            _context.HanhKhachDatTours.Where(h => h.Id == gheId).Select(h => (int?)h.DatTourId).FirstOrDefault();
+
         private int? TaiKhoanDangNhap() => HttpContext.Session.GetInt32("taiKhoanId");
 
         private bool LaKhach() =>
@@ -329,6 +344,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
+            XuLyNeuQuaHan(id);
             var datTour = _context.DatTours.AsNoTracking().Include(x => x.LichKhoiHanhTour)
                 .FirstOrDefault(x => x.Id == id && x.LoaiDon == "Nhom");
             // RB-21: chỉ trưởng nhóm xem được trang quản lý đơn
@@ -572,7 +588,8 @@ namespace webdulich.Controllers
             if (don.TrangThai == "DaXacNhan") return "Đơn đã chốt, danh sách đi đã cố định.";
             if (don.LichKhoiHanhTour.TrangThai == TrangThaiLich.DaHuy) return "Lịch khởi hành đã bị hủy. TravelVN sẽ liên hệ trưởng nhóm.";
             if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= DateTime.Today) return "Đã tới ngày khởi hành nên đơn không nhận thay đổi nữa. Cần hỗ trợ thì liên hệ TravelVN.";
-            if (!(don.HanGiuCho > DateTime.Now)) return "Đã hết hạn giữ chỗ, ghế chưa trả sẽ được nhả.";
+            // Trang đã chạy XuLyNeuQuaHan trước, nên quá hạn mà vẫn GiuCho nghĩa là đang đợi admin xác nhận ghế đã báo chuyển khoản
+            if (!(don.HanGiuCho > DateTime.Now)) return "Đã hết hạn giữ chỗ, ghế chưa trả đã được nhả. Đơn sẽ tự chốt khi TravelVN xác nhận xong các ghế đã báo chuyển khoản.";
             return null;
         }
 
@@ -594,6 +611,12 @@ namespace webdulich.Controllers
         public IActionResult Moi(string? ma)
         {
             var don = LayDonTheoMaMoi(ma);
+            if (don != null && don.TrangThai == "GiuCho" && don.HanGiuCho <= DateTime.Now)
+            {
+                // Quá hạn: xử lý (có thể được gia hạn) rồi đọc lại
+                XuLyNeuQuaHan(don.Id);
+                don = LayDonTheoMaMoi(ma);
+            }
             // Link sai, đã đổi mã, đơn đã chốt, hủy hoặc quá hạn: báo dễ hiểu thay vì lỗi 404
             if (don == null || !DonConNhanGhe(don))
             {
@@ -781,6 +804,7 @@ namespace webdulich.Controllers
                 GioKhoiHanh = lich.GioKhoiHanh,
                 HanGiuCho = don.TrangThai == "GiuCho" ? don.HanGiuCho : null,
                 DonDaChot = don.TrangThai == "DaXacNhan",
+                DaGiaHan = don.DaGiaHan,
                 LoaiHanhKhach = ghe.LoaiHanhKhach,
                 GiaLucDat = ghe.GiaLucDat,
                 MaCho = maCho,
@@ -811,6 +835,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan", new { returnUrl = Url.Action("GheCuaToi", new { id }) });
             }
 
+            XuLyNeuQuaHan(DonCuaGhe(id));
             var ghe = LayGheDuocMo(id, taiKhoanId.Value, out var laTruongNhom);
             if (ghe == null)
             {
@@ -938,6 +963,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan", new { returnUrl = Url.Action("TraHo", new { id }) });
             }
 
+            XuLyNeuQuaHan(DonCuaGhe(id));
             var ghe = LayGheDuocTra(id, taiKhoanId.Value);
             if (ghe == null || ghe.DatTour!.TaiKhoanId != taiKhoanId.Value)
             {

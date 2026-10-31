@@ -1,0 +1,69 @@
+using webdulich.Models;
+
+namespace webdulich.Services
+{
+    // Chạy nền theo chu kỳ (mặc định 5 phút, DonNhom:ChuKyQuetPhut): tìm đơn nhóm đang giữ chỗ đã quá hạn
+    // và xử lý từng đơn bằng XuLyDon.XuLyDonQuaHan (gia hạn, nhả ghế, chốt hoặc hủy). N5.
+    // Host dùng chung có thể cho ứng dụng "ngủ" khi không ai truy cập, nên các trang đơn nhóm cũng tự kiểm khi mở.
+    public class XuLyHetHanDonNhom : BackgroundService
+    {
+        private readonly IServiceScopeFactory _taoPhamVi;
+        private readonly IConfiguration _cauHinh;
+        private readonly ILogger<XuLyHetHanDonNhom> _nhatKy;
+
+        public XuLyHetHanDonNhom(IServiceScopeFactory taoPhamVi, IConfiguration cauHinh, ILogger<XuLyHetHanDonNhom> nhatKy)
+        {
+            _taoPhamVi = taoPhamVi;
+            _cauHinh = cauHinh;
+            _nhatKy = nhatKy;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken dungLai)
+        {
+            int chuKy = Math.Max(1, _cauHinh.GetValue("DonNhom:ChuKyQuetPhut", 5));
+            using var henGio = new PeriodicTimer(TimeSpan.FromMinutes(chuKy));
+            do
+            {
+                QuetMotLan();
+            }
+            while (await henGio.WaitForNextTickAsync(dungLai));
+        }
+
+        // Một lần quét. Bắt mọi lỗi: lỗi ở một đơn không được làm dừng cả dịch vụ hay ứng dụng.
+        private void QuetMotLan()
+        {
+            try
+            {
+                using var phamVi = _taoPhamVi.CreateScope();
+                var db = phamVi.ServiceProvider.GetRequiredService<DuLichDbContext>();
+                int soGioGiaHan = _cauHinh.GetValue("DonNhom:SoGioGiaHan", 6);
+                var bayGio = DateTime.Now;
+
+                var dsDonId = db.DatTours
+                    .Where(x => x.LoaiDon == "Nhom" && x.TrangThai == "GiuCho" && x.HanGiuCho <= bayGio)
+                    .Select(x => x.Id)
+                    .ToList();
+
+                foreach (var donId in dsDonId)
+                {
+                    try
+                    {
+                        var ketQua = XuLyDon.XuLyDonQuaHan(db, donId, soGioGiaHan);
+                        if (ketQua != XuLyDon.KetQuaHetHan.KhongDoi)
+                        {
+                            _nhatKy.LogInformation("Đơn nhóm {DonId} hết hạn giữ chỗ: {KetQua}", donId, ketQua);
+                        }
+                    }
+                    catch (Exception loi)
+                    {
+                        _nhatKy.LogError(loi, "Lỗi khi xử lý hết hạn đơn nhóm {DonId}", donId);
+                    }
+                }
+            }
+            catch (Exception loi)
+            {
+                _nhatKy.LogError(loi, "Lỗi khi quét đơn nhóm hết hạn");
+            }
+        }
+    }
+}

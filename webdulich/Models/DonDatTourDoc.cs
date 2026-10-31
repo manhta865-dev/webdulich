@@ -211,9 +211,8 @@ namespace webdulich.Models
         public static int ChotDonNhom(DuLichDbContext db, int donId, int lichId)
         {
             using var giaoDichCsdl = db.Database.BeginTransaction();
-            var bayGio = DateTime.Now;
 
-            int daChot = db.Database.ExecuteSqlInterpolated(
+            int daChot =db.Database.ExecuteSqlInterpolated(
                 $"UPDATE DatTours SET TrangThai = 'DaXacNhan' WHERE Id = {donId} AND LoaiDon = 'Nhom' AND TrangThai = 'GiuCho'");
             if (daChot == 0)
             {
@@ -221,8 +220,17 @@ namespace webdulich.Models
                 return -1;
             }
 
+            int soNha = NhaGheChuaTra(db, donId, lichId);
+            giaoDichCsdl.Commit();
+            return soNha;
+        }
+
+        // Nhả mọi ghế còn hiệu lực chưa có giao dịch chờ hoặc thành công (RB-28), bỏ chỗ ngồi của ghế đã nhả,
+        // trả đúng số ghế vừa nhả cho lịch (RB-29). Chạy bên trong giao dịch CSDL của nơi gọi. Trả về số ghế đã nhả.
+        private static int NhaGheChuaTra(DuLichDbContext db, int donId, int lichId)
+        {
             int soNha = db.Database.ExecuteSqlInterpolated($@"
-                UPDATE HanhKhachDatTours SET NgayNha = {bayGio}
+                UPDATE HanhKhachDatTours SET NgayNha = {DateTime.Now}
                 WHERE DatTourId = {donId} AND NgayNha IS NULL
                   AND NOT EXISTS (SELECT 1 FROM GiaoDichThanhToans g WHERE g.HanhKhachDatTourId = HanhKhachDatTours.Id AND g.TrangThai IN ('ChoXacNhan', 'ThanhCong'))");
 
@@ -235,9 +243,101 @@ namespace webdulich.Models
                 db.Database.ExecuteSqlInterpolated(
                     $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {soNha} WHERE Id = {lichId} AND TrangThai <> {TrangThaiLich.DaHuy}");
             }
-
-            giaoDichCsdl.Commit();
             return soNha;
+        }
+
+        // ---------- Hết hạn giữ chỗ của đơn nhóm (N5) ----------
+
+        public enum KetQuaHetHan { KhongDoi, GiaHan, NhaGheChoAdmin, Chot, Huy }
+
+        // Xử lý một đơn nhóm đã quá hạn giữ chỗ, theo luật chốt ngày 30/10 và 31/10/2026 (docs/MO_HINH_DU_LIEU.md, mục 9):
+        //   mọi ghế đã trả -> chốt;
+        //   còn ghế chưa trả, chưa gia hạn, còn gia hạn được -> gia hạn một lần (không vượt 23:59:59 hôm trước ngày đi);
+        //   hết lượt gia hạn -> nhả ghế chưa trả; còn ghế chờ admin thì đợi, không thì chốt (có ghế đã trả) hoặc hủy (không ai trả).
+        // Dịch vụ chạy nền và lúc mở trang cùng gọi; mỗi bước là UPDATE có điều kiện nên hai nơi gọi cùng lúc chỉ một nơi làm được.
+        public static KetQuaHetHan XuLyDonQuaHan(DuLichDbContext db, int donId, int soGioGiaHan)
+        {
+            var bayGio = DateTime.Now;
+            var don = db.DatTours.AsNoTracking().Include(x => x.LichKhoiHanhTour)
+                .FirstOrDefault(x => x.Id == donId && x.LoaiDon == "Nhom" && x.TrangThai == "GiuCho");
+            if (don?.LichKhoiHanhTour == null || !(don.HanGiuCho <= bayGio))
+            {
+                return KetQuaHetHan.KhongDoi;
+            }
+
+            var dsGhe = db.HanhKhachDatTours.AsNoTracking().Where(h => h.DatTourId == donId && h.NgayNha == null).ToList();
+            var dsGheId = dsGhe.Select(h => h.Id).ToList();
+            var dsGiaoDich = db.GiaoDichThanhToans.AsNoTracking()
+                .Where(g => g.HanhKhachDatTourId != null && dsGheId.Contains(g.HanhKhachDatTourId.Value)).ToList();
+            var dsTrangThai = dsGhe.Select(h => TrangThaiGhe.Tinh(h, dsGiaoDich)).ToList();
+            int soDaTra = dsTrangThai.Count(t => t == TrangThaiGhe.DaTra);
+            int soCho = dsTrangThai.Count(t => t == TrangThaiGhe.ChoXacNhan);
+            int soChuaTra = dsTrangThai.Count - soDaTra - soCho;
+
+            // Còn người chưa trả và chưa dùng lượt gia hạn: gia hạn tính từ bây giờ (lần quét có thể trễ vài phút)
+            if (soChuaTra > 0 && !don.DaGiaHan)
+            {
+                var hanMoi = TinhHanGiuCho(bayGio, soGioGiaHan, don.LichKhoiHanhTour.NgayKhoiHanh);
+                if (hanMoi > bayGio)
+                {
+                    int daGiaHan = db.Database.ExecuteSqlInterpolated(
+                        $"UPDATE DatTours SET HanGiuCho = {hanMoi}, DaGiaHan = 1 WHERE Id = {donId} AND TrangThai = 'GiuCho' AND DaGiaHan = 0");
+                    return daGiaHan > 0 ? KetQuaHetHan.GiaHan : KetQuaHetHan.KhongDoi;
+                }
+                // Đã chạm mốc trước ngày đi: không gia hạn được, xử lý như hết lượt
+            }
+
+            if (soCho > 0)
+            {
+                // Không nhả ghế đang chờ admin (RB-22); nhả phần chưa trả ngay để trả chỗ cho lịch, đơn đợi admin
+                if (soChuaTra == 0)
+                {
+                    return KetQuaHetHan.KhongDoi;
+                }
+                using var giaoDichCsdl = db.Database.BeginTransaction();
+                // Khóa đơn: chỉ nhả khi đơn vẫn đang giữ chỗ (nơi gọi khác có thể vừa chốt hoặc hủy)
+                int conGiuCho = db.Database.ExecuteSqlInterpolated(
+                    $"UPDATE DatTours SET TrangThai = TrangThai WHERE Id = {donId} AND TrangThai = 'GiuCho'");
+                int soNha = conGiuCho > 0 ? NhaGheChuaTra(db, donId, don.LichKhoiHanhTourId) : 0;
+                giaoDichCsdl.Commit();
+                return soNha > 0 ? KetQuaHetHan.NhaGheChoAdmin : KetQuaHetHan.KhongDoi;
+            }
+
+            if (soDaTra > 0)
+            {
+                return ChotDonNhom(db, donId, don.LichKhoiHanhTourId) >= 0 ? KetQuaHetHan.Chot : KetQuaHetHan.KhongDoi;
+            }
+
+            return HuyDonNhomQuaHan(db, donId, don.LichKhoiHanhTourId) ? KetQuaHetHan.Huy : KetQuaHetHan.KhongDoi;
+        }
+
+        // Hủy đơn nhóm không ai trả khi hết hạn: giống HuyDon nhưng có điều kiện "đơn vẫn GiuCho"
+        // để dịch vụ nền và lúc mở trang không cùng hủy rồi cộng chỗ cho lịch hai lần.
+        private static bool HuyDonNhomQuaHan(DuLichDbContext db, int donId, int lichId)
+        {
+            using var giaoDichCsdl = db.Database.BeginTransaction();
+            int daHuy = db.Database.ExecuteSqlInterpolated(
+                $"UPDATE DatTours SET TrangThai = 'DaHuy' WHERE Id = {donId} AND LoaiDon = 'Nhom' AND TrangThai = 'GiuCho'");
+            if (daHuy == 0)
+            {
+                giaoDichCsdl.Rollback();
+                return false;
+            }
+
+            int soNha = db.Database.ExecuteSqlInterpolated(
+                $"UPDATE HanhKhachDatTours SET NgayNha = {DateTime.Now} WHERE DatTourId = {donId} AND NgayNha IS NULL");
+            db.Database.ExecuteSqlInterpolated($@"
+                DELETE FROM ChoNgoiChuyenDis WHERE HanhKhachDatTourId IN (SELECT Id FROM HanhKhachDatTours WHERE DatTourId = {donId})");
+            db.Database.ExecuteSqlInterpolated($@"
+                UPDATE GiaoDichThanhToans SET TrangThai = 'ThatBai'
+                WHERE TrangThai = 'ChoXacNhan' AND HanhKhachDatTourId IN (SELECT Id FROM HanhKhachDatTours WHERE DatTourId = {donId})");
+            if (soNha > 0)
+            {
+                db.Database.ExecuteSqlInterpolated(
+                    $"UPDATE LichKhoiHanhTours SET SoChoCon = SoChoCon + {soNha} WHERE Id = {lichId} AND TrangThai <> {TrangThaiLich.DaHuy}");
+            }
+            giaoDichCsdl.Commit();
+            return true;
         }
     }
 }

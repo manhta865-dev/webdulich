@@ -226,6 +226,9 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | Bớt ghế (N2) | Nhả một ghế chưa báo chuyển khoản, chưa trả; bỏ chỗ ngồi; trả 1 chỗ cho lịch; đơn còn ít nhất 1 ghế |
 | Chốt sớm (N2) | Chỉ khi không còn ghế chờ admin xác nhận và có ít nhất 1 ghế đã trả. Nhả ghế chưa trả, trả chỗ cho lịch, đơn thành `DaXacNhan`, link mời hết hiệu lực. Hàm dùng chung `XuLyDon.ChotDonNhom` (N5 gọi lại) |
 | Hủy đơn nhóm (N2) | Trưởng nhóm chỉ hủy được khi chưa ghế nào trả hoặc báo chuyển khoản; đã có tiền thì liên hệ TravelVN để admin hủy và hoàn tiền ngoài hệ thống. Không làm chức năng thêm ghế |
+| Hết hạn giữ chỗ (N5) | Dịch vụ chạy nền `XuLyHetHanDonNhom` quét 5 phút một lần (`DonNhom:ChuKyQuetPhut`); các trang đơn nhóm cũng tự xử lý khi mở (host dùng chung có thể cho ứng dụng ngủ). Cả hai gọi `XuLyDon.XuLyDonQuaHan` |
+| Luật khi hết hạn (N5) | Mọi ghế đã trả: chốt. Còn ghế chưa trả, chưa gia hạn: gia hạn 6 giờ tính từ lúc xử lý (`DaGiaHan = 1`), không vượt 23:59:59 hôm trước ngày đi; chạm mốc thì coi như hết lượt. Hết lượt: nhả ghế chưa trả, trả chỗ cho lịch; còn ghế chờ admin thì đơn giữ `GiuCho` đợi admin xử lý xong mới chốt hoặc hủy (chốt 31/10/2026); không còn ghế chờ thì chốt nếu có ghế đã trả, hủy nếu không ai trả |
+| Nhắc trong web (N5) | Khi gia hạn: trang tiến độ và trang ghế hiện "đã gia hạn, đây là lần cuối", đồng hồ chuyển màu cam. Ghế bị nhả: Lịch sử ghi lý do. Chưa có email, SMS |
 | Đơn nhóm ở trang đơn cá nhân | `DatTour/HuyDatTour` và `DatTour/DoiChoNgoi` từ chối đơn nhóm, chuyển về trang đơn nhóm |
 | Thứ tự làm | N3 (link mời) trước, rồi N4 (QR từng ghế, gồm trả hộ), N2 (quản lý đơn), N5 (tự động hết hạn), N6 (admin) |
 
@@ -242,3 +245,4 @@ Ràng buộc thêm (kiểm trong code):
 | RB-27 | Người báo chuyển khoản cho một ghế: chủ ghế, hoặc trưởng nhóm của đơn. Admin xác nhận hay từ chối bằng câu UPDATE có điều kiện `TrangThai = 'ChoXacNhan'`, nên một giao dịch chỉ được xử lý một lần |
 | RB-28 | Nhả ghế (bớt ghế, chốt đơn) chỉ áp dụng cho ghế chưa có giao dịch `ChoXacNhan`/`ThanhCong`, kiểm trong cùng câu UPDATE. Báo chuyển khoản chỉ thành công khi đơn còn `GiuCho`. Chốt đổi trạng thái đơn trước rồi mới nhả ghế, trong một giao dịch CSDL, nên không có giao dịch mới chen vào ghế vừa bị nhả |
 | RB-29 | Số chỗ trả lại cho lịch bằng đúng số ghế vừa nhả (đếm từ câu UPDATE), lịch đã hủy thì không cộng (cụ thể hóa RB-16, RB-17) |
+| RB-30 | Mỗi đơn nhóm gia hạn tối đa một lần: câu UPDATE có điều kiện `DaGiaHan = 0`. Chốt và hủy tự động có điều kiện `TrangThai = 'GiuCho'`, nên dịch vụ nền và lúc mở trang xử lý cùng một đơn thì chỉ một nơi làm được |
