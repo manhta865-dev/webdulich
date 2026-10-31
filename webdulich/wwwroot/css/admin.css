@@ -410,6 +410,10 @@
 .ad-status.status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
 .ad-status.status-paused { background: #FBF1DC; color: var(--tv-canh-bao); }
 .ad-hint-nho { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); white-space: nowrap; }
+.ad-hint-nho.xuong-dong { white-space: normal; max-width: 180px; }
+
+/* Ô bị khóa nhưng vẫn gửi giá trị (ngày đi của lịch đã có khách) */
+.ad-table .form-control[readonly] { background: var(--tv-nen); color: var(--tv-chu-phu); cursor: not-allowed; }
 
 /* ---------- Bảng có ô nhập ngay trong dòng ---------- */
 .ad-table .form-control {

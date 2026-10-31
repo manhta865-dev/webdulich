@@ -161,6 +161,8 @@
 
                             var choPhepSua = trangThai == "Sắp khởi hành";
                             var choPhepHuy = trangThai == "Sắp khởi hành";
+                            // Lịch đã có khách giữ chỗ: khóa ô ngày (readonly để form vẫn gửi ngày cũ); giờ, giá, số chỗ vẫn sửa được
+                            var khoaNgay = item.SoChoToiDa - item.SoChoCon > 0;
                             var nhanTrangThai = choPhepSua && item.DangTamNgung ? "Tạm ngưng bán" : trangThai;
                             if (choPhepSua && item.DangTamNgung)
                             {
@@ -183,7 +185,13 @@
                                            class="form-control"
                                            value="@item.NgayKhoiHanh.ToString("yyyy-MM-dd")"
                                            disabled="@(!choPhepSua)"
+                                           readonly="@(choPhepSua && khoaNgay)"
+                                           title="@(choPhepSua && khoaNgay ? "Lịch đã có khách nên không đổi ngày được. Muốn dời ngày, hủy lịch này và tạo lịch mới." : null)"
                                            required />
+                                    @if (choPhepSua && khoaNgay)
+                                    {
+                                        <small class="ad-hint-nho xuong-dong">Đã có khách, không đổi ngày. Muốn dời: hủy lịch, tạo lịch mới.</small>
+                                    }
                                 </td>
 
                                 <td>

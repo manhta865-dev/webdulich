@@ -297,14 +297,15 @@ Kiểm ở đâu: code (mọi câu nhả ghế đều có NOT EXISTS giao dịch
 Nội dung: ∀ d ∈ D, d.LoaiDon = Nhom: d.HanGiuCho < lich(d).NgayKhoiHanh (tính theo ngày, muộn nhất 23:59:59 hôm trước)
           và DaGiaHan chỉ đổi từ 0 sang 1, không đổi ngược
 Bối cảnh: DatTours, LichKhoiHanhTours
-Kiểm ở đâu: code (XuLyDon.TinhHanGiuCho khi tạo đơn và khi gia hạn; UPDATE gia hạn có điều kiện DaGiaHan = 0)
+Kiểm ở đâu: code (XuLyDon.TinhHanGiuCho khi tạo đơn và khi gia hạn; UPDATE gia hạn có điều kiện DaGiaHan = 0;
+            Admin/CapNhatLichKhoiHanh không cho đổi ngày của lịch đã có khách giữ chỗ)
 ```
 | R26 | Thêm | Xóa | Sửa |
 |---|---|---|---|
 | DatTours | + | - | +(HanGiuCho, DaGiaHan) |
-| LichKhoiHanhTours | - | - | **+(NgayKhoiHanh)** |
+| LichKhoiHanhTours | - | - | +(NgayKhoiHanh) |
 
-> **Chưa kiểm (đã báo, chưa sửa):** admin sửa được `NgayKhoiHanh` của lịch đã có đơn (`AdminController`, action sửa lịch). Nếu dời ngày đi sớm hơn, R26 có thể bị vi phạm. Thiệt hại nhỏ, vì mọi thay đổi trên đơn vẫn bị chặn khi tới ngày đi. Cách sửa dự kiến: không cho đổi ngày của lịch đã có đơn chưa hủy, hoặc đổi thì kéo `HanGiuCho` của các đơn nhóm về mốc mới.
+> **Sửa `NgayKhoiHanh` (sửa ngày 01/11/2026):** lịch có `SoChoToiDa - SoChoCon > 0` thì không đổi được ngày đi. Ô ngày bị khóa ở trang Lịch đi, máy chủ cũng chặn nếu yêu cầu gửi thẳng. Giờ đi, giá, số chỗ vẫn sửa được. Muốn dời ngày thì hủy lịch (các đơn bị hủy, chỗ trả lại) rồi tạo lịch mới. Luật này giữ R26, và bảo vệ cả đơn cá nhân: khách đặt đi ngày nào thì không bị dời ngày mà không biết.
 
 ### 6.4. Ràng buộc thuộc tính tổng hợp
 

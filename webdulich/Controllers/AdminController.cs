@@ -1811,6 +1811,15 @@ namespace webdulich.Controllers
             // Cập nhật các thông tin của lịch khởi hành đó với các giá trị đã nhận được từ form chỉnh sửa. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng thông tin của lịch khởi hành đã được cập nhật thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng thông tin của lịch khởi hành đã được cập nhật trong danh sách.
             // Số chỗ đã có khách giữ không đổi; chỉ đổi sức chứa, chỗ còn tính lại (RB-12)
             int daGiu = lich.SoChoToiDa - lich.SoChoCon;
+
+            // Lịch đã có khách giữ chỗ thì không đổi ngày: khách đặt đi ngày nào phải giữ ngày đó, và hạn giữ chỗ
+            // của đơn nhóm không được nằm sau ngày đi (R26). Muốn dời ngày thì hủy lịch rồi tạo lịch mới. Giờ đi vẫn đổi được.
+            if (daGiu > 0 && ngayKhoiHanh.Date != lich.NgayKhoiHanh.Date)
+            {
+                TempData["error"] = $"Lịch này đã có {daGiu} khách giữ chỗ nên không đổi ngày đi được. Muốn dời ngày, hủy lịch này rồi tạo lịch mới.";
+                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+            }
+
             if (soChoToiDa < Math.Max(1, daGiu))
             {
                 TempData["error"] = $"Lịch này đã có {daGiu} khách đặt, số chỗ tối đa không được nhỏ hơn {Math.Max(1, daGiu)}.";
