@@ -8,11 +8,16 @@ namespace webdulich.Controllers
     public class TaiKhoanController : Controller
     {
         private readonly DuLichDbContext _context;
+        private readonly webdulich.Services.GioiHanDangNhap _gioiHan;
 
-        public TaiKhoanController(DuLichDbContext context)
+        public TaiKhoanController(DuLichDbContext context, webdulich.Services.GioiHanDangNhap gioiHan)
         {
             _context = context;
+            _gioiHan = gioiHan;
         }
+
+        private static string CauBaoKhoa(TimeSpan conLai) =>
+            $"Bạn đã nhập sai {webdulich.Services.GioiHanDangNhap.SoLanToiDa} lần. Vui lòng thử lại sau {Math.Ceiling(conLai.TotalMinutes)} phút.";
         // Hàm này dùng để lưu ảnh đại diện của người dùng.
         private async Task<string> LuuAnhDaiDienAsync(IFormFile file)
         {
@@ -168,14 +173,25 @@ namespace webdulich.Controllers
             }
 
             string taiKhoan = taiKhoanDangNhap.Trim();
+            string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            // Đang bị khóa thì không kiểm mật khẩu, kể cả mật khẩu đúng
+            if (_gioiHan.ConKhoa(taiKhoan, ip) is TimeSpan conKhoa)
+            {
+                ModelState.AddModelError("", CauBaoKhoa(conKhoa));
+                return View();
+            }
+
             // Tìm tài khoản trong database theo email hoặc số điện thoại.
             var user = _context.TaiKhoans.TheoDinhDanh(taiKhoan).FirstOrDefault();
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(matKhau, user.MatKhau)) // có 2 trường hơp lỗi BCrypt.Verify() dùng để so sánh mật khẩu người dùng nhập với mật khẩu đã mã hóa trong database.
             {
-                ModelState.AddModelError("", "Tài khoản hoặc mật khẩu không đúng!");
+                var biKhoa = _gioiHan.GhiSai(taiKhoan, ip);
+                ModelState.AddModelError("", biKhoa is TimeSpan t ? CauBaoKhoa(t) : "Tài khoản hoặc mật khẩu không đúng!");
                 return View();
             }
+            _gioiHan.XoaDem(taiKhoan, ip);
             // Lưu session đăng nhập
             LuuSessionDangNhap(user);
             // điều hướng theo vai trò 
