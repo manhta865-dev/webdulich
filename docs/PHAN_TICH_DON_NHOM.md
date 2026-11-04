@@ -344,8 +344,10 @@ Từ N2 tới N6 **không đổi cấu trúc CSDL**. Script cuối cùng cho hos
    - Trang ghế hiện QR ACB đúng tên, số tiền và nội dung. Tab MoMo hiện ảnh.
    - Báo chuyển khoản, rồi admin tìm theo nội dung chuyển khoản và xác nhận được.
    - Hủy đơn thử: `doi_chieu.sql` chạy trên host trả về rỗng.
-6. **Lưu ý về dịch vụ nền:** host dùng chung có thể cho ứng dụng "ngủ" khi không ai truy cập. Đây là giả thuyết, chưa kiểm chứng trên asp.monster. Lúc ngủ, dịch vụ quét 5 phút không chạy, nhưng mọi trang đơn nhóm và trang chi tiết đơn của admin đều tự xử lý hết hạn khi mở, nên người dùng vẫn thấy đúng trạng thái.
-7. Host đang chạy **HTTP** (lỗi 9 trong `CLAUDE.md`), nên nút "Chia sẻ qua ứng dụng" và Clipboard API có thể không chạy. Nút "Sao chép lời mời" đã có cách chép dự phòng.
+6. **Lưu ý về dịch vụ nền:** tài liệu MonsterASP ghi gói Free không có AlwaysRunning, nên ứng dụng có thể bị tắt khi không ai truy cập. Lúc đó dịch vụ quét 5 phút không chạy, ghế quá hạn chưa được nhả. Khi có người mở trang đơn nhóm hoặc trang chi tiết đơn của admin, đơn đó được xử lý ngay; ứng dụng khởi động lại cũng quét một lần.
+7. **HTTPS:** host đã bật Let's Encrypt (gói Free phải qua đội hỗ trợ của host; chứng chỉ hết hạn 22/12/2026, host ghi là tự gia hạn, nên xem lại trước tuần nộp bài). **Bật "HTTPS Redirect" trên host trước khi đăng code**: khi chạy thật, cookie chỉ gửi qua HTTPS, nên người vào bằng `http://` sẽ không đăng nhập được.
+8. **Đăng nhập Google:** tạo file `appsettings.Production.json` trực tiếp trên host bằng File manager, chứa mục `Google` với `ClientId` và `ClientSecret`. File này nằm trong `.gitignore`, không commit. Khi publish, kiểm tra file không bị xóa. Trước khi cho người ngoài dùng, bấm "Publish app" trong Google Auth Platform (đang ở chế độ thử nghiệm, chỉ email trong danh sách mới đăng nhập được) và nên đổi Client Secret.
+9. **Giới hạn đã biết:** Google chặn đăng nhập trong trình duyệt nhúng của Zalo, Messenger (lỗi `disallowed_useragent`, chưa thử trên điện thoại thật), nên vẫn giữ đăng nhập bằng mật khẩu. Bộ đếm đăng nhập sai nằm trong bộ nhớ, ứng dụng khởi động lại thì mất.
 
 ## 8. Kiểm tra theo skill uml-docs
 

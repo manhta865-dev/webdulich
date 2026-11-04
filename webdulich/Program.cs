@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using webdulich.Models;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +27,34 @@ builder.Services.AddAntiforgery(o => o.Cookie.SecurePolicy = cheDoSecure);
 builder.Services.AddHsts(o => o.MaxAge = TimeSpan.FromDays(7));
 
 builder.Services.AddSingleton<webdulich.Services.GioiHanDangNhap>();
+
+// Đăng nhập Google: chỉ bật khi có khóa trong cấu hình (user-secrets trên máy, cấu hình riêng trên host), không có thì nút tự ẩn.
+// Cookie tạm chỉ giữ kết quả từ Google tới lúc TaiKhoan/GoogleXong ghi Session rồi bị xóa; đăng nhập thật vẫn chạy bằng Session.
+var googleId = builder.Configuration["Google:ClientId"];
+var googleSecret = builder.Configuration["Google:ClientSecret"];
+if (!string.IsNullOrEmpty(googleId) && !string.IsNullOrEmpty(googleSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddCookie(webdulich.Controllers.TaiKhoanController.CookieTamGoogle, o =>
+        {
+            o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+            o.Cookie.SecurePolicy = cheDoSecure;
+        })
+        .AddGoogle(o =>
+        {
+            o.ClientId = googleId;
+            o.ClientSecret = googleSecret;
+            o.SignInScheme = webdulich.Controllers.TaiKhoanController.CookieTamGoogle;
+            o.ClaimActions.MapJsonKey("email_verified", "email_verified");
+            // Người dùng bấm hủy ở Google, hoặc Google báo lỗi: về trang đăng nhập có lời giải thích thay vì trang lỗi
+            o.Events.OnRemoteFailure = ctx =>
+            {
+                ctx.Response.Redirect("/TaiKhoan/DangNhap?loiGoogle=1");
+                ctx.HandleResponse();
+                return Task.CompletedTask;
+            };
+        });
+}
 
 builder.Services.AddDbContext<DuLichDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DuLichConnection")));

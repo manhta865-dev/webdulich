@@ -362,3 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 webdulich/wwwroot/images/avatar/
+
+# Khoa bi mat Google: khong dua vao git
+webdulich/appsettings.Production.json
+client_secret_*.json

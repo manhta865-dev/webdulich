@@ -1,6 +1,11 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using webdulich.Models;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace webdulich.Controllers
@@ -147,9 +152,13 @@ namespace webdulich.Controllers
         }
         // Dùng để mở trang đăng nhập.
         [HttpGet]
-        public IActionResult DangNhap(string? returnUrl)
+        public IActionResult DangNhap(string? returnUrl, int? loiGoogle)
         {
             ViewBag.ReturnUrl = TrangQuayLai(returnUrl);
+            if (loiGoogle == 1)
+            {
+                ViewBag.LoiGoogle = "Chưa đăng nhập được bằng Google. Nếu bạn mở từ Zalo hay Messenger, hãy mở link bằng Chrome hoặc Safari rồi thử lại, hoặc đăng nhập bằng mật khẩu.";
+            }
             return View();
         }
         // Dùng khi người dùng bấm Đăng nhập.
@@ -213,7 +222,92 @@ namespace webdulich.Controllers
 
             return RedirectToAction("Index", "TrangChu");
         }
-        // đăng xuất 
+        // ---------- Đăng nhập Google ----------
+        public const string CookieTamGoogle = "GoogleTam";
+
+        // Không có khóa thì Program.cs không đăng ký Google; nút đã ẩn, chặn thêm khi gọi thẳng địa chỉ
+        private bool CoGoogle()
+        {
+            var cauHinh = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            return !string.IsNullOrEmpty(cauHinh["Google:ClientId"]) && !string.IsNullOrEmpty(cauHinh["Google:ClientSecret"]);
+        }
+
+        // Bắt đầu bằng POST có antiforgery để trang khác không tự kích hoạt đăng nhập được
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DangNhapGoogle(string? returnUrl)
+        {
+            if (!CoGoogle())
+            {
+                return RedirectToAction("DangNhap", new { returnUrl = TrangQuayLai(returnUrl) });
+            }
+            var quayVe = Url.Action("GoogleXong", new { returnUrl = TrangQuayLai(returnUrl) });
+            // Máy dùng chung: luôn hỏi chọn tài khoản Google
+            return Challenge(new GoogleChallengeProperties { RedirectUri = quayVe, Prompt = "select_account" }, "Google");
+        }
+
+        // Google xác thực xong: tìm hoặc tạo tài khoản theo email đã xác minh rồi ghi Session như đăng nhập thường
+        [HttpGet]
+        public async Task<IActionResult> GoogleXong(string? returnUrl)
+        {
+            if (!CoGoogle())
+            {
+                return RedirectToAction("DangNhap", new { returnUrl = TrangQuayLai(returnUrl) });
+            }
+            var ketQua = await HttpContext.AuthenticateAsync(CookieTamGoogle);
+            await HttpContext.SignOutAsync(CookieTamGoogle);
+
+            var email = ketQua.Principal?.FindFirstValue(ClaimTypes.Email)?.Trim();
+            bool daXacMinh = string.Equals(ketQua.Principal?.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase);
+            if (!ketQua.Succeeded || string.IsNullOrEmpty(email) || !daXacMinh)
+            {
+                TempData["LoiGoogle"] = ketQua.Succeeded
+                    ? "Không đăng nhập được bằng Google: tài khoản chưa có email đã xác minh."
+                    : "Chưa đăng nhập được bằng Google, bạn thử lại nhé.";
+                return RedirectToAction("DangNhap", new { returnUrl = TrangQuayLai(returnUrl) });
+            }
+
+            var user = _context.TaiKhoans.FirstOrDefault(x => x.Email == email);
+            if (user == null)
+            {
+                // Mật khẩu ngẫu nhiên không ai biết: tài khoản này chỉ vào được bằng Google
+                user = new TaiKhoan
+                {
+                    HoTen = ketQua.Principal?.FindFirstValue(ClaimTypes.Name) ?? email,
+                    Email = email,
+                    VaiTro = "user",
+                    AnhDaiDien = "",
+                    MatKhau = BCrypt.Net.BCrypt.HashPassword(Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)))
+                };
+                _context.TaiKhoans.Add(user);
+                try
+                {
+                    _context.SaveChanges();
+                }
+                catch (DbUpdateException)
+                {
+                    // Hai lần bấm cùng lúc: chỉ mục duy nhất của Email chặn lần sau, dùng tài khoản lần đầu vừa tạo
+                    _context.Entry(user).State = EntityState.Detached;
+                    user = _context.TaiKhoans.First(x => x.Email == email);
+                }
+            }
+
+            // Admin và nhân viên vẫn phải dùng mật khẩu
+            if (user.VaiTro != "user")
+            {
+                TempData["LoiGoogle"] = "Tài khoản quản trị và nhân viên đăng nhập bằng mật khẩu.";
+                return RedirectToAction("DangNhap");
+            }
+
+            LuuSessionDangNhap(user);
+            if (TrangQuayLai(returnUrl) is string quayLai)
+            {
+                return Redirect(quayLai);
+            }
+            return RedirectToAction("Index", "TrangChu");
+        }
+
+        // đăng xuất
         public IActionResult DangXuat()
         {
             HttpContext.Session.Clear(); // Session.Clear() xóa toàn bộ thông tin đăng nhập.
