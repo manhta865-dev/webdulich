@@ -389,7 +389,63 @@ namespace webdulich.Controllers
                     BiTuChoi = TrangThaiGhe.LucBiTuChoi(h.Id, dsGiaoDich).HasValue
                 }).ToList()
             };
+            model.SoDo = TaoSoDoNhom(datTour, model.DsGhe);
             return View(model);
+        }
+
+        // Dữ liệu "Xe của nhóm". Null khi đơn đã hủy, lịch không có sơ đồ, hoặc nhóm chưa chọn chỗ nào.
+        private SoDoNhom? TaoSoDoNhom(DatTours datTour, List<GheNhomHienThi> dsGhe)
+        {
+            var soDoId = datTour.LichKhoiHanhTour?.SoDoChoNgoiId;
+            if (datTour.TrangThai == "DaHuy" || soDoId == null || !dsGhe.Any(g => g.MaCho != null))
+            {
+                return null;
+            }
+
+            var soDo = _context.SoDoChoNgois.AsNoTracking().Include(s => s.PhuongTien).FirstOrDefault(s => s.Id == soDoId);
+            if (soDo == null)
+            {
+                return null;
+            }
+
+            var gheTheoId = dsGhe.ToDictionary(g => g.Id);
+            var nguoiTheoCho = _context.ChoNgoiChuyenDis.AsNoTracking()
+                .Where(c => c.LichKhoiHanhTourId == datTour.LichKhoiHanhTourId)
+                .ToDictionary(c => c.ViTriChoNgoiId, c => c.HanhKhachDatTourId);
+
+            return new SoDoNhom
+            {
+                TenSoDo = soDo.TenSoDo,
+                SoHang = soDo.SoHang,
+                SoCot = soDo.SoCot,
+                LaMayBay = soDo.PhuongTien?.TenPhuongTien == "Máy bay",
+                DsCho = _context.ViTriChoNgois.AsNoTracking().Where(v => v.SoDoChoNgoiId == soDo.Id)
+                    .OrderBy(v => v.Hang).ThenBy(v => v.Cot).ToList()
+                    .Select(v =>
+                    {
+                        var cho = new ChoTrenSoDo { Ma = v.MaViTri, Hang = v.Hang, Cot = v.Cot };
+                        if (!nguoiTheoCho.TryGetValue(v.Id, out var gheId))
+                        {
+                            return cho;
+                        }
+                        if (!gheTheoId.TryGetValue(gheId, out var ghe))
+                        {
+                            cho.Loai = "khach-khac";
+                            return cho;
+                        }
+                        cho.Loai = ghe.TrangThai switch
+                        {
+                            TrangThaiGhe.DaTra => "da-tra",
+                            TrangThaiGhe.ChoXacNhan => "cho",
+                            TrangThaiGhe.DaDien => "da-dien",
+                            TrangThaiGhe.DaNhan => "da-nhan",
+                            _ => "trong"
+                        };
+                        cho.Ten = ghe.TenChu ?? "Ghế trống";
+                        cho.TrangThai = ghe.TrangThai;
+                        return cho;
+                    }).ToList()
+            };
         }
 
         // ---------- Trưởng nhóm quản lý đơn: đổi link, mời ra, bớt ghế, chốt, hủy (N2) ----------

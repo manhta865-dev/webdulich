@@ -58,6 +58,34 @@ namespace webdulich.Models
         public List<GheNhomHienThi> DsGhe { get; set; } = new List<GheNhomHienThi>();
         public int SoGheDaNhan => DsGhe.Count(g => g.DaCoChu);
         public int SoGheDaTra => DsGhe.Count(g => g.TrangThai == TrangThaiGhe.DaTra);
+
+        // Xe của nhóm: chỉ có khi lịch có sơ đồ chỗ và nhóm đã chọn ít nhất một chỗ
+        public SoDoNhom? SoDo { get; set; }
+    }
+
+    // Sơ đồ chỗ của cả chuyến, nhìn từ phía trưởng nhóm. Dữ liệu này gửi xuống trình duyệt nên
+    // chỗ của khách ngoài nhóm chỉ ghi "khach-khac", không có tên, không có mã ghế.
+    public class SoDoNhom
+    {
+        public string TenSoDo { get; set; } = string.Empty;
+        public int SoHang { get; set; }
+        public int SoCot { get; set; }
+        public bool LaMayBay { get; set; }
+        public List<ChoTrenSoDo> DsCho { get; set; } = new List<ChoTrenSoDo>();
+    }
+
+    public class ChoTrenSoDo
+    {
+        public string Ma { get; set; } = string.Empty;
+        public int Hang { get; set; }
+        public int Cot { get; set; }
+
+        // con-trong, khach-khac, hoặc trạng thái ghế của nhóm: trong, da-nhan, da-dien, cho, da-tra
+        public string Loai { get; set; } = "con-trong";
+
+        // Chỉ ghế của nhóm mới có hai giá trị này
+        public string? Ten { get; set; }
+        public string? TrangThai { get; set; }
     }
 
     // Một ghế trên bảng tiến độ. Không có số giấy tờ của người khác (RB-20).

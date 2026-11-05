@@ -181,6 +181,43 @@
                     }
                 </p>
             </section>
+
+            @if (Model.SoDo != null)
+            {
+                @* Bản 2D dựng sẵn ở máy chủ; js/so-do-3d.js đổi sang 3D khi trình duyệt chạy được *@
+                <section class="dt-block" id="soDoNhom">
+                    <div class="dn-tien-do-head">
+                        <h2>@(Model.SoDo.LaMayBay ? "Máy bay của nhóm" : "Xe của nhóm")</h2>
+                        <span>@Model.SoDo.TenSoDo</span>
+                    </div>
+                    <div class="dn-3d" hidden aria-hidden="true">
+                        <canvas></canvas>
+                        <div class="dn-3d-tip" hidden></div>
+                    </div>
+                    <div class="dn-2d">
+                        <p class="dn-2d-dau">@(Model.SoDo.LaMayBay ? "Đầu máy bay" : "Đầu xe")</p>
+                        <div class="dn-2d-luoi" style="--so-cot: @Model.SoDo.SoCot">
+                            @foreach (var c in Model.SoDo.DsCho)
+                            {
+                                string moTa = c.Ten != null ? $"{c.Ma}: {c.Ten}, {c.TrangThai}" : c.Loai == "khach-khac" ? $"{c.Ma}: khách ngoài nhóm" : $"{c.Ma}: còn trống";
+                                <span class="dn-cho @c.Loai@(c.Ten != null ? " cua-nhom" : "")" style="grid-row: @c.Hang; grid-column: @c.Cot" title="@moTa">@c.Ma</span>
+                            }
+                        </div>
+                    </div>
+                    <ul class="dn-chu-giai">
+                        <li><i class="dn-cho da-tra"></i>Đã trả</li>
+                        <li><i class="dn-cho cho"></i>Chờ xác nhận</li>
+                        <li><i class="dn-cho da-dien"></i>Đã điền, chưa trả</li>
+                        <li><i class="dn-cho da-nhan"></i>Đã nhận, chưa điền</li>
+                        <li><i class="dn-cho trong"></i>Chưa có người nhận</li>
+                        <li><i class="dn-cho khach-khac"></i>Khách ngoài nhóm</li>
+                        <li><i class="dn-cho con-trong"></i>Còn trống</li>
+                    </ul>
+                    <p class="dn-hint dn-3d-nhac" hidden>Kéo để xoay. Rê chuột hoặc chạm vào một ghế để xem tên.</p>
+                </section>
+                <script type="application/json" id="soDoNhomDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SoDo))</script>
+                <script type="module" src="~/js/so-do-3d.js" asp-append-version="true"></script>
+            }
         </div>
 
         <aside>

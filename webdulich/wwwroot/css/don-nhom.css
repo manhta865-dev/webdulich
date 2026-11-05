@@ -517,6 +517,69 @@
     .dn-moi-anh { width: 100%; height: 160px; }
 }
 
+/* Xe của nhóm: khung 3D và bản 2D dự phòng dùng chung màu trạng thái */
+.dn-3d {
+    position: relative;
+    height: 360px;
+    margin-top: var(--tv-k3);
+    overflow: hidden;
+    border-radius: var(--tv-bo-khoi);
+    background: linear-gradient(180deg, #E3F1F5 0%, var(--tv-nen) 100%);
+}
+.dn-3d canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+.dn-3d canvas:active { cursor: grabbing; }
+.dn-3d-tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 240px;
+    padding: var(--tv-k1) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-chu);
+    color: #FFFFFF;
+    font-size: var(--tv-cs-nho);
+    pointer-events: none;
+}
+
+.dn-2d { margin-top: var(--tv-k3); max-height: 420px; overflow: auto; }
+.dn-2d-dau { margin: 0 0 var(--tv-k2); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); text-align: center; }
+.dn-2d-luoi { display: grid; grid-template-columns: repeat(var(--so-cot), 38px); gap: var(--tv-k1); justify-content: center; }
+
+.dn-cho {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    border-radius: 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background: var(--tv-vien);
+    color: var(--tv-chu-phu);
+}
+.dn-cho.khach-khac { background: #7C8A91; color: #FFFFFF; }
+.dn-cho.trong { background: #B9DCE5; color: var(--tv-chu); }
+.dn-cho.da-nhan { background: #8FB8C0; color: var(--tv-chu); }
+.dn-cho.da-dien { background: var(--tv-nhan); color: #FFFFFF; }
+.dn-cho.cho { background: #D9962B; color: var(--tv-chu); }
+.dn-cho.da-tra { background: var(--tv-thanh-cong); color: #FFFFFF; }
+
+.dn-chu-giai {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tv-k1) var(--tv-k3);
+    margin: var(--tv-k3) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+.dn-chu-giai li { display: inline-flex; align-items: center; gap: var(--tv-k1); }
+.dn-chu-giai .dn-cho { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+
+@media (max-width: 700px) {
+    .dn-3d { height: 300px; }
+}
+
 /* Vé lật 3D ở trang ghế đã trả. Ba lớp để nghiêng và lật không giành nhau một thuộc tính transform:
    .ve tạo phối cảnh, .ve-nghieng nghiêng theo chuột, .ve-khung lật. Hai mặt chung một ô lưới nên vé cao theo mặt dài hơn. */
 .ve { margin-top: var(--tv-k3); perspective: 1000px; cursor: pointer; }
