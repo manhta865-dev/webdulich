@@ -67,6 +67,57 @@
 
     <div class="dt-layout">
         <div>
+            @if (Model.TrangThai == TrangThaiGhe.DaTra)
+            {
+                string ngayVe = Model.NgayDi.ToString("dd/MM/yyyy");
+                string gioVe = Model.GioKhoiHanh.HasValue ? Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa có";
+                string tenVe = string.IsNullOrWhiteSpace(Model.Form.HoTen) ? "Chưa điền" : Model.Form.HoTen;
+                string nhanCho = Model.MaCho != null || Model.CoSoDo ? "Chỗ ngồi" : "Ghế";
+                string choVe = Model.MaCho ?? (Model.CoSoDo ? "Chưa chọn" : "Số " + Model.ThuTu);
+                @* Vé chỉ là thông tin chuyến đi để gửi vào nhóm chat: không in số giấy tờ, không có mã soát vé *@
+                <section class="dt-block">
+                    <div class="dn-tien-do-head">
+                        <h2>Vé của bạn</h2>
+                        <button type="button" class="ve-nut-lat" data-ve-lat>Xem mặt sau</button>
+                    </div>
+                    <div class="ve" data-ve
+                         data-tour="@Model.TenTour" data-ngay="@ngayVe" data-gio="@gioVe" data-ten="@tenVe"
+                         data-nhan-cho="@nhanCho" data-cho="@choVe" data-ma-chuyen="@Model.MaChuyenDi"
+                         data-ma-ghe="@Model.MaThanhToan" data-thu-tu="@Model.ThuTu">
+                        <div class="ve-nghieng">
+                            <div class="ve-khung">
+                                <div class="ve-mat ve-truoc">
+                                    <div class="ve-dau"><strong>TravelVN</strong><span>Thông tin chuyến đi</span></div>
+                                    <div class="ve-than">
+                                        <p class="ve-tour">@Model.TenTour</p>
+                                        <dl class="ve-ds">
+                                            <div><dt>Ngày đi</dt><dd>@ngayVe</dd></div>
+                                            <div><dt>Giờ đi</dt><dd>@gioVe</dd></div>
+                                            <div><dt>Hành khách</dt><dd>@tenVe</dd></div>
+                                            <div><dt>@nhanCho</dt><dd>@choVe</dd></div>
+                                        </dl>
+                                    </div>
+                                </div>
+                                <div class="ve-mat ve-sau" aria-hidden="true">
+                                    <div class="ve-dau"><strong>TravelVN</strong><span>Đã thanh toán</span></div>
+                                    <div class="ve-than">
+                                        <dl class="ve-ds">
+                                            <div><dt>Mã chuyến đi</dt><dd>@Model.MaChuyenDi</dd></div>
+                                            <div><dt>Mã ghế</dt><dd>@Model.MaThanhToan</dd></div>
+                                        </dl>
+                                        <p class="ve-nhac">Mang theo giấy tờ gốc đúng với thông tin đã điền. Đây là thông tin chuyến đi, không dùng để soát vé.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ve-duoi">
+                        <button type="button" class="tv-btn tv-btn-vien" data-ve-luu>Lưu ảnh vé</button>
+                        <span class="dn-hint ve-bao" data-ve-bao role="status"></span>
+                    </div>
+                </section>
+            }
+
             <section class="dt-block">
                 <div class="dn-tien-do-head">
                     <h2>Thông tin hành khách</h2>
@@ -170,4 +221,8 @@
         setInterval(chay, 1000);
     })();
 </script>
+@if (Model.TrangThai == TrangThaiGhe.DaTra)
+{
+    <script src="~/js/ve-lat.js" asp-append-version="true"></script>
+}
 
