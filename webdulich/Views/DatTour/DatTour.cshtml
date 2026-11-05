@@ -8,7 +8,7 @@
     decimal giaTour = tour != null ? tour.Gia : 0;
     decimal giaNguoiLon = lichKhoiHanh?.GiaNguoiLon ?? giaTour;
     decimal giaTreEm = lichKhoiHanh?.GiaTreEm ?? giaNguoiLon * 0.5m;
-    var maChuyenDiTam = tour != null ? $"TRAVELVN-{tour.Id}-{DateTime.Now:yyyyMMddHHmmss}" : "TRAVELVN";
+    var maChuyenDiTam = tour != null ? $"TRAVELVN-{tour.Id}-{GioVN.BayGio:yyyyMMddHHmmss}" : "TRAVELVN";
     var coLoi = !ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0);
 }
 

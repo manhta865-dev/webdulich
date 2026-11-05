@@ -16,7 +16,7 @@ namespace webdulich.Models
 
         public string NguoiGui { get; set; } = "user"; // user hoặc admin
 
-        public DateTime NgayGui { get; set; } = DateTime.Now;
+        public DateTime NgayGui { get; set; } = GioVN.BayGio;
 
         public bool DaDoc { get; set; } = false;
 

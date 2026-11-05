@@ -49,7 +49,7 @@ namespace webdulich.Models
                     return "Đã hủy";
                 }
 
-                var homNay = DateTime.Today;
+                var homNay = GioVN.HomNay;
                 var ngayBatDau = NgayKhoiHanh.Date;
                 var soNgay = Tour?.SoNgay ?? 1;
 

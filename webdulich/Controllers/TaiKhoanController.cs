@@ -141,7 +141,7 @@ namespace webdulich.Controllers
             tk.HoTen = tk.HoTen.Trim();
             tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(tk.MatKhau.Trim()); // Mã hóa mật khẩu
             tk.VaiTro = "user"; // Tài khoản tự đăng ký mặc định là user.
-            tk.NgayTao = DateTime.Now;
+            tk.NgayTao = GioVN.BayGio;
             tk.AnhDaiDien = "";
             // Thêm tài khoản mới vào bảng TaiKhoans.
             _context.TaiKhoans.Add(tk);

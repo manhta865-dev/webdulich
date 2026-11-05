@@ -37,7 +37,7 @@ namespace webdulich.Services
                 using var phamVi = _taoPhamVi.CreateScope();
                 var db = phamVi.ServiceProvider.GetRequiredService<DuLichDbContext>();
                 int soGioGiaHan = _cauHinh.GetValue("DonNhom:SoGioGiaHan", 6);
-                var bayGio = DateTime.Now;
+                var bayGio = GioVN.BayGio;
 
                 var dsDonId = db.DatTours
                     .Where(x => x.LoaiDon == "Nhom" && x.TrangThai == "GiuCho" && x.HanGiuCho <= bayGio)

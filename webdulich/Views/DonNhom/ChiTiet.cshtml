@@ -39,7 +39,7 @@
         </div>
         @if (conGiuCho)
         {
-            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@Model.HanGiuCho!.Value.ToString("o")">
+            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho!.Value)">
                 <span>@(Model.DaGiaHan ? "Đã gia hạn, còn" : "Giữ chỗ còn")</span>
                 <strong data-dem>--:--:--</strong>
                 <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
@@ -92,6 +92,10 @@
                                 <small>@g.LoaiHanhKhach, @g.GiaLucDat.ToString("N0") VNĐ@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
                             </div>
                             <span class="dn-nhan">@g.TrangThai</span>
+                            @if (g.BiTuChoi && g.ChuaTra)
+                            {
+                                <span class="dn-nhan dn-tu-choi">Bị từ chối, cần trả lại</span>
+                            }
                             @if (g.TruongNhomMoDuoc)
                             {
                                 @* Ghế của mình, hoặc ghế không có tài khoản để điền hộ (RB-20: không mở ghế người khác) *@

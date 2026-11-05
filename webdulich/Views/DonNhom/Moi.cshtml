@@ -19,7 +19,7 @@
             <h1>@Model.TenTour</h1>
             <p>Khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : ""). Mã đơn @Model.MaChuyenDi.</p>
         </div>
-        <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@Model.HanGiuCho.ToString("o")">
+        <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho)">
             <span>Nhận ghế và trả trước</span>
             <strong data-dem>--:--:--</strong>
             <small>@Model.HanGiuCho.ToString("HH:mm dd/MM/yyyy")</small>

@@ -16,7 +16,7 @@ namespace webdulich.Models
 
         public string? GhiChu { get; set; }
 
-        public DateTime NgayTao { get; set; } = DateTime.Now;
+        public DateTime NgayTao { get; set; } = GioVN.BayGio;
 
         [ForeignKey("TaiKhoanId")]
         public TaiKhoan? TaiKhoan { get; set; }

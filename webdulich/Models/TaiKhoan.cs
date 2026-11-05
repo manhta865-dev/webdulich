@@ -27,7 +27,7 @@ namespace webdulich.Models
         [Required(ErrorMessage = "Vui lòng chọn vai trò!")]
         public string VaiTro { get; set; } = "user";
 
-        public DateTime NgayTao { get; set; } = DateTime.Now;
+        public DateTime NgayTao { get; set; } = GioVN.BayGio;
 
         public string? AnhDaiDien { get; set; }
 

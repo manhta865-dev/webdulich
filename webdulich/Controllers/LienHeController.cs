@@ -35,7 +35,7 @@ namespace webdulich.Controllers
                 TaiKhoanId = taiKhoanId.Value,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "user",
-                NgayGui = DateTime.Now,
+                NgayGui = GioVN.BayGio,
                 DaDoc = false
             };
             // Lưu xuống SQL Server.

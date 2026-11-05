@@ -93,7 +93,7 @@ namespace webdulich.Controllers
             }
             // Chuẩn hóa mã khuyến mãi bằng cách loại bỏ khoảng trắng và chuyển thành chữ hoa để so sánh một cách nhất quán với dữ liệu trong cơ sở dữ liệu 
             string ma = maKhuyenMai.Trim().ToUpper();
-            var homNay = DateTime.Today;
+            var homNay = GioVN.HomNay;
             // Truy vấn cơ sở dữ liệu để tìm khuyến mãi phù hợp với mã đã chuẩn hóa và đáp ứng các điều kiện về trạng thái, ngày bắt đầu, ngày kết thúc, và số lượt dùng
             return _context.KhuyenMais.FirstOrDefault(x =>
                 x.MaKhuyenMai == ma &&
@@ -170,7 +170,7 @@ namespace webdulich.Controllers
             {
                 return NotFound();
             }
-            if (tour.NgungBan || lich.TrangThai != TrangThaiLich.MoBan || lich.NgayKhoiHanh.Date <= DateTime.Today)
+            if (tour.NgungBan || lich.TrangThai != TrangThaiLich.MoBan || lich.NgayKhoiHanh.Date <= GioVN.HomNay)
             {
                 TempData["Loi"] = "Lịch khởi hành này không còn nhận đặt tour.";
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id = tour.Id });
@@ -257,7 +257,7 @@ namespace webdulich.Controllers
                 ModelState.AddModelError("SoNguoi", "Số người phải lớn hơn 0.");
             }
 
-            if (model.NgayDi < DateTime.Today) // Kiểm tra nếu ngày đi nhỏ hơn ngày hiện tại, nếu có, thêm lỗi vào ModelState để thông báo rằng ngày đi phải từ hôm nay trở đi
+            if (model.NgayDi < GioVN.HomNay) // Kiểm tra nếu ngày đi nhỏ hơn ngày hiện tại, nếu có, thêm lỗi vào ModelState để thông báo rằng ngày đi phải từ hôm nay trở đi
             {
                 ModelState.AddModelError("NgayDi", "Ngày đi phải từ hôm nay trở đi.");
             }
@@ -696,7 +696,7 @@ namespace webdulich.Controllers
             var lichId = HttpContext.Session.GetInt32("DatTour_LichKhoiHanhTourId");
             // Lấy ngày đi từ session để xử lý thanh toán. Nếu có thông tin ngày đi, phân tích chuỗi ngày đi thành đối tượng DateTime để sử dụng trong quá trình lưu thông tin đặt tour vào cơ sở dữ liệu. Nếu không có thông tin ngày đi, sử dụng giá trị mặc định là ngày mai để đảm bảo rằng tính toán vẫn có thể thực hiện được.
             var ngayDiString = HttpContext.Session.GetString("DatTour_NgayDi");
-            DateTime ngayDi = DateTime.Today.AddDays(1);
+            DateTime ngayDi = GioVN.HomNay.AddDays(1);
 
             if (!string.IsNullOrEmpty(ngayDiString))
             {
@@ -780,7 +780,7 @@ namespace webdulich.Controllers
                 // Đơn cá nhân chờ admin xác nhận đã nhận tiền
                 LoaiDon = "CaNhan",
                 TrangThai = "GiuCho",
-                NgayDat = DateTime.Now
+                NgayDat = GioVN.BayGio
             };
             // Lấy danh sách hành khách từ session, nếu có, phân tích chuỗi JSON để lấy danh sách hành khách và lưu vào thuộc tính HanhKhachDatTours của đối tượng DatTours. Nếu không có thông tin hành khách trong session, thuộc tính HanhKhachDatTours sẽ là một danh sách rỗng.
             var hanhKhachJson = HttpContext.Session.GetString("DatTour_HanhKhach");
@@ -889,7 +889,7 @@ namespace webdulich.Controllers
                         SoTien = tongTien,
                         PhuongThuc = phuongThucThanhToan ?? string.Empty,
                         TrangThai = "ChoXacNhan",
-                        NgayTao = DateTime.Now
+                        NgayTao = GioVN.BayGio
                     });
                     _context.SaveChanges();
                 }
@@ -978,7 +978,7 @@ namespace webdulich.Controllers
             {
                 loi = "Chuyến này không có sơ đồ chỗ ngồi.";
             }
-            else if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= DateTime.Today || don.LichKhoiHanhTour.TrangThai == TrangThaiLich.DaHuy)
+            else if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= GioVN.HomNay || don.LichKhoiHanhTour.TrangThai == TrangThaiLich.DaHuy)
             {
                 loi = "Chuyến đã tới ngày hoặc đã hủy, không đổi chỗ được nữa.";
             }
@@ -1186,7 +1186,8 @@ namespace webdulich.Controllers
                     GiaLucDat = x.Ghe.GiaLucDat,
                     MaCho = x.MaCho,
                     TrangThai = TrangThaiGhe.Tinh(x.Ghe, giaoDichGheNhom),
-                    DonDaHuy = x.DonTrangThai == "DaHuy"
+                    DonDaHuy = x.DonTrangThai == "DaHuy",
+                    BiTuChoi = TrangThaiGhe.LucBiTuChoi(x.Ghe.Id, giaoDichGheNhom).HasValue
                 })
                 .ToList();
 

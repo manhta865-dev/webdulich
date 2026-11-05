@@ -75,7 +75,7 @@ namespace webdulich.Controllers
                 .Take(5)
                 .ToList();
             // 10. Lấy khuyến mãi đang hoạt động
-            var homNay = DateTime.Today;
+            var homNay = GioVN.HomNay;
             ViewBag.KhuyenMais = _context.KhuyenMais
                 .Where(x =>
                     x.TrangThai == TrangThaiKhuyenMai.HoatDong &&

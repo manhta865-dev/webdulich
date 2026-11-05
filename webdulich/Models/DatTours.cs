@@ -54,7 +54,7 @@ namespace webdulich.Models
         // Đơn nhóm đã được gia hạn một lần khi hết hạn giữ chỗ (nhắc rồi mới nhả)
         public bool DaGiaHan { get; set; }
 
-        public DateTime NgayDat { get; set; } = DateTime.Now;
+        public DateTime NgayDat { get; set; } = GioVN.BayGio;
 
         public int? TaiKhoanId { get; set; }
 

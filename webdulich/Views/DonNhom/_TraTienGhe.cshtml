@@ -17,6 +17,14 @@
     else if (Model.DuocTra && Model.ChuyenKhoan != null)
     {
         var ck = Model.ChuyenKhoan;
+        if (Model.LucBiTuChoi.HasValue)
+        {
+            @* Admin từ chối: nói rõ, không để người trả chỉ thấy lại mã QR mà không hiểu vì sao *@
+            <div class="dn-tra-ket-qua tu-choi" role="alert">
+                TravelVN chưa xác nhận được chuyển khoản (kiểm tra lúc @Model.LucBiTuChoi.Value.ToString("HH:mm dd/MM")).
+                Bạn xem lại số tiền và nội dung rồi báo lại. Nếu đã chuyển đúng, hãy liên hệ TravelVN.
+            </div>
+        }
         <form asp-controller="DonNhom" asp-action="DaChuyenKhoan" asp-route-id="@Model.GheId" method="post" class="dn-pt"
               data-xac-nhan-tieu-de="Bạn đã chuyển khoản xong?"
               data-xac-nhan="Số tiền @ck.SoTien.ToString("N0") VNĐ, nội dung @ck.NoiDung. TravelVN sẽ đối chiếu sao kê rồi xác nhận. Sau khi báo, thông tin hành khách của ghế được khóa."

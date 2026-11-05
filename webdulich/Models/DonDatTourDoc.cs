@@ -28,7 +28,7 @@ namespace webdulich.Models
         public bool CoSoDoChoNgoi { get; set; }
 
         // Chủ đơn còn chọn hoặc đổi chỗ được: đơn chưa hủy, lịch có sơ đồ, chưa tới ngày đi
-        public bool DuocDoiCho => !DaHuy && CoSoDoChoNgoi && NgayDi.Date > DateTime.Today;
+        public bool DuocDoiCho => !DaHuy && CoSoDoChoNgoi && NgayDi.Date > GioVN.HomNay;
 
         public int SoNguoi { get; set; }
         public int SoNguoiLon { get; set; }
@@ -176,7 +176,7 @@ namespace webdulich.Models
         {
             using var giaoDichCsdl = db.Database.BeginTransaction();
 
-            var bayGio = DateTime.Now;
+            var bayGio = GioVN.BayGio;
             var dsGhe = don.HanhKhachDatTours.Where(h => h.NgayNha == null).ToList();
             var dsGheId = dsGhe.Select(h => h.Id).ToList();
             foreach (var ghe in dsGhe)
@@ -230,7 +230,7 @@ namespace webdulich.Models
         private static int NhaGheChuaTra(DuLichDbContext db, int donId, int lichId)
         {
             int soNha = db.Database.ExecuteSqlInterpolated($@"
-                UPDATE HanhKhachDatTours SET NgayNha = {DateTime.Now}
+                UPDATE HanhKhachDatTours SET NgayNha = {GioVN.BayGio}
                 WHERE DatTourId = {donId} AND NgayNha IS NULL
                   AND NOT EXISTS (SELECT 1 FROM GiaoDichThanhToans g WHERE g.HanhKhachDatTourId = HanhKhachDatTours.Id AND g.TrangThai IN ('ChoXacNhan', 'ThanhCong'))");
 
@@ -257,7 +257,7 @@ namespace webdulich.Models
         // Dịch vụ chạy nền và lúc mở trang cùng gọi; mỗi bước là UPDATE có điều kiện nên hai nơi gọi cùng lúc chỉ một nơi làm được.
         public static KetQuaHetHan XuLyDonQuaHan(DuLichDbContext db, int donId, int soGioGiaHan)
         {
-            var bayGio = DateTime.Now;
+            var bayGio = GioVN.BayGio;
             var don = db.DatTours.AsNoTracking().Include(x => x.LichKhoiHanhTour)
                 .FirstOrDefault(x => x.Id == donId && x.LoaiDon == "Nhom" && x.TrangThai == "GiuCho");
             if (don?.LichKhoiHanhTour == null || !(don.HanGiuCho <= bayGio))
@@ -325,7 +325,7 @@ namespace webdulich.Models
             }
 
             int soNha = db.Database.ExecuteSqlInterpolated(
-                $"UPDATE HanhKhachDatTours SET NgayNha = {DateTime.Now} WHERE DatTourId = {donId} AND NgayNha IS NULL");
+                $"UPDATE HanhKhachDatTours SET NgayNha = {GioVN.BayGio} WHERE DatTourId = {donId} AND NgayNha IS NULL");
             db.Database.ExecuteSqlInterpolated($@"
                 DELETE FROM ChoNgoiChuyenDis WHERE HanhKhachDatTourId IN (SELECT Id FROM HanhKhachDatTours WHERE DatTourId = {donId})");
             db.Database.ExecuteSqlInterpolated($@"

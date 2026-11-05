@@ -22,9 +22,9 @@ namespace webdulich.Models
 
         public decimal GiaTriGiam { get; set; }
 
-        public DateTime NgayBatDau { get; set; } = DateTime.Today;
+        public DateTime NgayBatDau { get; set; } = GioVN.HomNay;
 
-        public DateTime NgayKetThuc { get; set; } = DateTime.Today.AddMonths(1);
+        public DateTime NgayKetThuc { get; set; } = GioVN.HomNay.AddMonths(1);
 
         public string MauNen { get; set; } = "#ff6b4a";
 
@@ -39,7 +39,7 @@ namespace webdulich.Models
         [NotMapped]
         public int SoLuotDaDungThucTe { get; set; }
 
-        public DateTime NgayTao { get; set; } = DateTime.Now;
+        public DateTime NgayTao { get; set; } = GioVN.BayGio;
 
         public ICollection<DatTours> DatTours { get; set; } = new List<DatTours>();
 
@@ -48,7 +48,7 @@ namespace webdulich.Models
         {
             get
             {
-                bool conHan = NgayBatDau.Date <= DateTime.Today && NgayKetThuc.Date >= DateTime.Today;
+                bool conHan = NgayBatDau.Date <= GioVN.HomNay && NgayKetThuc.Date >= GioVN.HomNay;
                 bool conLuot = !SoLuotDungToiDa.HasValue || SoLuotDaDungThucTe < SoLuotDungToiDa.Value;
 
                 return TrangThai == TrangThaiKhuyenMai.HoatDong && conHan && conLuot;

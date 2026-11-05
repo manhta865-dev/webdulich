@@ -846,7 +846,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("SuaDonDatTour", new { id });
             }
 
-            var bayGio = DateTime.Now;
+            var bayGio = GioVN.BayGio;
             var nguoiXacNhan = HttpContext.Session.GetInt32("taiKhoanId");
             var gdCho = _context.GiaoDichThanhToans
                 .Where(g => g.DatTourId == id && g.TrangThai == "ChoXacNhan")
@@ -913,7 +913,7 @@ namespace webdulich.Controllers
             {
                 soDong = _context.Database.ExecuteSqlInterpolated($@"
                     UPDATE GiaoDichThanhToans
-                    SET TrangThai = {(dongY ? "ThanhCong" : "ThatBai")}, NgayXacNhan = {DateTime.Now}, NguoiXacNhanId = {HttpContext.Session.GetInt32("taiKhoanId")}
+                    SET TrangThai = {(dongY ? "ThanhCong" : "ThatBai")}, NgayXacNhan = {GioVN.BayGio}, NguoiXacNhanId = {HttpContext.Session.GetInt32("taiKhoanId")}
                     WHERE Id = {id} AND TrangThai = 'ChoXacNhan'");
             }
             // Chỉ bắt lỗi trùng chỉ mục duy nhất (ghế đã có giao dịch thành công khác); lỗi khác để hiện ra
@@ -927,11 +927,22 @@ namespace webdulich.Controllers
             {
                 TempData["error"] = "Giao dịch này đã được xử lý trước đó.";
             }
+            else if (dongY)
+            {
+                TempData["success"] = $"Đã xác nhận nhận {gd.SoTien:N0} VNĐ cho ghế {gd.HanhKhachDatTour.MaThanhToan}.";
+            }
             else
             {
-                TempData["success"] = dongY
-                    ? $"Đã xác nhận nhận {gd.SoTien:N0} VNĐ cho ghế {gd.HanhKhachDatTour.MaThanhToan}."
-                    : $"Đã từ chối giao dịch của ghế {gd.HanhKhachDatTour.MaThanhToan}. Người trả có thể báo chuyển khoản lại.";
+                // Đơn đã quá hạn thì ghế vừa bị từ chối được xử lý ngay theo luật hết hạn, báo admin đúng kết quả
+                int soGioGiaHan = HttpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue("DonNhom:SoGioGiaHan", 6);
+                var ketQua = XuLyDon.XuLyDonQuaHan(_context, donId, soGioGiaHan);
+                TempData["success"] = $"Đã từ chối giao dịch của ghế {gd.HanhKhachDatTour.MaThanhToan}. " + (ketQua switch
+                {
+                    XuLyDon.KetQuaHetHan.NhaGheChoAdmin or XuLyDon.KetQuaHetHan.Chot or XuLyDon.KetQuaHetHan.Huy
+                        => "Đơn đã hết hạn giữ chỗ nên ghế đã được nhả.",
+                    XuLyDon.KetQuaHetHan.GiaHan => "Đơn vừa được gia hạn, người trả có thể báo chuyển khoản lại.",
+                    _ => "Người trả có thể báo chuyển khoản lại."
+                });
             }
             return RedirectToAction("SuaDonDatTour", new { id = donId });
         }
@@ -1028,7 +1039,7 @@ namespace webdulich.Controllers
                     }
                 }
 
-                var bayGio = DateTime.Now;
+                var bayGio = GioVN.BayGio;
                 void ThemGhe(int soLuong, string loai, decimal gia)
                 {
                     for (int i = 0; i < soLuong; i++)
@@ -1288,7 +1299,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
-            var homNay = DateTime.Today;
+            var homNay = GioVN.HomNay;
             var ngayMai = homNay.AddDays(1);
             var sau30Ngay = homNay.AddDays(30);
 
@@ -1373,8 +1384,8 @@ namespace webdulich.Controllers
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
-            int thangChon = thang ?? DateTime.Today.Month;
-            int namChon = nam ?? DateTime.Today.Year;
+            int thangChon = thang ?? GioVN.HomNay.Month;
+            int namChon = nam ?? GioVN.HomNay.Year;
             // Đơn đã thanh toán (có giao dịch thành công), tính theo ngày đi của lịch
             var query = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan);
@@ -1464,8 +1475,8 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
             // Đoạn này truy vấn danh sách đơn đặt tour đã thanh toán từ database, bao gồm các thông tin liên quan như tour, lịch khởi hành và phương tiện. Sau đó áp dụng bộ lọc theo tháng và năm mà admin chọn để chỉ lấy những đơn đặt tour có ngày đi thuộc tháng và năm đó. Tiếp theo, hệ thống sẽ tạo nội dung file CSV bằng cách xây dựng một chuỗi với các dòng dữ liệu được phân tách bằng dấu phẩy. Mỗi dòng sẽ chứa các thông tin như STT, khách hàng, tour, ngày đi, giờ đi, phương tiện, phương thức thanh toán, trạng thái và doanh thu của từng đơn đặt tour. Cuối cùng hệ thống sẽ trả về file CSV dưới dạng tệp đính kèm để admin có thể tải về máy tính của mình.
-            int thangChon = thang ?? DateTime.Today.Month;
-            int namChon = nam ?? DateTime.Today.Year;
+            int thangChon = thang ?? GioVN.HomNay.Month;
+            int namChon = nam ?? GioVN.HomNay.Year;
             // 
             var danhSachDon = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x =>
@@ -1524,8 +1535,8 @@ namespace webdulich.Controllers
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
-            int thangChon = thang ?? DateTime.Today.Month;
-            int namChon = nam ?? DateTime.Today.Year;
+            int thangChon = thang ?? GioVN.HomNay.Month;
+            int namChon = nam ?? GioVN.HomNay.Year;
 
             var danhSachDon = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x =>
@@ -1887,7 +1898,7 @@ namespace webdulich.Controllers
 
             // Mọi đơn của lịch bị hủy theo: nhả ghế, bỏ chỗ ngồi đã chọn (RB-16, RB-17).
             // Lịch đã hủy không ai giữ chỗ nữa nên số chỗ còn bằng sức chứa (RB-12).
-            var bayGio = DateTime.Now;
+            var bayGio = GioVN.BayGio;
             var dsGhe = dsDon.SelectMany(d => d.HanhKhachDatTours).Where(h => h.NgayNha == null).ToList();
             var dsGheId = dsGhe.Select(h => h.Id).ToList();
             foreach (var ghe in dsGhe)
@@ -1945,7 +1956,7 @@ namespace webdulich.Controllers
         // Hàm phụ để nạp dữ liệu cho các dropdown list trong trang thêm hoặc chỉnh sửa phân công hướng dẫn viên và tài xế cho lịch khởi hành của tour. Hàm này sẽ lấy danh sách các lịch khởi hành của tour hiện tại (hoặc tất cả nếu không có lịch khởi hành cụ thể nào được chọn) để hiển thị trong dropdown chọn lịch khởi hành. Đồng thời, hàm cũng sẽ lấy danh sách các nhân viên đang làm việc và có loại nhân viên là "HuongDanVien" để hiển thị trong dropdown chọn hướng dẫn viên, và danh sách các nhân viên đang làm việc và có loại nhân viên là "TaiXe" để hiển thị trong dropdown chọn tài xế. Dữ liệu này sẽ được lưu vào ViewBag để có thể sử dụng trong view khi hiển thị form thêm hoặc chỉnh sửa phân công.
         private void NapDuLieuPhanCong(int? lichHienTaiId = null)
         {
-            var homNay = DateTime.Today;
+            var homNay = GioVN.HomNay;
 
             var lichKhoiHanhs = _context.LichKhoiHanhTours
                 .AsNoTracking()
@@ -2093,7 +2104,7 @@ namespace webdulich.Controllers
                         "LichKhoiHanhTourId",
                         "Không thể phân công cho lịch đã hủy.");
                 }
-                else if (lich.NgayKhoiHanh.Date < DateTime.Today)
+                else if (lich.NgayKhoiHanh.Date < GioVN.HomNay)
                 {
                     ModelState.AddModelError(
                         "LichKhoiHanhTourId",
@@ -2123,7 +2134,7 @@ namespace webdulich.Controllers
                 return View(model);
             }
 
-            model.NgayPhanCong = DateTime.Now;
+            model.NgayPhanCong = GioVN.BayGio;
 
             _context.PhanCongTours.Add(model);
             _context.SaveChanges();
@@ -2263,7 +2274,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("KhuyenMai");
             }
             // Nếu chưa tồn tại thì hệ thống sẽ tạo một đối tượng KhuyenMai mới với các thông tin đã nhận được từ form cùng với ngày tạo hiện tại và số lượt đã dùng ban đầu bằng 0. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng khuyến mãi đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi mới đã xuất hiện trong danh sách.
-            model.NgayTao = DateTime.Now;
+            model.NgayTao = GioVN.BayGio;
             // Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng khuyến mãi đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách khuyến mãi để thấy rằng khuyến mãi mới đã xuất hiện trong danh sách.
             _context.KhuyenMais.Add(model);
             _context.SaveChanges();
@@ -2527,7 +2538,7 @@ namespace webdulich.Controllers
             foreach (var tin in ds.Where(x => x.NguoiGui != "admin" && !x.DaDoc))
             {
                 tin.DaDoc = true;
-                tin.NgayDoc = DateTime.Now;
+                tin.NgayDoc = GioVN.BayGio;
             }
 
             _context.SaveChanges();
@@ -2561,9 +2572,9 @@ namespace webdulich.Controllers
                 TaiKhoanId = taiKhoanId,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
-                NgayGui = DateTime.Now,
+                NgayGui = GioVN.BayGio,
                 DaDoc = true,
-                NgayDoc = DateTime.Now
+                NgayDoc = GioVN.BayGio
             };
             // Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng tin nhắn trả lời đã được gửi thành công. Cuối cùng chuyển hướng admin về trang chi tiết cuộc trò chuyện đó để thấy rằng tin nhắn trả lời đã xuất hiện trong danh sách tin nhắn của cuộc trò chuyện.
             _context.TinNhanLienHes.Add(tinNhan);
@@ -2605,7 +2616,7 @@ namespace webdulich.Controllers
             foreach (var tin in ds.Where(x => x.NguoiGui != "admin" && !x.DaDoc))
             {
                 tin.DaDoc = true;
-                tin.NgayDoc = DateTime.Now;
+                tin.NgayDoc = GioVN.BayGio;
             }
 
             _context.SaveChanges();
@@ -2644,9 +2655,9 @@ namespace webdulich.Controllers
                 TaiKhoanId = taiKhoanId,
                 NoiDung = noiDung.Trim(),
                 NguoiGui = "admin",
-                NgayGui = DateTime.Now,
+                NgayGui = GioVN.BayGio,
                 DaDoc = true,
-                NgayDoc = DateTime.Now
+                NgayDoc = GioVN.BayGio
             };
 
             _context.TinNhanLienHes.Add(tinNhan);
@@ -2731,7 +2742,7 @@ namespace webdulich.Controllers
                 SoDienThoai = soDienThoaiTk,
                 MatKhau = BCrypt.Net.BCrypt.HashPassword(matKhau),
                 VaiTro = vaiTro,
-                NgayTao = DateTime.Now
+                NgayTao = GioVN.BayGio
             };
 
             _context.TaiKhoans.Add(taiKhoan);
@@ -2742,7 +2753,7 @@ namespace webdulich.Controllers
                 TaiKhoanId = taiKhoan.Id,
                 DangLamViec = true,
                 GhiChu = ghiChu,
-                NgayTao = DateTime.Now
+                NgayTao = GioVN.BayGio
             };
 
             _context.NhanViens.Add(nhanVien);

@@ -3,6 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using webdulich.Models;
 using Microsoft.AspNetCore.Identity;
 
+// Số hiện kiểu Việt Nam (3.000.000) trên mọi máy chủ. Giữ gốc en-US và dấu thập phân là dấu chấm để đọc đúng
+// giá trị ô số từ form (10.5); gõ 1.500.000 thì bị từ chối chứ không bị hiểu sai.
+var dinhDang = (System.Globalization.CultureInfo)System.Globalization.CultureInfo.GetCultureInfo("en-US").Clone();
+dinhDang.NumberFormat.NumberGroupSeparator = ".";
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = dinhDang;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = dinhDang;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Cookie chỉ gửi qua HTTPS khi chạy thật; trên máy (Development) còn dùng được cả http://localhost

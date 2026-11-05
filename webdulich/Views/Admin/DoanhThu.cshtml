@@ -4,8 +4,8 @@
 @{
     ViewData["Title"] = "Doanh thu";
 
-    int thangChon = ViewBag.ThangChon ?? DateTime.Today.Month;
-    int namChon = ViewBag.NamChon ?? DateTime.Today.Year;
+    int thangChon = ViewBag.ThangChon ?? GioVN.HomNay.Month;
+    int namChon = ViewBag.NamChon ?? GioVN.HomNay.Year;
     var namOptions = ViewBag.NamOptions as List<int> ?? new List<int>();
 
     decimal tongDoanhThu = ViewBag.TongDoanhThu ?? 0;

@@ -98,7 +98,7 @@ namespace webdulich.Controllers
                 return NotFound();
             }
             // Lấy danh sách lịch khởi hành sắp tới của tour, loại bỏ những lịch đã hủy và những lịch đã khởi hành trước ngày hôm nay
-            var ngayMai = DateTime.Today.AddDays(1);
+            var ngayMai = GioVN.HomNay.AddDays(1);
 
             // Tour ngừng bán thì không còn lịch để đặt; lịch tạm ngưng hoặc đã hủy cũng không hiện
             ViewBag.LichKhoiHanh = _context.LichKhoiHanhTours

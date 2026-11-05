@@ -82,7 +82,7 @@
                 <strong>
                     @(don.TrangThai == "DaXacNhan" ? "Đã chốt"
                         : don.TrangThai == "DaHuy" ? "Đã hủy"
-                        : Model.HanGiuCho > DateTime.Now ? $"Đến {Model.HanGiuCho:HH:mm dd/MM}{(Model.DaGiaHan ? " (đã gia hạn)" : "")}"
+                        : Model.HanGiuCho > GioVN.BayGio ? $"Đến {Model.HanGiuCho:HH:mm dd/MM}{(Model.DaGiaHan ? " (đã gia hạn)" : "")}"
                         : "Hết hạn, đợi xác nhận ghế chờ")
                 </strong>
             </div>
@@ -104,7 +104,7 @@
         @if (Model.DsGiaoDich.Any())
         {
             <div class="ad-table-wrap">
-                <table class="ad-table">
+                <table class="ad-table@(laNhom ? " ad-table-gd-ghe" : "")">
                     <thead>
                         <tr>
                             <th>Ngày tạo</th>
@@ -162,7 +162,9 @@
                                                 }
                                                 <form method="post" asp-action="XacNhanGiaoDichGhe" asp-route-id="@gd.Id"
                                                       data-xac-nhan-tieu-de="Từ chối giao dịch này?"
-                                                      data-xac-nhan="Dùng khi sao kê không có khoản @gd.SoTien.ToString("N0") VNĐ với nội dung @gheGd?.MaThanhToan. Ghế quay về chưa trả, người trả phải báo chuyển khoản lại."
+                                                      data-xac-nhan="@(don.TrangThai == "GiuCho" && !(Model.HanGiuCho > GioVN.BayGio)
+                                                          ? $"Đơn đã hết hạn giữ chỗ: từ chối có thể làm ghế bị nhả ngay, khách không báo lại được. Nếu khách đã chuyển tiền, hãy liên hệ họ trước. Sao kê không có khoản {gd.SoTien:N0} VNĐ với nội dung {gheGd?.MaThanhToan}."
+                                                          : $"Dùng khi sao kê không có khoản {gd.SoTien:N0} VNĐ với nội dung {gheGd?.MaThanhToan}. Ghế quay về chưa trả, người trả sẽ thấy thông báo và phải báo chuyển khoản lại.")"
                                                       data-xac-nhan-nut="Từ chối" data-xac-nhan-nguy-hiem>
                                                     <input type="hidden" name="dongY" value="false" />
                                                     <button type="submit" class="tv-btn tv-btn-vien">Từ chối</button>

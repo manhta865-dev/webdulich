@@ -92,7 +92,11 @@
                         }
                         else if (gheDaNha && !g.DonDaHuy)
                         {
-                            <p class="ls-ghi-chu">Ghế chưa trả tiền nên đã được nhả, do hết hạn giữ chỗ hoặc trưởng nhóm chốt đơn, bớt ghế. Bạn không bị trừ tiền.</p>
+                            <p class="ls-ghi-chu">
+                                @(g.BiTuChoi
+                                    ? "Chuyển khoản của ghế này không được xác nhận và đơn đã hết hạn giữ chỗ nên ghế đã được nhả. Nếu bạn đã chuyển tiền, hãy liên hệ TravelVN."
+                                    : "Ghế chưa trả tiền nên đã được nhả, do hết hạn giữ chỗ hoặc trưởng nhóm chốt đơn, bớt ghế.")
+                            </p>
                         }
                     </article>
                 }

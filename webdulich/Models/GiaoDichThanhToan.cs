@@ -27,7 +27,7 @@ namespace webdulich.Models
 
         public string? MaThamChieuNganHang { get; set; }
 
-        public DateTime NgayTao { get; set; } = DateTime.Now;
+        public DateTime NgayTao { get; set; } = GioVN.BayGio;
 
         public DateTime? NgayXacNhan { get; set; }
 

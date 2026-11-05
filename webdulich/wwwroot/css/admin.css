@@ -494,7 +494,18 @@
 /* Nút xác nhận, từ chối giao dịch của từng ghế đơn nhóm */
 .ad-gd-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
 .ad-gd-nut form { margin: 0; }
-.ad-gd-nut .tv-btn { min-height: 34px; padding: 0 var(--tv-k3); font-size: var(--tv-cs-nho); }
+.ad-gd-nut .tv-btn { min-height: 34px; padding: 0 var(--tv-k3); font-size: var(--tv-cs-nho); white-space: nowrap; }
+
+/* Cột Xử lý luôn nằm trong tầm nhìn, không phải kéo ngang mới bấm được */
+.ad-table-gd-ghe th:last-child,
+.ad-table-gd-ghe td:last-child {
+    position: sticky;
+    right: 0;
+    background: var(--tv-be-mat);
+    box-shadow: -1px 0 0 var(--tv-vien);
+}
+
+.ad-table-gd-ghe td:last-child { min-width: 104px; }
 
 /* =====================================================================
    Lô D: đơn đặt tour, sửa đơn, doanh thu

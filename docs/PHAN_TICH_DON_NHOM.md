@@ -150,6 +150,8 @@ Luồng thay thế:
  3a. Ghế đã bị nhả: chỉ được từ chối, hoàn tiền ngoài hệ thống
  4a. Giao dịch vừa được xử lý (hai admin cùng bấm): báo "đã xử lý trước đó"
  4b. Ghế đã có giao dịch thành công khác (chỉ mục duy nhất chặn): báo, đề nghị từ chối
+ 4c. Từ chối khi đơn còn hạn: người trả thấy khung báo đỏ ở trang ghế, trưởng nhóm thấy nhãn "Bị từ chối, cần trả lại"; báo chuyển khoản lại thì hai thông báo này mất
+ 4d. Từ chối khi đơn đã quá hạn: hộp thoại cảnh báo trước; bấm xong áp dụng ngay luật hết hạn (còn lượt thì gia hạn, hết lượt thì nhả ghế), trang Lịch sử nói rõ lý do ghế bị nhả
 ```
 
 **Bảng 3.7. Đặc tả use case Hết hạn giữ chỗ**
@@ -328,15 +330,11 @@ Kiểm ở đâu: code (XuLyDon.TinhHanGiuCho khi tạo đơn và khi gia hạn;
 
 ## 7. Đưa lên web host
 
-Từ N2 tới N6 **không đổi cấu trúc CSDL**. Script cuối cùng cho host là `docs/sql/Mo9_DonNhom.sql`.
+Từ N2 tới N6 không đổi cấu trúc CSDL, nhưng host chưa chạy các migration `Mo` (đối chiếu ngày 04/11/2026). Host có bảng `KhuyenMais` và cột `LichKhoiHanhTours.TrangThai` dù lịch sử migration thiếu 2 dòng tương ứng. Chuỗi dưới đây đã tập dượt thành công trên bản sao dựng từ bản xuất của host (không khôi phục `.bak` được vì host chạy SQL Server 17, máy chạy 16).
 
-1. **Sao lưu database host** trước, như mọi lần.
-2. Nếu host **chưa chạy** `Mo9_DonNhom.sql` thì chạy script đó trước (thêm `NguoiTraId`, `DaGiaHan`). Kiểm tra:
-   ```sql
-   SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DatTours' AND COLUMN_NAME = 'DaGiaHan';
-   ```
-   Kết quả 1 là đã có cột.
-3. Publish code mới. **Chép kèm `appsettings.json`**: có mục `DonNhom` (24 giờ, 6 giờ, quét 5 phút) và `ThanhToan` (ACB, MoMo). Không ghi đè chuỗi kết nối của host bằng chuỗi kết nối máy local.
+1. **Sao lưu database host** trước (trang Backups), tải file `.bak` về máy.
+2. Chạy lần lượt trên host: `host_xoa_don_17_19.sql`, `host_Mo0_GhiLichSu.sql`, `Mo1` đến `Mo5`, rồi `doi_chieu_truoc_Mo6.sql` (phải rỗng). Tới đây web cũ vẫn chạy. Sau đó tạm dừng web và chạy `Mo6`, `Mo7`, `Mo8`, `Mo9`, `doi_chieu.sql` (phải rỗng). `Mo6` xóa cột cũ nên code cũ sẽ lỗi từ lúc này, phải đăng code mới ngay. Các script `Mo` không dừng tự động giữa chừng nếu có lỗi, nên gặp lỗi đỏ thì dừng và khôi phục bản sao lưu, không chạy tiếp.
+3. Publish code mới từ commit sạch. **Chép kèm `appsettings.json`**: có mục `DonNhom` (24 giờ, 6 giờ, quét 5 phút) và `ThanhToan` (ACB, MoMo). Không ghi đè chuỗi kết nối của host bằng chuỗi kết nối máy local.
 4. Chép thêm thư mục mới `wwwroot/js/xac-nhan.js` nếu cách publish không tự chép.
 5. **Kiểm tra sau khi đăng:**
    - Tạo một đơn nhóm 2 ghế ở lịch còn xa ngày đi. Lời mời có link `http://travelvn.runasp.net/DonNhom/Moi?ma=...`.

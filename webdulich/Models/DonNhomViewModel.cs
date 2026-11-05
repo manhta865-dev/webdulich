@@ -75,6 +75,9 @@ namespace webdulich.Models
         public string? MaCho { get; set; }
         public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
 
+        // Admin vừa từ chối chuyển khoản của ghế, ghế cần báo chuyển khoản lại
+        public bool BiTuChoi { get; set; }
+
         // Trưởng nhóm mở được ghế của mình và ghế không có tài khoản (điền hộ trẻ nhỏ, ông bà), không mở ghế người khác (RB-20)
         public bool TruongNhomMoDuoc => TrangThai != TrangThaiGhe.DaNha && (LaCuaToi || !CoTaiKhoan);
 
@@ -191,6 +194,9 @@ namespace webdulich.Models
         // Đơn không còn nhận thay đổi thì nói lý do thay cho QR
         public string? LyDoKhongTra { get; set; }
 
+        // Lúc admin từ chối chuyển khoản gần nhất của ghế
+        public DateTime? LucBiTuChoi { get; set; }
+
         // Người đang xem trả cho ghế không phải của mình (trưởng nhóm trả hộ)
         public bool TraHo { get; set; }
         public ThongTinChuyenKhoan? ChuyenKhoan { get; set; }
@@ -257,6 +263,9 @@ namespace webdulich.Models
         public string? MaCho { get; set; }
         public string TrangThai { get; set; } = string.Empty;
         public bool DonDaHuy { get; set; }
+
+        // Ghế bị nhả sau khi chuyển khoản bị từ chối
+        public bool BiTuChoi { get; set; }
     }
 
     // Trạng thái ghế: tính từ dữ liệu, không lưu cột (docs/MO_HINH_DU_LIEU.md, mục 4)
@@ -268,6 +277,14 @@ namespace webdulich.Models
         public const string ChoXacNhan = "Chờ xác nhận thanh toán";
         public const string DaTra = "Đã trả";
         public const string DaNha = "Đã nhả";
+
+        // Lúc admin từ chối giao dịch gần nhất của ghế; null nếu giao dịch gần nhất không bị từ chối.
+        // Hủy đơn cũng đổi giao dịch thành ThatBai nhưng không ghi NgayXacNhan nên không tính ở đây.
+        public static DateTime? LucBiTuChoi(int gheId, IEnumerable<GiaoDichThanhToan> dsGiaoDich)
+        {
+            var ganNhat = dsGiaoDich.Where(g => g.HanhKhachDatTourId == gheId).OrderByDescending(g => g.Id).FirstOrDefault();
+            return ganNhat?.TrangThai == "ThatBai" ? ganNhat.NgayXacNhan : null;
+        }
 
         public static string Tinh(HanhKhachDatTour ghe, IEnumerable<GiaoDichThanhToan> dsGiaoDich)
         {

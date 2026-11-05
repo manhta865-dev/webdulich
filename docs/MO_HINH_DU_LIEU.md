@@ -215,7 +215,8 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | QR | Ngân hàng: ảnh VietQR tạo theo số tiền và mã thanh toán của ghế, tài khoản nhận (ACB) đặt trong mục `ThanhToan` của `appsettings.json`. Ví MoMo: ảnh QR cố định, người trả tự gõ số tiền và nội dung. Giao dịch ghi phương thức `Chuyển khoản` hoặc `MoMo` |
 | Trả tiền một ghế (N4) | QR hiện khi ghế đã điền đủ thông tin và đơn còn giữ chỗ. Người trả bấm "Tôi đã chuyển khoản": tạo giao dịch `ChoXacNhan` gắn với ghế (`HanhKhachDatTourId`, `DatTourId` rỗng), ghi `NguoiTraId`. Sau đó thông tin ghế khóa, không trả lại ghế được |
 | Trả hộ ghế thành viên khác | Trưởng nhóm mở trang trả hộ: chỉ thấy tên, giá, QR của ghế, không thấy giấy tờ. Chỉ trả hộ được ghế đã điền xong |
-| Admin xác nhận đơn nhóm | Theo từng giao dịch của ghế: "Đã nhận" thành `ThanhCong`, "Từ chối" thành `ThatBai` (ghế về "Đã điền, chưa trả", trả lại được). Không có nút xác nhận cả đơn. Ghế đã nhả chỉ được từ chối |
+| Admin xác nhận đơn nhóm | Theo từng giao dịch của ghế: "Đã nhận" thành `ThanhCong`, "Từ chối" thành `ThatBai` (ghế về "Đã điền, chưa trả", trả lại được, người trả và trưởng nhóm thấy thông báo). Đơn đã quá hạn thì từ chối xong áp dụng ngay luật hết hạn: còn lượt thì gia hạn, hết lượt thì nhả ghế. Không có nút xác nhận cả đơn. Ghế đã nhả chỉ được từ chối |
+| Giờ nghiệp vụ và hiển thị | Luôn là giờ Việt Nam (UTC+7) qua `GioVN`, không dùng giờ máy chủ vì host chạy múi giờ khác |
 | Trạng thái thanh toán của đơn nhóm | Tính, không lưu: mọi ghế còn hiệu lực đã có giao dịch thành công thì "Đã thanh toán"; có ghế chờ xác nhận thì "Đang kiểm tra"; còn lại "Chưa thanh toán" |
 | Trang link mời | Không hiện tên người đã nhận ghế, chỉ ghi "Đã có người nhận" (ai có link cũng xem được) |
 | Ghế trẻ nhỏ | Không nhận qua link; trưởng nhóm điền hộ. Trưởng nhóm cũng điền hộ được ghế người lớn chưa ai nhận (người không có tài khoản) |

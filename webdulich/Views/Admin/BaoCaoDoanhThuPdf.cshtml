@@ -4,8 +4,8 @@
     Layout = null;
     decimal tongDoanhThu = ViewBag.TongDoanhThu ?? 0;
     int soDon = ViewBag.SoDonDaThanhToan ?? 0;
-    int thang = ViewBag.ThangChon ?? DateTime.Today.Month;
-    int nam = ViewBag.NamChon ?? DateTime.Today.Year;
+    int thang = ViewBag.ThangChon ?? GioVN.HomNay.Month;
+    int nam = ViewBag.NamChon ?? GioVN.HomNay.Year;
 }
 
 <!DOCTYPE html>
@@ -37,7 +37,7 @@
 
             <div class="report-date">
                 Ngày xuất
-                <strong>@DateTime.Now.ToString("dd/MM/yyyy")</strong>
+                <strong>@GioVN.BayGio.ToString("dd/MM/yyyy")</strong>
             </div>
         </div>
 

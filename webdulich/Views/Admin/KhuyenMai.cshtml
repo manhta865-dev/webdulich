@@ -73,12 +73,12 @@
 
             <div class="ad-field">
                 <label>Ngày bắt đầu</label>
-                <input type="date" name="NgayBatDau" value="@((khuyenMaiSua?.NgayBatDau ?? DateTime.Today).ToString("yyyy-MM-dd"))" required />
+                <input type="date" name="NgayBatDau" value="@((khuyenMaiSua?.NgayBatDau ?? GioVN.HomNay).ToString("yyyy-MM-dd"))" required />
             </div>
 
             <div class="ad-field">
                 <label>Ngày kết thúc</label>
-                <input type="date" name="NgayKetThuc" value="@((khuyenMaiSua?.NgayKetThuc ?? DateTime.Today.AddMonths(1)).ToString("yyyy-MM-dd"))" required />
+                <input type="date" name="NgayKetThuc" value="@((khuyenMaiSua?.NgayKetThuc ?? GioVN.HomNay.AddMonths(1)).ToString("yyyy-MM-dd"))" required />
             </div>
 
             <div class="ad-field">

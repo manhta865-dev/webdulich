@@ -66,7 +66,7 @@ namespace webdulich.Controllers
             m.SoChoCon = lich.SoChoCon;
             m.CoSoDo = lich.SoDoChoNgoiId != null;
             m.SoGioGiuCho = SoGioGiuCho;
-            var bayGio = DateTime.Now;
+            var bayGio = GioVN.BayGio;
             m.HanGiuChoDuKien = XuLyDon.TinhHanGiuCho(bayGio, SoGioGiuCho, lich.NgayKhoiHanh);
             m.HanBiRutNgan = m.HanGiuChoDuKien < bayGio.AddHours(SoGioGiuCho);
         }
@@ -97,7 +97,7 @@ namespace webdulich.Controllers
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id });
             }
 
-            if (XuLyDon.TinhHanGiuCho(DateTime.Now, SoGioGiuCho, lich.NgayKhoiHanh) <= DateTime.Now)
+            if (XuLyDon.TinhHanGiuCho(GioVN.BayGio, SoGioGiuCho, lich.NgayKhoiHanh) <= GioVN.BayGio)
             {
                 TempData["Loi"] = LoiSatNgay;
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id });
@@ -137,7 +137,7 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("", "Lịch khởi hành này không còn nhận đặt tour.");
             }
-            if (model.HanGiuChoDuKien <= DateTime.Now)
+            if (model.HanGiuChoDuKien <= GioVN.BayGio)
             {
                 ModelState.AddModelError("", LoiSatNgay);
             }
@@ -248,8 +248,8 @@ namespace webdulich.Controllers
                 TempData["Loi"] = "Lịch khởi hành này không còn nhận đặt tour.";
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id = nhap.TourId });
             }
-            var hanGiuCho = XuLyDon.TinhHanGiuCho(DateTime.Now, SoGioGiuCho, lich.NgayKhoiHanh);
-            if (hanGiuCho <= DateTime.Now)
+            var hanGiuCho = XuLyDon.TinhHanGiuCho(GioVN.BayGio, SoGioGiuCho, lich.NgayKhoiHanh);
+            if (hanGiuCho <= GioVN.BayGio)
             {
                 TempData["Loi"] = LoiSatNgay;
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id = nhap.TourId });
@@ -265,7 +265,7 @@ namespace webdulich.Controllers
                 TrangThai = "GiuCho",
                 MaMoi = XuLyDon.TaoMaMoi(_context),
                 HanGiuCho = hanGiuCho,
-                NgayDat = DateTime.Now,
+                NgayDat = GioVN.BayGio,
                 TenKhach = nhap.TenKhach.Trim(),
                 DienThoai = nhap.DienThoai.Trim(),
                 Email = nhap.Email?.Trim() ?? string.Empty,
@@ -385,7 +385,8 @@ namespace webdulich.Controllers
                     DaCoChu = h.TaiKhoanId.HasValue || !string.IsNullOrWhiteSpace(h.HoTen),
                     CoTaiKhoan = h.TaiKhoanId.HasValue,
                     MaCho = choTheoGhe.TryGetValue(h.Id, out var ma) ? ma : null,
-                    TrangThai = TrangThaiGhe.Tinh(h, dsGiaoDich)
+                    TrangThai = TrangThaiGhe.Tinh(h, dsGiaoDich),
+                    BiTuChoi = TrangThaiGhe.LucBiTuChoi(h.Id, dsGiaoDich).HasValue
                 }).ToList()
             };
             return View(model);
@@ -493,7 +494,7 @@ namespace webdulich.Controllers
             using (var giaoDichCsdl = _context.Database.BeginTransaction())
             {
                 int soDong = _context.Database.ExecuteSqlInterpolated($@"
-                    UPDATE HanhKhachDatTours SET NgayNha = {DateTime.Now}
+                    UPDATE HanhKhachDatTours SET NgayNha = {GioVN.BayGio}
                     WHERE Id = {id} AND DatTourId = {don.Id} AND NgayNha IS NULL
                       AND NOT EXISTS (SELECT 1 FROM GiaoDichThanhToans WHERE HanhKhachDatTourId = {id} AND TrangThai IN ('ChoXacNhan', 'ThanhCong'))
                       AND (SELECT COUNT(*) FROM HanhKhachDatTours WHERE DatTourId = {don.Id} AND NgayNha IS NULL) > 1");
@@ -587,9 +588,9 @@ namespace webdulich.Controllers
             if (don.TrangThai == "DaHuy") return "Đơn nhóm đã hủy.";
             if (don.TrangThai == "DaXacNhan") return "Đơn đã chốt, danh sách đi đã cố định.";
             if (don.LichKhoiHanhTour.TrangThai == TrangThaiLich.DaHuy) return "Lịch khởi hành đã bị hủy. TravelVN sẽ liên hệ trưởng nhóm.";
-            if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= DateTime.Today) return "Đã tới ngày khởi hành nên đơn không nhận thay đổi nữa. Cần hỗ trợ thì liên hệ TravelVN.";
+            if (don.LichKhoiHanhTour.NgayKhoiHanh.Date <= GioVN.HomNay) return "Đã tới ngày khởi hành nên đơn không nhận thay đổi nữa. Cần hỗ trợ thì liên hệ TravelVN.";
             // Trang đã chạy XuLyNeuQuaHan trước, nên quá hạn mà vẫn GiuCho nghĩa là đang đợi admin xác nhận ghế đã báo chuyển khoản
-            if (!(don.HanGiuCho > DateTime.Now)) return "Đã hết hạn giữ chỗ, ghế chưa trả đã được nhả. Đơn sẽ tự chốt khi TravelVN xác nhận xong các ghế đã báo chuyển khoản.";
+            if (!(don.HanGiuCho > GioVN.BayGio)) return "Đã hết hạn giữ chỗ, ghế chưa trả đã được nhả. Đơn sẽ tự chốt khi TravelVN xác nhận xong các ghế đã báo chuyển khoản.";
             return null;
         }
 
@@ -611,7 +612,7 @@ namespace webdulich.Controllers
         public IActionResult Moi(string? ma)
         {
             var don = LayDonTheoMaMoi(ma);
-            if (don != null && don.TrangThai == "GiuCho" && don.HanGiuCho <= DateTime.Now)
+            if (don != null && don.TrangThai == "GiuCho" && don.HanGiuCho <= GioVN.BayGio)
             {
                 // Quá hạn: xử lý (có thể được gia hạn) rồi đọc lại
                 XuLyNeuQuaHan(don.Id);
@@ -756,7 +757,7 @@ namespace webdulich.Controllers
             don.TrangThai != "DaHuy"
             && don.LichKhoiHanhTour?.SoDoChoNgoiId != null
             && don.LichKhoiHanhTour.TrangThai != TrangThaiLich.DaHuy
-            && don.LichKhoiHanhTour.NgayKhoiHanh.Date > DateTime.Today;
+            && don.LichKhoiHanhTour.NgayKhoiHanh.Date > GioVN.HomNay;
 
         // Trả được khi đơn còn giữ chỗ và ghế đã điền đủ thông tin, chưa có giao dịch chờ hoặc thành công.
         // Thông tin khóa lại sau khi báo chuyển khoản nên phải điền trước (N4).
@@ -775,6 +776,8 @@ namespace webdulich.Controllers
                 MaThanhToan = ghe.MaThanhToan,
                 DuocTra = duocTra,
                 LyDoKhongTra = LyDoDonKhongNhan(don),
+                LucBiTuChoi = TrangThaiGhe.LucBiTuChoi(ghe.Id,
+                    _context.GiaoDichThanhToans.AsNoTracking().Where(g => g.HanhKhachDatTourId == ghe.Id).ToList()),
                 TraHo = traHo,
                 ChuyenKhoan = duocTra && ghe.MaThanhToan != null
                     ? ThongTinChuyenKhoan.Tao(_cauHinh, ghe.GiaLucDat, ghe.MaThanhToan)
@@ -1024,7 +1027,7 @@ namespace webdulich.Controllers
 
             int soDong = _context.Database.ExecuteSqlInterpolated($@"
                 INSERT INTO GiaoDichThanhToans (HanhKhachDatTourId, NguoiTraId, SoTien, PhuongThuc, TrangThai, NgayTao)
-                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat, {phuongThuc}, 'ChoXacNhan', {DateTime.Now}
+                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat, {phuongThuc}, 'ChoXacNhan', {GioVN.BayGio}
                 FROM HanhKhachDatTours h
                 WHERE h.Id = {id} AND h.NgayNha IS NULL
                   AND EXISTS (SELECT 1 FROM DatTours d WHERE d.Id = h.DatTourId AND d.TrangThai = 'GiuCho')

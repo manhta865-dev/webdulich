@@ -20,7 +20,7 @@
 
     string tenKhach = ViewBag.TenKhach != null ? ViewBag.TenKhach.ToString() : "KHACH";
     string tenTour = tour != null ? tour.TenTour : "TOUR";
-    string ngayDiText = ViewBag.NgayDi != null ? ((DateTime)ViewBag.NgayDi).ToString("ddMMyyyy") : DateTime.Now.ToString("ddMMyyyy");
+    string ngayDiText = ViewBag.NgayDi != null ? ((DateTime)ViewBag.NgayDi).ToString("ddMMyyyy") : GioVN.BayGio.ToString("ddMMyyyy");
 
     string noiDungCK = $"{tenKhach}-{tenTour}-{ngayDiText}";
     noiDungCK = noiDungCK.Replace(" ", "").ToUpper();

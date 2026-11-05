@@ -43,7 +43,7 @@
         }
         else if (Model.HanGiuCho.HasValue && Model.TrangThai != TrangThaiGhe.DaTra && Model.TraTien.LyDoKhongTra == null)
         {
-            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@Model.HanGiuCho.Value.ToString("o")">
+            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho.Value)">
                 <span>@(Model.DaGiaHan ? "Đã gia hạn lần cuối, còn" : "Trả trước hạn, còn")</span>
                 <strong data-dem>--:--:--</strong>
                 <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>

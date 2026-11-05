@@ -452,6 +452,8 @@
 
 .dn-tra-ket-qua.da-tra { background: #E4F4EC; color: var(--tv-thanh-cong); }
 .dn-tra-ket-qua.cho { background: #FBF1DC; color: var(--tv-canh-bao); }
+.dn-tra-ket-qua.tu-choi { background: #FBE9E7; color: var(--tv-loi); }
+.dn-ghe .dn-nhan.dn-tu-choi { background: #FBE9E7; color: var(--tv-loi); }
 
 .dn-het-han ul { margin: var(--tv-k3) 0; padding-left: var(--tv-k5); display: grid; gap: var(--tv-k1); }
 
