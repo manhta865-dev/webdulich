@@ -1,5 +1,6 @@
 /*
-  Chỉ chạy trên host, MỘT LẦN, ngay sau khi đưa bản "giờ Việt Nam" lên. Sao lưu trước khi chạy.
+  Chỉ chạy trên host, MỘT LẦN, sau khi sao lưu và NGAY TRƯỚC KHI đưa bản "giờ Việt Nam" lên.
+  Làm ngược lại thì trong khoảng giữa, bản mới coi đơn còn dưới 6 tiếng là đã quá hạn và có thể nhả ghế nhầm.
 
   Vì sao: bản cũ tính hạn giữ chỗ theo giờ máy chủ host, chậm hơn giờ Việt Nam 6 tiếng (suy từ mốc thời gian
   đã đối chiếu trên host). Bản mới so hạn với giờ Việt Nam, nên đơn đang giữ chỗ phải cộng thêm 6 tiếng,
