@@ -78,9 +78,45 @@
                     <h2>Tiến độ của nhóm</h2>
                     <span>@Model.SoGheDaTra/@tongGhe ghế đã trả</span>
                 </div>
-                <div class="dn-thanh" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@phanTram" aria-label="Tỉ lệ ghế đã trả">
-                    <span class="dn-thanh-gia-tri" data-phan-tram="@phanTram"></span>
-                </div>
+                @if (tongGhe > 0)
+                {
+                    @* Mỗi ghế trả xong xe tiến một đoạn. Vị trí tính sẵn ở máy chủ, CSS chỉ tạo hiệu ứng chạy tới đó *@
+                    bool duChuyen = Model.SoGheDaTra == tongGhe;
+                    int soChoXacNhan = Model.DsGhe.Count(g => g.TrangThai == TrangThaiGhe.ChoXacNhan);
+                    <div class="dn-duong@(duChuyen ? " xong" : "")" style="--tien: @phanTram" role="progressbar"
+                         aria-valuemin="0" aria-valuemax="@tongGhe" aria-valuenow="@Model.SoGheDaTra"
+                         aria-valuetext="@Model.SoGheDaTra trên @tongGhe ghế đã trả" aria-label="Tiến độ trả tiền của nhóm">
+                        <div class="dn-duong-nen"><span class="dn-duong-da-di"></span></div>
+                        <div class="dn-duong-moc" aria-hidden="true">
+                            @for (int i = 1; i < tongGhe; i++)
+                            {
+                                <span class="@(i <= Model.SoGheDaTra ? "qua" : "")" style="left: @(i * 100 / tongGhe)%"></span>
+                            }
+                        </div>
+                        <svg class="dn-duong-co" viewBox="0 0 24 40" aria-hidden="true">
+                            <path d="M5 38V4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                            <path d="M6 5h15l-4 6 4 6H6z" fill="currentColor" />
+                        </svg>
+                        <svg class="dn-duong-xe" viewBox="0 0 56 34" aria-hidden="true">
+                            <rect x="2" y="3" width="52" height="24" rx="6" fill="currentColor" />
+                            <path d="M8 8h9v8H8zM20 8h9v8h-9zM32 8h9v8h-9z" fill="#FFFFFF" />
+                            <path d="M44 8h6a2 2 0 0 1 2 2v6h-8z" fill="#FFFFFF" />
+                            <circle cx="15" cy="28" r="5" fill="#17262E" />
+                            <circle cx="41" cy="28" r="5" fill="#17262E" />
+                            <circle cx="15" cy="28" r="2" fill="#FFFFFF" />
+                            <circle cx="41" cy="28" r="2" fill="#FFFFFF" />
+                        </svg>
+                    </div>
+                    <p class="dn-duong-chu">
+                        @(duChuyen ? "Cả nhóm đã trả đủ, xe tới đích."
+                            : Model.SoGheDaTra == 0 ? "Xe chờ ghế đầu tiên trả tiền để lăn bánh."
+                            : $"Còn {tongGhe - Model.SoGheDaTra} ghế nữa là xe tới đích.")
+                        @if (soChoXacNhan > 0)
+                        {
+                            <span>@soChoXacNhan ghế đang chờ TravelVN xác nhận tiền.</span>
+                        }
+                    </p>
+                }
 
                 <ol class="dn-ghe-ds">
                     @foreach (var g in Model.DsGhe)
@@ -245,8 +281,6 @@
             setInterval(chay, 1000);
         }
 
-        var thanh = document.querySelector(".dn-thanh-gia-tri");
-        if (thanh) thanh.style.width = thanh.dataset.phanTram + "%";
 
         var loiMoi = document.getElementById("loiMoi"), link = document.getElementById("linkMoi");
         if (!loiMoi) return;

@@ -162,21 +162,62 @@
 .dn-tien-do-head { flex-wrap: wrap; }
 .dn-tien-do-head span { font-weight: 700; color: var(--tv-nhan-dam); white-space: nowrap; }
 
-.dn-thanh {
-    height: 10px;
-    margin: var(--tv-k3) 0 var(--tv-k4);
+/* Xe chạy theo tiến độ. --tien là phần trăm (số nguyên) do máy chủ tính;
+   xe rộng 56px, chừa 24px bên phải cho lá cờ, nên quãng chạy là 100% - 80px và tâm xe cách mép trái 28px. */
+.dn-duong { position: relative; height: 62px; margin: var(--tv-k4) 0 var(--tv-k2); color: var(--tv-nhan); }
+
+.dn-duong-nen {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 14px;
     overflow: hidden;
-    border-radius: 999px;
-    background: var(--tv-nen);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-vien);
+}
+.dn-duong-da-di {
+    display: block;
+    width: calc(28px + (100% - 80px) * var(--tien) / 100);
+    height: 100%;
+    background: var(--tv-nhan);
+    animation: dn-duong-di 1100ms cubic-bezier(0.25, 0.7, 0.3, 1);
 }
 
-.dn-thanh-gia-tri {
-    display: block;
-    width: 0;
-    height: 100%;
-    border-radius: 999px;
-    background: var(--tv-thanh-cong);
-    transition: width 600ms ease;
+.dn-duong-moc { position: absolute; left: 28px; right: 52px; bottom: 4px; height: 6px; }
+.dn-duong-moc span {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: var(--tv-chu-phu);
+}
+.dn-duong-moc span.qua { background: #FFFFFF; }
+
+.dn-duong-co { position: absolute; right: 0; bottom: 12px; width: 24px; height: 40px; color: var(--tv-chu-phu); }
+
+.dn-duong-xe {
+    position: absolute;
+    left: calc((100% - 80px) * var(--tien) / 100);
+    bottom: 9px;
+    width: 56px;
+    height: 34px;
+    animation: dn-xe-chay 1100ms cubic-bezier(0.25, 0.7, 0.3, 1);
+}
+
+.dn-duong.xong { color: var(--tv-thanh-cong); }
+.dn-duong.xong .dn-duong-da-di { background: var(--tv-thanh-cong); }
+.dn-duong.xong .dn-duong-co { color: var(--tv-thanh-cong); }
+
+.dn-duong-chu { margin: 0 0 var(--tv-k4); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dn-duong-chu span { display: block; color: var(--tv-canh-bao); }
+
+@keyframes dn-duong-di { from { width: 28px; } }
+@keyframes dn-xe-chay { from { left: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .dn-duong-da-di, .dn-duong-xe { animation: none; }
 }
 
 .dn-ghe-ds { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--tv-k2); margin: 0; padding: 0; list-style: none; }
