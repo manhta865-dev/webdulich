@@ -122,12 +122,31 @@
         <h2>Lịch trình tour</h2>
         <p class="ct-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
 
+        @if (lichTrinhTour.Count >= 2)
+        {
+            @* Hành trình 3D ẩn sẵn, js/hanh-trinh-3d.js chỉ hiện khi trình duyệt chạy được; danh sách bên dưới luôn còn *@
+            <div class="ct-ht" id="hanhTrinh3D" data-tour="@Model.Id" hidden>
+                <div class="ct-ht-khung" aria-hidden="true"><canvas></canvas></div>
+                <div class="ct-ht-the">
+                    <div class="ct-ht-ngay" role="group" aria-label="Chọn ngày trong hành trình"></div>
+                    <p class="ct-ht-tieu-de"></p>
+                    <p class="ct-ht-bua-an" hidden></p>
+                    <div class="ct-ht-duoi">
+                        <button type="button" class="tv-btn tv-btn-vien" data-ht-bay>Bay cả hành trình</button>
+                        <small>Minh họa hành trình, không phải bản đồ.</small>
+                    </div>
+                </div>
+            </div>
+            <script type="application/json" id="hanhTrinhDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(lichTrinhTour.Select(x => new { Ngay = x.NgayThu, x.TieuDe, x.BuaAn })))</script>
+            <script type="module" src="~/js/hanh-trinh-3d.js" asp-append-version="true"></script>
+        }
+
         @if (lichTrinhTour.Any())
         {
             <div class="ct-days">
                 @foreach (var item in lichTrinhTour)
                 {
-                    <details class="ct-day" @(item.NgayThu == 1 ? "open" : "")>
+                    <details class="ct-day" data-ngay="@item.NgayThu" @(item.NgayThu == 1 ? "open" : "")>
                         <summary>
                             <span class="ct-day-no">@item.NgayThu</span>
                             <span class="ct-day-title">

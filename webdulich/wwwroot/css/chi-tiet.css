@@ -232,3 +232,39 @@
     .ct-actions .tv-btn { flex: 1 1 100%; }
     .ct-day-body { padding-left: var(--tv-k4); }
 }
+
+/* Hành trình 3D (hình minh họa, không phải bản đồ) */
+.ct-ht {
+    margin: var(--tv-k4) 0 var(--tv-k5);
+    overflow: hidden;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-be-mat);
+}
+.ct-ht-khung { height: 400px; background: #CFE8EE; }
+.ct-ht-khung canvas { display: block; width: 100%; height: 100%; }
+.ct-ht-the { padding: var(--tv-k4); }
+.ct-ht-ngay { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
+.ct-ht-ngay button {
+    min-height: 36px;
+    padding: 0 var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    font: inherit;
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh);
+}
+.ct-ht-ngay button:hover { background: var(--tv-nhan-nhat); }
+.ct-ht-ngay button[aria-pressed="true"] { border-color: var(--tv-nhan); background: var(--tv-nhan); color: #FFFFFF; }
+.ct-ht-tieu-de { margin: var(--tv-k3) 0 0; font-size: var(--tv-cs-vua); font-weight: 700; }
+.ct-ht-bua-an { margin: var(--tv-k1) 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ct-ht-duoi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k3); margin-top: var(--tv-k3); }
+.ct-ht-duoi small { color: var(--tv-chu-phu); }
+
+@media (max-width: 576px) {
+    .ct-ht-khung { height: 280px; }
+}
