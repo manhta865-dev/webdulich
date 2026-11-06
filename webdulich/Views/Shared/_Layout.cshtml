@@ -25,6 +25,29 @@
         string.Equals(controllerName, controller, StringComparison.OrdinalIgnoreCase)
         && (action == null || string.Equals(actionName, action, StringComparison.OrdinalIgnoreCase))
             ? "active" : "";
+
+    // Menu admin: một mục gồm trang danh sách và các trang con của nó, để vào trang con vẫn biết đang ở mục nào
+    bool LaAdminCo(params string[] dsAction) =>
+        string.Equals(controllerName, "Admin", StringComparison.OrdinalIgnoreCase)
+        && dsAction.Contains(actionName, StringComparer.OrdinalIgnoreCase);
+    string MucAdmin(params string[] dsAction) => LaAdminCo(dsAction) ? "active" : "";
+
+    string[] mucTour = { "Index", "Create", "Edit" };
+    string[] mucLichDi = { "QuanLyLichKhoiHanh", "LichKhoiHanh", "ThemLichKhoiHanh" };
+    string[] mucLichTrinh = { "QuanLyLichTrinh", "LichTrinh" };
+    string[] mucPhanCong = { "PhanCongTour", "ThemPhanCongTour", "SuaPhanCongTour" };
+    string[] mucDon = { "DonDatTour", "DonDatTourTheoTour", "SuaDonDatTour" };
+    string[] mucKhuyenMai = { "KhuyenMai", "ThemKhuyenMai", "SuaKhuyenMai" };
+    string[] mucDoanhThu = { "DoanhThu" };
+    string[] mucTinNhan = { "TinNhan", "ChiTietTinNhan" };
+    string[] mucTaiKhoan = { "TaiKhoan", "SuaTaiKhoan" };
+    string[] mucNhanSu = { "NhanSu", "ThemNhanVien" };
+
+    bool moTour = LaAdminCo(mucTour) || LaAdminCo(mucLichDi) || LaAdminCo(mucLichTrinh) || LaAdminCo(mucPhanCong);
+    bool moKinhDoanh = LaAdminCo(mucDon) || LaAdminCo(mucKhuyenMai) || LaAdminCo(mucDoanhThu);
+    bool moNoiDung = controllerName is "AdminBaiViet" or "AdminVideo";
+    bool moConNguoi = LaAdminCo(mucTinNhan) || LaAdminCo(mucTaiKhoan) || LaAdminCo(mucNhanSu);
+    string? nhomHienTai = moTour ? "Tour và lịch" : moKinhDoanh ? "Đơn và doanh thu" : moNoiDung ? "Nội dung" : moConNguoi ? "Khách và nhân sự" : null;
 }
 
 <!DOCTYPE html>
@@ -67,56 +90,43 @@
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-grid" /></svg>
                     <span>Tổng quan</span>
                 </a>
-                <div class="tv-side-title">Vận hành</div>
-                <a asp-controller="Admin" asp-action="Index" class="@Active("Admin", "Index")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
-                    <span>Quản lý tour</span>
-                </a>
-                <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@Active("Admin", "QuanLyLichKhoiHanh")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
-                    <span>Lịch đi</span>
-                </a>
-                <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@Active("Admin", "QuanLyLichTrinh")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>
-                    <span>Lịch trình</span>
-                </a>
-                <a asp-controller="Admin" asp-action="DonDatTour" class="@Active("Admin", "DonDatTour")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
-                    <span>Đơn đặt tour</span>
-                </a>
-                <a asp-controller="Admin" asp-action="KhuyenMai" class="@Active("Admin", "KhuyenMai")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg>
-                    <span>Khuyến mãi</span>
-                </a>
-                <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
-                    <span>Bài viết</span>
-                </a>
-                <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-video" /></svg>
-                    <span>Video</span>
-                </a>
-                <a asp-controller="Admin" asp-action="TinNhan" class="@Active("Admin", "TinNhan")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
-                    <span>Tin nhắn</span>
-                </a>
-                <a asp-controller="Admin" asp-action="NhanSu" class="@Active("Admin", "NhanSu")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
-                    <span>Nhân sự</span>
-                </a>
-                <a asp-controller="Admin" asp-action="PhanCongTour" class="@Active("Admin", "PhanCongTour")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-truck" /></svg>
-                    <span>Phân công tour</span>
-                </a>
-                <div class="tv-side-title">Quản trị hệ thống</div>
-                <a asp-controller="Admin" asp-action="TaiKhoan" class="@Active("Admin", "TaiKhoan")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
-                    <span>Tài khoản</span>
-                </a>
-                <a asp-controller="Admin" asp-action="DoanhThu" class="@Active("Admin", "DoanhThu")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg>
-                    <span>Doanh thu</span>
-                </a>
+                @* Nhóm xổ xuống dùng thẻ details nên không cần JavaScript. Cùng name: mở nhóm này thì nhóm kia tự đóng. *@
+                <details class="tv-side-nhom" name="menuAdmin" open="@moTour">
+                    <summary>
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
+                        <span>Tour và lịch</span>
+                    </summary>
+                    <a asp-controller="Admin" asp-action="Index" class="@MucAdmin(mucTour)">Quản lý tour</a>
+                    <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@MucAdmin(mucLichDi)">Lịch đi</a>
+                    <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@MucAdmin(mucLichTrinh)">Lịch trình</a>
+                    <a asp-controller="Admin" asp-action="PhanCongTour" class="@MucAdmin(mucPhanCong)">Phân công tour</a>
+                </details>
+                <details class="tv-side-nhom" name="menuAdmin" open="@moKinhDoanh">
+                    <summary>
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                        <span>Đơn và doanh thu</span>
+                    </summary>
+                    <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)">Đơn đặt tour</a>
+                    <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)">Khuyến mãi</a>
+                    <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)">Doanh thu</a>
+                </details>
+                <details class="tv-side-nhom" name="menuAdmin" open="@moNoiDung">
+                    <summary>
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
+                        <span>Nội dung</span>
+                    </summary>
+                    <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")">Bài viết</a>
+                    <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")">Video</a>
+                </details>
+                <details class="tv-side-nhom" name="menuAdmin" open="@moConNguoi">
+                    <summary>
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
+                        <span>Khách và nhân sự</span>
+                    </summary>
+                    <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)">Tin nhắn</a>
+                    <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)">Tài khoản</a>
+                    <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)">Nhân sự</a>
+                </details>
                 <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
                     <span>Đăng xuất</span>
@@ -129,7 +139,13 @@
                     <button type="button" class="tv-side-toggle" id="tvSideToggle" aria-label="Mở menu">
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-menu" /></svg>
                     </button>
-                    <div class="tv-topbar-title">@(string.IsNullOrWhiteSpace(tieuDeTrang) ? "Quản trị" : tieuDeTrang)</div>
+                    <div class="tv-topbar-title">
+                        @if (nhomHienTai != null)
+                        {
+                            <span class="tv-topbar-nhom">@nhomHienTai</span>
+                        }
+                        @(string.IsNullOrWhiteSpace(tieuDeTrang) ? "Quản trị" : tieuDeTrang)
+                    </div>
                     <div class="tv-user">
                         @if (hasAvatar)
                         {
