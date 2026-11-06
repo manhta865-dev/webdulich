@@ -187,6 +187,26 @@ namespace webdulich.Controllers
             tour.DiaDiem = diaDiem.TenDiaDiem; // Gán tên địa điểm cho tour.DiaDiem để hiển thị. Mặc dù trường này có thể không cần thiết nếu đã có DiaDiemId, nhưng nó giúp hiển thị tên địa điểm dễ dàng hơn trong các view mà không cần phải truy vấn thêm.
         }
 
+        private const long AnhTourToiDaMb = 10;
+
+        // Kiểm tra ảnh đại diện và ảnh phụ trước khi lưu tour; ảnh sai thì báo ngay trên form, chưa ghi gì xuống đĩa hay CSDL
+        private void KiemTraAnhTour(Tour tour)
+        {
+            if (tour.HinhFile != null && !webdulich.Services.KiemTraTepAnh.HopLe(tour.HinhFile, AnhTourToiDaMb, out _, out var loiAnhChinh))
+            {
+                ModelState.AddModelError(nameof(tour.HinhFile), loiAnhChinh);
+            }
+
+            foreach (var tep in tour.HinhPhuFiles?.Where(x => x != null && x.Length > 0) ?? Enumerable.Empty<IFormFile>())
+            {
+                if (!webdulich.Services.KiemTraTepAnh.HopLe(tep, AnhTourToiDaMb, out _, out var loiAnhPhu))
+                {
+                    ModelState.AddModelError(nameof(tour.HinhPhuFiles), loiAnhPhu);
+                    break;
+                }
+            }
+        }
+
         // Hàm này dùng để lưu hình ảnh tour lên server. Khi admin chọn một file hình ảnh để làm hình đại diện cho tour, hàm này sẽ được gọi để lưu file đó vào thư mục wwwroot/images/dulich trên server. Hàm sẽ tạo tên file mới bằng cách kết hợp một GUID ngẫu nhiên với tên gốc của file để tránh trùng lặp. Sau khi lưu file, hàm trả về tên file đã lưu để có thể lưu vào database.
         private async Task<string> LuuHinhTourAsync(IFormFile file) // Hàm này nhận vào một file hình ảnh (IFormFile) mà admin đã chọn để làm hình đại diện cho tour. Hàm sẽ lưu file đó vào thư mục wwwroot/images/dulich trên server và trả về tên file đã lưu.
         {
@@ -197,9 +217,12 @@ namespace webdulich.Controllers
                 Directory.CreateDirectory(folder);
             }
 
-            string extension = Path.GetExtension(file.FileName).ToLowerInvariant(); // Lấy phần mở rộng của file, 
-            string safeName = Path.GetFileNameWithoutExtension(file.FileName); // Lấy tên file gốc nhưng bỏ phần mở rộng.
-            string fileName = Guid.NewGuid().ToString() + "_" + safeName + extension; // Tạo tên file mới bằng Guid để tránh trùng tên.
+            // Đuôi tệp lấy từ nội dung thật, tên tệp chỉ gồm Guid: không dùng lại tên người dùng gửi lên
+            if (!webdulich.Services.KiemTraTepAnh.HopLe(file, AnhTourToiDaMb, out var extension, out var loiAnh))
+            {
+                throw new InvalidOperationException(loiAnh);
+            }
+            string fileName = Guid.NewGuid().ToString("N") + extension;
             string filePath = Path.Combine(folder, fileName); // Tạo đường dẫn đầy đủ đến file ảnh.
 
             // Mở luồng ghi file và copy nội dung ảnh upload vào thư mục server.
@@ -345,6 +368,7 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("HinhFile", "Vui lòng chọn hình ảnh");
             }
+            KiemTraAnhTour(tour);
             // Nếu có bất kỳ lỗi nào, hệ thống không lưu database mà trả lại form cùng dữ liệu đã nhập và thông báo lỗi.
             if (!ModelState.IsValid)
             {
@@ -486,7 +510,7 @@ namespace webdulich.Controllers
                 tour.MoTa = "Chưa cập nhật mô tả";
                 ModelState.Remove("MoTa");
             }
-            // Kiểm tra xem admin đã chọn hình đại diện cho tour chưa. Nếu chưa chọn thì thêm lỗi vào ModelState để yêu cầu admin chọn hình ảnh.
+            KiemTraAnhTour(tour);
             if (!ModelState.IsValid)
             {
                 return View("Sua", tour);
@@ -1641,6 +1665,7 @@ namespace webdulich.Controllers
         }
         // Đây là action dùng để thêm mới một lịch trình cho một tour cụ thể trong trang quản trị. Khi admin điền thông tin ngày thứ, tiêu đề, nội dung và bữa ăn vào form thêm lịch trình và nhấn nút lưu, action này sẽ được gọi với các thông tin đó cùng với Id của tour để xác định tour cần thêm lịch trình. Hàm sẽ kiểm tra quyền admin, sau đó sẽ tạo một đối tượng LichTrinhTour mới với các thông tin đã nhận được từ form. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng lịch trình mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình mới đã xuất hiện trong danh sách.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ThemLichTrinh(int tourId, int ngayThu, string tieuDe, string? buaAn, string? noiDung, string? toaDo)
         {
             if (!LaAdmin())
@@ -1802,6 +1827,8 @@ namespace webdulich.Controllers
             return RedirectToAction("LichTrinh", new { id = lichTrinh.TourId });
         }
         // Đây là action dùng để xóa một lịch trình của một tour cụ thể trong trang quản trị. Khi admin nhấn nút xóa ở một lịch trình nào đó trong trang danh sách lịch trình của tour, action này sẽ được gọi với Id của lịch trình đó để xác định chính xác lịch trình cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm lịch trình trong database theo Id. Nếu không tìm thấy lịch trình thì trả về lỗi NotFound. Nếu tìm thấy lịch trình, hệ thống sẽ lấy Id của tour mà lịch trình đó thuộc về để có thể chuyển hướng lại đúng trang danh sách lịch trình của tour đó sau khi xóa. Sau đó hệ thống sẽ xóa bản ghi của lịch trình đó khỏi database và lưu lại để đảm bảo rằng lịch trình đã bị xóa thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình đã bị xóa khỏi danh sách.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> XoaLichTrinh(int id)
         {
             if (!LaAdmin())

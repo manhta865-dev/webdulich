@@ -157,6 +157,7 @@
                     <label asp-for="HinhPhuFiles" class="form-label">Thêm ảnh phụ</label>
                     <input asp-for="HinhPhuFiles" type="file" class="form-control" accept="image/*" multiple />
                     <small class="text-muted">Có thể chọn nhiều ảnh, ảnh cũ vẫn được giữ lại.</small>
+                    <span asp-validation-for="HinhPhuFiles" class="text-danger"></span>
                 </div>
 
                 @if (anhPhu.Any())

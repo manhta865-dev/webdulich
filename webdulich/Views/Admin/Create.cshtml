@@ -146,6 +146,7 @@
                     <label asp-for="HinhPhuFiles" class="form-label">Ảnh phụ của tour</label>
                     <input asp-for="HinhPhuFiles" type="file" class="form-control" accept="image/*" multiple />
                     <small class="text-muted">Có thể chọn nhiều ảnh để hiển thị trong trang chi tiết tour.</small>
+                    <span asp-validation-for="HinhPhuFiles" class="text-danger"></span>
                 </div>
 
                 <div class="col-12">

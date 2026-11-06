@@ -472,6 +472,7 @@
 .ad-timeline-item .ad-meal { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .ad-timeline-content { margin-top: var(--tv-k2); line-height: 1.6; color: var(--tv-chu-phu); white-space: pre-line; grid-column: 2 / -1; }
 .ad-timeline-item .ad-btn-nho { align-self: start; grid-column: 3; grid-row: 1; }
+.ad-lt-xoa { align-self: start; grid-column: 3; grid-row: 1; margin: 0; }
 
 /* Trang quản lý bài viết */
 .ad-bv-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); min-width: 230px; }
@@ -482,6 +483,25 @@
 .ad-bv-anh { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k3); margin-bottom: var(--tv-k2); }
 .ad-bv-anh img { width: 160px; height: 100px; object-fit: cover; border-radius: var(--tv-bo-nut); }
 .ad-bv-xoa-anh { margin: 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+/* Form viết bài: nội dung bên trái, nút lưu và phần phụ bên phải */
+.ad-bv-bo-cuc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: var(--tv-k4);
+}
+.ad-bv-bo-cuc .ad-card { margin-top: 0; }
+.ad-bv-cot { display: grid; gap: var(--tv-k4); position: sticky; top: 80px; }
+.ad-bv-tieu-de-khoi { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-thuong); font-weight: 600; }
+.ad-bv-nut-luu { display: grid; grid-template-columns: 1fr; gap: var(--tv-k2); }
+.ad-bv-quay-lai { display: inline-block; margin-top: var(--tv-k3); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-bv-cot .ad-bv-anh img { width: 100%; height: 150px; }
+
+@media (max-width: 1100px) {
+    .ad-bv-bo-cuc { grid-template-columns: 1fr; }
+    .ad-bv-cot { position: static; }
+}
 
 /* Trang quản lý video */
 .ad-vd-anh { display: block; width: 96px; height: 54px; object-fit: cover; border-radius: var(--tv-bo-nut); background: var(--tv-nen); }
@@ -520,6 +540,7 @@
     .ad-inline-grid { grid-template-columns: 1fr; }
     .ad-timeline-item { grid-template-columns: 40px minmax(0, 1fr); }
     .ad-timeline-item .ad-btn-nho { grid-column: 2; grid-row: auto; margin-top: var(--tv-k2); justify-self: start; }
+    .ad-lt-xoa { grid-column: 2; grid-row: auto; }
 }
 
 .ad-form-actions-trai { justify-content: flex-start; margin-top: var(--tv-k2); }

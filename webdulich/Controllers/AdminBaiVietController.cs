@@ -8,7 +8,7 @@ namespace webdulich.Controllers
     // Admin viết, sửa, đăng, gỡ và xóa bài viết
     public class AdminBaiVietController : Controller
     {
-        private const long AnhToiDa = 5 * 1024 * 1024;
+        private const long AnhToiDaMb = 5;
 
         private readonly DuLichDbContext _context;
         private readonly IWebHostEnvironment _moiTruong;
@@ -109,7 +109,7 @@ namespace webdulich.Controllers
             }
 
             string? duoiAnh = null;
-            if (form.TepAnhBia != null && !KiemTraAnh(form.TepAnhBia, out duoiAnh, out var loiAnh))
+            if (form.TepAnhBia != null && !webdulich.Services.KiemTraTepAnh.HopLe(form.TepAnhBia, AnhToiDaMb, out duoiAnh, out var loiAnh))
             {
                 ModelState.AddModelError(nameof(form.TepAnhBia), loiAnh);
             }
@@ -252,42 +252,6 @@ namespace webdulich.Controllers
                 duongDan = $"{goc}-{so}";
             }
             return duongDan;
-        }
-
-        // Chỉ nhận ảnh thật: kiểm tra đuôi tệp và mấy byte đầu, không tin tên tệp người dùng gửi
-        private static bool KiemTraAnh(IFormFile tep, out string? duoi, out string loi)
-        {
-            duoi = null;
-            loi = string.Empty;
-            if (tep.Length == 0)
-            {
-                loi = "Tệp ảnh trống, hãy chọn tệp khác.";
-                return false;
-            }
-            if (tep.Length > AnhToiDa)
-            {
-                loi = "Ảnh quá lớn, tối đa 5 MB.";
-                return false;
-            }
-
-            var dau = new byte[12];
-            using (var luong = tep.OpenReadStream())
-            {
-                luong.ReadExactly(dau, 0, Math.Min(12, (int)tep.Length));
-            }
-
-            bool laJpg = dau[0] == 0xFF && dau[1] == 0xD8 && dau[2] == 0xFF;
-            bool laPng = dau[0] == 0x89 && dau[1] == 0x50 && dau[2] == 0x4E && dau[3] == 0x47;
-            bool laWebp = dau[0] == 0x52 && dau[1] == 0x49 && dau[2] == 0x46 && dau[3] == 0x46
-                && dau[8] == 0x57 && dau[9] == 0x45 && dau[10] == 0x42 && dau[11] == 0x50;
-
-            duoi = laJpg ? ".jpg" : laPng ? ".png" : laWebp ? ".webp" : null;
-            if (duoi == null)
-            {
-                loi = "Chỉ nhận ảnh JPG, PNG hoặc WebP.";
-                return false;
-            }
-            return true;
         }
 
         private string ThuMucAnh()

@@ -131,13 +131,12 @@
                                 }
                             </div>
 
-                            <a asp-controller="Admin"
-                               asp-action="XoaLichTrinh"
-                               asp-route-id="@item.Id"
-                               class="tv-btn tv-btn-huy ad-btn-nho"
-                               onclick="return confirm('Bạn chắc chắn muốn xóa lịch trình ngày này?')">
-                                Xóa
-                            </a>
+                            <form asp-controller="Admin" asp-action="XoaLichTrinh" asp-route-id="@item.Id" method="post" class="ad-lt-xoa"
+                                  data-xac-nhan-tieu-de="Xóa ngày @item.NgayThu?"
+                                  data-xac-nhan="Nội dung và tọa độ của ngày này sẽ bị xóa, không lấy lại được. Đường xe chạy của ngày kế tiếp sẽ được tính lại."
+                                  data-xac-nhan-nut="Xóa ngày này" data-xac-nhan-nguy-hiem>
+                                <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>
+                            </form>
 
                             @if (!string.IsNullOrWhiteSpace(item.NoiDung))
                             {
