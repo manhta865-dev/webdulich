@@ -1,0 +1,50 @@
+/* Thẻ video dùng ở trang Video, trang tour và sau này ở trang chủ */
+.vd-trang { max-width: 1120px; margin: 0 auto; padding: var(--tv-k6) var(--tv-k4); }
+.vd-trang h1 { margin: 0; font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+.vd-mo-ta { margin: var(--tv-k1) 0 var(--tv-k5); color: var(--tv-chu-phu); }
+
+.vd-luoi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tv-k5); }
+.vd-the h3 { margin: var(--tv-k2) 0 var(--tv-k1); font-size: var(--tv-cs-vua); font-weight: 600; overflow-wrap: anywhere; }
+.vd-the p { margin: 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+.vd-khung {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-chu);
+}
+.vd-khung img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.vd-nut {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(23, 38, 46, 0.78);
+    color: #FFFFFF;
+    transform: translate(-50%, -50%);
+    transition: background var(--tv-nhanh);
+}
+a.vd-khung:hover .vd-nut, a.vd-khung:focus-visible .vd-nut { background: var(--tv-gia); }
+
+/* Phần video ở trang tour */
+.vd-cua-tour { margin-top: var(--tv-k5); }
+.vd-cua-tour h2 { margin: 0 0 var(--tv-k3); }
+.vd-cua-tour .vd-luoi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 900px) {
+    .vd-luoi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+    .vd-luoi, .vd-cua-tour .vd-luoi { grid-template-columns: 1fr; }
+}

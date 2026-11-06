@@ -109,6 +109,11 @@ namespace webdulich.Controllers
                 .OrderBy(x => x.NgayKhoiHanh)
                 .ToList();
 
+            ViewBag.Videos = _context.Videos.AsNoTracking()
+                .Where(x => x.TourId == id && x.DangHien)
+                .OrderBy(x => x.ThuTu).ThenBy(x => x.Id)
+                .ToList();
+
             return View(tour);
         }
     }

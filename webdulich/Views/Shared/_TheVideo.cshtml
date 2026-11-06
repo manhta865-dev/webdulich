@@ -1,0 +1,13 @@
+@model webdulich.Models.Video
+@* Ban đầu chỉ là ảnh và link tới YouTube; js/video-nhe.js đổi thành khung phát khi bấm. Chưa bấm thì chưa tải trình phát của YouTube. *@
+<article class="vd-the">
+    <a class="vd-khung" href="@Model.LinkXem" target="_blank" rel="noopener" data-video="@Model.MaYouTube" data-tieu-de="@Model.TieuDe" aria-label="Phát video: @Model.TieuDe">
+        <img src="@Model.AnhXemTruoc" alt="" loading="lazy" referrerpolicy="no-referrer" />
+        <span class="vd-nut" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span>
+    </a>
+    <h3>@Model.TieuDe</h3>
+    @if (!string.IsNullOrWhiteSpace(Model.MoTa))
+    {
+        <p>@Model.MoTa</p>
+    }
+</article>

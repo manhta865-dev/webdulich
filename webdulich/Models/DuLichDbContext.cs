@@ -15,6 +15,7 @@ namespace webdulich.Models
         public DbSet<DatTours> DatTours { get; set; }
         public DbSet<Tour> Tours { get; set; }
         public DbSet<BaiViet> BaiViets { get; set; }
+        public DbSet<Video> Videos { get; set; }
         public DbSet<TaiKhoan> TaiKhoans { get; set; }
         public DbSet<LichKhoiHanhTour> LichKhoiHanhTours { get; set; }
         public DbSet<LichTrinhTour> LichTrinhTours { get; set; }
@@ -104,6 +105,14 @@ namespace webdulich.Models
     .WithMany(x => x.LichTrinhTours)
     .HasForeignKey(x => x.TourId)
     .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Video>(e =>
+            {
+                e.Property(x => x.MaYouTube).IsUnicode(false);
+                e.HasIndex(x => x.MaYouTube).IsUnique();
+                e.HasOne(x => x.Tour).WithMany().HasForeignKey(x => x.TourId).OnDelete(DeleteBehavior.SetNull);
+                e.ToTable(t => t.HasCheckConstraint("CK_Video_MaYouTube",
+                    "LEN([MaYouTube]) = 11 AND [MaYouTube] NOT LIKE '%[^A-Za-z0-9_-]%'"));
+            });
             modelBuilder.Entity<BaiViet>(e =>
             {
                 e.HasIndex(x => x.DuongDan).IsUnique();

@@ -177,6 +177,21 @@
                 <p>Lịch trình chi tiết của tour này đang được cập nhật.</p>
             </div>
         }
+
+        @if (ViewBag.Videos is List<webdulich.Models.Video> dsVideo && dsVideo.Count > 0)
+        {
+            <link rel="stylesheet" href="~/css/video.css" asp-append-version="true" />
+            <div class="vd-cua-tour">
+                <h2>Video về chuyến đi</h2>
+                <div class="vd-luoi">
+                    @foreach (var video in dsVideo)
+                    {
+                        <partial name="_TheVideo" model="video" />
+                    }
+                </div>
+            </div>
+            <script src="~/js/video-nhe.js" asp-append-version="true"></script>
+        }
     </section>
 
     <aside id="departureSection" class="ct-departures">

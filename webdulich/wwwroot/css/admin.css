@@ -483,6 +483,11 @@
 .ad-bv-anh img { width: 160px; height: 100px; object-fit: cover; border-radius: var(--tv-bo-nut); }
 .ad-bv-xoa-anh { margin: 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 
+/* Trang quản lý video */
+.ad-vd-anh { display: block; width: 96px; height: 54px; object-fit: cover; border-radius: var(--tv-bo-nut); background: var(--tv-nen); }
+.ad-bv-nut.ad-vd-thu-tu { min-width: 130px; }
+.ad-vd-thu-tu .tv-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* Ô tọa độ của từng ngày lịch trình */
 .ad-toa-do {
     display: flex;

@@ -1127,6 +1127,54 @@ namespace webdulich.Migrations
                     b.ToTable("ViTriChoNgois");
                 });
 
+            modelBuilder.Entity("webdulich.Models.Video", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("DangHien")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MaYouTube")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(11)");
+
+                    b.Property<string>("MoTa")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ThuTu")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TieuDe")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("TourId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaYouTube")
+                        .IsUnique();
+
+                    b.HasIndex("TourId");
+
+                    b.ToTable("Videos", t =>
+                        {
+                            t.HasCheckConstraint("CK_Video_MaYouTube", "LEN([MaYouTube]) = 11 AND [MaYouTube] NOT LIKE '%[^A-Za-z0-9_-]%'");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1466,6 +1514,16 @@ namespace webdulich.Migrations
                         .IsRequired();
 
                     b.Navigation("SoDoChoNgoi");
+                });
+
+            modelBuilder.Entity("webdulich.Models.Video", b =>
+                {
+                    b.HasOne("webdulich.Models.Tour", "Tour")
+                        .WithMany()
+                        .HasForeignKey("TourId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Tour");
                 });
 
             modelBuilder.Entity("webdulich.Models.DatTours", b =>

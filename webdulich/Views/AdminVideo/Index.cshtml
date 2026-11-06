@@ -1,0 +1,91 @@
+@model List<webdulich.Models.Video>
+
+@{
+    ViewData["Title"] = "Quản lý video";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Quản lý video</h1>
+            <p>Dán link YouTube, video không tải lên host. Khách xem theo thứ tự trong bảng này.</p>
+        </div>
+        <a asp-action="Them" class="tv-btn tv-btn-chinh">Thêm video</a>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table ad-table-gd-ghe">
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tiêu đề</th>
+                        <th>Trạng thái</th>
+                        <th>Tour liên quan</th>
+                        <th>Thứ tự</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var video = Model[i];
+                        <tr>
+                            <td><img class="ad-vd-anh" src="@video.AnhXemTruoc" alt="" loading="lazy" referrerpolicy="no-referrer" /></td>
+                            <td><strong>@video.TieuDe</strong></td>
+                            <td><span class="ad-badge@(video.DangHien ? "" : " canh-bao")">@(video.DangHien ? "Đang hiện" : "Đang ẩn")</span></td>
+                            <td>@(video.Tour?.TenTour ?? "Không có")</td>
+                            <td>
+                                <div class="ad-bv-nut ad-vd-thu-tu">
+                                    <form asp-action="DoiThuTu" asp-route-id="@video.Id" method="post">
+                                        <input type="hidden" name="len" value="true" />
+                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho" disabled="@(i == 0)" aria-label="Đưa @video.TieuDe lên trên">Lên</button>
+                                    </form>
+                                    <form asp-action="DoiThuTu" asp-route-id="@video.Id" method="post">
+                                        <input type="hidden" name="len" value="false" />
+                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho" disabled="@(i == Model.Count - 1)" aria-label="Đưa @video.TieuDe xuống dưới">Xuống</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="ad-bv-nut">
+                                    <a asp-action="Sua" asp-route-id="@video.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
+                                    <form asp-action="DoiHienThi" asp-route-id="@video.Id" method="post">
+                                        <input type="hidden" name="hien" value="@(video.DangHien ? "false" : "true")" />
+                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">@(video.DangHien ? "Ẩn" : "Hiện")</button>
+                                    </form>
+                                    <form asp-action="Xoa" asp-route-id="@video.Id" method="post"
+                                          data-xac-nhan-tieu-de="Xóa video này?"
+                                          data-xac-nhan="Video &quot;@video.TieuDe&quot; sẽ bị xóa khỏi danh sách của TravelVN. Video trên YouTube không bị ảnh hưởng. Nếu chỉ muốn tạm ẩn, hãy chọn Ẩn."
+                                          data-xac-nhan-nut="Xóa video" data-xac-nhan-nguy-hiem>
+                                        <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="ad-empty-cell">Chưa có video nào. Bấm Thêm video để bắt đầu.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

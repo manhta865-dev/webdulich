@@ -366,3 +366,5 @@ webdulich/wwwroot/images/avatar/
 # Khoa bi mat Google: khong dua vao git
 webdulich/appsettings.Production.json
 client_secret_*.json
+
+webdulich/wwwroot/images/baiviet/

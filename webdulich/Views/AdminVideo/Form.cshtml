@@ -1,0 +1,60 @@
+@model webdulich.Models.VideoForm
+
+@{
+    ViewData["Title"] = Model.Id.HasValue ? "Sửa video" : "Thêm video";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page ad-form-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p>Chỉ dùng video của bạn hoặc video được phép chia sẻ.</p>
+        </div>
+    </div>
+
+    <form asp-action="Luu" method="post" class="ad-card ad-form" novalidate>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="Link" class="form-label">Link YouTube</label>
+            <input asp-for="Link" class="form-control" maxlength="300" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=..." />
+            <span asp-validation-for="Link" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TieuDe" class="form-label">Tiêu đề</label>
+            <input asp-for="TieuDe" class="form-control" maxlength="200" />
+            <span asp-validation-for="TieuDe" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MoTa" class="form-label">Mô tả ngắn (không bắt buộc)</label>
+            <textarea asp-for="MoTa" class="form-control" rows="2" maxlength="500"></textarea>
+            <span asp-validation-for="MoTa" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TourId" class="form-label">Tour liên quan (không bắt buộc)</label>
+            <select asp-for="TourId" asp-items="ViewBag.DsTour" class="form-select">
+                <option value="">Không gắn tour</option>
+            </select>
+            <small class="ad-toa-do-nhac">Video sẽ hiện thêm ở trang của tour này.</small>
+            <span asp-validation-for="TourId" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input asp-for="DangHien" class="form-check-input" />
+            <label asp-for="DangHien" class="form-check-label">Hiện cho khách xem</label>
+        </div>
+
+        <div class="ad-form-actions ad-form-actions-trai">
+            <button type="submit" class="tv-btn tv-btn-chinh">Lưu video</button>
+            <a asp-action="Index" class="tv-btn tv-btn-vien">Quay lại danh sách</a>
+        </div>
+    </form>
+</div>
