@@ -1640,7 +1640,7 @@ namespace webdulich.Controllers
         }
         // Đây là action dùng để thêm mới một lịch trình cho một tour cụ thể trong trang quản trị. Khi admin điền thông tin ngày thứ, tiêu đề, nội dung và bữa ăn vào form thêm lịch trình và nhấn nút lưu, action này sẽ được gọi với các thông tin đó cùng với Id của tour để xác định tour cần thêm lịch trình. Hàm sẽ kiểm tra quyền admin, sau đó sẽ tạo một đối tượng LichTrinhTour mới với các thông tin đã nhận được từ form. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng lịch trình mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình mới đã xuất hiện trong danh sách.
         [HttpPost]
-        public IActionResult ThemLichTrinh(int tourId, int ngayThu, string tieuDe, string? buaAn, string? noiDung)
+        public async Task<IActionResult> ThemLichTrinh(int tourId, int ngayThu, string tieuDe, string? buaAn, string? noiDung, string? toaDo)
         {
             if (!LaAdmin())
             {
@@ -1652,6 +1652,12 @@ namespace webdulich.Controllers
                 TempData["error"] = "Vui lòng nhập đầy đủ ngày thứ và tiêu đề lịch trình.";
                 return RedirectToAction("LichTrinh", new { id = tourId });
             }
+
+            if (!LichTrinhTour.DocToaDo(toaDo, out var viDo, out var kinhDo))
+            {
+                TempData["error"] = ThongBaoToaDoSai;
+                return RedirectToAction("LichTrinh", new { id = tourId });
+            }
             // Tạo một đối tượng LichTrinhTour mới với các thông tin đã nhận được từ form. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng lịch trình mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình mới đã xuất hiện trong danh sách.
             var lichTrinh = new LichTrinhTour
             {
@@ -1659,16 +1665,143 @@ namespace webdulich.Controllers
                 NgayThu = ngayThu,
                 TieuDe = tieuDe.Trim(),
                 BuaAn = buaAn,
-                NoiDung = noiDung
+                NoiDung = noiDung,
+                ViDo = viDo,
+                KinhDo = kinhDo
             };
             // Thêm đối tượng LichTrinhTour mới vào database và lưu lại để đảm bảo rằng lịch trình mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình mới đã xuất hiện trong danh sách.
             _context.LichTrinhTours.Add(lichTrinh);
+            XoaDuongDiNgaySau(tourId, ngayThu);
             _context.SaveChanges();
+            await LamMoiDuongDi(tourId);
 
             return RedirectToAction("LichTrinh", new { id = tourId }); // Chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình mới đã xuất hiện trong danh sách.
         }
+
+        private const string ThongBaoToaDoSai = "Tọa độ chưa đúng. Hãy dán đúng dạng vĩ độ, kinh độ như 11.9404, 108.4583, điểm phải ở trong Việt Nam.";
+
+        // Ngày sau đi tiếp từ điểm của ngày này, nên điểm đổi thì đường của ngày sau cũng phải lấy lại
+        private void XoaDuongDiNgaySau(int tourId, int ngayThu)
+        {
+            var ngaySau = _context.LichTrinhTours
+                .Where(x => x.TourId == tourId && x.NgayThu > ngayThu)
+                .OrderBy(x => x.NgayThu)
+                .FirstOrDefault();
+            if (ngaySau != null)
+            {
+                ngaySau.DuongDi = null;
+            }
+        }
+
+        // Lấy đường xe chạy cho các ngày còn thiếu. Lỗi dịch vụ không chặn việc lưu tọa độ, chỉ báo cho admin biết.
+        private async Task LamMoiDuongDi(int tourId)
+        {
+            var tour = _context.Tours.FirstOrDefault(x => x.Id == tourId);
+            if (tour == null)
+            {
+                return;
+            }
+
+            var dsNgay = _context.LichTrinhTours.Where(x => x.TourId == tourId).OrderBy(x => x.NgayThu).ToList();
+            decimal? viTruoc = tour.ViDoXuatPhat, kinhTruoc = tour.KinhDoXuatPhat;
+            int thatBai = 0, daGoi = 0;
+
+            foreach (var ngay in dsNgay)
+            {
+                bool coHaiDau = viTruoc.HasValue && kinhTruoc.HasValue && ngay.ViDo.HasValue && ngay.KinhDo.HasValue;
+                bool cungCho = coHaiDau && viTruoc == ngay.ViDo && kinhTruoc == ngay.KinhDo;
+                if (coHaiDau && !cungCho && string.IsNullOrEmpty(ngay.DuongDi))
+                {
+                    // Máy chủ công khai: gọi cách nhau một chút để không làm phiền
+                    if (daGoi++ > 0)
+                    {
+                        await Task.Delay(500);
+                    }
+                    ngay.DuongDi = await webdulich.Services.DuongXeChay.LayAsync(kinhTruoc!.Value, viTruoc!.Value, ngay.KinhDo!.Value, ngay.ViDo!.Value);
+                    if (ngay.DuongDi == null)
+                    {
+                        thatBai++;
+                    }
+                }
+                viTruoc = ngay.ViDo;
+                kinhTruoc = ngay.KinhDo;
+            }
+
+            _context.SaveChanges();
+            if (thatBai > 0)
+            {
+                TempData["error"] = $"Chưa lấy được đường xe chạy cho {thatBai} ngày, bản đồ tạm nối bằng nét đứt. Bấm Lưu lại ở ngày đó để thử lấy lại.";
+            }
+        }
+
+        // Lưu hoặc xóa điểm xuất phát của tour
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CapNhatDiemXuatPhat(int id, string? toaDo)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var tour = _context.Tours.FirstOrDefault(x => x.Id == id);
+            if (tour == null)
+            {
+                return NotFound();
+            }
+
+            if (!LichTrinhTour.DocToaDo(toaDo, out var viDo, out var kinhDo))
+            {
+                TempData["error"] = ThongBaoToaDoSai;
+                return RedirectToAction("LichTrinh", new { id });
+            }
+
+            tour.ViDoXuatPhat = viDo;
+            tour.KinhDoXuatPhat = kinhDo;
+            XoaDuongDiNgaySau(id, 0);
+            _context.SaveChanges();
+            await LamMoiDuongDi(id);
+
+            TempData["success"] = viDo.HasValue ? "Đã lưu điểm xuất phát." : "Đã xóa điểm xuất phát.";
+            return RedirectToAction("LichTrinh", new { id });
+        }
+
+        // Lưu hoặc xóa điểm tới cuối ngày. Tour có đủ điểm xuất phát và điểm mọi ngày thì trang tour hiện bản đồ thật.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CapNhatToaDoLichTrinh(int id, string? toaDo)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var lichTrinh = _context.LichTrinhTours.FirstOrDefault(x => x.Id == id);
+            if (lichTrinh == null)
+            {
+                return NotFound();
+            }
+
+            if (!LichTrinhTour.DocToaDo(toaDo, out var viDo, out var kinhDo))
+            {
+                TempData["error"] = ThongBaoToaDoSai;
+                return RedirectToAction("LichTrinh", new { id = lichTrinh.TourId });
+            }
+
+            lichTrinh.ViDo = viDo;
+            lichTrinh.KinhDo = kinhDo;
+            lichTrinh.DuongDi = null;
+            XoaDuongDiNgaySau(lichTrinh.TourId, lichTrinh.NgayThu);
+            _context.SaveChanges();
+            await LamMoiDuongDi(lichTrinh.TourId);
+
+            TempData["success"] = viDo.HasValue
+                ? $"Đã lưu tọa độ ngày {lichTrinh.NgayThu}."
+                : $"Đã xóa tọa độ ngày {lichTrinh.NgayThu}.";
+            return RedirectToAction("LichTrinh", new { id = lichTrinh.TourId });
+        }
         // Đây là action dùng để xóa một lịch trình của một tour cụ thể trong trang quản trị. Khi admin nhấn nút xóa ở một lịch trình nào đó trong trang danh sách lịch trình của tour, action này sẽ được gọi với Id của lịch trình đó để xác định chính xác lịch trình cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm lịch trình trong database theo Id. Nếu không tìm thấy lịch trình thì trả về lỗi NotFound. Nếu tìm thấy lịch trình, hệ thống sẽ lấy Id của tour mà lịch trình đó thuộc về để có thể chuyển hướng lại đúng trang danh sách lịch trình của tour đó sau khi xóa. Sau đó hệ thống sẽ xóa bản ghi của lịch trình đó khỏi database và lưu lại để đảm bảo rằng lịch trình đã bị xóa thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch trình của tour đó để thấy rằng lịch trình đã bị xóa khỏi danh sách.
-        public IActionResult XoaLichTrinh(int id)
+        public async Task<IActionResult> XoaLichTrinh(int id)
         {
             if (!LaAdmin())
             {
@@ -1684,8 +1817,10 @@ namespace webdulich.Controllers
 
             int tourId = lichTrinh.TourId;
 
+            XoaDuongDiNgaySau(tourId, lichTrinh.NgayThu);
             _context.LichTrinhTours.Remove(lichTrinh);
             _context.SaveChanges();
+            await LamMoiDuongDi(tourId);
 
             return RedirectToAction("LichTrinh", new { id = tourId });
         }

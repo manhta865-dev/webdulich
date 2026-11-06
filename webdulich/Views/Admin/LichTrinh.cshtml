@@ -31,6 +31,21 @@
         <div class="ad-alert loi" role="alert">@TempData["error"]</div>
     }
 
+    @if (tour != null)
+    {
+        <section class="ad-card ad-xuat-phat">
+            <h2>Điểm xuất phát của tour</h2>
+            <p class="ad-toa-do-nhac">Nơi xe bắt đầu chạy ở ngày đầu tiên. Mỗi ngày bên dưới nhập nơi xe tới vào cuối ngày, ngày sau tự đi tiếp từ đó. Có đủ điểm xuất phát và điểm của mọi ngày thì khách sẽ thấy xe chạy trên bản đồ thật.</p>
+            <form asp-controller="Admin" asp-action="CapNhatDiemXuatPhat" asp-route-id="@tour.Id" method="post" class="ad-toa-do">
+                <label for="toaDoXuatPhat">Tọa độ</label>
+                <input type="text" id="toaDoXuatPhat" name="toaDo" class="form-control" inputmode="decimal" autocomplete="off"
+                       value="@(tour.ViDoXuatPhat.HasValue ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{tour.ViDoXuatPhat.Value:0.######}, {tour.KinhDoXuatPhat!.Value:0.######}") : "")"
+                       placeholder="Ví dụ: 10.7769, 106.7009" />
+                <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Lưu</button>
+            </form>
+        </section>
+    }
+
     <div class="ad-split">
         <section class="ad-card">
             <h2>Thêm ngày lịch trình</h2>
@@ -72,6 +87,17 @@
                         <textarea name="noiDung"
                                   class="form-control"
                                   placeholder="Nhập các hoạt động trong ngày: tham quan, ăn uống, nhận phòng..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tọa độ nơi tới cuối ngày (không bắt buộc)</label>
+                        <input type="text"
+                               name="toaDo"
+                               class="form-control"
+                               inputmode="decimal"
+                               autocomplete="off"
+                               placeholder="Ví dụ: 11.9404, 108.4583" />
+                        <small class="ad-toa-do-nhac">Trên Google Maps, nhấp chuột phải vào điểm đó, bấm dòng số đầu tiên để sao chép rồi dán vào đây.</small>
                     </div>
 
                     <div class="ad-form-actions ad-form-actions-trai">
@@ -117,6 +143,17 @@
                             {
                                 <div class="ad-timeline-content">@item.NoiDung</div>
                             }
+
+                            <form asp-controller="Admin" asp-action="CapNhatToaDoLichTrinh" asp-route-id="@item.Id" method="post" class="ad-toa-do">
+                                <label for="toaDo-@item.Id">Nơi tới cuối ngày</label>
+                                <input type="text" id="toaDo-@item.Id" name="toaDo" class="form-control" inputmode="decimal" autocomplete="off"
+                                       value="@item.ToaDoDangChu" placeholder="11.9404, 108.4583" />
+                                <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Lưu</button>
+                                @if (item.ViDo.HasValue)
+                                {
+                                    <small class="ad-toa-do-tt">@(string.IsNullOrEmpty(item.DuongDi) ? "Chưa có đường xe chạy, bản đồ nối tạm bằng nét đứt" : "Đã có đường xe chạy")</small>
+                                }
+                            </form>
                         </div>
                     }
                 </div>

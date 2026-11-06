@@ -473,6 +473,26 @@
 .ad-timeline-content { margin-top: var(--tv-k2); line-height: 1.6; color: var(--tv-chu-phu); white-space: pre-line; grid-column: 2 / -1; }
 .ad-timeline-item .ad-btn-nho { align-self: start; grid-column: 3; grid-row: 1; }
 
+/* Ô tọa độ của từng ngày lịch trình */
+.ad-toa-do {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--tv-k2);
+    grid-column: 2 / -1;
+    margin-top: var(--tv-k3);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+.ad-toa-do label { margin: 0; }
+.ad-toa-do .form-control { flex: 1 1 170px; min-width: 0; min-height: 34px; padding: 0 var(--tv-k2); font-size: var(--tv-cs-nho); }
+.ad-timeline-item .ad-toa-do .ad-btn-nho { grid-column: auto; grid-row: auto; align-self: center; margin-top: 0; }
+.ad-toa-do-nhac { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-toa-do-tt { flex-basis: 100%; }
+.ad-xuat-phat { margin-bottom: var(--tv-k4); }
+.ad-xuat-phat .ad-toa-do { max-width: 520px; }
+.ad-xuat-phat .ad-btn-nho { min-height: 34px; }
+
 @media (max-width: 1100px) {
     .ad-inline-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

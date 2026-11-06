@@ -649,6 +649,13 @@ namespace webdulich.Migrations
                     b.Property<string>("BuaAn")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DuongDi")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("KinhDo")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.Property<int>("NgayThu")
                         .HasColumnType("int");
 
@@ -662,11 +669,18 @@ namespace webdulich.Migrations
                     b.Property<int>("TourId")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("ViDo")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TourId");
 
-                    b.ToTable("LichTrinhTours");
+                    b.ToTable("LichTrinhTours", t =>
+                        {
+                            t.HasCheckConstraint("CK_LichTrinh_ToaDo", "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110)");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.LoaiDiaHinh", b =>
@@ -920,6 +934,10 @@ namespace webdulich.Migrations
                     b.Property<string>("HinhAnh")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("KinhDoXuatPhat")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
 
@@ -936,6 +954,10 @@ namespace webdulich.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ViDoXuatPhat")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DanhMucId");
@@ -944,7 +966,10 @@ namespace webdulich.Migrations
 
                     b.HasIndex("PhuongTienId");
 
-                    b.ToTable("Tours");
+                    b.ToTable("Tours", t =>
+                        {
+                            t.HasCheckConstraint("CK_Tours_XuatPhat", "([ViDoXuatPhat] IS NULL AND [KinhDoXuatPhat] IS NULL) OR ([ViDoXuatPhat] IS NOT NULL AND [KinhDoXuatPhat] IS NOT NULL AND [ViDoXuatPhat] BETWEEN 8 AND 24 AND [KinhDoXuatPhat] BETWEEN 102 AND 110)");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.TourHinhAnh", b =>

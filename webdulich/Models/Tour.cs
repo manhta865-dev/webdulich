@@ -28,6 +28,11 @@ namespace webdulich.Models
         // Ngừng bán thay cho xóa tour (bước mở rộng)
         public bool NgungBan { get; set; }
 
+        // Nơi xe bắt đầu chạy ở ngày đầu tiên. Từ ngày 2 xe đi tiếp từ điểm cuối ngày trước (CK_Tours_XuatPhat).
+        public decimal? ViDoXuatPhat { get; set; }
+
+        public decimal? KinhDoXuatPhat { get; set; }
+
         [ForeignKey("DiaDiemId")]
         public DiaDiem? DiaDiemInfo { get; set; }
 

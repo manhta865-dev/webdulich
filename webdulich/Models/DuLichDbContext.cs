@@ -103,6 +103,21 @@ namespace webdulich.Models
     .WithMany(x => x.LichTrinhTours)
     .HasForeignKey(x => x.TourId)
     .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Tour>(e =>
+            {
+                e.Property(x => x.ViDoXuatPhat).HasPrecision(9, 6);
+                e.Property(x => x.KinhDoXuatPhat).HasPrecision(9, 6);
+                e.ToTable(t => t.HasCheckConstraint("CK_Tours_XuatPhat",
+                    "([ViDoXuatPhat] IS NULL AND [KinhDoXuatPhat] IS NULL) OR ([ViDoXuatPhat] IS NOT NULL AND [KinhDoXuatPhat] IS NOT NULL AND [ViDoXuatPhat] BETWEEN 8 AND 24 AND [KinhDoXuatPhat] BETWEEN 102 AND 110)"));
+            });
+            modelBuilder.Entity<LichTrinhTour>(e =>
+            {
+                e.Property(x => x.ViDo).HasPrecision(9, 6);
+                e.Property(x => x.KinhDo).HasPrecision(9, 6);
+                e.ToTable(t => t.HasCheckConstraint("CK_LichTrinh_ToaDo",
+                    // Phải ghi rõ IS NOT NULL: so sánh với NULL cho kết quả "không xác định" và CHECK sẽ cho qua
+                    "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110)"));
+            });
 
             modelBuilder.Entity<LichKhoiHanhTour>()
     .HasOne(x => x.Tour)
