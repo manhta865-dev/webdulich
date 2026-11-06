@@ -87,6 +87,19 @@ namespace webdulich.Controllers
                 .Take(8)
                 .ToList();
             //Sắp xếp khuyến mãi theo thứ tự hiển thị, nếu trùng thì ưu tiên mã mới hơn.
+
+            ViewBag.Videos = _context.Videos.AsNoTracking()
+                .Where(x => x.DangHien)
+                .OrderBy(x => x.ThuTu).ThenBy(x => x.Id)
+                .Take(3)
+                .ToList();
+
+            ViewBag.BaiViets = _context.BaiViets.AsNoTracking()
+                .Where(x => x.TrangThai == BaiViet.DaDang)
+                .OrderByDescending(x => x.NgayDang)
+                .Take(3)
+                .ToList();
+
             return View(tours);
         }
     }

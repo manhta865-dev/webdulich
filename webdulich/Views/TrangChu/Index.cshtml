@@ -8,6 +8,8 @@
     var tourTrongNuoc = ViewBag.TourTrongNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
     var tourNgoaiNuoc = ViewBag.TourNgoaiNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
     var coNhomTour = tourTrongNuoc.Any() || tourNgoaiNuoc.Any();
+    var dsVideo = ViewBag.Videos as List<webdulich.Models.Video> ?? new List<webdulich.Models.Video>();
+    var dsBaiViet = ViewBag.BaiViets as List<webdulich.Models.BaiViet> ?? new List<webdulich.Models.BaiViet>();
 
     // Điểm đến ở phần đầu trang. Ảnh lấy trong wwwroot/images/dulich, chỉ dùng ảnh đủ nét để phủ kín màn hình.
     var diemDens = new[]
@@ -22,6 +24,15 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+    @if (dsVideo.Count > 0)
+    {
+        <link rel="stylesheet" href="~/css/video.css" asp-append-version="true" />
+    }
+    @if (dsBaiViet.Count > 0)
+    {
+        <link rel="stylesheet" href="~/css/bai-viet.css" asp-append-version="true" />
+    }
     <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
 }
 
@@ -45,6 +56,11 @@
             </div>
         </div>
     }
+
+    <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")">
+        <canvas aria-hidden="true"></canvas>
+        <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
+    </div>
 
     <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="hero-search home-search">
         <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt, Phú Quốc" aria-label="Điểm đến" />
@@ -160,6 +176,98 @@
             }
         </section>
     }
+
+    @* Tính năng chính của web: đặt theo nhóm. Hình xe là minh họa, không phải số liệu thật *@
+    <section class="tv-section home-nhom">
+        <div class="home-nhom-chu">
+            <h2>Đi cùng nhóm, mỗi người tự trả phần mình</h2>
+            <p>Không phải đứng ra thu tiền và gom giấy tờ của cả nhóm nữa.</p>
+            <ol class="home-nhom-buoc">
+                <li>Một người giữ chỗ và gửi link mời vào nhóm chat.</li>
+                <li>Mỗi thành viên nhận một ghế, tự điền thông tin và chuyển khoản phần của mình.</li>
+                <li>Cả nhóm trả đủ trước hạn là xong. Trưởng nhóm thấy ai đã trả, không thấy giấy tờ của người khác.</li>
+            </ol>
+            <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-chinh">Chọn tour để đặt cho nhóm</a>
+        </div>
+        <figure class="home-nhom-hinh" aria-hidden="true">
+            <figcaption>Hình minh họa: 3 trên 5 ghế đã trả</figcaption>
+            <div class="dn-duong" style="--tien: 60">
+                <div class="dn-duong-nen"><span class="dn-duong-da-di"></span></div>
+                <div class="dn-duong-moc">
+                    <span class="qua" style="left: 20%"></span>
+                    <span class="qua" style="left: 40%"></span>
+                    <span class="qua" style="left: 60%"></span>
+                    <span style="left: 80%"></span>
+                </div>
+                <svg class="dn-duong-co" viewBox="0 0 24 40">
+                    <path d="M5 38V4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                    <path d="M6 5h15l-4 6 4 6H6z" fill="currentColor" />
+                </svg>
+                <svg class="dn-duong-xe" viewBox="0 0 56 34">
+                    <rect x="2" y="3" width="52" height="24" rx="6" fill="currentColor" />
+                    <path d="M8 8h9v8H8zM20 8h9v8h-9zM32 8h9v8h-9z" fill="#FFFFFF" />
+                    <path d="M44 8h6a2 2 0 0 1 2 2v6h-8z" fill="#FFFFFF" />
+                    <circle cx="15" cy="28" r="5" fill="#17262E" />
+                    <circle cx="41" cy="28" r="5" fill="#17262E" />
+                    <circle cx="15" cy="28" r="2" fill="#FFFFFF" />
+                    <circle cx="41" cy="28" r="2" fill="#FFFFFF" />
+                </svg>
+            </div>
+            <ul class="home-nhom-ghe">
+                <li class="da-tra">Ghế 1<span>Đã trả</span></li>
+                <li class="da-tra">Ghế 2<span>Đã trả</span></li>
+                <li class="da-tra">Ghế 3<span>Đã trả</span></li>
+                <li class="cho">Ghế 4<span>Chờ xác nhận</span></li>
+                <li>Ghế 5<span>Chưa trả</span></li>
+            </ul>
+        </figure>
+    </section>
+
+    @if (dsVideo.Count > 0)
+    {
+        <section class="tv-section">
+            <div class="tv-section-head">
+                <div>
+                    <h2>Xem trước chuyến đi</h2>
+                </div>
+                <a asp-controller="Video" asp-action="Index" class="tv-link">Xem tất cả video</a>
+            </div>
+            <div class="home-video@(dsVideo.Count == 1 ? " mot" : "")">
+                @foreach (var video in dsVideo)
+                {
+                    <partial name="_TheVideo" model="video" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (dsBaiViet.Count > 0)
+    {
+        <section class="tv-section">
+            <div class="tv-section-head">
+                <div>
+                    <h2>Bài viết mới</h2>
+                </div>
+                <a asp-controller="BaiViet" asp-action="Index" class="tv-link">Xem tất cả bài viết</a>
+            </div>
+            <div class="bv-luoi">
+                @foreach (var bai in dsBaiViet)
+                {
+                    <a href="/BaiViet/@bai.DuongDan" class="bv-the">
+                        <div class="bv-anh">
+                            @if (!string.IsNullOrEmpty(bai.AnhBia))
+                            {
+                                <img src="~/images/baiviet/@bai.AnhBia" alt="" loading="lazy" />
+                            }
+                        </div>
+                        <time>@bai.NgayDang?.ToString("dd/MM/yyyy")</time>
+                        <h3>@bai.TieuDe</h3>
+                        <p>@bai.TomTat</p>
+                    </a>
+                }
+            </div>
+        </section>
+    }
 </div>
 
 <section class="home-band">
@@ -182,6 +290,12 @@
         <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-sang">Bắt đầu chọn tour</a>
     </div>
 </section>
+
+<script type="module" src="~/js/hero-3d.js" asp-append-version="true"></script>
+@if (dsVideo.Count > 0)
+{
+    <script src="~/js/video-nhe.js" asp-append-version="true"></script>
+}
 
 <script>
     (function () {

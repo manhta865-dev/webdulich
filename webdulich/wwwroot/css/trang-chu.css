@@ -50,6 +50,78 @@
         linear-gradient(0deg, rgba(8, 20, 26, 0.6) 0%, rgba(8, 20, 26, 0) 45%);
 }
 
+/* Quả địa cầu 3D bên phải (vẽ bằng wwwroot/js/hero-3d.js) */
+.hero-globe {
+    position: absolute;
+    right: var(--hero-le);
+    top: 100px;
+    z-index: 1;
+    width: min(540px, 40vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    /* Nền "vũ trụ" tối mờ dần ra rìa để quả cầu và vệt máy bay nổi lên trên ảnh */
+    background: radial-gradient(circle closest-side, rgba(5, 20, 30, 0.82) 0%, rgba(5, 20, 30, 0.7) 78%, rgba(5, 20, 30, 0) 100%);
+}
+
+.hero-globe[hidden] { display: none; }
+
+.hero-globe canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: pan-y;
+    opacity: 0;
+    transition: opacity 600ms ease;
+    -webkit-mask-image: radial-gradient(circle closest-side, #000 90%, transparent 100%);
+    mask-image: radial-gradient(circle closest-side, #000 90%, transparent 100%);
+}
+
+.hero-globe canvas:active { cursor: grabbing; }
+.hero-globe.san-sang canvas { opacity: 1; }
+
+/* Tên điểm đến đang được chọn, bấm để xem tour */
+.hero-globe-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 4px 12px;
+    border-radius: var(--tv-bo-nhan);
+    background: #fff;
+    color: var(--tv-chu);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+}
+
+.hero-globe-label.hien { opacity: 1; pointer-events: auto; }
+.hero-globe-label:hover { background: var(--tv-nhan); color: #fff; }
+
+/* Tên hai quần đảo Hoàng Sa, Trường Sa: cùng màu với Việt Nam trên quả cầu */
+.hero-globe-dao {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: #FFE3A3;
+    text-shadow: 0 1px 3px rgba(0, 40, 55, 0.95), 0 0 6px rgba(0, 40, 55, 0.8);
+    opacity: 0;
+    pointer-events: none;
+}
+.hero-globe-dao.hien { opacity: 1; }
+
+@media (max-width: 1100px) {
+    .hero-globe { display: none; }
+}
+
 .hero-text {
     position: absolute;
     left: var(--hero-le);
@@ -316,4 +388,52 @@
 
 @media (prefers-reduced-motion: reduce) {
     .hero-slide { transition: none; }
+}
+
+/* ---------- Khối đi cùng nhóm: tính năng chính của web ---------- */
+.home-nhom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--tv-k6);
+}
+.home-nhom h2 { margin: 0 0 var(--tv-k2); font-size: var(--tv-cs-tieu-de); font-weight: 700; line-height: 1.25; }
+.home-nhom-chu > p { margin: 0 0 var(--tv-k4); color: var(--tv-chu-phu); }
+.home-nhom-buoc { margin: 0 0 var(--tv-k5); padding-left: var(--tv-k5); }
+.home-nhom-buoc li { margin-bottom: var(--tv-k2); }
+
+.home-nhom-hinh {
+    margin: 0;
+    padding: var(--tv-k5);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-nhan-nhat);
+}
+.home-nhom-hinh figcaption { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.home-nhom-hinh .dn-duong-nen { background: #FFFFFF; }
+.home-nhom-ghe { display: grid; gap: var(--tv-k1); margin: 0; padding: 0; list-style: none; }
+.home-nhom-ghe li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k2) var(--tv-k3);
+    border-left: 4px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    font-weight: 600;
+}
+.home-nhom-ghe span { font-weight: 500; color: var(--tv-chu-phu); }
+.home-nhom-ghe .da-tra { border-left-color: var(--tv-thanh-cong); }
+.home-nhom-ghe .da-tra span { color: var(--tv-thanh-cong); }
+.home-nhom-ghe .cho { border-left-color: var(--tv-canh-bao); }
+.home-nhom-ghe .cho span { color: var(--tv-canh-bao); }
+
+/* Video: video đầu lớn, hai video sau xếp cột bên cạnh */
+.home-video { display: grid; grid-template-columns: 2fr 1fr; gap: var(--tv-k4); }
+.home-video .vd-the:first-child { grid-row: span 2; }
+.home-video.mot { grid-template-columns: minmax(0, 720px); }
+
+@media (max-width: 900px) {
+    .home-nhom { grid-template-columns: 1fr; }
+    .home-video { grid-template-columns: 1fr; }
+    .home-video .vd-the:first-child { grid-row: auto; }
 }
