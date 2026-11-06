@@ -1,6 +1,8 @@
-// Hành trình 3D ở trang chi tiết tour: phong cảnh TỰ VẼ, con đường và cột mốc theo số ngày trong lịch trình.
-// Đây là hình minh họa, không phải bản đồ: không có tọa độ, không có hình đất nước, vị trí cột mốc không ứng với địa điểm thật.
-// Khung này ẩn sẵn; chỉ hiện khi 3D chạy được. Lỗi ở đây không ảnh hưởng danh sách lịch trình bên dưới.
+// Hành trình ở trang chi tiết tour, có hai cách vẽ dùng chung một bộ nút:
+// - Tour có đủ điểm xuất phát và điểm mọi ngày: xe chạy trên bản đồ thật (MapLibre), đã bỏ chữ và ranh giới của bản đồ gốc,
+//   khóa vùng xem và góc nhìn. Đường đi lấy từ CSDL; ngày chưa có đường thì nối bằng nét đứt thẳng.
+// - Tour chưa đủ tọa độ, hoặc bản đồ lỗi: phong cảnh tự vẽ (three), là hình minh họa, không có hình đất nước.
+// Khung này ẩn sẵn; lỗi ở đây không ảnh hưởng danh sách lịch trình bên dưới.
 const goc = document.getElementById("hanhTrinh3D");
 if (goc) {
     const moi = new IntersectionObserver((muc) => {
@@ -13,27 +15,398 @@ if (goc) {
 }
 
 async function batDau() {
-    const thu = document.createElement("canvas");
-    if (!thu.getContext("webgl2") && !thu.getContext("webgl")) return;
-    try {
-        const THREE = await import("/lib/three/three.module.min.js");
-        khoiTao(THREE);
-    } catch (loi) {
-        goc.hidden = true;
+    const duLieu = JSON.parse(document.getElementById("hanhTrinhDuLieu").textContent);
+    const dsNgay = duLieu.DsNgay;
+    goc.hidden = false;
+
+    let canh = null;
+    if (duLieu.XuatPhat && dsNgay.every((n) => n.ViDo != null && n.KinhDo != null)) {
+        try {
+            canh = await taoBanDo(duLieu);
+        } catch (loi) {
+            console.warn("Không dùng được bản đồ, chuyển sang bản minh họa:", loi && loi.message);
+        }
     }
+
+    if (!canh) {
+        // Bản đồ lỗi mà tour chỉ có một ngày: một cột mốc trên phong cảnh không có ý nghĩa, chỉ giữ danh sách
+        if (dsNgay.length < 2) {
+            goc.hidden = true;
+            return;
+        }
+        try {
+            const thu = document.createElement("canvas");
+            if (!thu.getContext("webgl2") && !thu.getContext("webgl")) throw new Error("Không có WebGL");
+            const THREE = await import("/lib/three/three.module.min.js");
+            canh = taoCachDieu(THREE, dsNgay);
+        } catch (loi) {
+            goc.hidden = true;
+            return;
+        }
+    }
+
+    ganGiaoDien(dsNgay, canh);
 }
 
-function khoiTao(THREE) {
-    const dsNgay = JSON.parse(document.getElementById("hanhTrinhDuLieu").textContent);
-    const khung = goc.querySelector(".ct-ht-khung");
-    const canvas = khung.querySelector("canvas");
+// ---------- Bộ nút dùng chung. canh.bayToi(i, xong): bay tới ngày i, tới nơi thì gọi xong ----------
+function ganGiaoDien(dsNgay, canh) {
     const nhomNut = goc.querySelector(".ct-ht-ngay");
     const theTieuDe = goc.querySelector(".ct-ht-tieu-de");
     const theBuaAn = goc.querySelector(".ct-ht-bua-an");
     const nutBay = goc.querySelector("[data-ht-bay]");
-    const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    goc.querySelector(".ct-ht-duoi small").textContent = canh.ghiChu;
+    // Một ngày thì không cần nút chọn ngày; nút bay vẫn giữ để xem lại xe chạy
+    nhomNut.hidden = dsNgay.length < 2;
 
-    goc.hidden = false;
+    let ngayChon = 0, tuBay = false, henGio = null, luot = 0;
+
+    function dungTuBay() {
+        tuBay = false;
+        nutBay.textContent = "Bay cả hành trình";
+        if (henGio) clearTimeout(henGio);
+    }
+
+    function sangNgaySau() {
+        if (ngayChon >= dsNgay.length - 1) {
+            dungTuBay();
+            return;
+        }
+        chon(ngayChon + 1, false);
+    }
+
+    function chon(i, tuNut) {
+        ngayChon = i;
+        if (henGio) clearTimeout(henGio);
+        // Bấm ngày khác giữa đường thì lần bay cũ không được tính là đã tới
+        const luotNay = ++luot;
+        canh.bayToi(i, () => {
+            if (luotNay === luot && tuBay) henGio = setTimeout(sangNgaySau, 1800);
+        });
+
+        const n = dsNgay[i];
+        theTieuDe.textContent = "Ngày " + n.Ngay + ": " + n.TieuDe;
+        theBuaAn.textContent = n.BuaAn ? "Bữa ăn: " + n.BuaAn : "";
+        theBuaAn.hidden = !n.BuaAn;
+        nhomNut.querySelectorAll("button").forEach((nut, j) => {
+            nut.setAttribute("aria-pressed", j === i ? "true" : "false");
+        });
+        if (tuNut) {
+            dungTuBay();
+            // Mở đúng ngày trong danh sách chi tiết bên dưới
+            const chiTiet = document.querySelector('.ct-day[data-ngay="' + n.Ngay + '"]');
+            if (chiTiet) chiTiet.open = true;
+        }
+    }
+
+    dsNgay.forEach((n, i) => {
+        const nut = document.createElement("button");
+        nut.type = "button";
+        nut.textContent = "Ngày " + n.Ngay;
+        nut.addEventListener("click", () => chon(i, true));
+        nhomNut.appendChild(nut);
+    });
+
+    nutBay.addEventListener("click", () => {
+        if (tuBay) {
+            dungTuBay();
+            return;
+        }
+        tuBay = true;
+        nutBay.textContent = "Dừng lại";
+        chon(0, false);
+    });
+
+    chon(0, false);
+}
+
+// ---------- Bản đồ thật ----------
+const KIEU_BAN_DO = "https://tiles.openfreemap.org/styles/liberty";
+const DIA_HINH = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+
+function taiThuVienBanDo() {
+    if (window.maplibregl) return Promise.resolve();
+    return new Promise((xong, loi) => {
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "/lib/maplibre/maplibre-gl.css?v=4.7.1";
+        document.head.appendChild(css);
+        const js = document.createElement("script");
+        js.src = "/lib/maplibre/maplibre-gl.js?v=4.7.1";
+        js.onload = xong;
+        js.onerror = () => loi(new Error("Không tải được thư viện bản đồ"));
+        document.head.appendChild(js);
+    });
+}
+
+// Khoảng cách gần đúng giữa hai điểm [kinh độ, vĩ độ], tính bằng km
+function tinhKm(a, b) {
+    const R = Math.PI / 180;
+    const x = (b[0] - a[0]) * R * Math.cos((a[1] + b[1]) / 2 * R), y = (b[1] - a[1]) * R;
+    return Math.hypot(x, y) * 6371;
+}
+
+function tinhHuong(a, b) {
+    const R = Math.PI / 180;
+    return Math.atan2((b[0] - a[0]) * Math.cos((a[1] + b[1]) / 2 * R), b[1] - a[1]) / R;
+}
+
+// Mỗi ngày là một đoạn đường: có sẵn trong CSDL, hoặc nối thẳng nếu chưa lấy được
+function taoDoan(duLieu) {
+    let truoc = duLieu.XuatPhat;
+    return duLieu.DsNgay.map((n) => {
+        const den = [n.KinhDo, n.ViDo];
+        let diem = null;
+        try {
+            diem = n.DuongDi ? JSON.parse(n.DuongDi) : null;
+        } catch (loi) {
+            diem = null;
+        }
+        const thang = !Array.isArray(diem) || diem.length < 2;
+        if (thang) diem = [truoc, den];
+        const moc = [0];
+        for (let i = 1; i < diem.length; i++) moc.push(moc[i - 1] + tinhKm(diem[i - 1], diem[i]));
+        truoc = den;
+        return { diem, thang, den, moc, km: moc[moc.length - 1] };
+    });
+}
+
+// Vị trí sau khi đi được km kilômét trên đoạn, kèm chỉ số điểm đã qua để vẽ quãng đã đi
+function viTriTrenDoan(doan, km) {
+    const { diem, moc } = doan;
+    if (km <= 0) return { p: diem[0], i: 0 };
+    if (km >= doan.km) return { p: diem[diem.length - 1], i: diem.length - 1 };
+    let i = 1;
+    while (moc[i] < km) i++;
+    const t = (km - moc[i - 1]) / ((moc[i] - moc[i - 1]) || 1);
+    return { p: [diem[i - 1][0] + (diem[i][0] - diem[i - 1][0]) * t, diem[i - 1][1] + (diem[i][1] - diem[i - 1][1]) * t], i: i - 1 };
+}
+
+async function taoBanDo(duLieu) {
+    const dsNgay = duLieu.DsNgay;
+    if (!document.createElement("canvas").getContext("webgl2")) throw new Error("Không có WebGL2");
+    await taiThuVienBanDo();
+
+    const phanHoi = await fetch(KIEU_BAN_DO, { signal: AbortSignal.timeout(8000) });
+    if (!phanHoi.ok) throw new Error("Dịch vụ bản đồ báo lỗi " + phanHoi.status);
+    const kieu = await phanHoi.json();
+    // Bỏ mọi chữ và đường ranh giới của bản đồ gốc: tên điểm do TravelVN tự ghi
+    kieu.layers = kieu.layers.filter((l) => l.type !== "symbol" && !/boundary/.test(l.id));
+
+    const dsDoan = taoDoan(duLieu);
+    // Khung xem tính theo cả đường đi, vì đường có thể lượn ra ngoài các điểm dừng
+    const tatCaDiem = dsDoan.flatMap((d) => d.diem);
+    const dsKinh = tatCaDiem.map((d) => d[0]), dsVi = tatCaDiem.map((d) => d[1]);
+    const tay = Math.min(...dsKinh), dong = Math.max(...dsKinh), nam = Math.min(...dsVi), bac = Math.max(...dsVi);
+    const dem = Math.max(0.25, (dong - tay) * 0.25, (bac - nam) * 0.25);
+    const khung = goc.querySelector(".ct-ht-khung");
+    const canvasCu = khung.querySelector("canvas");
+    const hop = document.createElement("div");
+    hop.className = "ct-ht-ban-do";
+    canvasCu.hidden = true;
+    khung.appendChild(hop);
+
+    const map = new maplibregl.Map({
+        container: hop,
+        style: kieu,
+        // Nới khung một chút: tour một điểm có khung rộng bằng 0 sẽ làm bản đồ phóng to tối đa
+        bounds: [[tay - 0.05, nam - 0.05], [dong + 0.05, bac + 0.05]],
+        fitBoundsOptions: { padding: 60 },
+        // Khóa vùng xem quanh tour; không cho tự xoay, nghiêng để không nhìn ra được biển xa
+        maxBounds: [[tay - dem, nam - dem], [dong + dem, bac + dem]],
+        maxPitch: 70,
+        dragRotate: false,
+        pitchWithRotate: false,
+        touchPitch: false,
+        keyboard: false,
+        scrollZoom: false,
+        // Điện thoại: một ngón để cuộn trang, không bị kẹt trong bản đồ; hai ngón để phóng to
+        dragPan: window.matchMedia("(pointer: fine)").matches,
+        attributionControl: { compact: true },
+        locale: {
+            "NavigationControl.ZoomIn": "Phóng to",
+            "NavigationControl.ZoomOut": "Thu nhỏ",
+            "AttributionControl.ToggleAttribution": "Nguồn dữ liệu bản đồ"
+        }
+    });
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    try {
+        await new Promise((xong, loi) => {
+            // Tab đang ẩn thì trình duyệt tạm dừng vẽ, không tính là tải chậm; quay lại thì đếm từ đầu
+            let hen = null;
+            const datHen = () => {
+                clearTimeout(hen);
+                hen = setTimeout(() => {
+                    if (document.hidden) return;
+                    document.removeEventListener("visibilitychange", datHen);
+                    loi(new Error("Bản đồ tải quá lâu"));
+                }, 15000);
+            };
+            document.addEventListener("visibilitychange", datHen);
+            datHen();
+            map.once("load", () => {
+                clearTimeout(hen);
+                document.removeEventListener("visibilitychange", datHen);
+                xong();
+            });
+        });
+    } catch (loi) {
+        map.remove();
+        hop.remove();
+        canvasCu.hidden = false;
+        throw loi;
+    }
+
+    // Không thu nhỏ quá khung tour, nhưng vẫn phải nhỏ hơn mức zoom lúc bay tới từng điểm
+    map.setMinZoom(Math.min(map.getZoom() - 0.3, 10.5));
+    map.addSource("diaHinh", { type: "raster-dem", tiles: [DIA_HINH], encoding: "terrarium", tileSize: 256, maxzoom: 13, attribution: "Địa hình: Mapzen, AWS Open Data" });
+    map.setTerrain({ source: "diaHinh", exaggeration: 1.25 });
+    // Đặt bóng đồi dưới lớp nước để không hiện gò nổi của đáy biển
+    map.addLayer({
+        id: "bongDoi",
+        type: "hillshade",
+        source: "diaHinh",
+        paint: { "hillshade-exaggeration": 0.3, "hillshade-shadow-color": "#5F6F5A", "hillshade-highlight-color": "#FFFFFF" }
+    }, map.getLayer("water") ? "water" : undefined);
+
+    const coDuongThat = dsDoan.some((d) => !d.thang), coDuongThang = dsDoan.some((d) => d.thang);
+    map.addSource("hanhTrinh", {
+        type: "geojson",
+        attribution: coDuongThat ? "Đường đi: OSRM, dữ liệu OpenStreetMap" : undefined,
+        data: {
+            type: "FeatureCollection",
+            features: dsDoan.map((d) => ({ type: "Feature", properties: { thang: d.thang }, geometry: { type: "LineString", coordinates: d.diem } }))
+        }
+    });
+    const nen = { "line-cap": "round", "line-join": "round" };
+    map.addLayer({ id: "hanhTrinhVien", type: "line", source: "hanhTrinh", layout: nen, paint: { "line-color": "#FFFFFF", "line-width": 7 } });
+    map.addLayer({ id: "hanhTrinhDuong", type: "line", source: "hanhTrinh", filter: ["==", ["get", "thang"], false], layout: nen, paint: { "line-color": "#7C8A91", "line-width": 4 } });
+    map.addLayer({ id: "hanhTrinhNoiTam", type: "line", source: "hanhTrinh", filter: ["==", ["get", "thang"], true], layout: { "line-cap": "round" }, paint: { "line-color": "#7C8A91", "line-width": 3, "line-dasharray": [2, 1.5] } });
+    // Quãng xe đã đi, vẽ lại liên tục khi xe chạy
+    const khongCoGi = { type: "Feature", geometry: { type: "MultiLineString", coordinates: [] } };
+    map.addSource("daDi", { type: "geojson", data: khongCoGi });
+    map.addLayer({ id: "daDiDuong", type: "line", source: "daDi", layout: nen, paint: { "line-color": "#E4572E", "line-width": 5 } });
+
+    function themMoc(chu, toaDo) {
+        const el = document.createElement("div");
+        el.className = "ct-ht-moc";
+        el.textContent = chu;
+        new maplibregl.Marker({ element: el, anchor: "bottom", opacityWhenCovered: "1" }).setLngLat(toaDo).addTo(map);
+        return el;
+    }
+    themMoc("Xuất phát", duLieu.XuatPhat);
+    const dsMoc = dsNgay.map((n, i) => themMoc("Ngày " + n.Ngay, dsDoan[i].den));
+
+    // Xe nhìn từ trên xuống, mũi xe hướng lên; xoay và nằm theo mặt bản đồ
+    const elXe = document.createElement("div");
+    elXe.className = "ct-ht-xe";
+    elXe.innerHTML = '<svg viewBox="0 0 24 44" width="20" height="36" aria-hidden="true"><rect x="2" y="2" width="20" height="40" rx="6" fill="#E4572E" stroke="#FFFFFF" stroke-width="2"/><rect x="5" y="7" width="14" height="7" rx="2" fill="#BDE3EC"/><rect x="5" y="32" width="14" height="5" rx="2" fill="#BDE3EC"/></svg>';
+    const xe = new maplibregl.Marker({ element: elXe, rotationAlignment: "map", pitchAlignment: "map", opacityWhenCovered: "1" })
+        .setLngLat(duLieu.XuatPhat)
+        .addTo(map);
+
+    // Xe chỉ bắt đầu chạy khi người xem thật sự nhìn thấy khung bản đồ
+    let baoDaThay;
+    const daThay = new Promise((xong) => { baoDaThay = xong; });
+    const moiThay = new IntersectionObserver((muc) => {
+        if (muc.some((m) => m.isIntersecting)) {
+            moiThay.disconnect();
+            baoDaThay();
+        }
+    }, { threshold: 0.4 });
+    moiThay.observe(khung);
+
+    const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let luotBay = 0;
+
+    function veDaDi(i, phanDangDi) {
+        const dsDuong = dsDoan.slice(0, i).map((d) => d.diem);
+        if (phanDangDi && phanDangDi.length > 1) dsDuong.push(phanDangDi);
+        map.getSource("daDi").setData({ type: "Feature", geometry: { type: "MultiLineString", coordinates: dsDuong } });
+    }
+
+    async function chayDoan(i, luot, xong) {
+        await daThay;
+        if (luot !== luotBay) return;
+
+        const doan = dsDoan[i];
+        veDaDi(i, null);
+        xe.setLngLat(doan.diem[0]);
+
+        // Quãng càng dài camera càng lên cao, không thì xe lao vun vút qua màn hình
+        const zoom = Math.max(map.getMinZoom() + 0.1, doan.km < 60 ? 11.4 : 11.4 - Math.log2(doan.km / 60));
+
+        // Ngày tham quan tại chỗ: xe đứng yên, camera chỉ lượn tới
+        if (doan.km < 0.05) {
+            map.once("moveend", () => { if (luot === luotBay) xong(); });
+            map.flyTo({ center: doan.den, zoom, pitch: 55, duration: 2500 });
+            return;
+        }
+
+        if (giamChuyenDong) {
+            veDaDi(i, doan.diem);
+            xe.setLngLat(doan.den);
+            map.jumpTo({ center: doan.den, zoom, pitch: 55 });
+            xong();
+            return;
+        }
+
+        const nhin = (km) => viTriTrenDoan(doan, km + Math.max(0.4, doan.km * 0.03)).p;
+        let huong = tinhHuong(doan.diem[0], nhin(0));
+        xe.setRotation(huong);
+        map.flyTo({ center: doan.diem[0], zoom, pitch: 55, bearing: huong, duration: 1500 });
+        await new Promise((tiep) => setTimeout(tiep, 1550));
+        if (luot !== luotBay) return;
+
+        const thoiGian = Math.min(14000, Math.max(4000, 4000 + doan.km * 70));
+        const batDau = performance.now();
+        const buoc = (t) => {
+            if (luot !== luotBay) return;
+            const k = Math.min(1, (t - batDau) / thoiGian);
+            const em = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+            const km = em * doan.km;
+            const { p, i: daQua } = viTriTrenDoan(doan, km);
+
+            // Xoay camera từ từ theo hướng phía trước, đi vòng theo góc ngắn nhất
+            const huongDich = k >= 1 ? huong : tinhHuong(p, nhin(km));
+            huong += (((huongDich - huong + 540) % 360) - 180) * 0.06;
+
+            xe.setLngLat(p);
+            xe.setRotation(huong);
+            map.jumpTo({ center: p, bearing: huong });
+            veDaDi(i, doan.diem.slice(0, daQua + 1).concat([p]));
+
+            if (k < 1) {
+                requestAnimationFrame(buoc);
+            } else {
+                veDaDi(i, doan.diem);
+                xong();
+            }
+        };
+        requestAnimationFrame(buoc);
+    }
+
+    // Dòng nguồn dữ liệu thu gọn thành nút "i" để không che bản đồ, bấm vào vẫn xem được
+    const nguon = hop.querySelector(".maplibregl-ctrl-attrib");
+    if (nguon) nguon.classList.remove("maplibregl-compact-show");
+
+    return {
+        ghiChu: coDuongThang
+            ? "Đường tham khảo, lộ trình thực tế có thể khác. Nét đứt là đoạn tạm nối thẳng, chưa có đường xe chạy."
+            : "Đường tham khảo, lộ trình thực tế có thể khác.",
+        bayToi(i, xong) {
+            dsMoc.forEach((m, j) => m.classList.toggle("chon", j === i));
+            chayDoan(i, ++luotBay, xong);
+        }
+    };
+}
+
+// ---------- Phong cảnh tự vẽ ----------
+function taoCachDieu(THREE, dsNgay) {
+    const khung = goc.querySelector(".ct-ht-khung");
+    const canvas = khung.querySelector("canvas");
+    const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Mỗi tour một dáng đường riêng nhưng mở lại vẫn giống nhau
     const hat = (Number(goc.dataset.tour) || 1) * 1.37;
@@ -190,7 +563,7 @@ function khoiTao(THREE) {
 
     // ---------- Camera bay theo u (0..1 trên đường) ----------
     let u = giamChuyenDong ? uNgay[0] : 0, uDau = u, uDich = uNgay[0], batDauBay = 0, thoiGianBay = 1;
-    let dangHien = true, ngayChon = 0, tuBay = false, henGio = null;
+    let dangHien = true, ngayChon = 0, khiToi = null;
     const p = new THREE.Vector3(), truoc = new THREE.Vector3(), nhin = new THREE.Vector3();
 
     function datCanh(t) {
@@ -224,77 +597,30 @@ function khoiTao(THREE) {
             u = uDau + (uDich - uDau) * em;
             if (k >= 1) {
                 batDauBay = 0;
-                if (tuBay) henGio = setTimeout(sangNgaySau, 1800);
+                const xong = khiToi;
+                khiToi = null;
+                if (xong) xong();
             }
         }
         datCanh(t);
         renderer.render(canh, camera);
     }
 
-    function chonNgay(i, tuNut) {
+    function bayToi(i, xong) {
         ngayChon = i;
-        if (henGio) clearTimeout(henGio);
         uDau = u;
         uDich = uNgay[i];
         if (giamChuyenDong) {
             u = uDich;
             batDauBay = 0;
             ve(performance.now());
+            xong();
         } else {
+            khiToi = xong;
             batDauBay = performance.now();
             thoiGianBay = 900 + Math.abs(uDich - uDau) * DAI * 55;
         }
-        const n = dsNgay[i];
-        theTieuDe.textContent = "Ngày " + n.Ngay + ": " + n.TieuDe;
-        theBuaAn.textContent = n.BuaAn ? "Bữa ăn: " + n.BuaAn : "";
-        theBuaAn.hidden = !n.BuaAn;
-        nhomNut.querySelectorAll("button").forEach((nut, j) => {
-            nut.setAttribute("aria-pressed", j === i ? "true" : "false");
-        });
-        if (tuNut) {
-            dungTuBay();
-            // Mở đúng ngày trong danh sách chi tiết bên dưới
-            const chiTiet = document.querySelector('.ct-day[data-ngay="' + n.Ngay + '"]');
-            if (chiTiet) chiTiet.open = true;
-        }
     }
-
-    function sangNgaySau() {
-        if (ngayChon >= SO_NGAY - 1) {
-            dungTuBay();
-            return;
-        }
-        chonNgay(ngayChon + 1, false);
-    }
-
-    function dungTuBay() {
-        tuBay = false;
-        nutBay.textContent = "Bay cả hành trình";
-        if (henGio) clearTimeout(henGio);
-    }
-
-    dsNgay.forEach((n, i) => {
-        const nut = document.createElement("button");
-        nut.type = "button";
-        nut.textContent = "Ngày " + n.Ngay;
-        nut.addEventListener("click", () => chonNgay(i, true));
-        nhomNut.appendChild(nut);
-    });
-
-    nutBay.addEventListener("click", () => {
-        if (tuBay) {
-            dungTuBay();
-            return;
-        }
-        tuBay = true;
-        nutBay.textContent = "Dừng lại";
-        chonNgay(0, false);
-        if (giamChuyenDong) {
-            dungTuBay();
-        } else if (!batDauBay) {
-            sangNgaySau();
-        }
-    });
 
     function doKichThuoc() {
         const r = khung.clientWidth, c = khung.clientHeight;
@@ -306,7 +632,6 @@ function khoiTao(THREE) {
     }
     new ResizeObserver(doKichThuoc).observe(khung);
     doKichThuoc();
-    chonNgay(0, false);
 
     if (!giamChuyenDong) {
         new IntersectionObserver((muc) => { dangHien = muc.some((m) => m.isIntersecting); }).observe(khung);
@@ -321,6 +646,8 @@ function khoiTao(THREE) {
         e.preventDefault();
         goc.hidden = true;
     });
+
+    return { bayToi, ghiChu: "Minh họa hành trình, không phải bản đồ." };
 }
 
 function taoNhan(THREE, chu) {

@@ -122,7 +122,8 @@
         <h2>Lịch trình tour</h2>
         <p class="ct-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
 
-        @if (lichTrinhTour.Count >= 2)
+        @* Đủ điểm xuất phát và điểm mọi ngày: xe chạy trên bản đồ. Chưa đủ mà từ 2 ngày: phong cảnh tự vẽ. Còn lại chỉ có danh sách *@
+        @if (lichTrinhTour.Count >= 2 || (lichTrinhTour.Count == 1 && lichTrinhTour[0].ViDo.HasValue && Model.ViDoXuatPhat.HasValue))
         {
             @* Hành trình 3D ẩn sẵn, js/hanh-trinh-3d.js chỉ hiện khi trình duyệt chạy được; danh sách bên dưới luôn còn *@
             <div class="ct-ht" id="hanhTrinh3D" data-tour="@Model.Id" hidden>
@@ -133,11 +134,15 @@
                     <p class="ct-ht-bua-an" hidden></p>
                     <div class="ct-ht-duoi">
                         <button type="button" class="tv-btn tv-btn-vien" data-ht-bay>Bay cả hành trình</button>
-                        <small>Minh họa hành trình, không phải bản đồ.</small>
+                        <small></small>
                     </div>
                 </div>
             </div>
-            <script type="application/json" id="hanhTrinhDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(lichTrinhTour.Select(x => new { Ngay = x.NgayThu, x.TieuDe, x.BuaAn })))</script>
+            <script type="application/json" id="hanhTrinhDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                XuatPhat = Model.ViDoXuatPhat.HasValue ? new[] { Model.KinhDoXuatPhat!.Value, Model.ViDoXuatPhat.Value } : null,
+                DsNgay = lichTrinhTour.Select(x => new { Ngay = x.NgayThu, x.TieuDe, x.BuaAn, x.ViDo, x.KinhDo, x.DuongDi })
+            }))</script>
             <script type="module" src="~/js/hanh-trinh-3d.js" asp-append-version="true"></script>
         }
 

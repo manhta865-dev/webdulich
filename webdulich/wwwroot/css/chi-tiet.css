@@ -268,3 +268,25 @@
 @media (max-width: 576px) {
     .ct-ht-khung { height: 280px; }
 }
+
+/* Bản đồ thật trong khung hành trình. Khung có canvas ẩn dùng cho bản dự phòng */
+.ct-ht-khung canvas[hidden] { display: none; }
+.ct-ht-ban-do { width: 100%; height: 100%; }
+.ct-ht-moc {
+    padding: 2px var(--tv-k2);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-chu);
+    color: #FFFFFF;
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(23, 38, 46, 0.35);
+}
+/* Hai điểm gần nhau thì nhãn đè lên nhau, ngày đang chọn phải luôn nằm trên */
+.ct-ht-moc.chon { z-index: 2; background: var(--tv-gia); }
+
+/* Nút và nhóm nút có display riêng nên phải ghi rõ để thuộc tính hidden có tác dụng */
+.ct-ht [hidden] { display: none; }
+
+/* Xe chạy trên bản đồ, luôn nằm trên nhãn và đường */
+.ct-ht-xe { z-index: 3; line-height: 0; filter: drop-shadow(0 2px 3px rgba(23, 38, 46, 0.45)); }
