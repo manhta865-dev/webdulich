@@ -14,6 +14,7 @@ namespace webdulich.Models
         public DbSet<DanhMuc> DanhMucs { get; set; }
         public DbSet<DatTours> DatTours { get; set; }
         public DbSet<Tour> Tours { get; set; }
+        public DbSet<BaiViet> BaiViets { get; set; }
         public DbSet<TaiKhoan> TaiKhoans { get; set; }
         public DbSet<LichKhoiHanhTour> LichKhoiHanhTours { get; set; }
         public DbSet<LichTrinhTour> LichTrinhTours { get; set; }
@@ -103,6 +104,19 @@ namespace webdulich.Models
     .WithMany(x => x.LichTrinhTours)
     .HasForeignKey(x => x.TourId)
     .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<BaiViet>(e =>
+            {
+                e.HasIndex(x => x.DuongDan).IsUnique();
+                // Danh sách bài đã đăng, mới nhất trước
+                e.HasIndex(x => new { x.TrangThai, x.NgayDang });
+                e.HasOne(x => x.TacGia).WithMany().HasForeignKey(x => x.TacGiaId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Tour).WithMany().HasForeignKey(x => x.TourId).OnDelete(DeleteBehavior.SetNull);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_BaiViet_TrangThai", "[TrangThai] IN ('Nhap','DaDang')");
+                    t.HasCheckConstraint("CK_BaiViet_NgayDang", "[TrangThai] <> 'DaDang' OR [NgayDang] IS NOT NULL");
+                });
+            });
             modelBuilder.Entity<Tour>(e =>
             {
                 e.Property(x => x.ViDoXuatPhat).HasPrecision(9, 6);

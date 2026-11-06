@@ -473,6 +473,16 @@
 .ad-timeline-content { margin-top: var(--tv-k2); line-height: 1.6; color: var(--tv-chu-phu); white-space: pre-line; grid-column: 2 / -1; }
 .ad-timeline-item .ad-btn-nho { align-self: start; grid-column: 3; grid-row: 1; }
 
+/* Trang quản lý bài viết */
+.ad-bv-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); min-width: 230px; }
+.ad-bv-nut form { margin: 0; }
+.ad-bv-loi { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-loi); }
+.ad-bv-loi:empty { display: none; }
+.ad-bv-noi-dung { line-height: 1.6; }
+.ad-bv-anh { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k3); margin-bottom: var(--tv-k2); }
+.ad-bv-anh img { width: 160px; height: 100px; object-fit: cover; border-radius: var(--tv-bo-nut); }
+.ad-bv-xoa-anh { margin: 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
 /* Ô tọa độ của từng ngày lịch trình */
 .ad-toa-do {
     display: flex;

@@ -1,0 +1,92 @@
+@model List<webdulich.Models.BaiViet>
+@using webdulich.Models
+
+@{
+    ViewData["Title"] = "Quản lý bài viết";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Quản lý bài viết</h1>
+            <p>Bài đã đăng hiện ở trang Bài viết. Bản nháp chỉ admin xem được.</p>
+        </div>
+        <a asp-action="Viet" class="tv-btn tv-btn-chinh">Viết bài mới</a>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="ad-toolbar">
+        <form asp-action="Index" method="get" class="ad-search">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control" aria-label="Tìm bài viết" placeholder="Tìm theo tiêu đề..." />
+            <button class="tv-btn tv-btn-chinh" type="submit">Tìm kiếm</button>
+            <a asp-action="Index" class="tv-btn tv-btn-vien">Làm mới</a>
+        </form>
+    </div>
+
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table ad-table-gd-ghe">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đăng</th>
+                        <th>Tác giả</th>
+                        <th>Tour liên quan</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bai in Model)
+                    {
+                        bool daDang = bai.TrangThai == BaiViet.DaDang;
+                        <tr>
+                            <td><strong>@bai.TieuDe</strong></td>
+                            <td><span class="ad-badge@(daDang ? "" : " canh-bao")">@(daDang ? "Đã đăng" : "Nháp")</span></td>
+                            <td>@(bai.NgayDang?.ToString("dd/MM/yyyy") ?? "Chưa đăng")</td>
+                            <td>@bai.TacGia?.HoTen</td>
+                            <td>@(bai.Tour?.TenTour ?? "Không có")</td>
+                            <td>
+                                <div class="ad-bv-nut">
+                                    <a asp-action="Sua" asp-route-id="@bai.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
+                                    <a href="/BaiViet/@bai.DuongDan" class="tv-btn tv-btn-vien ad-btn-nho">@(daDang ? "Xem" : "Xem trước")</a>
+                                    <form asp-action="DoiTrangThai" asp-route-id="@bai.Id" method="post">
+                                        <input type="hidden" name="dang" value="@(daDang ? "false" : "true")" />
+                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">@(daDang ? "Gỡ về nháp" : "Đăng")</button>
+                                    </form>
+                                    <form asp-action="Xoa" asp-route-id="@bai.Id" method="post"
+                                          data-xac-nhan-tieu-de="Xóa bài viết này?"
+                                          data-xac-nhan="Bài &quot;@bai.TieuDe&quot; và ảnh bìa sẽ bị xóa hẳn, không lấy lại được. Nếu chỉ muốn tạm ẩn, hãy chọn Gỡ về nháp."
+                                          data-xac-nhan-nut="Xóa bài" data-xac-nhan-nguy-hiem>
+                                        <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="ad-empty-cell">
+                                @(string.IsNullOrWhiteSpace(ViewBag.Search as string) ? "Chưa có bài viết nào. Bấm Viết bài mới để bắt đầu." : "Không có bài nào khớp từ khóa này.")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

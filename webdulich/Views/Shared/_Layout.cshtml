@@ -88,6 +88,10 @@
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg>
                     <span>Khuyến mãi</span>
                 </a>
+                <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
+                    <span>Bài viết</span>
+                </a>
                 <a asp-controller="Admin" asp-action="TinNhan" class="@Active("Admin", "TinNhan")">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
                     <span>Tin nhắn</span>
@@ -203,6 +207,7 @@
                 <ul class="tv-nav-links">
                     <li><a asp-controller="TrangChu" asp-action="Index" class="@Active("TrangChu", "Index")">Trang chủ</a></li>
                     <li><a asp-controller="GoiYTour" asp-action="Index" class="@Active("GoiYTour")">Gợi ý tour</a></li>
+                    <li><a asp-controller="BaiViet" asp-action="Index" class="@Active("BaiViet")">Bài viết</a></li>
                     @if (currentUser != null)
                     {
                         <li><a asp-controller="DatTour" asp-action="LichSu" class="@Active("DatTour", "LichSu")">Lịch sử đặt tour</a></li>

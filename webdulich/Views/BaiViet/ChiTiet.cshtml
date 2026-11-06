@@ -1,0 +1,79 @@
+@model webdulich.Models.BaiViet
+@using webdulich.Models
+
+@{
+    ViewData["Title"] = Model.TieuDe;
+    var baiKhac = ViewBag.BaiKhac as List<BaiViet> ?? new List<BaiViet>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/bai-viet.css" asp-append-version="true" />
+}
+
+<article class="bv-doc">
+    <a asp-action="Index" class="bv-quay-lai">Tất cả bài viết</a>
+
+    @if (Model.TrangThai != BaiViet.DaDang)
+    {
+        <p class="bv-nhap" role="status">Đây là bản nháp, chỉ admin xem được.</p>
+    }
+
+    <h1>@Model.TieuDe</h1>
+    @if (Model.NgayDang.HasValue)
+    {
+        <time>@Model.NgayDang.Value.ToString("dd/MM/yyyy")</time>
+    }
+    <p class="bv-tom-tat">@Model.TomTat</p>
+
+    @if (!string.IsNullOrEmpty(Model.AnhBia))
+    {
+        <img class="bv-bia" src="~/images/baiviet/@Model.AnhBia" alt="" />
+    }
+
+    <div class="bv-noi-dung">
+        @foreach (var khoi in BaiViet.TachKhoi(Model.NoiDung))
+        {
+            if (khoi.LaTieuDe)
+            {
+                <h2>@khoi.Chu</h2>
+            }
+            else
+            {
+                <p>@khoi.Chu</p>
+            }
+        }
+    </div>
+
+    @if (Model.Tour != null && !Model.Tour.NgungBan)
+    {
+        <aside class="bv-tour">
+            <div>
+                <span>Tour liên quan</span>
+                <strong>@Model.Tour.TenTour</strong>
+            </div>
+            <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@Model.Tour.Id" class="tv-btn tv-btn-chinh">Xem tour này</a>
+        </aside>
+    }
+</article>
+
+@if (baiKhac.Count > 0)
+{
+    <section class="bv-khac">
+        <h2>Bài viết khác</h2>
+        <div class="bv-luoi">
+            @foreach (var bai in baiKhac)
+            {
+                <a href="/BaiViet/@bai.DuongDan" class="bv-the">
+                    <div class="bv-anh">
+                        @if (!string.IsNullOrEmpty(bai.AnhBia))
+                        {
+                            <img src="~/images/baiviet/@bai.AnhBia" alt="" loading="lazy" />
+                        }
+                    </div>
+                    <h3>@bai.TieuDe</h3>
+                </a>
+            }
+        </div>
+    </section>
+}

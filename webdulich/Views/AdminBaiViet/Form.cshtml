@@ -1,0 +1,89 @@
+@model webdulich.Models.BaiVietForm
+@using webdulich.Models
+
+@{
+    bool laSua = Model.Id.HasValue;
+    bool dangDang = Model.TrangThaiHienTai == BaiViet.DaDang;
+    ViewData["Title"] = laSua ? "Sửa bài viết" : "Viết bài mới";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page ad-form-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p>@(laSua ? (dangDang ? "Bài đang hiện cho khách." : "Bài đang là nháp, khách chưa xem được.") : "Bạn có thể lưu nháp rồi đăng sau.")</p>
+        </div>
+    </div>
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <form asp-action="Luu" method="post" enctype="multipart/form-data" class="ad-card ad-form" novalidate>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="TieuDe" class="form-label">Tiêu đề</label>
+            <input asp-for="TieuDe" class="form-control" maxlength="200" />
+            <span asp-validation-for="TieuDe" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TomTat" class="form-label">Tóm tắt</label>
+            <textarea asp-for="TomTat" class="form-control" rows="2" maxlength="500"></textarea>
+            <small class="ad-toa-do-nhac">Vài câu hiện ở danh sách bài viết để khách biết bài nói về gì.</small>
+            <span asp-validation-for="TomTat" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NoiDung" class="form-label">Nội dung</label>
+            <textarea asp-for="NoiDung" class="form-control ad-bv-noi-dung" rows="16"></textarea>
+            <small class="ad-toa-do-nhac">Để một dòng trống giữa các đoạn. Dòng bắt đầu bằng <code>## </code> là tiêu đề nhỏ, ví dụ <code>## Nên đi vào mùa nào</code>.</small>
+            <span asp-validation-for="NoiDung" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TepAnhBia" class="form-label">Ảnh bìa (không bắt buộc)</label>
+            @if (!string.IsNullOrEmpty(Model.AnhBiaHienTai))
+            {
+                <div class="ad-bv-anh">
+                    <img src="~/images/baiviet/@Model.AnhBiaHienTai" alt="Ảnh bìa hiện tại" />
+                    <label class="ad-bv-xoa-anh"><input type="checkbox" name="XoaAnhBia" value="true" /> Xóa ảnh này</label>
+                </div>
+            }
+            <input asp-for="TepAnhBia" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+            <small class="ad-toa-do-nhac">JPG, PNG hoặc WebP, tối đa 5 MB. Chỉ dùng ảnh của bạn hoặc ảnh được phép dùng.</small>
+            <span asp-validation-for="TepAnhBia" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TourId" class="form-label">Tour liên quan (không bắt buộc)</label>
+            <select asp-for="TourId" asp-items="ViewBag.DsTour" class="form-select">
+                <option value="">Không gắn tour</option>
+            </select>
+            <small class="ad-toa-do-nhac">Cuối bài sẽ có nút dẫn tới tour này.</small>
+            <span asp-validation-for="TourId" class="ad-bv-loi"></span>
+        </div>
+
+        <div class="ad-form-actions ad-form-actions-trai">
+            @* Nhấn Enter trong ô nhập sẽ bấm nút đầu tiên, nên nút đầu luôn giữ nguyên trạng thái: không lỡ đăng bài hay lỡ gỡ bài *@
+            @if (dangDang)
+            {
+                <button type="submit" name="hanhDong" value="dang" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
+                <button type="submit" name="hanhDong" value="nhap" class="tv-btn tv-btn-vien">Lưu và gỡ về nháp</button>
+            }
+            else
+            {
+                <button type="submit" name="hanhDong" value="nhap" class="tv-btn tv-btn-vien">Lưu nháp</button>
+                <button type="submit" name="hanhDong" value="dang" class="tv-btn tv-btn-chinh">Đăng bài</button>
+            }
+            <a asp-action="Index" class="tv-btn tv-btn-vien">Quay lại danh sách</a>
+        </div>
+    </form>
+</div>
