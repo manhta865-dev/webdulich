@@ -131,6 +131,66 @@
     color: var(--tv-chu);
 }
 
+/* Menu tài khoản xổ xuống */
+.tv-tk { position: relative; }
+.tv-tk > summary {
+    min-height: 44px;
+    padding: var(--tv-k1) var(--tv-k3) var(--tv-k1) var(--tv-k1);
+    border-radius: var(--tv-bo-nhan);
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--tv-nhanh);
+}
+.tv-tk > summary::-webkit-details-marker { display: none; }
+.tv-tk > summary::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-left: var(--tv-k1);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform var(--tv-nhanh);
+}
+.tv-tk[open] > summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.tv-tk > summary:hover, .tv-tk[open] > summary { background: var(--tv-nhan-nhat); }
+.tv-tk-ten { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tv-tk-menu {
+    position: absolute;
+    top: calc(100% + var(--tv-k2));
+    right: 0;
+    z-index: 1050;
+    min-width: 220px;
+    padding: var(--tv-k1);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-be-mat);
+    box-shadow: var(--tv-bong-noi);
+}
+.tv-tk-menu a {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    min-height: 42px;
+    padding: 0 var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    color: var(--tv-chu);
+    font-weight: 500;
+    text-decoration: none;
+}
+.tv-tk-menu a:hover, .tv-tk-menu a.active { background: var(--tv-nen); color: var(--tv-nhan-dam); }
+.tv-tk-menu a .tv-icon { color: var(--tv-chu-phu); }
+.tv-tk-ngan { height: 1px; margin: var(--tv-k1) var(--tv-k2); background: var(--tv-vien); }
+.tv-tk-menu a.tv-tk-thoat, .tv-tk-menu a.tv-tk-thoat .tv-icon { color: var(--tv-loi); }
+.tv-tk-menu a.tv-tk-thoat:hover { background: #FBE9E7; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tv-tk > summary::after { transition: none; }
+}
+
 .tv-avatar {
     width: 36px;
     height: 36px;
@@ -208,6 +268,9 @@
     .tv-nav.is-open .tv-nav-links { display: flex; flex-direction: column; align-items: stretch; }
     .tv-nav.is-open .tv-nav-actions { display: flex; flex-wrap: wrap; padding-bottom: var(--tv-k2); }
     .tv-nav-links a { min-height: 44px; }
+    /* Điện thoại: menu tài khoản nằm luôn trong khung menu, không nổi */
+    .tv-tk { width: 100%; }
+    .tv-tk-menu { position: static; margin-top: var(--tv-k1); border: 0; box-shadow: none; padding: 0; }
 }
 
 .tv-page { padding-top: var(--tv-k5); padding-bottom: var(--tv-k7); }
@@ -493,6 +556,9 @@
     background: rgba(255, 255, 255, 0.18);
     color: #fff;
 }
+
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-tk > summary:hover,
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-tk[open] > summary { background: rgba(255, 255, 255, 0.18); }
 
 .tv-nav--over:not(.is-solid):not(.is-open) .tv-btn-vien {
     background: rgba(255, 255, 255, 0.12);

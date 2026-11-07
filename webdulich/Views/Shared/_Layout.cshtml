@@ -228,29 +228,40 @@
                     <li><a asp-controller="TrangChu" asp-action="Index" class="@Active("TrangChu", "Index")">Trang chủ</a></li>
                     <li><a asp-controller="GoiYTour" asp-action="Index" class="@Active("GoiYTour")">Gợi ý tour</a></li>
                     <li><a asp-controller="BaiViet" asp-action="Index" class="@Active("BaiViet")">Bài viết</a></li>
-                    @if (currentUser != null)
-                    {
-                        <li><a asp-controller="DatTour" asp-action="LichSu" class="@Active("DatTour", "LichSu")">Lịch sử đặt tour</a></li>
-                    }
                 </ul>
 
                 <div class="tv-nav-actions">
                     @if (currentUser != null)
                     {
-                        <div class="tv-user">
-                            @if (hasAvatar)
-                            {
-                                <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
-                            }
-                            else
-                            {
-                                <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
-                            }
-                            <span>@currentUser</span>
-                        </div>
-
-                        <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="tv-btn tv-btn-vien">Sửa hồ sơ</a>
-                        <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-btn tv-btn-vien">Đăng xuất</a>
+                        @* Bấm vào tên để xổ menu tài khoản; dùng thẻ details nên vẫn mở được khi không có JavaScript *@
+                        <details class="tv-tk" id="tvTaiKhoan">
+                            <summary class="tv-user" aria-label="Tài khoản của @currentUser">
+                                @if (hasAvatar)
+                                {
+                                    <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="" />
+                                }
+                                else
+                                {
+                                    <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
+                                }
+                                <span class="tv-tk-ten">@currentUser</span>
+                            </summary>
+                            <div class="tv-tk-menu">
+                                <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="@Active("TaiKhoan", "SuaHoSo")">
+                                    <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
+                                    Sửa thông tin
+                                </a>
+                                <a asp-controller="DatTour" asp-action="LichSu" class="@Active("DatTour", "LichSu")">
+                                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                                    Lịch sử đặt tour
+                                </a>
+                                <div class="tv-tk-ngan"></div>
+                                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-tk-thoat">
+                                    <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
+                                    Đăng xuất
+                                </a>
+                            </div>
+                        </details>
                     }
                     else
                     {
@@ -291,6 +302,20 @@
                     window.addEventListener("scroll", doiNenMenu, { passive: true });
                 }
             }
+            // Menu tài khoản: bấm ra ngoài hoặc nhấn Esc thì đóng
+            var taiKhoan = document.getElementById("tvTaiKhoan");
+            if (taiKhoan) {
+                document.addEventListener("click", function (e) {
+                    if (taiKhoan.open && !taiKhoan.contains(e.target)) taiKhoan.open = false;
+                });
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape" && taiKhoan.open) {
+                        taiKhoan.open = false;
+                        taiKhoan.querySelector("summary").focus();
+                    }
+                });
+            }
+
             var admin = document.getElementById("tvAdmin");
             var sideBtn = document.getElementById("tvSideToggle");
             var scrim = document.getElementById("tvScrim");
