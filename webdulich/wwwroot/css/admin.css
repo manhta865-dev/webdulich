@@ -943,3 +943,12 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 
 /* Chi tiết đơn: ghế đã bỏ khỏi đơn (khi đổi số người) */
 .ad-passenger-nha { opacity: 0.55; }
+
+/* Chọn chỗ mở bán của lịch (Admin/ChoMoBan, RB-37) */
+.ad-mb-tom-tat { margin-bottom: var(--tv-k4); }
+.ad-mb-so { margin: 0; font-size: var(--tv-cs-vua); }
+.ad-mb-so strong { color: var(--tv-nhan-dam); }
+.ad-mb-tom-tat .ad-hint-nho { white-space: normal; max-width: 640px; }
+.ad-mb-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); margin-top: var(--tv-k3); }
+.ad-form-actions-trai.ad-khoang-tren { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
+.ad-xe-select { min-width: 150px; }

@@ -5,6 +5,8 @@
     var tour = ViewBag.Tour as webdulich.Models.Tour;
     decimal giaMacDinh = tour?.Gia ?? 0;
     decimal giaTreEmMacDinh = giaMacDinh * 0.5m;
+    var dsXe = ViewBag.DsXe as List<webdulich.Controllers.AdminController.XeChon> ?? new();
+    var soChoMoBan = ViewBag.SoChoMoBan as Dictionary<int, int> ?? new();
 }
 
 @section Styles {
@@ -92,8 +94,23 @@
                 </div>
 
                 <div>
-                    <label class="form-label">Số chỗ tối đa</label>
-                    <input type="number" name="soChoToiDa" class="form-control" min="1" required />
+                    <label class="form-label" for="themXe">Xe</label>
+                    <select id="themXe" name="soDoChoNgoiId" class="form-select" required>
+                        @foreach (var xe in dsXe)
+                        {
+                            <option value="@xe.Id" data-so-cho="@xe.SoViTri">@xe.TenSoDo</option>
+                        }
+                    </select>
+                    @if (!dsXe.Any())
+                    {
+                        <small class="ad-hint-nho xuong-dong">Tour chưa có phương tiện có sơ đồ xe.</small>
+                    }
+                </div>
+
+                <div>
+                    <label class="form-label" for="themSoCho">Số chỗ mở bán</label>
+                    <input id="themSoCho" type="number" name="soChoMoBan" class="form-control" min="1"
+                           max="@(dsXe.FirstOrDefault()?.SoViTri ?? 1)" value="@(dsXe.FirstOrDefault()?.SoViTri ?? 1)" required />
                 </div>
 
                 <div>
@@ -117,11 +134,10 @@
         </form>
 
         <p class="ad-hint">
-            Mỗi lịch khởi hành có thể đặt giá riêng. Số chỗ còn lại do hệ thống tự tính từ số chỗ tối đa trừ số khách đã đặt.
-            Trạng thái tự tính theo ngày thật: sắp khởi hành, đang diễn ra, đã hoàn thành.
-            Tạm ngưng bán và hủy lịch là do admin bấm.
-            Xe hoặc máy bay được gán tự động theo số chỗ tối đa: xe du lịch đến 16 chỗ dùng xe 16 chỗ,
-            đến 29 chỗ dùng xe 29 chỗ, đến 45 chỗ dùng xe 45 chỗ.
+            Chọn xe cho chuyến và số chỗ mở bán. Nếu mở bán ít hơn số chỗ của xe, các chỗ cuối xe bị khóa trước;
+            bấm <strong>Chọn chỗ mở bán</strong> ở từng lịch để tự chọn chỗ nào bán, chỗ nào để trống (ví dụ ghế hướng dẫn viên).
+            Số chỗ còn lại do hệ thống tự tính. Mỗi lịch có thể đặt giá riêng.
+            Trạng thái tự tính theo ngày thật; tạm ngưng bán và hủy lịch là do admin bấm.
         </p>
     </section>
 
@@ -132,7 +148,7 @@
                     <tr>
                         <th>Ngày khởi hành</th>
                         <th>Giờ</th>
-                        <th>Số chỗ tối đa</th>
+                        <th>Xe và chỗ</th>
                         <th>Giá người lớn</th>
                         <th>Giá trẻ em</th>
                         <th>Trạng thái</th>
@@ -162,7 +178,9 @@
                             var choPhepSua = trangThai == "Sắp khởi hành";
                             var choPhepHuy = trangThai == "Sắp khởi hành";
                             // Lịch đã có khách giữ chỗ: khóa ô ngày (readonly để form vẫn gửi ngày cũ); giờ, giá, số chỗ vẫn sửa được
-                            var khoaNgay = item.SoChoToiDa - item.SoChoCon > 0;
+                            var moBan = soChoMoBan.TryGetValue(item.Id, out var mb) ? mb : 0;
+                            var daGiu = moBan - item.SoChoCon;
+                            var khoaNgay = daGiu > 0;
                             var nhanTrangThai = choPhepSua && item.DangTamNgung ? "Tạm ngưng bán" : trangThai;
                             if (choPhepSua && item.DangTamNgung)
                             {
@@ -204,16 +222,22 @@
                                 </td>
 
                                 <td>
-                                    <input form="@formId"
-                                           type="number"
-                                           name="soChoToiDa"
-                                           class="form-control"
-                                           min="@Math.Max(1, item.SoChoToiDa - item.SoChoCon)"
-                                           value="@item.SoChoToiDa"
-                                           disabled="@(!choPhepSua)"
-                                           required />
-                                    <small class="ad-hint-nho">Còn @item.SoChoCon chỗ</small>
-                                    <small class="ad-hint-nho">@(item.SoDoChoNgoi?.TenSoDo ?? "Chưa có sơ đồ chỗ ngồi")</small>
+                                    <select form="@formId" name="soDoChoNgoiId" class="form-select ad-xe-select"
+                                            disabled="@(!choPhepSua)" aria-label="Xe của lịch">
+                                        @if (item.SoDoChoNgoi != null && !dsXe.Any(x => x.Id == item.SoDoChoNgoiId))
+                                        {
+                                            <option value="@item.SoDoChoNgoiId" selected>@item.SoDoChoNgoi.TenSoDo</option>
+                                        }
+                                        @foreach (var xe in dsXe)
+                                        {
+                                            <option value="@xe.Id" selected="@(xe.Id == item.SoDoChoNgoiId ? "selected" : null)">@xe.TenSoDo</option>
+                                        }
+                                    </select>
+                                    <small class="ad-hint-nho">Mở bán @moBan chỗ, còn @item.SoChoCon</small>
+                                    @if (item.SoDoChoNgoiId.HasValue)
+                                    {
+                                        <a asp-action="ChoMoBan" asp-route-id="@item.Id" class="ad-hint-nho">@(choPhepSua ? "Chọn chỗ mở bán" : "Xem sơ đồ chỗ")</a>
+                                    }
                                 </td>
 
                                 <td>
@@ -299,3 +323,16 @@
         </div>
     </div>
 </div>
+<script>
+    // Form thêm lịch: đổi xe thì số chỗ mở bán tối đa theo số chỗ của xe đó
+    (function () {
+        var xe = document.getElementById("themXe");
+        var soCho = document.getElementById("themSoCho");
+        if (!xe || !soCho) return;
+        xe.addEventListener("change", function () {
+            var toiDa = parseInt(xe.selectedOptions[0].dataset.soCho, 10) || 1;
+            soCho.max = toiDa;
+            soCho.value = toiDa;
+        });
+    })();
+</script>

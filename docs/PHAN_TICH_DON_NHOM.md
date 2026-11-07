@@ -307,11 +307,11 @@ Kiểm ở đâu: code (XuLyDon.TinhHanGiuCho khi tạo đơn và khi gia hạn;
 | DatTours | + | - | +(HanGiuCho, DaGiaHan) |
 | LichKhoiHanhTours | - | - | +(NgayKhoiHanh) |
 
-> **Sửa `NgayKhoiHanh` (sửa ngày 01/11/2026):** lịch có `SoChoToiDa - SoChoCon > 0` thì không đổi được ngày đi. Ô ngày bị khóa ở trang Lịch đi, máy chủ cũng chặn nếu yêu cầu gửi thẳng. Giờ đi, giá, số chỗ vẫn sửa được. Muốn dời ngày thì hủy lịch (các đơn bị hủy, chỗ trả lại) rồi tạo lịch mới. Luật này giữ R26, và bảo vệ cả đơn cá nhân: khách đặt đi ngày nào thì không bị dời ngày mà không biết.
+> **Sửa `NgayKhoiHanh` (sửa ngày 01/11/2026):** lịch đã có ghế đang giữ thì không đổi được ngày đi. Ô ngày bị khóa ở trang Lịch đi, máy chủ cũng chặn nếu yêu cầu gửi thẳng. Giờ đi, giá, chỗ mở bán vẫn sửa được. Muốn dời ngày thì hủy lịch (các đơn bị hủy, chỗ trả lại) rồi tạo lịch mới. Luật này giữ R26, và bảo vệ cả đơn cá nhân: khách đặt đi ngày nào thì không bị dời ngày mà không biết.
 
 ### 6.4. Ràng buộc thuộc tính tổng hợp
 
-**R12 (nhắc lại, cụ thể hóa cho đơn nhóm):** `SoChoCon` của lịch bằng `SoChoToiDa` trừ số ghế chưa nhả của các đơn chưa hủy (RB-12, RB-16, RB-29).
+**R12 (nhắc lại, cụ thể hóa cho đơn nhóm):** `SoChoCon` của lịch bằng số chỗ mở bán (số vị trí của xe trừ chỗ không mở bán, RB-37) trừ số ghế chưa nhả của các đơn chưa hủy (RB-12, RB-16, RB-29).
 - Mọi thao tác nhả ghế của đơn nhóm (bớt ghế, chốt, hết hạn, hủy) cộng lại đúng số dòng mà câu UPDATE nhả ghế vừa đổi, trong cùng giao dịch CSDL.
 - Lịch đã hủy thì không cộng.
 - Kiểm định kỳ bằng `docs/sql/doi_chieu.sql`. Sau mọi lần test N1 đến N6, truy vấn này đều trả về rỗng.

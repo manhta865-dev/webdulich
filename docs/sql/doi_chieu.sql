@@ -4,17 +4,32 @@
 -- file này kiểm các ràng buộc chỉ code giữ được (docs/MO_HINH_DU_LIEU.md, mục 6).
 -- Chạy bằng sqlcmd thì thêm -I (bật QUOTED_IDENTIFIER, cần cho chỉ mục có lọc).
 
--- RB-12. SoChoCon phải bằng SoChoToiDa trừ số ghế chưa nhả của đơn chưa hủy (lịch đã hủy: bằng SoChoToiDa)
-SELECT l.Id, l.TrangThai, l.SoChoToiDa, l.SoChoCon,
-       l.SoChoToiDa - ISNULL(x.SoGhe, 0) AS SoChoConTinhLai
+-- RB-12. SoChoCon phải bằng số chỗ mở bán trừ số ghế chưa nhả của đơn chưa hủy.
+-- Số chỗ mở bán = số vị trí của xe − số chỗ không mở bán (RB-37, từ Mo15 không còn cột SoChoToiDa)
+SELECT l.Id, l.TrangThai, l.SoChoCon, m.MoBan,
+       m.MoBan - ISNULL(x.SoGhe, 0) AS SoChoConTinhLai
 FROM LichKhoiHanhTours l
+CROSS APPLY (SELECT
+    (SELECT COUNT(*) FROM ViTriChoNgois v WHERE v.SoDoChoNgoiId = l.SoDoChoNgoiId)
+  - (SELECT COUNT(*) FROM ChoKhongMoBans k WHERE k.LichKhoiHanhTourId = l.Id) AS MoBan) m
 LEFT JOIN (
     SELECT d.LichKhoiHanhTourId, COUNT(*) AS SoGhe
     FROM DatTours d JOIN HanhKhachDatTours h ON h.DatTourId = d.Id
     WHERE d.TrangThai <> 'DaHuy' AND h.NgayNha IS NULL
     GROUP BY d.LichKhoiHanhTourId
 ) x ON x.LichKhoiHanhTourId = l.Id
-WHERE l.SoChoCon <> l.SoChoToiDa - ISNULL(x.SoGhe, 0);
+WHERE l.SoChoCon <> m.MoBan - ISNULL(x.SoGhe, 0);
+
+-- RB-37. Không có khách ngồi ở chỗ không mở bán; chỗ khóa thuộc đúng xe của lịch
+SELECT k.LichKhoiHanhTourId, k.ViTriChoNgoiId, N'Có khách ngồi chỗ khóa' AS Loi
+FROM ChoKhongMoBans k
+JOIN ChoNgoiChuyenDis c ON c.LichKhoiHanhTourId = k.LichKhoiHanhTourId AND c.ViTriChoNgoiId = k.ViTriChoNgoiId
+UNION ALL
+SELECT k.LichKhoiHanhTourId, k.ViTriChoNgoiId, N'Chỗ khóa không thuộc xe của lịch'
+FROM ChoKhongMoBans k
+JOIN LichKhoiHanhTours l ON l.Id = k.LichKhoiHanhTourId
+JOIN ViTriChoNgois v ON v.Id = k.ViTriChoNgoiId
+WHERE v.SoDoChoNgoiId <> l.SoDoChoNgoiId;
 
 -- RB-17. Đơn đã hủy thì không còn ghế chưa nhả
 SELECT d.Id, COUNT(*) AS GheChuaNha
@@ -55,6 +70,15 @@ JOIN ViTriChoNgois v ON v.Id = c.ViTriChoNgoiId
 WHERE d.LichKhoiHanhTourId <> c.LichKhoiHanhTourId
    OR l.SoDoChoNgoiId IS NULL OR v.SoDoChoNgoiId <> l.SoDoChoNgoiId
    OR h.NgayNha IS NOT NULL;
+
+-- RB-36. Lịch có sơ đồ xe: ghế đang giữ mà chưa có chỗ trên xe (kết quả rỗng là đúng)
+SELECT d.LichKhoiHanhTourId, d.Id AS DatTourId, h.Id AS HanhKhachDatTourId
+FROM HanhKhachDatTours h
+JOIN DatTours d ON d.Id = h.DatTourId
+JOIN LichKhoiHanhTours l ON l.Id = d.LichKhoiHanhTourId
+WHERE h.NgayNha IS NULL AND d.TrangThai <> 'DaHuy'
+  AND l.SoDoChoNgoiId IS NOT NULL AND l.TrangThai <> 'DaHuy'
+  AND NOT EXISTS (SELECT 1 FROM ChoNgoiChuyenDis c WHERE c.HanhKhachDatTourId = h.Id);
 
 -- RB-15. Phân công đúng vai trò
 SELECT p.Id, p.HuongDanVienId, p.TaiXeId FROM PhanCongTours p

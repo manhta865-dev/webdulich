@@ -291,6 +291,21 @@ namespace webdulich.Migrations
                         });
                 });
 
+            modelBuilder.Entity("webdulich.Models.ChoKhongMoBan", b =>
+                {
+                    b.Property<int>("LichKhoiHanhTourId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ViTriChoNgoiId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LichKhoiHanhTourId", "ViTriChoNgoiId");
+
+                    b.HasIndex("ViTriChoNgoiId");
+
+                    b.ToTable("ChoKhongMoBans");
+                });
+
             modelBuilder.Entity("webdulich.Models.ChoNgoiChuyenDi", b =>
                 {
                     b.Property<int>("LichKhoiHanhTourId")
@@ -677,10 +692,8 @@ namespace webdulich.Migrations
                     b.Property<int>("SoChoCon")
                         .HasColumnType("int");
 
-                    b.Property<int>("SoChoToiDa")
-                        .HasColumnType("int");
-
                     b.Property<int?>("SoDoChoNgoiId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("TourId")
@@ -699,7 +712,7 @@ namespace webdulich.Migrations
 
                     b.ToTable("LichKhoiHanhTours", t =>
                         {
-                            t.HasCheckConstraint("CK_Lich_SoCho", "[SoChoCon] >= 0 AND [SoChoCon] <= [SoChoToiDa]");
+                            t.HasCheckConstraint("CK_Lich_SoCho", "[SoChoCon] >= 0");
 
                             t.HasCheckConstraint("CK_Lich_TrangThai", "[TrangThai] IN ('MoBan','TamNgung','DaHuy')");
                         });
@@ -1244,6 +1257,25 @@ namespace webdulich.Migrations
                     b.Navigation("Tour");
                 });
 
+            modelBuilder.Entity("webdulich.Models.ChoKhongMoBan", b =>
+                {
+                    b.HasOne("webdulich.Models.LichKhoiHanhTour", "LichKhoiHanhTour")
+                        .WithMany()
+                        .HasForeignKey("LichKhoiHanhTourId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("webdulich.Models.ViTriChoNgoi", "ViTriChoNgoi")
+                        .WithMany()
+                        .HasForeignKey("ViTriChoNgoiId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LichKhoiHanhTour");
+
+                    b.Navigation("ViTriChoNgoi");
+                });
+
             modelBuilder.Entity("webdulich.Models.ChoNgoiChuyenDi", b =>
                 {
                     b.HasOne("webdulich.Models.HanhKhachDatTour", "HanhKhachDatTour")
@@ -1350,7 +1382,8 @@ namespace webdulich.Migrations
                     b.HasOne("webdulich.Models.SoDoChoNgoi", "SoDoChoNgoi")
                         .WithMany()
                         .HasForeignKey("SoDoChoNgoiId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("webdulich.Models.Tour", "Tour")
                         .WithMany("LichKhoiHanhTours")

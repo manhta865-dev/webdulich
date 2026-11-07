@@ -14,11 +14,10 @@ namespace webdulich.Models
 
         public TimeSpan? GioKhoiHanh { get; set; }
 
+        // Bộ nhớ đệm có chủ đích (RB-12): số chỗ mở bán trừ ghế đang giữ, để câu UPDATE trừ chỗ chạy nguyên tử
         public int SoChoCon { get; set; }
 
-        // Cột mới (bước mở rộng): sức chứa và sơ đồ chỗ ngồi của chuyến
-        public int SoChoToiDa { get; set; }
-
+        // Xe của chuyến, admin chọn (RB-14). Số chỗ mở bán không lưu: số vị trí của xe trừ chỗ không mở bán (RB-37)
         public int? SoDoChoNgoiId { get; set; }
 
         [ForeignKey("SoDoChoNgoiId")]

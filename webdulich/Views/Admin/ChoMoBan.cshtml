@@ -1,0 +1,156 @@
+@model webdulich.Models.ChonChoNgoiViewModel
+@* Admin chọn chỗ nào trên xe được mở bán cho một lịch (RB-37). Mỗi ghế là một ô tick: có dấu là mở bán.
+   Chỗ đã có khách luôn mở bán và không bấm được. *@
+@{
+    var lich = ViewBag.Lich as webdulich.Models.LichKhoiHanhTour;
+    int dangGiu = ViewBag.DangGiu is int g ? g : 0;
+    bool choSua = ViewBag.ChoSua is bool b && b;
+    ViewData["Title"] = "Chọn chỗ mở bán";
+    var theoViTri = Model.DsViTri.ToDictionary(v => (v.Hang, v.Cot));
+    int soMo = Model.DsViTri.Count(v => !v.KhongMoBan);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cho-ngoi.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Chọn chỗ mở bán</h1>
+            <p>@Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy"), @Model.TenSoDo</p>
+        </div>
+    </div>
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <form asp-action="ChoMoBan" asp-route-id="@lich?.Id" method="post" class="cn-wrap" data-mo-ban>
+        @Html.AntiForgeryToken()
+
+        <div class="ad-mb-tom-tat">
+            <p class="ad-mb-so" aria-live="polite">Mở bán <strong data-dem-mo>@soMo</strong> / @Model.DsViTri.Count chỗ</p>
+            <p class="ad-hint-nho">
+                Bấm vào ghế để mở hoặc khóa. Ghế sọc xám là chỗ không bán (ví dụ ghế hướng dẫn viên).
+                @if (dangGiu > 0)
+                {
+                    <text>Lịch đã có @dangGiu khách giữ chỗ, chỗ có khách luôn mở bán.</text>
+                }
+            </p>
+            @if (choSua)
+            {
+                <div class="ad-mb-nut">
+                    <button type="button" class="tv-btn tv-btn-vien ad-btn-nho" data-mo-het>Mở tất cả</button>
+                    <button type="button" class="tv-btn tv-btn-vien ad-btn-nho" data-khoa-het>Khóa mọi chỗ trống</button>
+                </div>
+            }
+        </div>
+
+        <div class="cn-legend" aria-hidden="true">
+            <span><i class="cn-mau trong"></i>Mở bán</span>
+            <span><i class="cn-mau khong-mo-ban"></i>Không mở bán</span>
+            <span><i class="cn-mau co-nguoi"></i>Đã có khách</span>
+        </div>
+
+        <div class="cn-layout">
+            <div class="cn-khung" role="group" aria-label="Sơ đồ @Model.TenSoDo">
+                <div class="cn-than @(Model.LaMayBay ? "may-bay" : "xe")">
+                    <span class="cn-cua-so trai" aria-hidden="true"></span>
+                    <span class="cn-cua-so phai" aria-hidden="true"></span>
+                    @if (Model.LaMayBay)
+                    {
+                        <div class="cn-mui" aria-hidden="true"><span class="cn-buong-lai"></span></div>
+                    }
+                    else
+                    {
+                        <div class="cn-dau-xe" aria-hidden="true">
+                            <span class="cn-kinh"></span>
+                            <div class="cn-buong-xe">
+                                <span class="cn-tai-xe">Tài xế</span>
+                                <span class="cn-cua-xe">Cửa lên xe</span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="cn-luoi">
+                        @for (int hang = 1; hang <= Model.SoHang; hang++)
+                        {
+                            <div class="cn-hang">
+                                @for (int cot = 1; cot <= Model.SoCot; cot++)
+                                {
+                                    if (theoViTri.TryGetValue((hang, cot), out var v))
+                                    {
+                                        <label class="cn-ghe ad-mb@(v.DaCoNguoi ? " co-nguoi co-khach" : "")"
+                                               title="Chỗ @v.MaViTri@(v.DaCoNguoi ? ", đã có khách" : "")">
+                                            <input type="checkbox" name="moBan" value="@v.Id"
+                                                   aria-label="Mở bán chỗ @v.MaViTri"
+                                                   checked="@(!v.KhongMoBan || v.DaCoNguoi ? "checked" : null)"
+                                                   disabled="@(v.DaCoNguoi || !choSua ? "disabled" : null)" />
+                                            <span class="cn-dem"></span>
+                                            <span class="cn-ma">@v.MaViTri</span>
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        <span class="cn-loi-di" aria-hidden="true">@hang</span>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @if (!Model.LaMayBay)
+                    {
+                        <div class="cn-duoi-xe" aria-hidden="true">Đuôi xe</div>
+                    }
+                    else
+                    {
+                        <div class="cn-duoi-mb" aria-hidden="true"></div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-form-actions-trai ad-khoang-tren">
+            @if (choSua)
+            {
+                <button type="submit" class="tv-btn tv-btn-chinh">Lưu chỗ mở bán</button>
+            }
+            <a asp-action="LichKhoiHanh" asp-route-id="@lich?.TourId" class="tv-btn tv-btn-vien">Quay lại</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function () {
+        var goc = document.querySelector("[data-mo-ban]");
+        if (!goc) return;
+        var dem = goc.querySelector("[data-dem-mo]");
+        var oTick = goc.querySelectorAll("input[name=moBan]");
+        function demLai() {
+            var n = 0;
+            oTick.forEach(function (o) { if (o.checked) n++; });
+            dem.textContent = n;
+        }
+        oTick.forEach(function (o) { o.addEventListener("change", demLai); });
+        var moHet = goc.querySelector("[data-mo-het]");
+        var khoaHet = goc.querySelector("[data-khoa-het]");
+        if (moHet) moHet.addEventListener("click", function () {
+            oTick.forEach(function (o) { if (!o.disabled) o.checked = true; });
+            demLai();
+        });
+        if (khoaHet) khoaHet.addEventListener("click", function () {
+            oTick.forEach(function (o) { if (!o.disabled) o.checked = false; });
+            demLai();
+        });
+        // Màn hình hẹp: cuộn sơ đồ vào giữa
+        var khung = goc.querySelector(".cn-khung");
+        if (khung && khung.scrollWidth > khung.clientWidth) {
+            khung.scrollLeft = (khung.scrollWidth - khung.clientWidth) / 2;
+        }
+    })();
+</script>

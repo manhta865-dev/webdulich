@@ -338,6 +338,26 @@
     cursor: not-allowed;
 }
 
+/* Chỗ chuyến này không bán (RB-37): sọc xám để khác với chỗ đã có người */
+.cn-ghe.khong-mo-ban,
+.cn-ghe.ad-mb:has(input:not(:checked)) {
+    --lung: #C9CFD1;
+    color: #8E9A9E;
+}
+.cn-ghe.khong-mo-ban { cursor: not-allowed; }
+.cn-ghe.khong-mo-ban .cn-dem,
+.cn-ghe.ad-mb:has(input:not(:checked)) .cn-dem,
+.cn-mau.khong-mo-ban {
+    background: repeating-linear-gradient(45deg, #EEF1F2 0 5px, #D9DFE1 5px 10px);
+}
+.cn-mau.khong-mo-ban { box-shadow: inset 0 -5px 0 #C9CFD1; }
+
+/* Trang admin chọn chỗ mở bán: mỗi ghế là một ô tick ẩn, bấm vào ghế để mở hoặc khóa */
+.cn-ghe.ad-mb { display: inline-block; }
+.cn-ghe.ad-mb input { position: absolute; opacity: 0; pointer-events: none; }
+.cn-ghe.ad-mb:has(input:focus-visible) { outline: 2px solid var(--tv-nhan); outline-offset: 3px; border-radius: 10px; }
+.cn-ghe.ad-mb.co-khach { cursor: not-allowed; }
+
 /* Số thứ tự hành khách đang giữ chỗ này */
 .cn-ai:empty { display: none; }
 .cn-ai {

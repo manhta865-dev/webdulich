@@ -34,6 +34,7 @@ namespace webdulich.Models
         public DbSet<SoDoChoNgoi> SoDoChoNgois { get; set; }
         public DbSet<ViTriChoNgoi> ViTriChoNgois { get; set; }
         public DbSet<ChoNgoiChuyenDi> ChoNgoiChuyenDis { get; set; }
+        public DbSet<ChoKhongMoBan> ChoKhongMoBans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -218,10 +219,13 @@ namespace webdulich.Models
             modelBuilder.Entity<TaiKhoan>().Property(x => x.Email).HasMaxLength(256);
             modelBuilder.Entity<TaiKhoan>().Property(x => x.SoDienThoai).HasMaxLength(20);
 
+            // Mọi lịch phải có xe (RB-14): số chỗ mở bán tính từ xe và chỗ không mở bán (RB-37).
+            // Kiểu C# vẫn là int? để code cũ kiểm HasValue không đổi; CSDL là NOT NULL.
             modelBuilder.Entity<LichKhoiHanhTour>()
                 .HasOne(x => x.SoDoChoNgoi)
                 .WithMany()
                 .HasForeignKey(x => x.SoDoChoNgoiId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SoDoChoNgoi>(e =>
@@ -261,6 +265,21 @@ namespace webdulich.Models
                     .HasForeignKey(x => x.HanhKhachDatTourId)
                     .OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(x => x.HanhKhachDatTourId).IsUnique();
+            });
+
+            // Chỗ không mở bán của từng lịch (RB-37). Xóa lịch thì các dòng này đi theo (dữ liệu con thuần túy);
+            // vị trí của sơ đồ đang được khóa thì không xóa được (Restrict).
+            modelBuilder.Entity<ChoKhongMoBan>(e =>
+            {
+                e.HasKey(x => new { x.LichKhoiHanhTourId, x.ViTriChoNgoiId });
+                e.HasOne(x => x.LichKhoiHanhTour)
+                    .WithMany()
+                    .HasForeignKey(x => x.LichKhoiHanhTourId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.ViTriChoNgoi)
+                    .WithMany()
+                    .HasForeignKey(x => x.ViTriChoNgoiId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<GiaoDichThanhToan>(e =>
@@ -339,7 +358,8 @@ namespace webdulich.Models
                 e.Property(x => x.TrangThai).HasMaxLength(20);
                 e.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Lich_SoCho", "[SoChoCon] >= 0 AND [SoChoCon] <= [SoChoToiDa]");
+                    // Cận trên (SoChoCon <= số chỗ mở bán) liên quan bảng khác nên kiểm trong code (SucChuaLich.TinhLaiSoChoCon) và doi_chieu.sql
+                    t.HasCheckConstraint("CK_Lich_SoCho", "[SoChoCon] >= 0");
                     t.HasCheckConstraint("CK_Lich_TrangThai", "[TrangThai] IN ('MoBan','TamNgung','DaHuy')");
                 });
             });

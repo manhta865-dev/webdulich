@@ -12,6 +12,10 @@
         <span><i class="cn-mau trong"></i>Trống</span>
         <span><i class="cn-mau chon"></i>Bạn chọn</span>
         <span><i class="cn-mau co-nguoi"></i>Đã có người</span>
+        @if (Model.DsViTri.Any(v => v.KhongMoBan))
+        {
+            <span><i class="cn-mau khong-mo-ban"></i>Không mở bán</span>
+        }
     </div>
 
     <div class="cn-layout">
@@ -65,13 +69,14 @@
                             {
                                 if (theoViTri.TryGetValue((hang, cot), out var v))
                                 {
+                                    bool khoa = v.DaCoNguoi || v.KhongMoBan;
                                     <button type="button"
-                                            class="cn-ghe@(v.DaCoNguoi ? " co-nguoi" : "")"
+                                            class="cn-ghe@(v.DaCoNguoi ? " co-nguoi" : "")@(v.KhongMoBan ? " khong-mo-ban" : "")"
                                             data-id="@v.Id"
                                             data-ma="@v.MaViTri"
-                                            title="Chỗ @v.MaViTri"
-                                            aria-label="Chỗ @v.MaViTri@(v.DaCoNguoi ? ", đã có người" : "")"
-                                            disabled="@(v.DaCoNguoi ? "disabled" : null)">
+                                            title="Chỗ @v.MaViTri@(v.KhongMoBan ? ", không mở bán" : "")"
+                                            aria-label="Chỗ @v.MaViTri@(v.DaCoNguoi ? ", đã có người" : "")@(v.KhongMoBan ? ", không mở bán" : "")"
+                                            disabled="@(khoa ? "disabled" : null)">
                                         <span class="cn-dem"></span>
                                         <span class="cn-ma">@v.MaViTri</span>
                                         <span class="cn-ai" aria-hidden="true"></span>
@@ -120,7 +125,7 @@
                         </label>
                         <select name="viTri[@hk.ThuTu]" class="cn-select" aria-label="Chỗ của hành khách @(hk.ThuTu + 1)">
                             <option value="">@(Model.NhanKhongChon ?? (Model.ChoTuDongXep ? "TravelVN xếp" : "Giữ chỗ hiện tại"))</option>
-                            @foreach (var v in Model.DsViTri.Where(x => !x.DaCoNguoi))
+                            @foreach (var v in Model.DsViTri.Where(x => !x.DaCoNguoi && !x.KhongMoBan))
                             {
                                 <option value="@v.Id" selected="@(hk.ViTriId == v.Id ? "selected" : null)">@v.MaViTri</option>
                             }
@@ -136,7 +141,7 @@
     (function () {
         var goc = document.querySelector("[data-so-do]");
         if (!goc) return;
-        var gheBtns = goc.querySelectorAll(".cn-ghe:not(.co-nguoi)");
+        var gheBtns = goc.querySelectorAll(".cn-ghe:not(.co-nguoi):not(.khong-mo-ban)");
         var dsHk = goc.querySelectorAll(".cn-hk");
 
         function dangChon() {

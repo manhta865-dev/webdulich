@@ -483,9 +483,15 @@ namespace webdulich.Controllers
                     ViTriId = i < chon.Count && chon[i].HasValue && !daCoNguoi.Contains(chon[i]!.Value) ? chon[i] : null
                 }).ToList()
             };
+            var khongMoBan = SucChuaLich.ViTriKhoa(_context, lich.Id);
             foreach (var v in model.DsViTri)
             {
                 v.DaCoNguoi = daCoNguoi.Contains(v.Id);
+                v.KhongMoBan = khongMoBan.Contains(v.Id);
+            }
+            foreach (var hk in model.DsHanhKhach.Where(h => h.ViTriId.HasValue && khongMoBan.Contains(h.ViTriId.Value)))
+            {
+                hk.ViTriId = null; // chỗ vừa bị admin khóa
             }
 
             ViewBag.QuayLai = Url.Action("DatTour", new { id = lich.TourId, lichId = lich.Id });
@@ -835,11 +841,8 @@ namespace webdulich.Controllers
                     var chon = DocChoNgoiSession();
                     var dsGhe = model.HanhKhachDatTours.ToList(); // cùng thứ tự với danh sách hành khách
                     var chonTay = chon.Where(x => x.HasValue).Select(x => x!.Value).ToList();
-                    // RB-18: chỉ nhận chỗ thuộc sơ đồ của lịch
-                    var hopLe = _context.ViTriChoNgois
-                        .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId.Value && chonTay.Contains(v.Id))
-                        .Select(v => v.Id)
-                        .ToHashSet();
+                    // RB-18, RB-37: chỉ nhận chỗ thuộc sơ đồ của lịch và đang mở bán
+                    var hopLe = XepChoNgoi.ViTriChonDuoc(_context, lich.Id, lich.SoDoChoNgoiId);
                     var conTrong = XepChoNgoi.ViTriTrong(_context, lich.Id, lich.SoDoChoNgoiId.Value, chonTay);
                     int k = 0;
                     for (int i = 0; i < dsGhe.Count; i++)
@@ -1035,9 +1038,11 @@ namespace webdulich.Controllers
                 DatTourId = don.Id,
                 ChoTuDongXep = false
             };
+            var khongMoBan = SucChuaLich.ViTriKhoa(_context, lich.Id);
             foreach (var v in model.DsViTri)
             {
                 v.DaCoNguoi = cuaNguoiKhac.Contains(v.Id);
+                v.KhongMoBan = khongMoBan.Contains(v.Id);
             }
 
             ViewBag.MaChuyenDi = don.MaChuyenDi;
@@ -1064,9 +1069,11 @@ namespace webdulich.Controllers
             var dsGhe = don.HanhKhachDatTours.Where(h => h.NgayNha == null).OrderBy(h => h.Id).ToList();
             var dsGheId = dsGhe.Select(h => h.Id).ToList();
             var choCu = _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)).ToList();
-            var hopLe = _context.ViTriChoNgois.Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId).Select(v => v.Id).ToHashSet();
+            // RB-18, RB-37: chỗ mới phải thuộc sơ đồ của lịch và đang mở bán; chỗ đang ngồi thì giữ được
+            var hopLe = XepChoNgoi.ViTriChonDuoc(_context, lich.Id, lich.SoDoChoNgoiId);
+            hopLe.UnionWith(choCu.Select(c => c.ViTriChoNgoiId));
 
-            // Ô để trống nghĩa là giữ chỗ hiện tại; RB-18: chỗ phải thuộc sơ đồ của lịch, không trùng nhau
+            // Ô để trống nghĩa là giữ chỗ hiện tại; chỗ không trùng nhau
             viTri ??= new List<int?>();
             var moi = new Dictionary<int, int>();
             var daDung = new HashSet<int>();

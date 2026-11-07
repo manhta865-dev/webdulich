@@ -88,7 +88,8 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 
 | Bảng | Thay đổi |
 |---|---|
-| **LichKhoiHanhTour** | Thêm `SoChoToiDa` int, `SoDoChoNgoiId` int? FK → SoDoChoNgoi (Restrict). `TrangThai` chỉ còn `MoBan`, `TamNgung`, `DaHuy`. FK tới Tour đổi Cascade thành Restrict. **Giữ `SoChoCon`** (xem RB-12) |
+| **LichKhoiHanhTour** | `SoDoChoNgoiId` int **NOT NULL** FK → SoDoChoNgoi (Restrict): xe do admin chọn (Mo15). `TrangThai` chỉ còn `MoBan`, `TamNgung`, `DaHuy`. FK tới Tour đổi Cascade thành Restrict. **Giữ `SoChoCon`** (xem RB-12). Cột `SoChoToiDa` thêm ở Mo1, **bỏ ở Mo15** vì suy ra được từ xe và `ChoKhongMoBans` |
+| **ChoKhongMoBans** (mới, Mo14) | `ChoKhongMoBans(LichKhoiHanhTourId, ViTriChoNgoiId)`, PK ghép cả hai cột; FK lịch Cascade, FK vị trí Restrict. Mỗi dòng: chuyến này không bán chỗ này (ghế hướng dẫn viên, ghế hỏng, đi đoàn nhỏ). Bảng chỉ gồm khóa nên đạt BCNF (RB-37) |
 | **Tour** | Thêm `NgungBan` bool |
 | **TaiKhoan** | Tách `TaiKhoanDangNhap` thành `Email` string? UQ và `SoDienThoai` string? UQ, CHECK có ít nhất một |
 | **NhanVien** | Bỏ `HoTen`, `LoaiNhanVien`, `SoDienThoai`. Họ tên và số điện thoại lấy từ `TaiKhoan`, loại nhân viên lấy từ `TaiKhoan.VaiTro` |
@@ -112,6 +113,8 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 | ViTriChoNgoi.SoDoChoNgoiId | SoDoChoNgoi | Cascade |
 | LichKhoiHanhTour.TourId | Tours | Restrict (dùng `NgungBan` thay cho xóa) |
 | LichKhoiHanhTour.SoDoChoNgoiId | SoDoChoNgoi | Restrict |
+| ChoKhongMoBan.LichKhoiHanhTourId | LichKhoiHanhTours | Cascade (dữ liệu con thuần túy của lịch) |
+| ChoKhongMoBan.ViTriChoNgoiId | ViTriChoNgoi | Restrict |
 | TinNhanLienHe.TaiKhoanId | TaiKhoans | Cascade |
 
 ## 4. Giá trị trạng thái
@@ -136,6 +139,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 | Trạng thái ghế | từ `NgayNha`, `GiaoDichThanhToan`, thông tin đã điền |
 | Tour của đơn | `DatTours → LichKhoiHanhTour → Tour` |
 | Ngày đi của đơn | `DatTours → LichKhoiHanhTour.NgayKhoiHanh` |
+| Số chỗ mở bán của lịch | số `ViTriChoNgoi` của xe (`SoDoChoNgoiId`) − số dòng `ChoKhongMoBans` của lịch (`SucChuaLich.SoChoMoBan`) |
 
 **Snapshot hợp lệ, giữ lại:** `GiaLucDat` (giá lúc đặt, giá hiện tại có thể đổi), `SoTienGiam` (khuyến mãi có thể bị sửa sau đó).
 
@@ -158,16 +162,16 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | RB-07 | `TaiKhoan.Email` đúng dạng email; `SoDienThoai` đúng 10 số bắt đầu bằng 0 (kiểm trong code, tùy chọn CHECK) |
 | RB-08 | `ChoNgoiChuyenDi`: PK(`LichKhoiHanhTourId`, `ViTriChoNgoiId`) và UQ(`HanhKhachDatTourId`) |
 | RB-09 | `ViTriChoNgoi`: UQ(`SoDoChoNgoiId`, `MaViTri`) và UQ(`SoDoChoNgoiId`, `Hang`, `Cot`) |
-| RB-10 | `LichKhoiHanhTour`: CHECK `0 <= SoChoCon <= SoChoToiDa`; `TrangThai` thuộc `MoBan`, `TamNgung`, `DaHuy` |
+| RB-10 | `LichKhoiHanhTour`: CHECK `SoChoCon >= 0` (cận trên là số chỗ mở bán, liên quan bảng khác nên kiểm ở RB-12); `TrangThai` thuộc `MoBan`, `TamNgung`, `DaHuy` |
 | RB-11 | CHECK miền giá trị cho `LoaiDon`, `DatTours.TrangThai`, `GiaoDichThanhToan.TrangThai`, `KhuyenMai.TrangThai`; `GiaLucDat >= 0`, `SoTien > 0` |
-| RB-12 | `SoChoCon` luôn bằng `SoChoToiDa` trừ số ghế chưa nhả của đơn chưa hủy trên lịch đó (truy vấn đối chiếu ở `docs/sql/doi_chieu.sql`, cập nhật cùng giao dịch) |
+| RB-12 | `SoChoCon` luôn bằng số chỗ mở bán (mục 5) trừ số ghế chưa nhả của đơn chưa hủy trên lịch đó (truy vấn đối chiếu ở `docs/sql/doi_chieu.sql`, cập nhật cùng giao dịch; đổi xe hay chỗ mở bán thì tính lại bằng một câu UPDATE, `SucChuaLich.TinhLaiSoChoCon`) |
 | RB-13 | Xóa Tour hoặc Lịch có đơn bị chặn (Restrict); dùng `Tour.NgungBan` hoặc `LichKhoiHanhTour.TrangThai = DaHuy` |
 
 **Kiểm tra trong code (CSDL không biểu diễn được):**
 
 | Mã | Ràng buộc |
 |---|---|
-| RB-14 | `SoChoToiDa` <= số vị trí của sơ đồ gắn với lịch (vì hướng dẫn viên và tài xế cũng ngồi) |
+| RB-14 | Mọi lịch có xe (`SoDoChoNgoiId` NOT NULL, Mo15). Xe do admin chọn và phải thuộc đúng phương tiện của tour (ví dụ tour đi xe du lịch chỉ chọn Xe 16, 29, 45 chỗ). Đổi xe chỉ khi chưa có khách chọn chỗ trên xe hiện tại, và xe mới phải đủ chỗ cho số khách đã giữ |
 | RB-15 | `PhanCongTour`: người được chọn làm hướng dẫn viên phải có `TaiKhoan.VaiTro = huongdanvien`, tài xế phải là `taixe` |
 | RB-16 | Nhả ghế (đặt `NgayNha`) thì xóa dòng `ChoNgoiChuyenDi` của ghế đó và cộng lại `SoChoCon` |
 | RB-17 | Hủy đơn: nhả mọi ghế chưa nhả, trả chỗ, không còn tính lượt khuyến mãi |
@@ -254,3 +258,5 @@ Ràng buộc thêm (kiểm trong code):
 | RB-34 | `BaiViets` (Mo12): `DuongDan` duy nhất; `TrangThai` thuộc `Nhap`, `DaDang`; bài đã đăng phải có `NgayDang` (`CK_BaiViet_NgayDang`). `TacGiaId` FK Restrict: tài khoản đã viết bài không xóa được. `TourId` FK SetNull: xóa tour thì bài vẫn còn. Tên tác giả và tên tour lấy qua khóa ngoại nên đạt 3NF. Nội dung lưu chữ thuần, không lưu HTML, hiển thị qua Razor nên không chèn được mã độc |
 | RB-35 | `Videos` (Mo13): `MaYouTube` duy nhất, đúng 11 ký tự chữ, số, `_`, `-` (`CK_Video_MaYouTube`), chỉ lưu mã chứ không lưu tệp video. `TourId` FK SetNull: xóa tour thì video vẫn còn. Khách chỉ tải trình phát của YouTube sau khi bấm phát |
 | RB-33 | `LichTrinhTours.DuongDi` (Mo11, `nvarchar(max)`): **dữ liệu dẫn xuất giữ làm bộ nhớ đệm có chủ đích**, tính được từ tọa độ qua dịch vụ OSRM, lưu lúc admin lưu tọa độ để khách xem không phụ thuộc dịch vụ ngoài. Đổi điểm của một ngày thì xóa đường của ngày đó và ngày kế tiếp rồi lấy lại, nên không bị lệch với tọa độ. Rỗng nghĩa là chưa lấy được, bản đồ nối tạm bằng nét đứt |
+| RB-36 | Lịch có sơ đồ xe: mỗi ghế chưa nhả của đơn chưa hủy có đúng một dòng `ChoNgoiChuyenDi`, để số chỗ đã giữ (RB-12) luôn khớp số chỗ có người trên xe. Ghế không được chọn tay thì hệ thống xếp chỗ trống đầu tiên theo hàng (`XepChoNgoi.XepChoConThieu`) lúc tạo đơn nhóm, lúc admin thêm người vào đơn, lúc lịch được gán xe; dịch vụ chạy nền xếp bù cho lịch chưa khởi hành. Người dùng vẫn đổi chỗ được. Kiểm trong code (không có CHECK vì liên quan nhiều bảng), truy vấn đối chiếu ở `docs/sql/doi_chieu.sql` |
+| RB-37 | `ChoKhongMoBans` (Mo14): chỗ trong bảng này không bán cho chuyến đó. Khách không chọn được, không được tự xếp vào (`XepChoNgoi.ViTriChonDuoc`, `ViTriTrong`); sơ đồ hiện sọc xám "Không mở bán". Admin bấm chọn ở trang **Chọn chỗ mở bán**; chỗ đã có khách không khóa được; số chỗ mở bán không nhỏ hơn số khách đang giữ. Thêm lịch với số chỗ mở bán nhỏ hơn xe thì khóa trước các chỗ cuối xe. **Số chỗ mở bán không lưu cột** (bỏ `SoChoToiDa` ở Mo15) nên không có dư thừa. Lưu chỗ khóa và tính lại `SoChoCon` trong cùng giao dịch, sau đó kiểm lại không có khách vừa ngồi vào chỗ vừa khóa |

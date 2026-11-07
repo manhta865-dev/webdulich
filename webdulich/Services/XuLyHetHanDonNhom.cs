@@ -59,6 +59,37 @@ namespace webdulich.Services
                         _nhatKy.LogError(loi, "Lỗi khi xử lý hết hạn đơn nhóm {DonId}", donId);
                     }
                 }
+
+                // Lịch sắp đi còn ghế đang giữ mà chưa có chỗ trên xe (dữ liệu cũ, hoặc lần xếp trước bị trùng): xếp bù (RB-36)
+                var homNay = bayGio.Date;
+                var dsLichThieu = db.HanhKhachDatTours
+                    .Where(h => h.NgayNha == null
+                        && h.DatTour!.TrangThai != "DaHuy"
+                        && h.DatTour.LichKhoiHanhTour!.SoDoChoNgoiId != null
+                        && h.DatTour.LichKhoiHanhTour.TrangThai != TrangThaiLich.DaHuy
+                        && h.DatTour.LichKhoiHanhTour.NgayKhoiHanh >= homNay
+                        && !db.ChoNgoiChuyenDis.Any(c => c.HanhKhachDatTourId == h.Id))
+                    .Select(h => h.DatTour!.LichKhoiHanhTourId)
+                    .Distinct()
+                    .ToList();
+
+                foreach (var lichId in dsLichThieu)
+                {
+                    try
+                    {
+                        int soXep = XepChoNgoi.XepChoConThieu(db, lichId);
+                        if (soXep > 0)
+                        {
+                            db.SaveChanges();
+                            _nhatKy.LogInformation("Lịch {LichId}: xếp bù chỗ ngồi cho {SoGhe} ghế", lichId, soXep);
+                        }
+                    }
+                    catch (Exception loi)
+                    {
+                        db.ChangeTracker.Clear();
+                        _nhatKy.LogError(loi, "Lỗi khi xếp bù chỗ ngồi cho lịch {LichId}", lichId);
+                    }
+                }
             }
             catch (Exception loi)
             {

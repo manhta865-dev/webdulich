@@ -28,6 +28,9 @@ namespace webdulich.Models
         public int Hang { get; set; }
         public int Cot { get; set; }
         public bool DaCoNguoi { get; set; }
+
+        // Chuyến này không bán chỗ này (RB-37): hiện xám, không chọn được
+        public bool KhongMoBan { get; set; }
     }
 
     public class HanhKhachChonCho
@@ -45,7 +48,8 @@ namespace webdulich.Models
         public static List<int> ViTriTrong(DuLichDbContext db, int lichId, int soDoId, IEnumerable<int> boQua)
         {
             var daChon = db.ChoNgoiChuyenDis.Where(c => c.LichKhoiHanhTourId == lichId).Select(c => c.ViTriChoNgoiId).ToList();
-            var tru = new HashSet<int>(daChon.Concat(boQua));
+            var khongMoBan = db.ChoKhongMoBans.Where(k => k.LichKhoiHanhTourId == lichId).Select(k => k.ViTriChoNgoiId).ToList();
+            var tru = new HashSet<int>(daChon.Concat(khongMoBan).Concat(boQua));
             return db.ViTriChoNgois
                 .Where(v => v.SoDoChoNgoiId == soDoId)
                 .OrderBy(v => v.Hang).ThenBy(v => v.Cot)
@@ -53,6 +57,60 @@ namespace webdulich.Models
                 .AsEnumerable()
                 .Where(id => !tru.Contains(id))
                 .ToList();
+        }
+
+        // Các vị trí khách được chọn trên lịch: thuộc sơ đồ của lịch (RB-18) và không nằm trong chỗ không mở bán (RB-37)
+        public static HashSet<int> ViTriChonDuoc(DuLichDbContext db, int lichId, int? soDoId)
+        {
+            if (!soDoId.HasValue)
+            {
+                return new HashSet<int>();
+            }
+            return db.ViTriChoNgois
+                .Where(v => v.SoDoChoNgoiId == soDoId.Value
+                    && !db.ChoKhongMoBans.Any(k => k.LichKhoiHanhTourId == lichId && k.ViTriChoNgoiId == v.Id))
+                .Select(v => v.Id)
+                .ToHashSet();
+        }
+
+        // Mỗi ghế đang giữ của lịch có sơ đồ xe phải có một vị trí trên xe (RB-36).
+        // Hàm này xếp chỗ trống đầu tiên cho các ghế còn thiếu: ghế đơn nhóm chưa ai chọn, ghế admin thêm vào đơn,
+        // ghế đặt trước khi lịch được gán xe. Người dùng vẫn đổi chỗ được sau.
+        // Chỉ thêm vào DbContext, chưa SaveChanges; gọi SAU khi các ghế và chỗ đã chọn tay đã được lưu.
+        // Trả về số ghế vừa được xếp chỗ.
+        public static int XepChoConThieu(DuLichDbContext db, int lichId)
+        {
+            var soDoId = db.LichKhoiHanhTours.Where(l => l.Id == lichId).Select(l => l.SoDoChoNgoiId).FirstOrDefault();
+            if (!soDoId.HasValue)
+            {
+                return 0;
+            }
+
+            var dsGheThieu = db.HanhKhachDatTours
+                .Where(h => h.NgayNha == null
+                    && h.DatTour!.LichKhoiHanhTourId == lichId
+                    && h.DatTour.TrangThai != "DaHuy"
+                    && !db.ChoNgoiChuyenDis.Any(c => c.HanhKhachDatTourId == h.Id))
+                .OrderBy(h => h.DatTourId).ThenBy(h => h.Id) // ghế cùng đơn nằm cạnh nhau
+                .Select(h => h.Id)
+                .ToList();
+            if (dsGheThieu.Count == 0)
+            {
+                return 0;
+            }
+
+            var dsTrong = ViTriTrong(db, lichId, soDoId.Value, Enumerable.Empty<int>());
+            int soXep = Math.Min(dsGheThieu.Count, dsTrong.Count);
+            for (int i = 0; i < soXep; i++)
+            {
+                db.ChoNgoiChuyenDis.Add(new ChoNgoiChuyenDi
+                {
+                    LichKhoiHanhTourId = lichId,
+                    ViTriChoNgoiId = dsTrong[i],
+                    HanhKhachDatTourId = dsGheThieu[i]
+                });
+            }
+            return soXep;
         }
     }
 }

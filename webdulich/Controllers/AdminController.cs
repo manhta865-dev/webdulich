@@ -1108,6 +1108,21 @@ namespace webdulich.Controllers
 
                 _context.SaveChanges();
 
+                // Ghế vừa thêm được xếp chỗ trống trên xe (RB-36)
+                if (chenhLech > 0 && XepChoNgoi.XepChoConThieu(_context, lich.Id) > 0)
+                {
+                    try
+                    {
+                        _context.SaveChanges();
+                    }
+                    catch (DbUpdateException)
+                    {
+                        giaoDichCsdl.Rollback();
+                        TempData["error"] = "Có khách vừa chọn chỗ trên xe cùng lúc, chưa thêm được người. Bạn thử lại nhé.";
+                        return RedirectToAction("SuaDonDatTour", new { id });
+                    }
+                }
+
                 if (chenhLech < 0)
                 {
                     _context.Database.ExecuteSqlInterpolated(
@@ -1900,12 +1915,145 @@ namespace webdulich.Controllers
                 ? dsTatCa
                 : dsTatCa.Where(x => x.TrangThaiHienThi == tenTrangThai).ToList();
 
+            // Xe chọn được cho lịch: các sơ đồ của đúng phương tiện của tour (RB-14), và số chỗ mở bán của từng lịch (RB-37)
+            ViewBag.DsXe = DanhSachXe(tour.PhuongTienId);
+            ViewBag.SoChoMoBan = SucChuaLich.SoChoMoBan(_context, dsHienThi.Select(x => x.Id));
+
             return View(dsHienThi);
         }
+
+        // Trang chọn chỗ mở bán của một lịch (RB-37): admin bấm vào từng ghế để mở hoặc khóa.
+        // Chỗ đã có khách luôn mở và không bấm được.
+        public IActionResult ChoMoBan(int id)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var lich = _context.LichKhoiHanhTours
+                .Include(x => x.Tour).ThenInclude(t => t!.PhuongTienInfo)
+                .Include(x => x.SoDoChoNgoi)
+                .FirstOrDefault(x => x.Id == id);
+            if (lich == null || lich.SoDoChoNgoi == null)
+            {
+                return NotFound();
+            }
+
+            var coKhach = _context.ChoNgoiChuyenDis.Where(c => c.LichKhoiHanhTourId == id).Select(c => c.ViTriChoNgoiId).ToHashSet();
+            var khoa = SucChuaLich.ViTriKhoa(_context, id);
+            var model = new ChonChoNgoiViewModel
+            {
+                TenTour = lich.Tour?.TenTour ?? string.Empty,
+                NgayDi = lich.NgayKhoiHanh,
+                TenSoDo = lich.SoDoChoNgoi.TenSoDo,
+                LaMayBay = lich.Tour?.PhuongTienInfo?.TenPhuongTien?.StartsWith("Máy bay") == true,
+                SoHang = lich.SoDoChoNgoi.SoHang,
+                SoCot = lich.SoDoChoNgoi.SoCot,
+                DatTourId = lich.Id,
+                DsViTri = _context.ViTriChoNgois
+                    .Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoi.Id)
+                    .OrderBy(v => v.Hang).ThenBy(v => v.Cot)
+                    .Select(v => new ViTriHienThi { Id = v.Id, MaViTri = v.MaViTri, Hang = v.Hang, Cot = v.Cot })
+                    .ToList()
+            };
+            foreach (var v in model.DsViTri)
+            {
+                v.DaCoNguoi = coKhach.Contains(v.Id);
+                v.KhongMoBan = khoa.Contains(v.Id);
+            }
+
+            ViewBag.Lich = lich;
+            ViewBag.DangGiu = SucChuaLich.SoGheDangGiu(_context, id);
+            ViewBag.ChoSua = lich.TrangThaiHienThi == "Sắp khởi hành";
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ChoMoBan(int id, List<int>? moBan)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var lich = _context.LichKhoiHanhTours.Include(x => x.Tour).FirstOrDefault(x => x.Id == id);
+            if (lich == null || !lich.SoDoChoNgoiId.HasValue)
+            {
+                return NotFound();
+            }
+            if (lich.TrangThaiHienThi != "Sắp khởi hành")
+            {
+                TempData["error"] = "Chỉ đổi chỗ mở bán của lịch sắp khởi hành.";
+                return RedirectToAction("ChoMoBan", new { id });
+            }
+
+            var dsViTri = _context.ViTriChoNgois.Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId.Value).Select(v => v.Id).ToList();
+            var coKhach = _context.ChoNgoiChuyenDis.Where(c => c.LichKhoiHanhTourId == id).Select(c => c.ViTriChoNgoiId).ToHashSet();
+            // Chỗ mở bán: các ô admin tick (chỉ nhận vị trí thuộc xe của lịch) cộng các chỗ đã có khách
+            var mo = new HashSet<int>((moBan ?? new List<int>()).Where(dsViTri.Contains));
+            mo.UnionWith(coKhach);
+            var khoaMoi = dsViTri.Where(v => !mo.Contains(v)).ToList();
+
+            int dangGiu = SucChuaLich.SoGheDangGiu(_context, id);
+            if (mo.Count < Math.Max(1, dangGiu))
+            {
+                TempData["error"] = $"Phải mở bán ít nhất {Math.Max(1, dangGiu)} chỗ vì lịch đã có {dangGiu} khách giữ chỗ.";
+                return RedirectToAction("ChoMoBan", new { id });
+            }
+
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                _context.ChoKhongMoBans.RemoveRange(_context.ChoKhongMoBans.Where(k => k.LichKhoiHanhTourId == id));
+                _context.SaveChanges();
+                _context.ChoKhongMoBans.AddRange(khoaMoi.Select(v => new ChoKhongMoBan { LichKhoiHanhTourId = id, ViTriChoNgoiId = v }));
+                _context.SaveChanges();
+
+                // Khách vừa chọn đúng một chỗ đang bị khóa trong lúc admin lưu: không lưu, báo admin thử lại
+                bool trung = _context.ChoNgoiChuyenDis.Any(c => c.LichKhoiHanhTourId == id && khoaMoi.Contains(c.ViTriChoNgoiId));
+                if (trung)
+                {
+                    giaoDichCsdl.Rollback();
+                    TempData["error"] = "Có khách vừa chọn một chỗ bạn định khóa. Trang đã tải lại, bạn kiểm tra rồi lưu lại nhé.";
+                    return RedirectToAction("ChoMoBan", new { id });
+                }
+
+                try
+                {
+                    SucChuaLich.TinhLaiSoChoCon(_context, id);
+                }
+                catch (Exception)
+                {
+                    // CHECK số chỗ còn không âm chặn: có khách vừa giữ thêm chỗ
+                    giaoDichCsdl.Rollback();
+                    TempData["error"] = "Số khách giữ chỗ vừa thay đổi, chưa lưu được. Bạn thử lại nhé.";
+                    return RedirectToAction("ChoMoBan", new { id });
+                }
+                giaoDichCsdl.Commit();
+            }
+
+            TempData["success"] = $"Đã lưu: mở bán {mo.Count} trên {dsViTri.Count} chỗ.";
+            return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+        }
+
+        // Một xe (sơ đồ chỗ ngồi) chọn được cho lịch
+        public record XeChon(int Id, string TenSoDo, int SoViTri);
+
+        // Các sơ đồ của một phương tiện, nhỏ đến lớn
+        private List<XeChon> DanhSachXe(int? phuongTienId) =>
+            phuongTienId.HasValue
+                ? _context.SoDoChoNgois
+                    .Where(s => s.PhuongTienId == phuongTienId.Value)
+                    .Select(s => new XeChon(s.Id, s.TenSoDo, s.ViTriChoNgois.Count))
+                    .AsEnumerable()
+                    .OrderBy(s => s.SoViTri).ThenBy(s => s.Id)
+                    .ToList()
+                : new List<XeChon>();
         // Đây là action dùng để thêm mới một lịch khởi hành cho một tour cụ thể trong trang quản trị. Khi admin điền thông tin ngày khởi hành, giờ khởi hành, số chỗ còn, giá người lớn và giá trẻ em vào form thêm lịch khởi hành và nhấn nút lưu, action này sẽ được gọi với các thông tin đó cùng với Id của tour để xác định tour cần thêm lịch khởi hành. Hàm sẽ kiểm tra quyền admin, sau đó sẽ tạo một đối tượng LichKhoiHanhTour mới với các thông tin đã nhận được từ form. Đối tượng này sẽ được thêm vào database và lưu lại để đảm bảo rằng lịch khởi hành mới đã được tạo thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng lịch khởi hành mới đã xuất hiện trong danh sách.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ThemLichKhoiHanh(int tourId, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoToiDa, decimal? giaNguoiLon, decimal? giaTreEm)
+        public IActionResult ThemLichKhoiHanh(int tourId, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soDoChoNgoiId, int soChoMoBan, decimal? giaNguoiLon, decimal? giaTreEm)
         {
             if (!LaAdmin())
             {
@@ -1927,43 +2075,58 @@ namespace webdulich.Controllers
                 ? giaTreEm.Value
                 : giaLon * 0.5m;
 
-            if (soChoToiDa <= 0)
+            // Admin chọn xe trong các xe của đúng phương tiện của tour (RB-14)
+            var xe = DanhSachXe(tour.PhuongTienId).FirstOrDefault(x => x.Id == soDoChoNgoiId);
+            if (xe == null)
             {
-                TempData["error"] = "Số chỗ tối đa phải lớn hơn 0.";
+                TempData["error"] = tour.PhuongTienId.HasValue
+                    ? "Vui lòng chọn xe cho lịch khởi hành."
+                    : "Tour chưa có phương tiện. Hãy gán phương tiện cho tour trước khi thêm lịch.";
                 return RedirectToAction("LichKhoiHanh", new { id = tourId });
             }
 
-            // Sơ đồ chỗ ngồi tự gán theo phương tiện của tour và số chỗ tối đa (RB-14)
-            var soDo = GanSoDoChoNgoi.Chon(_context, tourId, soChoToiDa);
-            if (soDo.Loi != null)
+            if (soChoMoBan <= 0 || soChoMoBan > xe.SoViTri)
             {
-                TempData["error"] = soDo.Loi;
+                TempData["error"] = $"Số chỗ mở bán phải từ 1 đến {xe.SoViTri} ({xe.TenSoDo}).";
                 return RedirectToAction("LichKhoiHanh", new { id = tourId });
             }
 
-            // Lịch mới chưa có ai đặt nên số chỗ còn bằng số chỗ tối đa
+            // Lịch mới chưa có ai đặt nên số chỗ còn bằng số chỗ mở bán (RB-12)
             var lich = new LichKhoiHanhTour
             {
-                SoDoChoNgoiId = soDo.SoDoChoNgoiId,
+                SoDoChoNgoiId = xe.Id,
                 TourId = tourId,
                 NgayKhoiHanh = ngayKhoiHanh,
                 GioKhoiHanh = gioKhoiHanh,
-                SoChoToiDa = soChoToiDa,
-                SoChoCon = soChoToiDa,
+                SoChoCon = soChoMoBan,
                 GiaNguoiLon = giaLon,
                 GiaTreEm = giaTre,
                 TrangThai = TrangThaiLich.MoBan,
             };
 
-            _context.LichKhoiHanhTours.Add(lich);
-            _context.SaveChanges();
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                _context.LichKhoiHanhTours.Add(lich);
+                _context.SaveChanges();
 
+                // Chỗ dư khóa tạm ở cuối xe; admin chọn lại chỗ nào mở bán ở trang Chọn chỗ mở bán (RB-37)
+                foreach (var viTriId in SucChuaLich.ChonChoKhoaCuoiXe(_context, lich.Id, xe.Id, soChoMoBan) ?? new List<int>())
+                {
+                    _context.ChoKhongMoBans.Add(new ChoKhongMoBan { LichKhoiHanhTourId = lich.Id, ViTriChoNgoiId = viTriId });
+                }
+                _context.SaveChanges();
+                giaoDichCsdl.Commit();
+            }
+
+            TempData["success"] = soChoMoBan < xe.SoViTri
+                ? $"Đã thêm lịch: {xe.TenSoDo}, mở bán {soChoMoBan} chỗ. Các chỗ cuối xe đang khóa, bấm Chọn chỗ mở bán để đổi."
+                : $"Đã thêm lịch: {xe.TenSoDo}, mở bán đủ {soChoMoBan} chỗ.";
             return RedirectToAction("LichKhoiHanh", new { id = tourId });
         }
         // Đây là action dùng để cập nhật thông tin một lịch khởi hành của một tour cụ thể trong trang quản trị. Khi admin chỉnh sửa thông tin ngày khởi hành, giờ khởi hành, số chỗ còn, giá người lớn hoặc giá trẻ em của một lịch khởi hành nào đó trong trang danh sách lịch khởi hành của tour và nhấn nút lưu, action này sẽ được gọi với các thông tin đã chỉnh sửa cùng với Id của lịch khởi hành đó để xác định chính xác lịch khởi hành cần cập nhật. Hàm sẽ kiểm tra quyền admin, sau đó tìm lịch khởi hành trong database theo Id. Nếu không tìm thấy lịch khởi hành thì trả về lỗi NotFound. Nếu tìm thấy lịch khởi hành, hệ thống sẽ cập nhật các thông tin của lịch khởi hành đó với các giá trị đã nhận được từ form chỉnh sửa. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng thông tin của lịch khởi hành đã được cập nhật thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng thông tin của lịch khởi hành đã được cập nhật trong danh sách.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CapNhatLichKhoiHanh(int id, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soChoToiDa, decimal? giaNguoiLon, decimal? giaTreEm)
+        public IActionResult CapNhatLichKhoiHanh(int id, DateTime ngayKhoiHanh, TimeSpan? gioKhoiHanh, int soDoChoNgoiId, decimal? giaNguoiLon, decimal? giaTreEm)
         {
             if (!LaAdmin())
             {
@@ -1987,8 +2150,8 @@ namespace webdulich.Controllers
                 ? giaTreEm.Value
                 : giaLon * 0.5m;
             // Cập nhật các thông tin của lịch khởi hành đó với các giá trị đã nhận được từ form chỉnh sửa. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng thông tin của lịch khởi hành đã được cập nhật thành công. Cuối cùng chuyển hướng admin về trang danh sách lịch khởi hành của tour đó để thấy rằng thông tin của lịch khởi hành đã được cập nhật trong danh sách.
-            // Số chỗ đã có khách giữ không đổi; chỉ đổi sức chứa, chỗ còn tính lại (RB-12)
-            int daGiu = lich.SoChoToiDa - lich.SoChoCon;
+            // Số ghế khách đang giữ trên lịch (RB-12)
+            int daGiu = SucChuaLich.SoGheDangGiu(_context, lich.Id);
 
             // Lịch đã có khách giữ chỗ thì không đổi ngày: khách đặt đi ngày nào phải giữ ngày đó, và hạn giữ chỗ
             // của đơn nhóm không được nằm sau ngày đi (R26). Muốn dời ngày thì hủy lịch rồi tạo lịch mới. Giờ đi vẫn đổi được.
@@ -1998,34 +2161,70 @@ namespace webdulich.Controllers
                 return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
             }
 
-            if (soChoToiDa < Math.Max(1, daGiu))
+            // Đổi xe (RB-14): chỉ khi chưa có khách ngồi trên xe hiện tại. Số chỗ mở bán giữ nguyên
+            // (nhỏ hơn nếu xe mới ít chỗ hơn), chỗ dư trên xe mới khóa tạm ở cuối xe (RB-37).
+            bool doiXe = soDoChoNgoiId != (lich.SoDoChoNgoiId ?? 0);
+            XeChon? xeMoi = null;
+            int moBanMoi = 0;
+            if (doiXe)
             {
-                TempData["error"] = $"Lịch này đã có {daGiu} khách đặt, số chỗ tối đa không được nhỏ hơn {Math.Max(1, daGiu)}.";
-                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
-            }
-
-            // Đổi số chỗ có thể đổi xe; không đổi xe khi đã có khách chọn chỗ trên xe hiện tại
-            var soDo = GanSoDoChoNgoi.Chon(_context, lich.TourId, soChoToiDa);
-            if (soDo.Loi != null)
-            {
-                TempData["error"] = soDo.Loi;
-                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
-            }
-            if (soDo.SoDoChoNgoiId != lich.SoDoChoNgoiId && _context.ChoNgoiChuyenDis.Any(c => c.LichKhoiHanhTourId == lich.Id))
-            {
-                TempData["error"] = "Lịch đã có khách chọn chỗ ngồi nên không đổi xe được. Hãy giữ số chỗ tối đa trong sức chứa của xe hiện tại.";
-                return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+                xeMoi = DanhSachXe(lich.Tour?.PhuongTienId).FirstOrDefault(x => x.Id == soDoChoNgoiId);
+                if (xeMoi == null)
+                {
+                    TempData["error"] = "Xe đã chọn không thuộc phương tiện của tour.";
+                    return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+                }
+                if (_context.ChoNgoiChuyenDis.Any(c => c.LichKhoiHanhTourId == lich.Id))
+                {
+                    TempData["error"] = "Lịch đã có khách chọn chỗ ngồi trên xe hiện tại nên không đổi xe được.";
+                    return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+                }
+                moBanMoi = Math.Min(SucChuaLich.SoChoMoBan(_context, lich.Id), xeMoi.SoViTri);
+                if (moBanMoi < Math.Max(1, daGiu))
+                {
+                    TempData["error"] = $"{xeMoi.TenSoDo} không đủ chỗ cho {daGiu} khách đã đặt.";
+                    return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
+                }
             }
 
             lich.NgayKhoiHanh = ngayKhoiHanh;
             lich.GioKhoiHanh = gioKhoiHanh;
-            lich.SoChoToiDa = soChoToiDa;
-            lich.SoChoCon = soChoToiDa - daGiu;
-            lich.SoDoChoNgoiId = soDo.SoDoChoNgoiId;
             lich.GiaNguoiLon = giaLon;
             lich.GiaTreEm = giaTre;
 
-            _context.SaveChanges();
+            using (var giaoDichCsdl = _context.Database.BeginTransaction())
+            {
+                if (doiXe && xeMoi != null)
+                {
+                    _context.ChoKhongMoBans.RemoveRange(_context.ChoKhongMoBans.Where(k => k.LichKhoiHanhTourId == lich.Id));
+                    lich.SoDoChoNgoiId = xeMoi.Id;
+                    _context.SaveChanges();
+                    foreach (var viTriId in SucChuaLich.ChonChoKhoaCuoiXe(_context, lich.Id, xeMoi.Id, moBanMoi) ?? new List<int>())
+                    {
+                        _context.ChoKhongMoBans.Add(new ChoKhongMoBan { LichKhoiHanhTourId = lich.Id, ViTriChoNgoiId = viTriId });
+                    }
+                }
+                _context.SaveChanges();
+                if (doiXe)
+                {
+                    SucChuaLich.TinhLaiSoChoCon(_context, lich.Id);
+                }
+                giaoDichCsdl.Commit();
+            }
+
+            // Lịch vừa được gán xe khi đã có khách đặt: xếp chỗ cho các ghế chưa có chỗ (RB-36)
+            if (lich.SoDoChoNgoiId.HasValue && XepChoNgoi.XepChoConThieu(_context, lich.Id) > 0)
+            {
+                try
+                {
+                    _context.SaveChanges();
+                }
+                catch (DbUpdateException)
+                {
+                    // Trùng với khách đang chọn chỗ: bỏ lần này, dịch vụ chạy nền sẽ xếp lại sau
+                    _context.ChangeTracker.Clear();
+                }
+            }
 
             return RedirectToAction("LichKhoiHanh", new { id = lich.TourId });
         }
@@ -2074,7 +2273,7 @@ namespace webdulich.Controllers
             }
             _context.ChoNgoiChuyenDis.RemoveRange(
                 _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)));
-            lich.SoChoCon = lich.SoChoToiDa;
+            lich.SoChoCon = SucChuaLich.SoChoMoBan(_context, lich.Id);
             // Cập nhật trạng thái thanh toán của các đơn đặt tour liên quan thành "Đã hủy" và thêm ghi chú giải thích lý do hủy là do admin đã hủy lịch khởi hành. Điều này sẽ giúp khách hàng hiểu được lý do tại sao đơn đặt tour của họ bị hủy và cũng giúp admin quản lý các đơn đặt tour liên quan đến lịch khởi hành đã bị hủy một cách hiệu quả hơn.
             foreach (var don in dsDon)
             {

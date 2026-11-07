@@ -201,11 +201,13 @@ namespace webdulich.Controllers
                         HoTen = i == 0 && nhap.ToiDi ? $"Ghế {i + 1} (bạn)" : $"Ghế {i + 1}",
                         LoaiHanhKhach = loai
                     }).ToList(),
-                NhanKhongChon = "Thành viên tự chọn"
+                NhanKhongChon = "Để TravelVN xếp"
             };
+            var khongMoBan = SucChuaLich.ViTriKhoa(_context, lich.Id);
             foreach (var v in model.DsViTri)
             {
                 v.DaCoNguoi = daCoNguoi.Contains(v.Id);
+                v.KhongMoBan = khongMoBan.Contains(v.Id);
             }
 
             ViewBag.QuayLai = Url.Action("TaoDon", new { id = nhap.TourId, lichId = nhap.LichId });
@@ -300,7 +302,7 @@ namespace webdulich.Controllers
                 // Chỗ chọn sẵn: chỉ nhận chỗ thuộc sơ đồ của lịch, không trùng (RB-18); để trống thì thành viên tự chọn
                 if (lich.SoDoChoNgoiId.HasValue && viTri.Any(v => v.HasValue))
                 {
-                    var hopLe = _context.ViTriChoNgois.Where(v => v.SoDoChoNgoiId == lich.SoDoChoNgoiId.Value).Select(v => v.Id).ToHashSet();
+                    var hopLe = XepChoNgoi.ViTriChonDuoc(_context, lich.Id, lich.SoDoChoNgoiId); // RB-18, RB-37
                     var dsGhe = don.HanhKhachDatTours.ToList();
                     var daDung = new HashSet<int>();
                     for (int i = 0; i < dsGhe.Count && i < viTri.Count; i++)
@@ -323,6 +325,21 @@ namespace webdulich.Controllers
                     {
                         giaoDichCsdl.Rollback();
                         TempData["Loi"] = "Có chỗ bạn chọn vừa được người khác đặt. Bạn chọn lại nhé.";
+                        return RedirectToAction("ChonCho");
+                    }
+                }
+
+                // Ghế chưa chọn chỗ được xếp chỗ trống ngay (RB-36), để số chỗ đã giữ luôn khớp chỗ trên xe
+                if (lich.SoDoChoNgoiId.HasValue && XepChoNgoi.XepChoConThieu(_context, lich.Id) > 0)
+                {
+                    try
+                    {
+                        _context.SaveChanges();
+                    }
+                    catch (DbUpdateException)
+                    {
+                        giaoDichCsdl.Rollback();
+                        TempData["Loi"] = "Có người vừa chọn chỗ trên xe cùng lúc với bạn. Bạn bấm giữ chỗ lại nhé.";
                         return RedirectToAction("ChonCho");
                     }
                 }
@@ -1156,9 +1173,11 @@ namespace webdulich.Controllers
                 DatTourId = ghe.Id,
                 ChoTuDongXep = false
             };
+            var khongMoBan = SucChuaLich.ViTriKhoa(_context, lich.Id);
             foreach (var v in model.DsViTri)
             {
                 v.DaCoNguoi = cuaNguoiKhac.Contains(v.Id);
+                v.KhongMoBan = khongMoBan.Contains(v.Id);
             }
             return View(model);
         }
@@ -1186,8 +1205,8 @@ namespace webdulich.Controllers
             }
 
             int? chon = viTri != null && viTri.Count > 0 ? viTri[0] : null;
-            // Ô để trống: giữ chỗ hiện tại. RB-18: chỗ phải thuộc sơ đồ của lịch.
-            if (chon.HasValue && _context.ViTriChoNgois.Any(v => v.Id == chon.Value && v.SoDoChoNgoiId == don.LichKhoiHanhTour!.SoDoChoNgoiId))
+            // Ô để trống: giữ chỗ hiện tại. RB-18, RB-37: chỗ phải thuộc sơ đồ của lịch và đang mở bán.
+            if (chon.HasValue && XepChoNgoi.ViTriChonDuoc(_context, don.LichKhoiHanhTourId, don.LichKhoiHanhTour!.SoDoChoNgoiId).Contains(chon.Value))
             {
                 using var giaoDichCsdl = _context.Database.BeginTransaction();
                 _context.ChoNgoiChuyenDis.RemoveRange(_context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == ghe.Id));
