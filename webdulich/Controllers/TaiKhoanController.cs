@@ -34,17 +34,10 @@ namespace webdulich.Controllers
                 Directory.CreateDirectory(folder);
             }
 
-            string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-
-            if (!allowedExtensions.Contains(extension))
+            // Kiểm tra nội dung tệp thật, đuôi tệp lưu xuống cũng lấy từ nội dung, không tin tên tệp người dùng gửi
+            if (!webdulich.Services.KiemTraTepAnh.HopLe(file, 5, out var extension, out var loiAnh))
             {
-                throw new InvalidOperationException("Ảnh đại diện chỉ nhận file JPG, JPEG, PNG hoặc WEBP.");
-            }
-
-            if (file.Length > 5 * 1024 * 1024)
-            {
-                throw new InvalidOperationException("Ảnh đại diện không được vượt quá 5MB.");
+                throw new InvalidOperationException(loiAnh);
             }
 
             string fileName = $"{Guid.NewGuid()}{extension}";

@@ -121,13 +121,12 @@
                                         Sửa
                                     </a>
 
-                                    <a asp-controller="Admin"
-                                       asp-action="XoaPhanCongTour"
-                                       asp-route-id="@item.Id"
-                                       class="tv-btn tv-btn-huy ad-btn-nho"
-                                       onclick="return confirm('Xóa phân công này?')">
-                                        Xóa
-                                    </a>
+                                    <form asp-controller="Admin" asp-action="XoaPhanCongTour" asp-route-id="@item.Id" method="post" class="ad-form-gon"
+                                          data-xac-nhan-tieu-de="Xóa phân công này?"
+                                          data-xac-nhan="Nhân viên sẽ không còn thấy chuyến này trong lịch làm việc."
+                                          data-xac-nhan-nut="Xóa phân công" data-xac-nhan-nguy-hiem>
+                                        <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

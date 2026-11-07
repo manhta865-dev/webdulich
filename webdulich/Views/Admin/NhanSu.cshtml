@@ -109,12 +109,9 @@
                             </td>
                             <td>@item.GhiChu</td>
                             <td>
-                                <a asp-controller="Admin"
-                                   asp-action="DoiTrangThaiNhanVien"
-                                   asp-route-id="@item.Id"
-                                   class="tv-btn tv-btn-vien ad-btn-nho">
-                                    Đổi trạng thái
-                                </a>
+                                <form asp-controller="Admin" asp-action="DoiTrangThaiNhanVien" asp-route-id="@item.Id" method="post" class="ad-form-gon">
+                                    <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Đổi trạng thái</button>
+                                </form>
                             </td>
                         </tr>
                     }

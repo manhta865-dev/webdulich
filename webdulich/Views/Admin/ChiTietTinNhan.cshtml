@@ -62,19 +62,18 @@
                           placeholder="Nhập phản hồi cho khách hàng..."></textarea>
 
                 <div class="reply-actions">
-                    <a asp-controller="Admin"
-                       asp-action="XoaCuocTroChuyen"
-                       asp-route-taiKhoanId="@taiKhoanId"
-                       class="tv-btn tv-btn-huy ad-btn-nho"
-                       onclick="return confirm('Bạn có chắc muốn xóa toàn bộ cuộc trò chuyện này không?');">
-                        Xóa cuộc trò chuyện
-                    </a>
+                    @* Nút nằm trong form trả lời nhưng gửi form xóa riêng ở dưới (form không được lồng nhau) *@
+                    <button type="submit" form="xoaCuocTroChuyen" class="tv-btn tv-btn-huy ad-btn-nho">Xóa cuộc trò chuyện</button>
 
                     <button type="submit" class="tv-btn tv-btn-chinh">
                         Gửi phản hồi
                     </button>
                 </div>
             </form>
+            <form id="xoaCuocTroChuyen" asp-controller="Admin" asp-action="XoaCuocTroChuyen" asp-route-taiKhoanId="@taiKhoanId" method="post"
+                  data-xac-nhan-tieu-de="Xóa cuộc trò chuyện này?"
+                  data-xac-nhan="Toàn bộ tin nhắn với khách này sẽ bị xóa, không lấy lại được."
+                  data-xac-nhan-nut="Xóa cuộc trò chuyện" data-xac-nhan-nguy-hiem></form>
         </div>
     </div>
 </div>

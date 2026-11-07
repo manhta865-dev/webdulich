@@ -337,6 +337,7 @@ namespace webdulich.Controllers
 
         // Action này nhận dữ liệu khi admin nhấn nút lưu tour.
         [HttpPost] // action nhận dữ liệu được gửi từ form.
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Tour tour) // Tour tour: ASP.NET tự ánh xạ dữ liệu form vào đối tượng Tour. async Task<IActionResult>: action có thao tác bất đồng bộ như lưu ảnh và lưu database.
         {
             if (!LaAdmin())
@@ -484,6 +485,7 @@ namespace webdulich.Controllers
 
         // Hàm nhận dữ liệu người dùng gửi từ form sửa tour. Khi admin chỉnh sửa thông tin tour và nhấn nút lưu, action này sẽ được gọi với dữ liệu tour đã được bind từ form. Hàm sẽ kiểm tra quyền admin, sau đó nạp lại dữ liệu cho dropdown và đồng bộ dữ liệu tour như trong hàm Create. Sau đó kiểm tra các lỗi tương tự như trong Create, nếu có lỗi thì trả về form sửa cùng với dữ liệu đã nhập và thông báo lỗi. Nếu không có lỗi, hàm sẽ tìm tour cũ trong database theo Id, cập nhật các trường thông tin của tour cũ bằng dữ liệu mới từ form, xử lý lại các loại địa hình và phong cách đã chọn bằng cách xóa các liên kết cũ và thêm các liên kết mới vào bảng trung gian, lưu hình đại diện mới nếu có, lưu các hình phụ mới nếu có, rồi lưu tất cả thay đổi vào database. Cuối cùng chuyển hướng admin về trang danh sách tour.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Tour tour)
         {
             if (!LaAdmin())
@@ -598,6 +600,8 @@ namespace webdulich.Controllers
             return RedirectToAction("Index"); // Sau khi lưu xong, chuyển hướng admin về trang danh sách tour để thấy các thay đổi đã cập nhật.
         }
         // Hàm này dùng để xóa một hình phụ của tour. Khi admin nhấn nút xóa ở một hình phụ nào đó trong trang sửa tour, action này sẽ được gọi với Id của hình phụ đó và Id của tour để xác định chính xác hình phụ cần xóa. Hàm sẽ kiểm tra quyền admin, sau đó tìm hình phụ trong database theo Id và TourId. Nếu không tìm thấy hình phụ thì trả về lỗi NotFound. Nếu tìm thấy hình phụ, hệ thống sẽ xóa bản ghi của hình phụ đó khỏi bảng TourHinhAnhs, sau đó kiểm tra xem file hình phụ đó có tồn tại trên server không. Nếu tồn tại thì xóa file đó khỏi thư mục wwwroot/images/dulich để giải phóng dung lượng lưu trữ. Cuối cùng chuyển hướng admin về trang sửa tour để thấy rằng hình phụ đã bị xóa.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> XoaHinhTour(int id, int tourId)
         {
             if (!LaAdmin())
@@ -2360,6 +2364,8 @@ namespace webdulich.Controllers
             return RedirectToAction("PhanCongTour");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult XoaPhanCongTour(int id)
         {
             if (!LaAdmin())
@@ -2746,6 +2752,8 @@ namespace webdulich.Controllers
             return RedirectToAction("ChiTietTinNhan", new { taiKhoanId });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult XoaCuocTroChuyen(int taiKhoanId)
         {
             if (!LaAdmin())
@@ -2851,6 +2859,7 @@ namespace webdulich.Controllers
         }
         // Đây là action dùng để thêm mới một nhân viên vào hệ thống trong trang quản trị. Khi admin điền thông tin của nhân viên mới vào form thêm nhân viên và nhấn nút lưu, action này sẽ được gọi với các thông tin đã nhập từ form như họ tên, số điện thoại, loại nhân viên, tài khoản đăng nhập, mật khẩu và ghi chú (nếu có). Hàm sẽ kiểm tra quyền admin, sau đó kiểm tra xem các thông tin bắt buộc đã được nhập đầy đủ hay chưa. Nếu có thông tin nào đó chưa hợp lệ hoặc thiếu thì sẽ lưu lỗi vào TempData và chuyển hướng admin về trang danh sách nhân viên để hiển thị lỗi. Nếu tất cả các thông tin đều hợp lệ thì hệ thống sẽ kiểm tra xem tài khoản đăng nhập đã tồn tại trong database hay chưa. Nếu đã tồn tại thì sẽ lưu lỗi vào TempData và chuyển hướng admin về trang danh sách nhân viên để hiển thị lỗi. Nếu chưa tồn tại thì hệ thống sẽ tạo một đối tượng TaiKhoan mới với các thông tin đã nhận được từ form cùng với vai trò tương ứng với loại nhân viên (huongdanvien hoặc taixe) và ngày tạo hiện tại. Đối tượng TaiKhoan này sẽ được thêm vào database và lưu lại để đảm bảo rằng tài khoản đã được tạo thành công. Sau đó hệ thống sẽ tạo một đối tượng NhanVien mới với các thông tin đã nhận được từ form cùng với Id của tài khoản vừa tạo, trạng thái đang làm việc là true và ngày tạo hiện tại. Đối tượng NhanVien này sẽ được thêm vào database và lưu lại để đảm bảo rằng nhân viên đã được thêm thành công. Cuối cùng chuyển hướng admin về trang danh sách nhân viên để thấy rằng nhân viên mới đã xuất hiện trong danh sách.
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ThemNhanVien(
             string hoTen,
             string soDienThoai,
@@ -2926,6 +2935,8 @@ namespace webdulich.Controllers
             return RedirectToAction("NhanSu");
         }
         // Đây là action dùng để đổi trạng thái làm việc của một nhân viên trong trang quản trị. Khi admin nhấn nút đổi trạng thái làm việc của một nhân viên, action này sẽ được gọi với Id của nhân viên đó để xác định chính xác nhân viên cần đổi trạng thái. Hàm sẽ kiểm tra quyền admin, sau đó tìm nhân viên trong database theo Id. Nếu không tìm thấy nhân viên thì trả về lỗi NotFound. Nếu tìm thấy nhân viên, hệ thống s�� đổi trạng thái làm việc của nhân viên đó từ đang làm việc sang nghỉ việc hoặc ngược lại tùy vào trạng thái hiện tại của nhân viên. Sau đó hệ thống sẽ lưu lại để đảm bảo rằng trạng thái làm việc của nhân viên đã được đổi thành công. Cuối cùng chuyển hướng admin về trang danh sách nhân viên để thấy rằng trạng thái làm việc của nhân viên đã được cập nhật trong danh sách.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult DoiTrangThaiNhanVien(int id)
         {
             if (!LaAdmin()) return RedirectToAction("DangNhap", "TaiKhoan");

@@ -169,13 +169,8 @@
                             {
                                 <div class="extra-gallery-item">
                                     <img src="~/images/dulich/@anh.TenFile" alt="Ảnh phụ của tour" />
-                                    <a asp-controller="Admin"
-                                       asp-action="XoaHinhTour"
-                                       asp-route-id="@anh.Id"
-                                       asp-route-tourId="@Model.Id"
-                                       onclick="return confirm('Xoa anh phu nay?')">
-                                        Xóa
-                                    </a>
+                                    @* Nút nằm trong form sửa tour nhưng gửi form xóa riêng ở cuối trang (form không được lồng nhau) *@
+                                    <button type="submit" form="xoaAnhPhu-@anh.Id" class="ad-xoa-anh-phu">Xóa</button>
                                 </div>
                             }
                         </div>
@@ -197,6 +192,14 @@
             <a asp-controller="Admin" asp-action="Index" class="tv-btn tv-btn-vien">Quay lại</a>
         </div>
     </form>
+
+    @foreach (var anh in anhPhu)
+    {
+        <form id="xoaAnhPhu-@anh.Id" asp-controller="Admin" asp-action="XoaHinhTour" asp-route-id="@anh.Id" asp-route-tourId="@Model.Id" method="post"
+              data-xac-nhan-tieu-de="Xóa ảnh phụ này?"
+              data-xac-nhan="Ảnh sẽ không còn hiện ở trang chi tiết tour. Những thay đổi chưa lưu trên trang này sẽ bị mất."
+              data-xac-nhan-nut="Xóa ảnh" data-xac-nhan-nguy-hiem></form>
+    }
 </div>
 
 <script>
