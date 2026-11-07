@@ -6,7 +6,7 @@
     margin-bottom: var(--tv-k4);
     padding: var(--tv-k3) var(--tv-k4);
     border-radius: var(--tv-bo-nut);
-    background: #FBE9E7;
+    background: var(--tv-loi-nhat);
     color: var(--tv-loi);
     font-weight: 600;
 }
@@ -79,7 +79,7 @@
     width: max-content;
     margin: 0 auto;
     padding: 0 30px 18px;
-    background: #fff;
+    background: var(--tv-be-mat);
     border: 3px solid var(--vo-than);
     box-shadow: 0 10px 24px rgba(16, 36, 44, 0.08);
 }
@@ -157,7 +157,7 @@
     border: 2px solid #E8C26B;
     border-right: 0;
     border-radius: 8px 0 0 8px;
-    background: #FFF8E6;
+    background: var(--tv-canh-bao-nhat);
     font-size: 0.6875rem;
     font-weight: 600;
     color: #9A6B00;
@@ -220,7 +220,7 @@
     top: -5px;
     bottom: -5px;
     width: 90px;
-    background: #E4EBED;
+    background: var(--tv-xam-nhat);
 }
 
 .cn-hang.canh::before { right: calc(100% + 36px); }
@@ -264,7 +264,7 @@
     transform: translateY(-50%);
     padding: 1px 4px;
     border-radius: 4px;
-    background: #FBE9E7;
+    background: var(--tv-loi-nhat);
     font-size: 0.5625rem;
     font-weight: 700;
     color: var(--tv-loi);

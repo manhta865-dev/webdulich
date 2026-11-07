@@ -185,7 +185,7 @@
 .tv-tk-menu a .tv-icon { color: var(--tv-chu-phu); }
 .tv-tk-ngan { height: 1px; margin: var(--tv-k1) var(--tv-k2); background: var(--tv-vien); }
 .tv-tk-menu a.tv-tk-thoat, .tv-tk-menu a.tv-tk-thoat .tv-icon { color: var(--tv-loi); }
-.tv-tk-menu a.tv-tk-thoat:hover { background: #FBE9E7; }
+.tv-tk-menu a.tv-tk-thoat:hover { background: var(--tv-loi-nhat); }
 
 @media (prefers-reduced-motion: reduce) {
     .tv-tk > summary::after { transition: none; }
@@ -228,7 +228,7 @@
     color: #fff;
 }
 
-.tv-btn-chinh:hover { background: var(--tv-nhan-dam); color: #fff; }
+.tv-btn-chinh:hover { background: var(--tv-nhan-nen-dam); color: #fff; }
 
 .tv-btn-vien {
     background: var(--tv-be-mat);
@@ -245,7 +245,7 @@
     color: var(--tv-loi);
 }
 
-.tv-btn-huy:hover { background: #FBE9E7; }
+.tv-btn-huy:hover { background: var(--tv-loi-nhat); }
 
 .tv-nav-toggle {
     display: none;
@@ -580,3 +580,33 @@
 
 /* Trang chủ: dải ảnh cuối trang nối liền với chân trang */
 .page-full + .tv-footer { margin-top: 0; }
+
+/* ---------- Nút sáng tối ---------- */
+.tv-giao-dien {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    cursor: pointer;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+.tv-giao-dien:hover { border-color: var(--tv-nhan); color: var(--tv-nhan-dam); }
+.tv-giao-dien .tv-giao-dien-toi { display: none; }
+:root[data-theme="dark"] .tv-giao-dien .tv-giao-dien-trang { display: none; }
+:root[data-theme="dark"] .tv-giao-dien .tv-giao-dien-toi { display: inline; }
+.tv-nav--over:not(.is-solid):not(.is-open) .tv-giao-dien {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #FFFFFF;
+}
+.tv-topbar .tv-giao-dien { margin-left: auto; }
+.tv-topbar .tv-giao-dien + .tv-user { margin-left: 0; }
+
+/* Ảnh và bản đồ không đổi màu; khung xem trước ở chế độ tối dịu lại chút */
+:root[data-theme="dark"] .tv-footer-map iframe { filter: brightness(0.85); }

@@ -35,7 +35,7 @@ body {
     cursor: pointer;
 }
 
-.btn-print:hover { background: var(--tv-nhan-dam); }
+.btn-print:hover { background: var(--tv-nhan-nen-dam); }
 
 .report-page {
     max-width: 1100px;

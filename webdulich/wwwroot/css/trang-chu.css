@@ -88,7 +88,7 @@
     padding: 4px 12px;
     border-radius: var(--tv-bo-nhan);
     background: #fff;
-    color: var(--tv-chu);
+    color: var(--tv-chu-tren-sang);
     font-size: var(--tv-cs-nho);
     font-weight: 600;
     text-decoration: none;
@@ -163,13 +163,17 @@
     transform: translateX(-50%);
 }
 
+/* Ô tìm kiếm kiểu kính mờ: nhìn xuyên thấy ảnh phía sau, lớp tối nhẹ giữ chữ trắng đọc được trên cả ảnh sáng */
 .home-search {
     display: flex;
     gap: var(--tv-k2);
     padding: var(--tv-k2);
-    background: var(--tv-be-mat);
+    border: 1px solid rgba(255, 255, 255, 0.38);
     border-radius: var(--tv-bo-khoi);
-    box-shadow: var(--tv-bong-noi);
+    background: rgba(10, 30, 40, 0.28);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .home-search input {
@@ -181,11 +185,17 @@
     background: transparent;
     font-family: inherit;
     font-size: var(--tv-cs-thuong);
-    color: var(--tv-chu);
+    color: #FFFFFF;
 }
+.home-search input::placeholder { color: rgba(255, 255, 255, 0.82); }
 
 .home-search input:focus { outline: none; }
-.home-search:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), var(--tv-bong-noi); }
+.home-search:focus-within { border-color: rgba(255, 255, 255, 0.75); background: rgba(10, 30, 40, 0.4); }
+
+/* Trình duyệt không hỗ trợ làm mờ nền thì dùng nền tối đặc hơn để chữ vẫn đọc được */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .home-search { background: rgba(10, 30, 40, 0.62); }
+}
 
 /* Dải thẻ điểm đến */
 .hero-thumbs {
@@ -409,7 +419,7 @@
     background: var(--tv-nhan-nhat);
 }
 .home-nhom-hinh figcaption { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
-.home-nhom-hinh .dn-duong-nen { background: #FFFFFF; }
+.home-nhom-hinh .dn-duong-nen { background: var(--tv-be-mat); }
 .home-nhom-ghe { display: grid; gap: var(--tv-k1); margin: 0; padding: 0; list-style: none; }
 .home-nhom-ghe li {
     display: flex;
@@ -427,13 +437,56 @@
 .home-nhom-ghe .cho { border-left-color: var(--tv-canh-bao); }
 .home-nhom-ghe .cho span { color: var(--tv-canh-bao); }
 
-/* Video: video đầu lớn, hai video sau xếp cột bên cạnh */
-.home-video { display: grid; grid-template-columns: 2fr 1fr; gap: var(--tv-k4); }
-.home-video .vd-the:first-child { grid-row: span 2; }
-.home-video.mot { grid-template-columns: minmax(0, 720px); }
+/* Dải video tối tràn bề ngang, video lớn tự chạy ở giữa */
+.home-dai-video {
+    margin-top: var(--tv-k8);
+    padding: var(--tv-k7) var(--tv-k4);
+    background: #0E2530;
+    color: #FFFFFF;
+}
+.home-dai-video-trong { max-width: 1140px; margin: 0 auto; }
+.home-dai-video-dau { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--tv-k3); margin-bottom: var(--tv-k4); }
+.home-dai-video-dau h2 { margin: 0; font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+.home-dai-video-link { font-weight: 600; color: #9FD8E6; }
+.home-dai-video-link:hover { color: #FFFFFF; }
+
+.home-video-lon {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    max-height: 640px;
+    width: 100%;
+    border-radius: var(--tv-bo-anh);
+    background: #000;
+}
+.home-video-lon img,
+.home-video-lon iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+/* Video chạy nền: phóng to nhẹ để che viền đen và tên kênh của YouTube */
+.home-video-lon:not(.co-tieng) iframe { transform: scale(1.18); pointer-events: none; }
+.home-video-lon-chu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    padding: var(--tv-k7) var(--tv-k5) var(--tv-k5);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+}
+.home-video-lon-chu h3 { margin: 0; max-width: 720px; font-size: var(--tv-cs-lon); font-weight: 700; overflow-wrap: anywhere; }
+.home-video-lon.co-tieng .home-video-lon-chu { display: none; }
+
+.home-video-con { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k4); margin-top: var(--tv-k4); }
+.home-video-con .vd-the h3 { color: #FFFFFF; }
+.home-video-con .vd-the p { color: #B9CCD3; }
 
 @media (max-width: 900px) {
     .home-nhom { grid-template-columns: 1fr; }
-    .home-video { grid-template-columns: 1fr; }
-    .home-video .vd-the:first-child { grid-row: auto; }
+    .home-video-con { grid-template-columns: 1fr; }
+    .home-video-lon-chu { padding: var(--tv-k5) var(--tv-k4) var(--tv-k4); }
+    .home-video-lon-chu h3 { font-size: var(--tv-cs-vua); }
 }

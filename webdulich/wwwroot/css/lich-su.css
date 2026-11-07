@@ -15,8 +15,8 @@
     font-weight: 500;
 }
 
-.ls-alert-ok { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.ls-alert-loi { background: #FBE9E7; color: var(--tv-loi); }
+.ls-alert-ok { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.ls-alert-loi { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 /* ---------- Số liệu tổng ---------- */
 .ls-stats {
@@ -118,10 +118,10 @@
     white-space: nowrap;
 }
 
-.status-unpaid { background: #EEF1F2; color: var(--tv-chu-phu); }
-.status-checking { background: #FBF1DC; color: var(--tv-canh-bao); }
-.status-paid { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.status-cancelled { background: #FBE9E7; color: var(--tv-loi); }
+.status-unpaid { background: var(--tv-xam-nhat); color: var(--tv-chu-phu); }
+.status-checking { background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
+.status-paid { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.status-cancelled { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 .ls-empty-btn { margin-top: var(--tv-k4); }
 

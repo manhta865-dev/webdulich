@@ -19,7 +19,7 @@
 }
 
 .chat-toggle:hover,
-.ai-help-toggle:hover { background: var(--tv-nhan-dam); }
+.ai-help-toggle:hover { background: var(--tv-nhan-nen-dam); }
 
 .chat-toggle .tv-icon,
 .ai-help-toggle .tv-icon { width: 26px; height: 26px; }
@@ -33,28 +33,29 @@
 
 .ai-help-toggle:hover { background: var(--tv-nhan-nhat); }
 
-/* ---------- Khung hộp thoại ---------- */
-.chat-widget {
+/* ---------- Khung hộp thoại ----------
+   Hai nút nằm cạnh nhau một hàng ở góc phải dưới; hai khung cùng mở ra một chỗ ngay trên hàng nút,
+   và mỗi lần chỉ mở một khung (xem toggleChatBox, toggleAiHelpBox) nên không bao giờ đè lên nhau hay đè lên nút. */
+.chat-widget,
+.ai-help-widget {
     position: fixed;
-    right: 112px;
-    bottom: 28px;
+    bottom: 24px;
     z-index: 2000;
     font-family: var(--tv-font);
 }
-
-.ai-help-widget {
-    position: fixed;
-    right: 24px;
-    bottom: 166px;
-    z-index: 2100;
-    font-family: var(--tv-font);
-}
+.chat-widget { right: 24px; }
+.ai-help-widget { right: 92px; }
 
 .chat-box,
 .ai-help-box {
+    position: fixed;
+    right: 24px;
+    bottom: 92px;
+    z-index: 2100;
     display: none;
+    flex-direction: column;
     width: 360px;
-    margin-bottom: var(--tv-k3);
+    max-height: calc(100vh - 120px);
     overflow: hidden;
     background: var(--tv-be-mat);
     border: 1px solid var(--tv-vien);
@@ -63,7 +64,11 @@
 }
 
 .chat-box.active,
-.ai-help-box.active { display: block; }
+.ai-help-box.active { display: flex; }
+.chat-box > *,
+.ai-help-box > * { flex-shrink: 0; }
+.chat-box .chat-messages-user,
+.ai-help-box .ai-help-messages { flex: 1 1 auto; min-height: 120px; }
 
 .chat-header,
 .ai-help-header {
@@ -182,8 +187,8 @@
     font-weight: 500;
 }
 
-.chat-status.success { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.chat-status.error { background: #FBE9E7; color: var(--tv-loi); }
+.chat-status.success { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.chat-status.error { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 /* ---------- Ô nhập ---------- */
 .chat-compose,
@@ -236,7 +241,7 @@
 }
 
 .chat-submit:hover,
-.ai-help-send:hover { background: var(--tv-nhan-dam); }
+.ai-help-send:hover { background: var(--tv-nhan-nen-dam); }
 
 .ai-help-input { flex: 1; }
 .ai-help-send { width: 44px; padding: 0; }
@@ -272,15 +277,14 @@
 
 /* ---------- Điện thoại ---------- */
 @media (max-width: 576px) {
-    .chat-widget { right: 84px; bottom: 16px; }
-    .ai-help-widget { right: 16px; bottom: 16px; }
+    .chat-widget { right: 16px; bottom: 16px; }
+    .ai-help-widget { right: 80px; bottom: 16px; }
 
     .chat-box,
     .ai-help-box {
-        position: fixed;
         inset: auto 12px 84px 12px;
         width: auto;
-        margin: 0;
+        max-height: calc(100vh - 100px);
     }
 }
 

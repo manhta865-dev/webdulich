@@ -7,11 +7,11 @@
     font-weight: 600;
 }
 
-.dn-alert.ok { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.dn-alert.loi { background: #FBE9E7; color: var(--tv-loi); }
+.dn-alert.ok { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.dn-alert.loi { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 .dn-alert.loi:empty, .dn-alert.loi ul:empty { display: none; }
 .dn-alert ul { margin: 0; padding-left: var(--tv-k4); }
-.dn-alert.canh-bao { background: #FBF1DC; color: var(--tv-canh-bao); }
+.dn-alert.canh-bao { background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
 
 /* Nút quay lại đầu trang ghế, trang trả hộ */
 .dn-quay-lai {
@@ -148,8 +148,8 @@
     font-weight: 700;
 }
 
-.dn-trang-thai.chot { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.dn-trang-thai.huy { background: #FBE9E7; color: var(--tv-loi); }
+.dn-trang-thai.chot { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.dn-trang-thai.huy { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 .dn-tien-do-head {
     display: flex;
@@ -264,11 +264,11 @@
 .dn-ghe.da-dien { border-left-color: var(--tv-nhan); }
 .dn-ghe.da-dien .dn-nhan { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
 .dn-ghe.cho { border-left-color: var(--tv-canh-bao); }
-.dn-ghe.cho .dn-nhan { background: #FBF1DC; color: var(--tv-canh-bao); }
+.dn-ghe.cho .dn-nhan { background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
 .dn-ghe.da-tra { border-left-color: var(--tv-thanh-cong); }
-.dn-ghe.da-tra .dn-nhan { background: #E4F4EC; color: var(--tv-thanh-cong); }
+.dn-ghe.da-tra .dn-nhan { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
 .dn-ghe.da-nha { opacity: 0.55; }
-.dn-ghe.da-nha .dn-nhan { background: #FBE9E7; color: var(--tv-loi); }
+.dn-ghe.da-nha .dn-nhan { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 .dn-ghe-mo {
     flex-shrink: 0;
@@ -405,8 +405,8 @@
 
 /* ---------- Trang một ghế ---------- */
 .dn-ghe-nhan { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
-.dn-ghe-nhan.da-tra { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.dn-ghe-nhan.cho { background: #FBF1DC; color: var(--tv-canh-bao); }
+.dn-ghe-nhan.da-tra { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.dn-ghe-nhan.cho { background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
 
 .dn-xem { display: grid; gap: var(--tv-k3); margin: var(--tv-k3) 0 0; }
 .dn-xem dt { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
@@ -475,7 +475,7 @@
     margin: var(--tv-k3) 0 0;
     padding: var(--tv-k2) var(--tv-k3);
     border-radius: var(--tv-bo-nut);
-    background: #FBF1DC;
+    background: var(--tv-canh-bao-nhat);
     color: var(--tv-canh-bao);
     font-size: var(--tv-cs-nho);
     font-weight: 600;
@@ -491,10 +491,10 @@
     font-weight: 600;
 }
 
-.dn-tra-ket-qua.da-tra { background: #E4F4EC; color: var(--tv-thanh-cong); }
-.dn-tra-ket-qua.cho { background: #FBF1DC; color: var(--tv-canh-bao); }
-.dn-tra-ket-qua.tu-choi { background: #FBE9E7; color: var(--tv-loi); }
-.dn-ghe .dn-nhan.dn-tu-choi { background: #FBE9E7; color: var(--tv-loi); }
+.dn-tra-ket-qua.da-tra { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.dn-tra-ket-qua.cho { background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
+.dn-tra-ket-qua.tu-choi { background: var(--tv-loi-nhat); color: var(--tv-loi); }
+.dn-ghe .dn-nhan.dn-tu-choi { background: var(--tv-loi-nhat); color: var(--tv-loi); }
 
 .dn-het-han ul { margin: var(--tv-k3) 0; padding-left: var(--tv-k5); display: grid; gap: var(--tv-k1); }
 
@@ -557,10 +557,10 @@
     color: var(--tv-chu-phu);
 }
 .dn-cho.khach-khac { background: #7C8A91; color: #FFFFFF; }
-.dn-cho.trong { background: #B9DCE5; color: var(--tv-chu); }
-.dn-cho.da-nhan { background: #8FB8C0; color: var(--tv-chu); }
+.dn-cho.trong { background: #B9DCE5; color: var(--tv-chu-tren-sang); }
+.dn-cho.da-nhan { background: #8FB8C0; color: var(--tv-chu-tren-sang); }
 .dn-cho.da-dien { background: var(--tv-nhan); color: #FFFFFF; }
-.dn-cho.cho { background: #D9962B; color: var(--tv-chu); }
+.dn-cho.cho { background: #D9962B; color: var(--tv-chu-tren-sang); }
 .dn-cho.da-tra { background: var(--tv-thanh-cong); color: #FFFFFF; }
 
 .dn-chu-giai {
@@ -612,7 +612,7 @@
     align-items: center;
     gap: var(--tv-k3);
     padding: var(--tv-k3) var(--tv-k5);
-    background: var(--tv-nhan-dam);
+    background: var(--tv-nhan-nen-dam);
     color: #FFFFFF;
     font-size: var(--tv-cs-nho);
 }

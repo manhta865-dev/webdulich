@@ -6,21 +6,34 @@ const khung = document.getElementById("hero-globe");
 const canvas = khung && khung.querySelector("canvas");
 const nhan = khung && khung.querySelector(".hero-globe-label");
 let THREE = null;
+let daBatDau = false, soLanThu = 0;
 
 async function batDau() {
+    if (daBatDau) return;
+    daBatDau = true;
     try {
-        THREE = await import("/lib/three/three.module.min.js");
+        THREE = THREE || await import("/lib/three/three.module.min.js");
         khoiTao();
     } catch (loi) {
-        khung.hidden = true;
+        // Trình duyệt có lúc chưa tạo được WebGL (máy đang bận, nhiều tab 3D): thử lại một lần rồi mới ẩn
+        console.warn("Quả địa cầu chưa chạy được:", loi && loi.message);
+        if (++soLanThu < 2) {
+            daBatDau = false;
+            setTimeout(batDau, 1500);
+        } else {
+            khung.hidden = true;
+        }
     }
 }
 
 if (khung && canvas && getComputedStyle(khung).display !== "none") {
+    // Đợi trang tải xong để không tranh băng thông với ảnh đầu trang, nhưng không đợi quá 2,5 giây:
+    // nếu còn một tài nguyên nào đó tải chậm (bản đồ, ảnh bên ngoài) thì quả cầu vẫn hiện
     if (document.readyState === "complete") {
         batDau();
     } else {
         window.addEventListener("load", batDau, { once: true });
+        setTimeout(batDau, 2500);
     }
 }
 
@@ -49,6 +62,13 @@ function khoiTao() {
     const TRUONG_SA = [
         [11.43, 114.33], [10.72, 114.42], [10.38, 114.36], [9.9, 114.4], [9.7, 115.85],
         [8.85, 112.85], [8.65, 111.92], [7.9, 113.8], [10.2, 113.6]
+    ];
+    // Đèn thành phố lớn (vĩ độ, kinh độ, cỡ chấm), chỉ để trang trí phía ban đêm
+    const DEN_THANH_PHO = [
+        [21.03, 105.85, 4], [10.78, 106.7, 4.5], [16.05, 108.2, 3], [20.86, 106.68, 2.5], [10.03, 105.78, 2.5],
+        [16.46, 107.59, 2], [12.24, 109.19, 2], [11.94, 108.44, 2], [18.67, 105.69, 2],
+        [13.75, 100.5, 4.5], [11.55, 104.92, 3], [17.97, 102.6, 2.5], [16.87, 96.2, 3],
+        [3.14, 101.69, 3.5], [1.35, 103.82, 3.5], [14.6, 120.98, 4], [22.3, 114.17, 4], [23.13, 113.26, 4]
     ];
     const DIEM_DEN = [
         { ten: "Hà Nội", lat: 21.03, lon: 105.85 },
@@ -130,6 +150,14 @@ function khoiTao() {
             const [x, y] = toaDo(la, lo);
             g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill();
         });
+        // Đèn các thành phố lớn, chỉ sáng rõ ở phía đêm
+        g.fillStyle = "#FFF4D6";
+        g.shadowColor = "#FFC46B";
+        g.shadowBlur = 10;
+        DEN_THANH_PHO.forEach(([la, lo, r]) => {
+            const [x, y] = toaDo(la, lo);
+            g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+        });
         return c;
     }
 
@@ -163,13 +191,26 @@ function khoiTao() {
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
     camera.position.set(0, 0, 5.2);
 
-    canh.add(new THREE.AmbientLight(0xbfe9ee, 0.38));
-    const den = new THREE.DirectionalLight(0xfff2dd, 2.3);
-    den.position.set(-2.5, 1.8, 3);
+    // Ánh sáng ngày đêm: mặt trời đặt đúng vị trí theo giờ thật, nên Việt Nam sáng khi đang là ban ngày ở Việt Nam
+    // và tối, lên đèn khi đang là ban đêm. Ánh sáng nền để thấp cho phía đêm tối hẳn nhưng vẫn nhìn ra hình quả cầu.
+    canh.add(new THREE.AmbientLight(0x8cc4dc, 0.32));
+    const den = new THREE.DirectionalLight(0xfff2dd, 2.6);
     canh.add(den);
-    const denNguoc = new THREE.DirectionalLight(0x4ac8d8, 0.55);
+    const denNguoc = new THREE.DirectionalLight(0x4ac8d8, 0.22);
     denNguoc.position.set(3, -1, -2);
     canh.add(denNguoc);
+
+    // Điểm mặt trời đứng thẳng đầu: kinh độ theo giờ quốc tế, vĩ độ theo ngày trong năm (công thức gần đúng)
+    function viTriMatTroi() {
+        const bayGio = new Date();
+        const gioUtc = bayGio.getUTCHours() + bayGio.getUTCMinutes() / 60;
+        const dauNam = Date.UTC(bayGio.getUTCFullYear(), 0, 1);
+        const ngayTrongNam = (bayGio.getTime() - dauNam) / 86400000;
+        const viDo = -23.44 * Math.cos(2 * Math.PI * (ngayTrongNam + 10) / 365);
+        const kinhDo = (12 - gioUtc) * 15;
+        return { viDo, kinhDo };
+    }
+    const uTroi = { value: new THREE.Vector3(0, 0, 1) };
 
     // nghieng: nghiêng trục; quay: quay quanh kinh tuyến
     const nghieng = new THREE.Group();
@@ -183,14 +224,39 @@ function khoiTao() {
     anhSang.colorSpace = THREE.SRGBColorSpace;
     anhNen.anisotropy = anhSang.anisotropy = 4;
 
-    const traiDat = new THREE.Mesh(
-        new THREE.SphereGeometry(1, 96, 64),
-        new THREE.MeshStandardMaterial({
-            map: anhNen, roughness: 0.55, metalness: 0.08,
-            emissive: 0xffffff, emissiveMap: anhSang, emissiveIntensity: 1.0
-        })
-    );
+    const vatLieuDat = new THREE.MeshStandardMaterial({
+        map: anhNen, roughness: 0.55, metalness: 0.08,
+        emissive: 0xffffff, emissiveMap: anhSang, emissiveIntensity: 1.0
+    });
+    // Phần phát sáng (Việt Nam, đèn thành phố) mờ đi ở phía ngày, sáng rõ ở phía đêm.
+    // Ban ngày vẫn giữ một phần để Việt Nam và hai quần đảo luôn nhận ra được.
+    vatLieuDat.onBeforeCompile = (sh) => {
+        sh.uniforms.uTroi = uTroi;
+        sh.fragmentShader = "uniform vec3 uTroi;\n" + sh.fragmentShader.replace(
+            "#include <emissivemap_fragment>",
+            "#include <emissivemap_fragment>\n" +
+            "float demTroi = smoothstep(0.12, -0.28, dot(normal, uTroi));\n" +
+            "totalEmissiveRadiance *= mix(0.4, 1.35, demTroi);"
+        );
+    };
+    const traiDat = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), vatLieuDat);
     quay.add(traiDat);
+
+    // Hướng mặt trời trong hệ của quả cầu; mỗi khung hình đổi sang hệ thế giới vì quả cầu quay
+    const troiTrongCau = new THREE.Vector3();
+    const troiThuc = new THREE.Vector3();
+    function capNhatMatTroi() {
+        const { viDo, kinhDo } = viTriMatTroi();
+        troiTrongCau.copy(diem(viDo, kinhDo, 1)).normalize();
+    }
+    capNhatMatTroi();
+    setInterval(capNhatMatTroi, 60000);
+    function datAnhSang() {
+        camera.updateMatrixWorld();
+        troiThuc.copy(troiTrongCau).transformDirection(quay.matrixWorld);
+        den.position.copy(troiThuc).multiplyScalar(5);
+        uTroi.value.copy(troiThuc).transformDirection(camera.matrixWorldInverse);
+    }
 
     const anhMay = new THREE.CanvasTexture(veAnhMay());
     anhMay.wrapS = THREE.RepeatWrapping;
@@ -427,6 +493,8 @@ function khoiTao() {
 
         sao.material.opacity = 0.7 + Math.sin(giay * 1.6) * 0.15;
         capNhatNhan(t);
+        canh.updateMatrixWorld();
+        datAnhSang();
         renderer.render(canh, camera);
     }
 

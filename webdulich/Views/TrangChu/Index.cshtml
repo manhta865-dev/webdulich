@@ -223,24 +223,39 @@
         </figure>
     </section>
 
-    @if (dsVideo.Count > 0)
-    {
-        <section class="tv-section">
-            <div class="tv-section-head">
-                <div>
-                    <h2>Xem trước chuyến đi</h2>
-                </div>
-                <a asp-controller="Video" asp-action="Index" class="tv-link">Xem tất cả video</a>
-            </div>
-            <div class="home-video@(dsVideo.Count == 1 ? " mot" : "")">
-                @foreach (var video in dsVideo)
-                {
-                    <partial name="_TheVideo" model="video" />
-                }
-            </div>
-        </section>
-    }
+</div>
 
+@if (dsVideo.Count > 0)
+{
+    var videoChinh = dsVideo[0];
+    @* Dải tối tràn bề ngang: video đầu tự chạy không tiếng khi cuộn tới (js/video-nen.js), các video sau xếp bên dưới *@
+    <section class="home-dai-video" aria-labelledby="tieuDeVideo">
+        <div class="home-dai-video-trong">
+            <div class="home-dai-video-dau">
+                <h2 id="tieuDeVideo">Xem trước chuyến đi</h2>
+                <a asp-controller="Video" asp-action="Index" class="home-dai-video-link">Xem tất cả video</a>
+            </div>
+            <div class="home-video-lon" data-video-nen="@videoChinh.MaYouTube">
+                <img src="@videoChinh.AnhXemTruoc" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                <div class="home-video-lon-chu">
+                    <h3>@videoChinh.TieuDe</h3>
+                    <a href="@videoChinh.LinkXem" target="_blank" rel="noopener" class="tv-btn tv-btn-sang" data-video-bat-tieng>Xem có tiếng</a>
+                </div>
+            </div>
+            @if (dsVideo.Count > 1)
+            {
+                <div class="home-video-con">
+                    @foreach (var video in dsVideo.Skip(1))
+                    {
+                        <partial name="_TheVideo" model="video" />
+                    }
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<div class="home-wrap">
     @if (dsBaiViet.Count > 0)
     {
         <section class="tv-section">
@@ -295,6 +310,7 @@
 @if (dsVideo.Count > 0)
 {
     <script src="~/js/video-nhe.js" asp-append-version="true"></script>
+    <script src="~/js/video-nen.js" asp-append-version="true"></script>
 }
 
 <script>

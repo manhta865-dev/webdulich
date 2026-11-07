@@ -9,11 +9,25 @@
     --tv-nhan: #0A6E8A;
     --tv-nhan-dam: #085A72;
     --tv-nhan-nhat: #E3F1F5;
+    /* Nền nút khi rê chuột: luôn đậm hơn màu nhấn để chữ trắng đọc được ở cả hai chế độ */
+    --tv-nhan-nen-dam: #085A72;
     --tv-gia: #E4572E;
     --tv-thanh-cong: #1E8A5A;
     --tv-canh-bao: #B7791F;
     --tv-loi: #C0392B;
     --tv-vien: #DCE3E6;
+
+    /* Nền nhạt của nhãn trạng thái, hàng bảng khi rê chuột, nhãn xám */
+    --tv-loi-nhat: #FBE9E7;
+    --tv-thanh-cong-nhat: #E4F4EC;
+    --tv-canh-bao-nhat: #FBF1DC;
+    --tv-xam-nhat: #EEF1F2;
+    --tv-mat-nhat: #FAFCFC;
+
+    /* Chữ tối cố định, dùng trên nền luôn sáng (chip trắng nằm trên ảnh) ở cả hai chế độ */
+    --tv-chu-tren-sang: #17262E;
+
+    color-scheme: light;
 
     /* Chữ */
     --tv-font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
@@ -47,6 +61,34 @@
     --tv-nhanh: 160ms ease;
 }
 
+/* Chế độ tối: chỉ đổi màu, bố cục giữ nguyên. Gắn bằng data-theme="dark" trên thẻ html (xem _Layout).
+   Màu nhấn sáng hơn bản sáng để chữ và đường viền đủ tương phản trên nền tối. */
+:root[data-theme="dark"] {
+    --tv-nen: #0F1A1F;
+    --tv-be-mat: #16252C;
+    --tv-chu: #E3ECEF;
+    --tv-chu-phu: #9AAFB8;
+    --tv-nhan: #1E8FAF;
+    --tv-nhan-dam: #7FD0E6;
+    --tv-nhan-nhat: #173A47;
+    --tv-nhan-nen-dam: #15718C;
+    --tv-gia: #FF8A5C;
+    --tv-thanh-cong: #4CC38A;
+    --tv-canh-bao: #E3B458;
+    --tv-loi: #F07466;
+    --tv-vien: #2A414B;
+
+    --tv-loi-nhat: #3A201D;
+    --tv-thanh-cong-nhat: #16362A;
+    --tv-canh-bao-nhat: #3A3018;
+    --tv-xam-nhat: #22333B;
+    --tv-mat-nhat: #1B2C34;
+
+    --tv-bong-noi: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+    color-scheme: dark;
+}
+
 /* Nền và chữ mặc định.
    Các trang chưa làm lại có CSS riêng, quy tắc nào của trang đó cụ thể hơn sẽ thắng. */
 body {
@@ -60,10 +102,10 @@ body {
 .btn-primary {
     --bs-btn-bg: var(--tv-nhan);
     --bs-btn-border-color: var(--tv-nhan);
-    --bs-btn-hover-bg: var(--tv-nhan-dam);
-    --bs-btn-hover-border-color: var(--tv-nhan-dam);
-    --bs-btn-active-bg: var(--tv-nhan-dam);
-    --bs-btn-active-border-color: var(--tv-nhan-dam);
+    --bs-btn-hover-bg: var(--tv-nhan-nen-dam);
+    --bs-btn-hover-border-color: var(--tv-nhan-nen-dam);
+    --bs-btn-active-bg: var(--tv-nhan-nen-dam);
+    --bs-btn-active-border-color: var(--tv-nhan-nen-dam);
     --bs-btn-disabled-bg: var(--tv-nhan);
     --bs-btn-disabled-border-color: var(--tv-nhan);
 }

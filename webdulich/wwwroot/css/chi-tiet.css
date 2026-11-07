@@ -8,7 +8,7 @@
     margin-bottom: var(--tv-k4);
     padding: var(--tv-k3) var(--tv-k4);
     border-radius: var(--tv-bo-nut);
-    background: #FBE9E7;
+    background: var(--tv-loi-nhat);
     color: var(--tv-loi);
     font-weight: 600;
 }

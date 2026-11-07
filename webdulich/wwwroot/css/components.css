@@ -178,7 +178,7 @@
 /* ---------- Nút sáng dùng trên nền ảnh ---------- */
 .tv-btn-sang {
     background: #fff;
-    color: var(--tv-chu);
+    color: var(--tv-chu-tren-sang);
 }
 
 .tv-btn-sang:hover { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
@@ -235,7 +235,7 @@
     padding: var(--tv-k1) var(--tv-k3);
     border-radius: var(--tv-bo-nhan);
     background: #fff;
-    color: var(--tv-chu);
+    color: var(--tv-chu-tren-sang);
     font-size: var(--tv-cs-nho);
     font-weight: 600;
 }
@@ -287,7 +287,7 @@
     height: 40px;
     border-radius: 50%;
     background: #fff;
-    color: var(--tv-chu);
+    color: var(--tv-chu-tren-sang);
     transition: transform var(--tv-nhanh);
 }
 
@@ -300,7 +300,7 @@
     color: #fff;
 }
 
-.tv-chip.active:hover { background: var(--tv-nhan-dam); color: #fff; }
+.tv-chip.active:hover { background: var(--tv-nhan-nen-dam); color: #fff; }
 
 .tv-photo-place {
     display: flex;
