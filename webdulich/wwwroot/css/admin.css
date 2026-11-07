@@ -952,3 +952,15 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 .ad-mb-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); margin-top: var(--tv-k3); }
 .ad-form-actions-trai.ad-khoang-tren { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
 .ad-xe-select { min-width: 150px; }
+
+/* Đơn cá nhân đã báo chuyển khoản nhưng quá hạn giữ chỗ (RB-38): nhắc admin kiểm sao kê */
+.ad-qua-han {
+    display: inline-block;
+    margin-top: var(--tv-k1);
+    padding: 2px var(--tv-k2);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-loi-nhat);
+    color: var(--tv-loi);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}

@@ -6,6 +6,7 @@
     var tongDon = Model != null ? Model.Count : 0;
     var dangKiemTra = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đang kiểm tra") : 0;
     var chuaThanhToan = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Chưa thanh toán") : 0;
+    var quaHan = Model != null ? Model.Count(x => x.QuaHanChuaXacNhan) : 0;
     var tienDoNhom = ViewBag.TienDoNhom as Dictionary<int, (int DaTra, int Tong)> ?? new Dictionary<int, (int DaTra, int Tong)>();
 }
 
@@ -46,6 +47,10 @@
             <span class="ad-kpi-body">
                 <span class="ad-kpi-label">Đang kiểm tra</span>
                 <strong>@dangKiemTra</strong>
+                @if (quaHan > 0)
+                {
+                    <span class="ad-qua-han">@quaHan đơn quá hạn giữ chỗ</span>
+                }
             </span>
         </div>
 
@@ -163,6 +168,15 @@
                                     <div class="ad-cell-stack">
                                         <span>@(item.LoaiDon == "Nhom" ? "Theo từng ghế" : item.PhuongThucThanhToan)</span>
                                         <span class="badge-status @cssStatus">@item.TrangThaiThanhToan</span>
+                                        @if (item.QuaHanChuaXacNhan)
+                                        {
+                                            @* RB-38: khách đã báo chuyển khoản, quá hạn giữ chỗ: hệ thống không tự hủy, admin kiểm sao kê *@
+                                            <span class="ad-qua-han">Quá hạn @item.HanGiuCho!.Value.ToString("HH:mm dd/MM"), cần kiểm sao kê</span>
+                                        }
+                                        else if (item.LoaiDon != "Nhom" && item.TrangThai == "GiuCho" && item.HanGiuCho.HasValue)
+                                        {
+                                            <span class="ad-sub">Giữ chỗ đến @item.HanGiuCho.Value.ToString("HH:mm dd/MM")</span>
+                                        }
                                     </div>
                                 </td>
 

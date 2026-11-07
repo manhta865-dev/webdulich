@@ -43,6 +43,18 @@ namespace webdulich.Models
 
         public bool DaHuy => TrangThai == "DaHuy";
         public bool DaThanhToan => TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan;
+
+        // Hạn giữ chỗ (đơn nhóm, và đơn cá nhân từ RB-38); đơn cũ có thể rỗng
+        public DateTime? HanGiuCho { get; set; }
+
+        // RB-39: khách tự hủy đơn cá nhân chỉ khi chưa trả, chưa báo chuyển khoản, và chưa tới ngày đi.
+        // Đã trả hoặc đang chờ kiểm tra chuyển khoản thì liên hệ TravelVN (hoàn tiền xử lý ngoài hệ thống).
+        public bool KhachTuHuyDuoc => LoaiDon != "Nhom" && TrangThai == "GiuCho"
+            && TrangThaiThanhToan == TrangThaiThanhToanDon.ChuaThanhToan && NgayDi.Date > GioVN.HomNay;
+
+        // RB-38: đơn cá nhân đã báo chuyển khoản, quá hạn giữ chỗ mà admin chưa xác nhận: không tự hủy, admin cần kiểm sao kê
+        public bool QuaHanChuaXacNhan => LoaiDon != "Nhom" && TrangThai == "GiuCho"
+            && HanGiuCho.HasValue && HanGiuCho.Value <= GioVN.BayGio;
     }
 
     // Nhãn trạng thái thanh toán hiển thị cho người dùng (tính, không lưu)
@@ -73,6 +85,7 @@ namespace webdulich.Models
                 TrangThai = x.TrangThai,
                 LoaiDon = x.LoaiDon,
                 TaiKhoanId = x.TaiKhoanId,
+                HanGiuCho = x.HanGiuCho,
 
                 LichKhoiHanhTourId = x.LichKhoiHanhTourId,
                 TourId = x.LichKhoiHanhTour != null ? x.LichKhoiHanhTour.TourId : 0,
@@ -202,6 +215,51 @@ namespace webdulich.Models
             }
 
             giaoDichCsdl.Commit();
+        }
+
+        // RB-38: đơn cá nhân quá hạn giữ chỗ mà chưa trả thì tự hủy, trả chỗ cho lịch.
+        // Chỉ hủy đơn chọn tiền mặt (hoặc không có giao dịch): đơn đã báo chuyển khoản hay ví thì giữ lại để admin kiểm sao kê,
+        // tránh khách đã chuyển tiền mất chỗ vì admin xác nhận chậm. Câu UPDATE đầu tiên có điều kiện "còn giữ chỗ, chưa có giao dịch
+        // thành công, không có chuyển khoản đang chờ", nên admin xác nhận cùng lúc thì một trong hai bên không đổi gì.
+        // Trả về true nếu đã hủy.
+        public static bool HuyDonCaNhanQuaHan(DuLichDbContext db, int donId)
+        {
+            using var giaoDichCsdl = db.Database.BeginTransaction();
+            var bayGio = GioVN.BayGio;
+            const string ghiChu = "Quá hạn giữ chỗ chưa thanh toán, hệ thống tự hủy.";
+
+            int soDong = db.Database.ExecuteSqlInterpolated($@"
+UPDATE DatTours
+SET TrangThai = 'DaHuy',
+    GhiChu = CASE WHEN GhiChu IS NULL OR GhiChu = N'' THEN {ghiChu} ELSE GhiChu + NCHAR(10) + {ghiChu} END
+WHERE Id = {donId} AND LoaiDon = 'CaNhan' AND TrangThai = 'GiuCho' AND HanGiuCho <= {bayGio}
+  AND NOT EXISTS (SELECT 1 FROM GiaoDichThanhToans g WHERE g.DatTourId = {donId}
+                  AND (g.TrangThai = 'ThanhCong' OR (g.TrangThai = 'ChoXacNhan' AND g.PhuongThuc <> N'Tiền mặt')))");
+            if (soDong == 0)
+            {
+                giaoDichCsdl.Rollback();
+                return false;
+            }
+
+            // Bỏ chỗ ngồi, nhả ghế, giao dịch tiền mặt đang chờ thành không hiệu lực (RB-16, RB-17)
+            db.Database.ExecuteSqlInterpolated($@"
+DELETE c FROM ChoNgoiChuyenDis c JOIN HanhKhachDatTours h ON h.Id = c.HanhKhachDatTourId
+WHERE h.DatTourId = {donId} AND h.NgayNha IS NULL");
+            int soNha = db.Database.ExecuteSqlInterpolated(
+                $"UPDATE HanhKhachDatTours SET NgayNha = {bayGio} WHERE DatTourId = {donId} AND NgayNha IS NULL");
+            db.Database.ExecuteSqlInterpolated(
+                $"UPDATE GiaoDichThanhToans SET TrangThai = 'ThatBai' WHERE DatTourId = {donId} AND TrangThai = 'ChoXacNhan'");
+            // Trả đúng số ghế vừa nhả (RB-29)
+            if (soNha > 0)
+            {
+                db.Database.ExecuteSqlInterpolated($@"
+UPDATE l SET SoChoCon = SoChoCon + {soNha}
+FROM LichKhoiHanhTours l JOIN DatTours d ON d.LichKhoiHanhTourId = l.Id
+WHERE d.Id = {donId} AND l.TrangThai <> {TrangThaiLich.DaHuy}");
+            }
+
+            giaoDichCsdl.Commit();
+            return true;
         }
 
         // Chốt đơn nhóm: nhả mọi ghế chưa có giao dịch chờ hoặc thành công, bỏ chỗ ngồi của chúng,

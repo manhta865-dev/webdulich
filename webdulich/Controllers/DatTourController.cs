@@ -9,11 +9,16 @@ namespace webdulich.Controllers
     public class DatTourController : Controller
     {
         private readonly DuLichDbContext _context; // Biến để truy cập cơ sở dữ liệu thông qua Entity Framework Core
+        private readonly IConfiguration _cauHinh;
 
-        public DatTourController(DuLichDbContext context)
+        public DatTourController(DuLichDbContext context, IConfiguration cauHinh)
         {
             _context = context;
+            _cauHinh = cauHinh;
         }
+
+        // Đơn cá nhân giữ chỗ cùng số giờ với đơn nhóm (RB-38)
+        private int SoGioGiuCho => _cauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
         
         private IQueryable<Tour> LayQueryTourDayDu()
         {
@@ -786,7 +791,9 @@ namespace webdulich.Controllers
                 // Đơn cá nhân chờ admin xác nhận đã nhận tiền
                 LoaiDon = "CaNhan",
                 TrangThai = "GiuCho",
-                NgayDat = GioVN.BayGio
+                NgayDat = GioVN.BayGio,
+                // Quá hạn mà chưa trả tiền mặt thì đơn tự hủy (RB-38); muộn nhất cuối ngày trước ngày đi
+                HanGiuCho = XuLyDon.TinhHanGiuCho(GioVN.BayGio, SoGioGiuCho, lich.NgayKhoiHanh)
             };
             // Lấy danh sách hành khách từ session, nếu có, phân tích chuỗi JSON để lấy danh sách hành khách và lưu vào thuộc tính HanhKhachDatTours của đối tượng DatTours. Nếu không có thông tin hành khách trong session, thuộc tính HanhKhachDatTours sẽ là một danh sách rỗng.
             var hanhKhachJson = HttpContext.Session.GetString("DatTour_HanhKhach");
@@ -1250,6 +1257,18 @@ namespace webdulich.Controllers
             {
                 TempData["Loi"] = "Đơn nhóm hủy ở trang đơn nhóm.";
                 return RedirectToAction("ChiTiet", "DonNhom", new { id });
+            }
+
+            // RB-39: đã trả, đang chờ kiểm tra chuyển khoản, hoặc đã tới ngày đi thì khách không tự hủy được
+            var doc = _context.DatTours.AsNoTracking().Where(x => x.Id == id).ChonDon(_context).First();
+            if (!doc.KhachTuHuyDuoc)
+            {
+                TempData["Loi"] = doc.NgayDi.Date <= GioVN.HomNay
+                    ? "Chuyến đã tới ngày khởi hành nên không hủy được."
+                    : doc.DaThanhToan
+                        ? "Đơn đã thanh toán. Để hủy và hoàn tiền, bạn liên hệ TravelVN."
+                        : "Đơn đang được kiểm tra chuyển khoản. Để hủy và hoàn tiền, bạn liên hệ TravelVN.";
+                return RedirectToAction("LichSu");
             }
 
             XuLyDon.HuyDon(_context, datTour);

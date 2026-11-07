@@ -194,8 +194,17 @@
                             </a>
                         </footer>
                     }
-                    else if (item.DuocDoiCho || item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
+                    else if (item.DuocDoiCho || item.KhachTuHuyDuoc || (item.TrangThaiThanhToan == "Đang kiểm tra" && !item.DaHuy))
                     {
+                        @if (item.KhachTuHuyDuoc && item.HanGiuCho.HasValue)
+                        {
+                            @* RB-38: đơn tiền mặt chưa trả, quá hạn thì tự hủy *@
+                            <p class="ls-han">Giữ chỗ đến <strong>@item.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</strong>. Quá hạn mà chưa thanh toán, đơn tự hủy và trả chỗ.</p>
+                        }
+                        else if (item.TrangThaiThanhToan == "Đang kiểm tra")
+                        {
+                            <p class="ls-han">TravelVN đang kiểm tra chuyển khoản của bạn. Muốn hủy đơn, bạn liên hệ TravelVN để được hoàn tiền.</p>
+                        }
                         <footer class="ls-card-foot">
                             @if (item.DuocDoiCho)
                             {
@@ -204,7 +213,7 @@
                                     @(daCoCho ? "Đổi chỗ ngồi" : "Chọn chỗ ngồi")
                                 </a>
                             }
-                            @if (item.TrangThaiThanhToan == "Đang kiểm tra" || item.TrangThaiThanhToan == "Chưa thanh toán")
+                            @if (item.KhachTuHuyDuoc)
                             {
                                 <form asp-controller="DatTour"
                                       asp-action="HuyDatTour"

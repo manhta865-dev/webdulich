@@ -60,6 +60,26 @@ namespace webdulich.Services
                     }
                 }
 
+                // Đơn cá nhân quá hạn giữ chỗ chưa trả tiền mặt: tự hủy, trả chỗ (RB-38)
+                var dsDonCaNhan = db.DatTours
+                    .Where(x => x.LoaiDon == "CaNhan" && x.TrangThai == "GiuCho" && x.HanGiuCho <= bayGio)
+                    .Select(x => x.Id)
+                    .ToList();
+                foreach (var donId in dsDonCaNhan)
+                {
+                    try
+                    {
+                        if (XuLyDon.HuyDonCaNhanQuaHan(db, donId))
+                        {
+                            _nhatKy.LogInformation("Đơn cá nhân {DonId} quá hạn giữ chỗ chưa trả: đã hủy", donId);
+                        }
+                    }
+                    catch (Exception loi)
+                    {
+                        _nhatKy.LogError(loi, "Lỗi khi hủy đơn cá nhân quá hạn {DonId}", donId);
+                    }
+                }
+
                 // Lịch sắp đi còn ghế đang giữ mà chưa có chỗ trên xe (dữ liệu cũ, hoặc lần xếp trước bị trùng): xếp bù (RB-36)
                 var homNay = bayGio.Date;
                 var dsLichThieu = db.HanhKhachDatTours

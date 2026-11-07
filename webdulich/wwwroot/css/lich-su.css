@@ -105,7 +105,20 @@
 .ls-card-foot {
     display: flex;
     justify-content: flex-end;
+    gap: var(--tv-k2);
     padding: var(--tv-k3) var(--tv-k5) var(--tv-k4);
+}
+.ls-card-foot:empty { display: none; }
+
+/* Hạn giữ chỗ của đơn chưa trả, hoặc nhắc liên hệ khi đang kiểm tra chuyển khoản (RB-38, RB-39) */
+.ls-han {
+    margin: 0 var(--tv-k5);
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-canh-bao-nhat);
+    color: var(--tv-chu);
+    font-size: var(--tv-cs-nho);
+    line-height: 1.5;
 }
 
 /* ---------- Nhãn trạng thái (chữ kèm màu) ---------- */
