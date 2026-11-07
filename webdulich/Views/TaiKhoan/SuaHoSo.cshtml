@@ -11,9 +11,12 @@
         "taixe" => "Tài xế",
         _ => "Khách hàng"
     };
+    // Tài khoản cũ có thể chưa có ngày tạo (giá trị mặc định 01/01/0001), khi đó không hiện ngày sai
+    var ngayThamGia = Model.NgayTao.Year > 2000 ? Model.NgayTao.ToString("dd/MM/yyyy") : null;
     var thongBao = TempData["ThanhCong"] as string;
     var coLoiMatKhau = !ViewData.ModelState.IsValid &&
         new[] { "MatKhauHienTai", "MatKhauMoi", "XacNhanMatKhau" }.Any(k => ViewData.ModelState[k]?.Errors.Count > 0);
+    var lienHe = string.Join("  ", new[] { Model.Email, Model.SoDienThoai }.Where(x => !string.IsNullOrWhiteSpace(x)));
 }
 
 @section Styles {
@@ -21,11 +24,6 @@
 }
 
 <div class="hs-page">
-    <div class="hs-head">
-        <h1>Hồ sơ của bạn</h1>
-        <p>Thông tin này dùng để đăng nhập và điền sẵn khi bạn đặt tour.</p>
-    </div>
-
     @if (!string.IsNullOrEmpty(thongBao))
     {
         <div class="hs-ok" role="status">
@@ -34,97 +32,120 @@
         </div>
     }
 
-    <form asp-action="SuaHoSo" method="post" enctype="multipart/form-data" class="hs-layout" novalidate>
-        <aside class="hs-card hs-me">
-            <div class="hs-avatar" id="hsAvatar">
-                @if (coAnh)
-                {
-                    <img id="hsAvatarImg" src="~/images/avatar/@Model.AnhDaiDien" alt="Ảnh đại diện của @Model.HoTen" />
-                }
-                else
-                {
-                    <img id="hsAvatarImg" alt="Ảnh đại diện mới" hidden />
-                    <span id="hsAvatarChu" aria-hidden="true">@chuCai</span>
-                }
+    <form asp-action="SuaHoSo" method="post" enctype="multipart/form-data" novalidate>
+        @* Thẻ đầu trang: ảnh đại diện có nút đổi ảnh, tên và thông tin tài khoản *@
+        <section class="hs-the-dau">
+            <div class="hs-anh-khung">
+                <div class="hs-avatar" id="hsAvatar">
+                    @if (coAnh)
+                    {
+                        <img id="hsAvatarImg" src="~/images/avatar/@Model.AnhDaiDien" alt="Ảnh đại diện của @Model.HoTen" />
+                    }
+                    else
+                    {
+                        <img id="hsAvatarImg" alt="Ảnh đại diện mới" hidden />
+                        <span id="hsAvatarChu" aria-hidden="true">@chuCai</span>
+                    }
+                </div>
+                <label class="hs-doi-anh" title="Đổi ảnh đại diện">
+                    <input asp-for="AnhDaiDienFile" type="file" accept=".jpg,.jpeg,.png,.webp" id="hsFile" />
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                    <span class="visually-hidden">Đổi ảnh đại diện</span>
+                </label>
             </div>
 
-            <label class="tv-btn tv-btn-vien hs-file">
-                <input asp-for="AnhDaiDienFile" type="file" accept=".jpg,.jpeg,.png,.webp" id="hsFile" />
-                Đổi ảnh đại diện
-            </label>
-            <p class="hs-hint">JPG, PNG hoặc WEBP, tối đa 5 MB.</p>
-            <span asp-validation-for="AnhDaiDienFile" class="hs-err"></span>
-
-            <dl class="hs-facts">
-                <div><dt>Vai trò</dt><dd>@tenVaiTro</dd></div>
-                <div><dt>Thành viên từ</dt><dd>@Model.NgayTao.ToString("dd/MM/yyyy")</dd></div>
-            </dl>
+            <div class="hs-ten-khoi">
+                <h1>@Model.HoTen</h1>
+                @if (!string.IsNullOrEmpty(lienHe))
+                {
+                    <p class="hs-lien-he">@lienHe</p>
+                }
+                <ul class="hs-chip">
+                    <li>@tenVaiTro</li>
+                    @if (ngayThamGia != null)
+                    {
+                        <li>Thành viên từ @ngayThamGia</li>
+                    }
+                </ul>
+                <p class="hs-anh-nhac" id="hsAnhNhac">Bấm vào ảnh để đổi. JPG, PNG hoặc WebP, tối đa 5 MB.</p>
+                <span asp-validation-for="AnhDaiDienFile" class="hs-err"></span>
+            </div>
 
             @if (Model.VaiTro == "user")
             {
-                <a asp-controller="DatTour" asp-action="LichSu" class="tv-link hs-link">
+                <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-vien hs-lich-su">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
-                    Xem lịch sử đặt tour
+                    Lịch sử đặt tour
                 </a>
             }
-        </aside>
+        </section>
 
-        <div class="hs-main">
-            <section class="hs-card">
-                <h2>Thông tin cá nhân</h2>
-                <div class="hs-field">
-                    <label asp-for="HoTen">Họ và tên</label>
-                    <input asp-for="HoTen" autocomplete="name" />
-                    <span asp-validation-for="HoTen" class="hs-err"></span>
+        @* Mỗi nhóm một hàng: tên nhóm bên trái, ô nhập bên phải *@
+        <div class="hs-bang">
+            <section class="hs-hang">
+                <div class="hs-hang-ten">
+                    <h2>Thông tin cá nhân</h2>
+                    <p>Tên này điền sẵn khi bạn đặt tour và hiện cho trưởng nhóm khi đi theo nhóm.</p>
+                </div>
+                <div class="hs-hang-o">
+                    <div class="hs-field">
+                        <label asp-for="HoTen">Họ và tên</label>
+                        <input asp-for="HoTen" autocomplete="name" />
+                        <span asp-validation-for="HoTen" class="hs-err"></span>
+                    </div>
                 </div>
             </section>
 
-            <section class="hs-card">
-                <h2>Đăng nhập</h2>
-                <p class="hs-note">Bạn đăng nhập được bằng email hoặc số điện thoại. Cần giữ ít nhất một trong hai.</p>
-                <div class="hs-grid">
+            <section class="hs-hang">
+                <div class="hs-hang-ten">
+                    <h2>Đăng nhập</h2>
+                    <p>Bạn đăng nhập được bằng email hoặc số điện thoại. Cần giữ ít nhất một trong hai.</p>
+                </div>
+                <div class="hs-hang-o hs-grid">
                     <div class="hs-field">
                         <label asp-for="Email">Email</label>
-                        <input asp-for="Email" type="email" autocomplete="email" placeholder="ten@gmail.com" />
+                        <input asp-for="Email" type="email" autocomplete="email" placeholder="Ví dụ ten@gmail.com" />
                         <span asp-validation-for="Email" class="hs-err"></span>
                     </div>
                     <div class="hs-field">
                         <label asp-for="SoDienThoai">Số điện thoại</label>
-                        <input asp-for="SoDienThoai" type="tel" inputmode="numeric" autocomplete="tel" placeholder="0912345678" />
+                        <input asp-for="SoDienThoai" type="tel" inputmode="numeric" autocomplete="tel" placeholder="Ví dụ 0912345678" />
                         <span asp-validation-for="SoDienThoai" class="hs-err"></span>
                     </div>
                 </div>
             </section>
 
-            <details class="hs-card hs-pass" @(coLoiMatKhau ? "open" : "")>
-                <summary>
-                    <span>
-                        <span class="hs-sum-title">Đổi mật khẩu</span>
-                        <span class="hs-sum-note">Bỏ qua nếu bạn không muốn đổi.</span>
-                    </span>
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>
-                </summary>
-                <div class="hs-field">
-                    <label asp-for="MatKhauHienTai">Mật khẩu hiện tại</label>
-                    <input asp-for="MatKhauHienTai" type="password" autocomplete="current-password" />
-                    <span asp-validation-for="MatKhauHienTai" class="hs-err"></span>
+            <section class="hs-hang">
+                <div class="hs-hang-ten">
+                    <h2>Mật khẩu</h2>
+                    <p>Bỏ trống nếu bạn không muốn đổi.</p>
                 </div>
-                <div class="hs-grid">
-                    <div class="hs-field">
-                        <label asp-for="MatKhauMoi">Mật khẩu mới</label>
-                        <input asp-for="MatKhauMoi" type="password" autocomplete="new-password" placeholder="Ít nhất 6 ký tự" />
-                        <span asp-validation-for="MatKhauMoi" class="hs-err"></span>
-                    </div>
-                    <div class="hs-field">
-                        <label asp-for="XacNhanMatKhau">Nhập lại mật khẩu mới</label>
-                        <input asp-for="XacNhanMatKhau" type="password" autocomplete="new-password" />
-                        <span asp-validation-for="XacNhanMatKhau" class="hs-err"></span>
-                    </div>
+                <div class="hs-hang-o">
+                    <details class="hs-pass" @(coLoiMatKhau ? "open" : "")>
+                        <summary>Đổi mật khẩu</summary>
+                        <div class="hs-field">
+                            <label asp-for="MatKhauHienTai">Mật khẩu hiện tại</label>
+                            <input asp-for="MatKhauHienTai" type="password" autocomplete="current-password" />
+                            <span asp-validation-for="MatKhauHienTai" class="hs-err"></span>
+                        </div>
+                        <div class="hs-grid">
+                            <div class="hs-field">
+                                <label asp-for="MatKhauMoi">Mật khẩu mới</label>
+                                <input asp-for="MatKhauMoi" type="password" autocomplete="new-password" placeholder="Ít nhất 6 ký tự" />
+                                <span asp-validation-for="MatKhauMoi" class="hs-err"></span>
+                            </div>
+                            <div class="hs-field">
+                                <label asp-for="XacNhanMatKhau">Nhập lại mật khẩu mới</label>
+                                <input asp-for="XacNhanMatKhau" type="password" autocomplete="new-password" />
+                                <span asp-validation-for="XacNhanMatKhau" class="hs-err"></span>
+                            </div>
+                        </div>
+                        <label class="hs-show">
+                            <input type="checkbox" id="hsHienMatKhau" /> Hiện mật khẩu
+                        </label>
+                    </details>
                 </div>
-                <label class="hs-show">
-                    <input type="checkbox" id="hsHienMatKhau" /> Hiện mật khẩu
-                </label>
-            </details>
+            </section>
 
             <div class="hs-actions">
                 <button type="submit" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
@@ -139,12 +160,15 @@
         var file = document.getElementById("hsFile");
         var img = document.getElementById("hsAvatarImg");
         var chu = document.getElementById("hsAvatarChu");
+        var nhac = document.getElementById("hsAnhNhac");
         if (file && img) {
             file.addEventListener("change", function () {
                 if (!file.files || !file.files[0]) return;
                 img.src = URL.createObjectURL(file.files[0]);
                 img.hidden = false;
                 if (chu) chu.hidden = true;
+                // Ảnh mới chỉ được lưu khi bấm Lưu thay đổi
+                if (nhac) nhac.textContent = "Ảnh mới sẽ được lưu khi bạn bấm Lưu thay đổi.";
             });
         }
 

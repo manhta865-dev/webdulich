@@ -1,0 +1,392 @@
+/* Trang Đăng nhập / Đăng ký (TaiKhoan/DangNhap, DangKy).
+   Ảnh Hạ Long phủ kín trang, thanh menu và khung form là kính trong nhìn xuyên thấy ảnh.
+   Chữ trên kính luôn màu trắng vì nền là ảnh, nên giống nhau ở chế độ sáng và tối (chế độ tối chỉ phủ ảnh đậm hơn).
+   Cơ chế trượt giữ như cũ: .dn-hop có lớp .active thì form đăng ký và tấm che đổi chỗ cho nhau. */
+
+.dn-trang {
+    --dn-kinh: rgba(255, 255, 255, 0.12);
+    --dn-kinh-form: rgba(8, 30, 40, 0.28);
+    --dn-vien-kinh: rgba(255, 255, 255, 0.35);
+    --dn-chu-phu: rgba(255, 255, 255, 0.82);
+    --dn-nhan: #9FE3F5;
+    --dn-phu-anh: linear-gradient(rgba(6, 30, 40, 0.45), rgba(6, 30, 40, 0.15) 25%, rgba(6, 30, 40, 0.4));
+}
+:root[data-theme="dark"] .dn-trang {
+    --dn-kinh: rgba(10, 22, 28, 0.25);
+    --dn-kinh-form: rgba(6, 18, 24, 0.45);
+    --dn-vien-kinh: rgba(255, 255, 255, 0.2);
+    --dn-phu-anh: linear-gradient(rgba(4, 14, 20, 0.7), rgba(4, 14, 20, 0.45) 25%, rgba(4, 14, 20, 0.7));
+}
+
+/* ---------- Ảnh nền tràn hết chiều ngang, chạy lên dưới thanh menu ---------- */
+body:has(.dn-trang) { overflow-x: clip; }
+body:has(.dn-trang) .tv-page { padding-top: 0; padding-bottom: 0; }
+
+body:has(.dn-trang) .tv-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    background: rgba(8, 30, 40, 0.18);
+    border-bottom-color: rgba(255, 255, 255, 0.18);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+}
+body:has(.dn-trang) .tv-nav a:not(.tv-btn),
+body:has(.dn-trang) .tv-nav .tv-giao-dien,
+body:has(.dn-trang) .tv-nav button:not(.tv-btn) { color: #FFFFFF; }
+body:has(.dn-trang) .tv-nav-links a:hover,
+body:has(.dn-trang) .tv-nav-links a.active { background: rgba(255, 255, 255, 0.16); }
+body:has(.dn-trang) .tv-nav .tv-giao-dien,
+body:has(.dn-trang) .tv-nav .tv-nav-toggle {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dn-trang {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 112px var(--tv-k4) var(--tv-k7);
+    background: var(--dn-phu-anh), url('/images/dulich/halong.jpg') center / cover no-repeat;
+}
+
+.dn-hop {
+    position: relative;
+    width: 960px;
+    max-width: 100%;
+    min-height: 640px;
+    overflow: hidden;
+    border: 1px solid var(--dn-vien-kinh);
+    border-radius: 20px;
+    background: var(--dn-kinh);
+    -webkit-backdrop-filter: blur(10px) saturate(1.3);
+    backdrop-filter: blur(10px) saturate(1.3);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ---------- Hai form ---------- */
+.dn-form {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--tv-k7) 56px;
+    background: var(--dn-kinh-form);
+    color: #FFFFFF;
+    transition: transform 0.7s cubic-bezier(.65, 0, .35, 1), opacity 0.45s ease;
+}
+
+.signin-panel { z-index: 2; }
+.signup-panel { z-index: 1; opacity: 0; }
+
+.dn-hop.active .signin-panel { transform: translateX(100%); opacity: 0; z-index: 1; }
+.dn-hop.active .signup-panel { transform: translateX(100%); opacity: 1; z-index: 3; }
+
+.dn-thuong-hieu {
+    margin: 0 0 var(--tv-k2);
+    font-size: var(--tv-cs-nho);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dn-nhan);
+}
+
+.dn-tieu-de {
+    margin: 0;
+    font-size: var(--tv-cs-tieu-de);
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.dn-mo-ta {
+    margin: var(--tv-k2) 0 var(--tv-k5);
+    color: var(--dn-chu-phu);
+    line-height: 1.5;
+}
+
+/* ---------- Ô nhập ---------- */
+.dn-khung-o { display: flex; flex-direction: column; gap: var(--tv-k4); }
+
+.dn-o label {
+    display: block;
+    margin-bottom: var(--tv-k1);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.dn-o input {
+    width: 100%;
+    height: 46px;
+    padding: 0 var(--tv-k3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--tv-bo-nut);
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    transition: border-color var(--tv-nhanh), background var(--tv-nhanh), box-shadow var(--tv-nhanh);
+}
+.dn-o input::placeholder { color: rgba(255, 255, 255, 0.7); }
+.dn-o input:focus {
+    outline: none;
+    border-color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+/* Trình duyệt tự điền tô nền vàng nhạt làm mất chữ trắng: giữ nền kính */
+.dn-o input:-webkit-autofill {
+    -webkit-text-fill-color: #FFFFFF;
+    caret-color: #FFFFFF;
+    transition: background-color 9999s ease-out;
+}
+.dn-o input.input-validation-error { border-color: #FFB4A8; }
+
+/* Ô mật khẩu có nút Hiện / Ẩn nằm trong ô */
+.dn-mat-khau { position: relative; }
+.dn-mat-khau input { padding-right: 64px; }
+.dn-hien {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    min-width: 48px;
+    height: 34px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dn-nhan);
+    font-family: inherit;
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    cursor: pointer;
+}
+.dn-hien:hover { background: rgba(255, 255, 255, 0.14); }
+
+.dn-loi-o {
+    display: block;
+    margin-top: var(--tv-k1);
+    font-size: var(--tv-cs-nho);
+    font-weight: 500;
+    color: #FFC9C0;
+}
+.dn-loi-o:empty { display: none; }
+
+/* ---------- Nút ---------- */
+.dn-nut-chinh {
+    height: 46px;
+    margin-top: var(--tv-k1);
+    border: 0;
+    border-radius: var(--tv-bo-nut);
+    background: #FFFFFF;
+    color: #085A72;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--tv-nhanh);
+}
+.dn-nut-chinh:hover { background: #E3F1F5; }
+
+.dn-hoac {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    margin: var(--tv-k5) 0 var(--tv-k4);
+    font-size: var(--tv-cs-nho);
+    color: var(--dn-chu-phu);
+}
+.dn-hoac::before,
+.dn-hoac::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.3); }
+
+.dn-nut-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--tv-k2);
+    width: 100%;
+    height: 46px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--tv-bo-nut);
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+.dn-nut-google:hover { border-color: #FFFFFF; background: rgba(255, 255, 255, 0.2); }
+.dn-nut-google svg { width: 18px; height: 18px; }
+
+.dn-ghi-chu {
+    margin: var(--tv-k2) 0 0;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--dn-chu-phu);
+}
+
+.dn-chuyen {
+    margin: var(--tv-k5) 0 0;
+    text-align: center;
+    font-size: var(--tv-cs-thuong);
+    color: var(--dn-chu-phu);
+}
+.dn-chuyen button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--dn-nhan);
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.dn-chuyen button:hover { text-decoration: underline; }
+
+/* ---------- Thông báo: nền đặc để chữ đọc rõ trên kính ---------- */
+.dn-bao {
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k3) var(--tv-k4);
+    border-radius: var(--tv-bo-nut);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    line-height: 1.45;
+}
+.dn-khung-o .dn-bao { margin-bottom: 0; }
+.dn-bao-loi { background: #FBE9E7; color: #A52A1F; }
+.dn-bao-ok { background: #E4F4EC; color: #17704A; }
+
+/* ---------- Tấm che nửa còn lại ---------- */
+.dn-anh {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 6;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(10, 110, 138, 0.35), rgba(6, 35, 46, 0.55));
+    transition: transform 0.7s cubic-bezier(.65, 0, .35, 1);
+}
+.dn-hop.active .dn-anh { transform: translateX(-100%); }
+
+.dn-anh-noi {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--tv-k7) 48px;
+    color: #FFFFFF;
+    transition: opacity 0.35s ease, transform 0.5s ease;
+}
+
+.dn-anh-nhan {
+    margin: 0 0 var(--tv-k2);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.dn-anh-noi h2 {
+    margin: 0 0 var(--tv-k4);
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #FFFFFF;
+}
+
+.dn-anh-noi > p:not(.dn-anh-nhan) {
+    max-width: 340px;
+    margin: 0 0 var(--tv-k5);
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.dn-anh-noi ul {
+    margin: 0 0 var(--tv-k5);
+    padding: 0;
+    list-style: none;
+}
+.dn-anh-noi li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: var(--tv-k3);
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.9);
+}
+/* Dấu tích vẽ bằng viền, không dùng emoji */
+.dn-anh-noi li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 6px;
+    height: 11px;
+    border-right: 2px solid #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    transform: rotate(45deg);
+}
+
+.dn-nut-vien {
+    align-self: flex-start;
+    height: 44px;
+    padding: 0 var(--tv-k5);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: var(--tv-bo-nhan);
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh);
+}
+.dn-nut-vien:hover { background: #FFFFFF; color: #085A72; }
+
+.cover-signin { opacity: 0; pointer-events: none; transform: translateY(12px); }
+.dn-hop.active .cover-signup { opacity: 0; pointer-events: none; transform: translateY(12px); }
+.dn-hop.active .cover-signin { opacity: 1; pointer-events: auto; transform: none; }
+
+/* Trình duyệt cũ không có kính mờ: dùng nền tối hơn để chữ trắng vẫn đọc được */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .dn-hop { background: rgba(8, 30, 40, 0.72); }
+    body:has(.dn-trang) .tv-nav { background: rgba(8, 30, 40, 0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dn-form,
+    .dn-anh,
+    .dn-anh-noi { transition: none; }
+}
+
+/* ---------- Điện thoại: bỏ tấm che, chỉ hiện một form, chuyển bằng dòng chữ cuối form ---------- */
+@media (max-width: 768px) {
+    .dn-trang { padding: 96px var(--tv-k4) var(--tv-k6); align-items: flex-start; }
+    .dn-hop { min-height: 0; }
+
+    .dn-form {
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: var(--tv-k6) var(--tv-k5);
+        transition: none;
+    }
+
+    .signup-panel { display: none; opacity: 1; }
+    .dn-hop.active .signin-panel { display: none; }
+    .dn-hop.active .signup-panel { display: flex; transform: none; }
+
+    .dn-anh { display: none; }
+
+    /* Menu xổ xuống trên điện thoại cần nền đậm để chữ trắng đọc được */
+    body:has(.dn-trang) .tv-nav { background: rgba(8, 30, 40, 0.55); }
+}

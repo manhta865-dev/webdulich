@@ -1,6 +1,8 @@
 ﻿@model webdulich.Models.TaiKhoan
 @inject IConfiguration CauHinh
 
+@* Trang đăng nhập và đăng ký dùng chung một khung: DangNhap.cshtml và DangKy.cshtml có nội dung giống hệt nhau,
+   sửa một file thì chép sang file kia. Bấm Đăng ký / Đăng nhập thì tấm ảnh trượt qua, đổi form mà không tải lại trang. *@
 @{
     // Nút Google chỉ hiện khi đã có khóa trong cấu hình
     bool coGoogle = !string.IsNullOrEmpty(CauHinh["Google:ClientId"]) && !string.IsNullOrEmpty(CauHinh["Google:ClientSecret"]);
@@ -25,485 +27,142 @@
     var taiKhoanDaGo = !moDangKy && Context.Request.HasFormContentType ? Context.Request.Form["taiKhoanDangNhap"].ToString() : "";
 }
 
-<style>
-    body {
-        background: radial-gradient(circle at 20% 20%, rgba(232, 201, 109, 0.18), transparent 26%), radial-gradient(circle at 80% 70%, rgba(11, 116, 255, 0.16), transparent 28%), linear-gradient(135deg, #081226 0%, #0d1b3e 48%, #050816 100%) !important;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/css/tai-khoan.css" asp-append-version="true" />
+}
 
-    .auth-slide-page {
-        min-height: calc(100vh - 86px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 56px 14px;
-    }
+<div class="dn-trang">
+    <div class="dn-hop @(moDangKy ? "active" : "")" id="authBox">
 
-    .auth-slide-box {
-        position: relative;
-        width: 980px;
-        max-width: 100%;
-        min-height: 680px;
-        background: rgba(255, 253, 248, 0.96);
-        border-radius: 30px;
-        overflow: hidden;
-        border: 1px solid rgba(232, 201, 109, 0.38);
-        box-shadow: 0 34px 90px rgba(0, 0, 0, 0.38);
-    }
+        @* ---------- Form đăng nhập (bên trái) ---------- *@
+        <section class="dn-form signin-panel" aria-labelledby="dnTieuDeVao" @(moDangKy ? "inert" : "")>
+            <p class="dn-thuong-hieu">TravelVN</p>
+            <h1 class="dn-tieu-de" id="dnTieuDeVao">Đăng nhập</h1>
+            <p class="dn-mo-ta">@(tuLinkMoi ? "Đăng nhập để nhận ghế trong đơn nhóm. Xong bạn sẽ quay lại trang mời." : "Dùng email hoặc số điện thoại bạn đã đăng ký.")</p>
 
-    .auth-form-panel {
-        position: absolute;
-        top: 0;
-        width: 50%;
-        height: 100%;
-        padding: 55px 54px;
-        background: linear-gradient(160deg, #fffdf8, #f8f2df);
-        transition: 0.75s ease-in-out;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        z-index: 2;
-    }
+            @if (TempData["ThanhCong"] != null)
+            {
+                <div class="dn-bao dn-bao-ok" role="status">@TempData["ThanhCong"]</div>
+            }
+            @if (ViewBag.Loi != null && !moDangKy)
+            {
+                <div class="dn-bao dn-bao-loi" role="alert">@ViewBag.Loi</div>
+            }
 
-    .signin-panel {
-        left: 0;
-    }
-
-    .signup-panel {
-        left: 0;
-        opacity: 0;
-        z-index: 1;
-    }
-
-    .auth-slide-box.active .signin-panel {
-        transform: translateX(100%);
-        opacity: 0;
-        z-index: 1;
-    }
-
-    .auth-slide-box.active .signup-panel {
-        transform: translateX(100%);
-        opacity: 1;
-        z-index: 3;
-    }
-
-    .auth-title {
-        text-align: center;
-        color: #071638;
-        font-size: 2rem;
-        font-weight: 950;
-        margin-bottom: 14px;
-    }
-
-    .auth-desc {
-        text-align: center;
-        color: #6b5b2e;
-        font-weight: 800;
-        margin-bottom: 20px;
-        font-size: 0.95rem;
-    }
-
-    .auth-socials {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 18px;
-    }
-
-        .auth-socials span {
-            width: 36px;
-            height: 36px;
-            background: #071638;
-            color: #f5d76e;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font-weight: 950;
-            box-shadow: 0 10px 22px rgba(7, 22, 56, 0.18);
-        }
-
-    .auth-input {
-        width: 100%;
-        height: 50px;
-        border: none;
-        outline: none;
-        border-radius: 14px;
-        background: #ffffff;
-        color: #071638;
-        padding: 0 16px;
-        margin-bottom: 13px;
-        font-weight: 800;
-        border: 1px solid rgba(201, 168, 76, 0.34);
-        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
-    }
-
-        .auth-input:focus {
-            border-color: #c9a84c;
-            box-shadow: 0 0 0 0.22rem rgba(201, 168, 76, 0.18);
-        }
-
-    .auth-submit-btn {
-        width: 170px;
-        height: 48px;
-        border: none;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #071638, #12306b);
-        color: #f5d76e;
-        font-weight: 950;
-        display: block;
-        margin: 14px auto 0;
-        transition: 0.25s;
-        box-shadow: 0 14px 30px rgba(7, 22, 56, 0.26);
-    }
-
-        .auth-submit-btn:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, #c9a84c, #f5d76e);
-            color: #071638;
-        }
-
-    .forgot-text {
-        text-align: center;
-        color: #7c6a35;
-        font-size: 0.9rem;
-        font-weight: 800;
-        margin-top: 2px;
-    }
-
-    /* Nút đăng nhập bằng Google */
-    .auth-google-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        height: 46px;
-        margin-top: 14px;
-        border: 1px solid rgba(7, 22, 56, 0.22);
-        border-radius: 999px;
-        background: #ffffff;
-        color: #071638;
-        font-weight: 800;
-    }
-
-        .auth-google-btn:hover {
-            border-color: #071638;
-        }
-
-        .auth-google-btn svg {
-            width: 18px;
-            height: 18px;
-        }
-
-    .auth-google-note {
-        margin: 6px 0 0;
-        text-align: center;
-        color: #7c6a35;
-        font-size: 0.78rem;
-        font-weight: 600;
-    }
-
-    /* Dòng chuyển đăng nhập / đăng ký: cần trên điện thoại vì tấm che có nút chuyển bị ẩn */
-    .auth-switch-text {
-        text-align: center;
-        color: #6b5b2e;
-        font-size: 0.9rem;
-        font-weight: 700;
-        margin-top: 16px;
-    }
-
-        .auth-switch-text button {
-            border: 0;
-            background: none;
-            padding: 0;
-            color: #071638;
-            font-weight: 950;
-            text-decoration: underline;
-        }
-
-    .auth-cover {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        width: 50%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(7, 22, 56, 0.90), rgba(13, 27, 62, 0.86)), url('/images/dulich/dalat.jpg') center/cover no-repeat;
-        transition: 0.75s ease-in-out;
-        z-index: 6;
-        overflow: hidden;
-    }
-
-    .auth-slide-box.active .auth-cover {
-        transform: translateX(-100%);
-    }
-
-    .auth-cover-panel {
-        position: absolute;
-        inset: 0;
-        padding: 58px 46px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        color: white;
-    }
-
-        .auth-cover-panel h2 {
-            color: #f5d76e;
-            font-size: 2.15rem;
-            font-weight: 950;
-            margin-bottom: 12px;
-            text-shadow: 0 8px 28px rgba(0,0,0,0.32);
-        }
-
-        .auth-cover-panel p {
-            color: rgba(255,255,255,0.86);
-            font-weight: 750;
-            line-height: 1.55;
-            margin-bottom: 24px;
-            max-width: 310px;
-        }
-
-    .switch-btn {
-        height: 46px;
-        padding: 0 36px;
-        border-radius: 999px;
-        border: 1px solid rgba(245, 215, 110, 0.9);
-        background: rgba(255,255,255,0.08);
-        color: #f5d76e;
-        font-weight: 950;
-        transition: 0.25s;
-    }
-
-        .switch-btn:hover {
-            background: #f5d76e;
-            color: #071638;
-        }
-
-    .cover-signup {
-        opacity: 1;
-        transition: 0.35s;
-    }
-
-    .cover-signin {
-        opacity: 0;
-        pointer-events: none;
-        transition: 0.35s;
-    }
-
-    .auth-slide-box.active .cover-signup {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .auth-slide-box.active .cover-signin {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .error-box {
-        margin-top: 14px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #fee2e2;
-        color: #991b1b;
-        font-weight: 800;
-        text-align: center;
-    }
-
-    /* Lỗi đăng nhập nằm trên các ô nhập, ngay chỗ mắt người dùng đang nhìn */
-    form .error-box { margin: 0 0 12px; }
-
-    .success-box {
-        margin-top: 14px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: #dcfce7;
-        color: #166534;
-        font-weight: 800;
-        text-align: center;
-    }
-
-    .text-danger,
-    .field-validation-error {
-        color: #b91c1c !important;
-        font-weight: 800;
-        font-size: 0.82rem;
-        margin-top: -8px;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    @@media (max-width: 768px) {
-        .auth-slide-box {
-            min-height: auto;
-            overflow: visible;
-            background: transparent;
-            box-shadow: none;
-            border: none;
-        }
-
-        .auth-form-panel {
-            position: relative;
-            width: 100%;
-            min-height: auto;
-            border-radius: 24px;
-            padding: 34px 24px;
-        }
-
-        .signup-panel {
-            display: none;
-            opacity: 1;
-        }
-
-        .auth-slide-box.active .signin-panel {
-            display: none;
-        }
-
-        .auth-slide-box.active .signup-panel {
-            display: flex;
-            transform: none;
-        }
-
-        .auth-cover {
-            display: none;
-        }
-    }
-</style>
-
-<div class="auth-slide-page">
-    <div class="auth-slide-box @(moDangKy ? "active" : "")" id="authBox">
-
-        <div class="auth-form-panel signin-panel">
-            <h2 class="auth-title">Sign in to Website</h2>
-
-            <div class="auth-socials">
-                <span>f</span>
-                <span>in</span>
-                <span>x</span>
-            </div>
-
-            <p class="auth-desc">@(tuLinkMoi ? "Đăng nhập để nhận ghế trong đơn nhóm. Xong bạn sẽ quay lại trang mời." : "Đăng nhập bằng email hoặc số điện thoại")</p>
-
-            <form asp-controller="TaiKhoan" asp-action="DangNhap" method="post">
+            <form asp-controller="TaiKhoan" asp-action="DangNhap" method="post" class="dn-khung-o">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                 @if (loiDangNhap.Any())
                 {
-                    <div class="error-box" role="alert">@string.Join(" ", loiDangNhap)</div>
+                    <div class="dn-bao dn-bao-loi" role="alert">@string.Join(" ", loiDangNhap)</div>
                 }
                 @if (!moDangKy && loiGoogle != null)
                 {
-                    <div class="error-box" role="alert">@loiGoogle</div>
+                    <div class="dn-bao dn-bao-loi" role="alert">@loiGoogle</div>
                 }
 
-                <input name="taiKhoanDangNhap"
-                       class="auth-input"
-                       value="@taiKhoanDaGo"
-                       autocomplete="username"
-                       placeholder="Email hoặc số điện thoại" />
+                <div class="dn-o">
+                    <label for="dnTaiKhoan">Email hoặc số điện thoại</label>
+                    <input id="dnTaiKhoan" name="taiKhoanDangNhap" value="@taiKhoanDaGo" autocomplete="username" />
+                </div>
+                <div class="dn-o">
+                    <label for="dnMatKhau">Mật khẩu</label>
+                    <div class="dn-mat-khau">
+                        <input id="dnMatKhau" name="matKhau" type="password" autocomplete="current-password" />
+                        <button type="button" class="dn-hien" data-hien-cho="dnMatKhau" aria-pressed="false">Hiện</button>
+                    </div>
+                </div>
 
-                <input name="matKhau"
-                       type="password"
-                       class="auth-input"
-                       autocomplete="current-password"
-                       placeholder="Mật khẩu" />
-
-                <div class="forgot-text">Forgot your password?</div>
-
-                <button type="submit" class="auth-submit-btn">SIGN IN</button>
+                <button type="submit" class="dn-nut-chinh">Đăng nhập</button>
             </form>
 
             @if (coGoogle)
             {
+                <div class="dn-hoac"><span>hoặc</span></div>
                 <form asp-controller="TaiKhoan" asp-action="DangNhapGoogle" method="post">
                     <input type="hidden" name="returnUrl" value="@returnUrl" />
-                    <button type="submit" class="auth-google-btn">
+                    <button type="submit" class="dn-nut-google">
                         <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
                         Tiếp tục với Google
                     </button>
                 </form>
-                <p class="auth-google-note">Nút lỗi trong Zalo, Messenger? Mở link bằng Chrome hoặc Safari.</p>
+                <p class="dn-ghi-chu">Nút lỗi trong Zalo, Messenger? Mở link bằng Chrome hoặc Safari.</p>
             }
 
-            <p class="auth-switch-text">Chưa có tài khoản? <button type="button" onclick="showSignUp()">Đăng ký</button></p>
+            <p class="dn-chuyen">Chưa có tài khoản? <button type="button" onclick="showSignUp()">Đăng ký</button></p>
+        </section>
 
-            @if (TempData["ThanhCong"] != null)
-            {
-                <div class="success-box">@TempData["ThanhCong"]</div>
-            }
-
-            @if (ViewBag.Loi != null && !moDangKy)
-            {
-                <div class="error-box">@ViewBag.Loi</div>
-            }
-        </div>
-
-        <div class="auth-form-panel signup-panel">
-            <h2 class="auth-title">Create Account</h2>
-
-            <div class="auth-socials">
-                <span>f</span>
-                <span>in</span>
-                <span>x</span>
-            </div>
-
-            <p class="auth-desc">Tạo tài khoản để đặt tour và nhận ưu đãi</p>
-
-            <form asp-controller="TaiKhoan" asp-action="DangKy" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="returnUrl" value="@returnUrl" />
-
-                <input asp-for="HoTen"
-                       class="auth-input"
-                       placeholder="Họ và tên" />
-                <span asp-validation-for="HoTen" class="text-danger"></span>
-
-                <input asp-for="TaiKhoanDangNhap"
-                       class="auth-input"
-                       placeholder="Email hoặc số điện thoại" />
-                <span asp-validation-for="TaiKhoanDangNhap" class="text-danger"></span>
-
-                <input asp-for="MatKhau"
-                       type="password"
-                       class="auth-input"
-                       placeholder="Mật khẩu" />
-                <span asp-validation-for="MatKhau" class="text-danger"></span>
-
-                <button type="submit" class="auth-submit-btn">SIGN UP</button>
-            </form>
-
-            @if (coGoogle)
-            {
-                <form asp-controller="TaiKhoan" asp-action="DangNhapGoogle" method="post">
-                    <input type="hidden" name="returnUrl" value="@returnUrl" />
-                    <button type="submit" class="auth-google-btn">
-                        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
-                        Tiếp tục với Google
-                    </button>
-                </form>
-            }
-
-            <p class="auth-switch-text">Đã có tài khoản? <button type="button" onclick="showSignIn()">Đăng nhập</button></p>
+        @* ---------- Form đăng ký (trượt sang phải khi mở) ---------- *@
+        <section class="dn-form signup-panel" aria-labelledby="dnTieuDeTao" @(moDangKy ? "" : "inert")>
+            <p class="dn-thuong-hieu">TravelVN</p>
+            <h1 class="dn-tieu-de" id="dnTieuDeTao">Tạo tài khoản</h1>
+            <p class="dn-mo-ta">Có tài khoản để đặt tour, nhận ghế trong đơn nhóm và xem lại chuyến đi.</p>
 
             @if (ViewBag.Loi != null && moDangKy)
             {
-                <div class="error-box">@ViewBag.Loi</div>
+                <div class="dn-bao dn-bao-loi" role="alert">@ViewBag.Loi</div>
             }
-        </div>
 
-        <div class="auth-cover">
-            <div class="auth-cover-panel cover-signup">
-                <h2>Hello Friend!</h2>
-                <p>Nhập thông tin cá nhân để bắt đầu hành trình cùng TravelVN.</p>
-                <button type="button" class="switch-btn" onclick="showSignUp()">SIGN UP</button>
+            <form asp-controller="TaiKhoan" asp-action="DangKy" method="post" class="dn-khung-o">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                <div class="dn-o">
+                    <label asp-for="HoTen">Họ và tên</label>
+                    <input asp-for="HoTen" autocomplete="name" />
+                    <span asp-validation-for="HoTen" class="dn-loi-o"></span>
+                </div>
+                <div class="dn-o">
+                    <label asp-for="TaiKhoanDangNhap">Email hoặc số điện thoại</label>
+                    <input asp-for="TaiKhoanDangNhap" autocomplete="username" />
+                    <span asp-validation-for="TaiKhoanDangNhap" class="dn-loi-o"></span>
+                </div>
+                <div class="dn-o">
+                    <label asp-for="MatKhau">Mật khẩu</label>
+                    <div class="dn-mat-khau">
+                        <input asp-for="MatKhau" type="password" autocomplete="new-password" placeholder="Ít nhất 6 ký tự" />
+                        <button type="button" class="dn-hien" data-hien-cho="MatKhau" aria-pressed="false">Hiện</button>
+                    </div>
+                    <span asp-validation-for="MatKhau" class="dn-loi-o"></span>
+                </div>
+
+                <button type="submit" class="dn-nut-chinh">Đăng ký</button>
+            </form>
+
+            @if (coGoogle)
+            {
+                <div class="dn-hoac"><span>hoặc</span></div>
+                <form asp-controller="TaiKhoan" asp-action="DangNhapGoogle" method="post">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" class="dn-nut-google">
+                        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
+                        Tiếp tục với Google
+                    </button>
+                </form>
+            }
+
+            <p class="dn-chuyen">Đã có tài khoản? <button type="button" onclick="showSignIn()">Đăng nhập</button></p>
+        </section>
+
+        @* ---------- Tấm ảnh che nửa còn lại, trượt qua lại ---------- *@
+        <div class="dn-anh" aria-hidden="true">
+            <div class="dn-anh-noi cover-signup">
+                <p class="dn-anh-nhan">Lần đầu đến TravelVN?</p>
+                <h2>Đi theo nhóm, mỗi người tự lo phần mình</h2>
+                <ul>
+                    <li>Trưởng nhóm gửi link, mỗi người tự nhận ghế</li>
+                    <li>Tự điền thông tin và tự trả phần của mình</li>
+                    <li>Biết ngay ai đã trả, ai chưa</li>
+                </ul>
+                <button type="button" class="dn-nut-vien" onclick="showSignUp()" tabindex="-1">Tạo tài khoản</button>
             </div>
 
-            <div class="auth-cover-panel cover-signin">
-                <h2>Welcome Back!</h2>
-                <p>Đăng nhập để tiếp tục đặt tour và xem lịch sử chuyến đi.</p>
-                <button type="button" class="switch-btn" onclick="showSignIn()">SIGN IN</button>
+            <div class="dn-anh-noi cover-signin">
+                <p class="dn-anh-nhan">Đã có tài khoản?</p>
+                <h2>Mừng bạn quay lại</h2>
+                <p>Đăng nhập để tiếp tục đặt tour, nhận ghế nhóm và xem lịch sử chuyến đi.</p>
+                <button type="button" class="dn-nut-vien" onclick="showSignIn()" tabindex="-1">Đăng nhập</button>
             </div>
         </div>
     </div>
@@ -511,17 +170,40 @@
 
 <script>
     const authBox = document.getElementById("authBox");
+    const formVao = authBox.querySelector(".signin-panel");
+    const formTao = authBox.querySelector(".signup-panel");
+
+    // Form đang khuất được đánh dấu inert để phím Tab không nhảy vào ô bị che
+    function doiForm(moTao) {
+        authBox.classList.toggle("active", moTao);
+        formVao.inert = moTao;
+        formTao.inert = !moTao;
+        const oDau = (moTao ? formTao : formVao).querySelector("input:not([type=hidden])");
+        if (oDau) setTimeout(function () { oDau.focus({ preventScroll: true }); }, 400);
+    }
 
     // Giữ ?returnUrl=... khi chuyển qua lại giữa đăng nhập và đăng ký
     function showSignUp() {
-        authBox.classList.add("active");
+        doiForm(true);
         history.replaceState(null, "", "/TaiKhoan/DangKy" + location.search);
     }
 
     function showSignIn() {
-        authBox.classList.remove("active");
+        doiForm(false);
         history.replaceState(null, "", "/TaiKhoan/DangNhap" + location.search);
     }
+
+    // Nút Hiện / Ẩn mật khẩu
+    document.querySelectorAll(".dn-hien").forEach(function (nut) {
+        nut.addEventListener("click", function () {
+            const o = document.getElementById(nut.dataset.hienCho);
+            if (!o) return;
+            const hien = o.type === "password";
+            o.type = hien ? "text" : "password";
+            nut.textContent = hien ? "Ẩn" : "Hiện";
+            nut.setAttribute("aria-pressed", hien ? "true" : "false");
+        });
+    });
 </script>
 
 @section Scripts {
