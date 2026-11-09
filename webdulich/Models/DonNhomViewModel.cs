@@ -26,7 +26,12 @@ namespace webdulich.Models
         public string? Email { get; set; }
         public string? GhiChu { get; set; }
 
+        // Mã khuyến mãi (không bắt buộc). Tiền giảm chia cho từng ghế theo tỷ lệ giá (RB-40)
+        public string? MaKhuyenMai { get; set; }
+
         // Chỉ để hiển thị
+        public string? TenKhuyenMai { get; set; }
+        public decimal TienGiamDuKien { get; set; }
         public string TenTour { get; set; } = string.Empty;
         public string? HinhAnh { get; set; }
         public DateTime NgayDi { get; set; }
@@ -80,7 +85,7 @@ namespace webdulich.Models
         public int Hang { get; set; }
         public int Cot { get; set; }
 
-        // con-trong, khach-khac, hoặc trạng thái ghế của nhóm: trong, da-nhan, da-dien, cho, da-tra
+        // con-trong, khong-ban (chỗ không mở bán, RB-37), khach-khac, hoặc trạng thái ghế của nhóm: trong, da-nhan, da-dien, cho, da-tra
         public string Loai { get; set; } = "con-trong";
 
         // Chỉ ghế của nhóm mới có hai giá trị này
@@ -95,6 +100,9 @@ namespace webdulich.Models
         public int ThuTu { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
+        // Phần giảm của ghế (đơn nhóm dùng mã, RB-40) và số tiền ghế phải trả
+        public decimal TienGiam { get; set; }
+        public decimal PhaiTra => GiaLucDat - TienGiam;
         public string? MaThanhToan { get; set; }
         public string? TenChu { get; set; }
         public bool LaCuaToi { get; set; }
@@ -144,6 +152,9 @@ namespace webdulich.Models
         public int ThuTu { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
+        // Phần giảm của ghế (đơn nhóm dùng mã, RB-40) và số tiền ghế phải trả
+        public decimal TienGiam { get; set; }
+        public decimal PhaiTra => GiaLucDat - TienGiam;
         public string? MaCho { get; set; }
         public bool ConTrong { get; set; }
 
@@ -213,6 +224,9 @@ namespace webdulich.Models
         public int GheId { get; set; }
         public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
         public decimal GiaLucDat { get; set; }
+        // Phần giảm của ghế (đơn nhóm dùng mã, RB-40) và số tiền ghế phải trả
+        public decimal TienGiam { get; set; }
+        public decimal PhaiTra => GiaLucDat - TienGiam;
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public string? MaThanhToan { get; set; }
 
@@ -262,6 +276,9 @@ namespace webdulich.Models
         public bool DaGiaHan { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
+        // Phần giảm của ghế (đơn nhóm dùng mã, RB-40) và số tiền ghế phải trả
+        public decimal TienGiam { get; set; }
+        public decimal PhaiTra => GiaLucDat - TienGiam;
         public string? MaCho { get; set; }
         public string TrangThai { get; set; } = TrangThaiGhe.ChuaNhan;
 
@@ -288,6 +305,9 @@ namespace webdulich.Models
         public TimeSpan? GioKhoiHanh { get; set; }
         public string LoaiHanhKhach { get; set; } = string.Empty;
         public decimal GiaLucDat { get; set; }
+        // Phần giảm của ghế (đơn nhóm dùng mã, RB-40) và số tiền ghế phải trả
+        public decimal TienGiam { get; set; }
+        public decimal PhaiTra => GiaLucDat - TienGiam;
         public string? MaCho { get; set; }
         public string TrangThai { get; set; } = string.Empty;
         public bool DonDaHuy { get; set; }

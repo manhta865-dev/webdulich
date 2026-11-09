@@ -248,7 +248,7 @@
                             }
                             <div>
                                 <span>Giá lúc đặt</span>
-                                <strong>@ghe.GiaLucDat.ToString("N0") VNĐ</strong>
+                                <strong>@ghe.GiaLucDat.ToString("N0") VNĐ@(ghe.TienGiam > 0 ? ", giảm " + ghe.TienGiam.ToString("N0") + ", phải trả " + ghe.SoTienPhaiTra.ToString("N0") + " VNĐ" : "")</strong>
                             </div>
                             @if (ghe.NgayNha.HasValue && !don.DaHuy)
                             {

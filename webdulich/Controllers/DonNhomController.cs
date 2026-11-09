@@ -149,6 +149,21 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("", $"Lịch chỉ còn {lich.SoChoCon} chỗ.");
             }
+            // Mã khuyến mãi (RB-40): kiểm như đơn cá nhân, tính trước số tiền giảm để hiện ở bước sau
+            model.MaKhuyenMai = string.IsNullOrWhiteSpace(model.MaKhuyenMai) ? null : model.MaKhuyenMai.Trim().ToUpper();
+            if (model.MaKhuyenMai != null)
+            {
+                var km = XuLyDon.LayKhuyenMaiHopLe(_context, model.MaKhuyenMai);
+                if (km == null)
+                {
+                    ModelState.AddModelError(nameof(model.MaKhuyenMai), "Mã khuyến mãi không đúng, đã hết hạn hoặc hết lượt.");
+                }
+                else if (soGhe >= 2)
+                {
+                    model.TenKhuyenMai = km.TenKhuyenMai;
+                    model.TienGiamDuKien = TinhGiamDonNhom(model, lich, km).Sum();
+                }
+            }
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -211,6 +226,10 @@ namespace webdulich.Controllers
             }
 
             ViewBag.QuayLai = Url.Action("TaoDon", new { id = nhap.TourId, lichId = nhap.LichId });
+            if (!string.IsNullOrEmpty(nhap.MaKhuyenMai) && nhap.TienGiamDuKien > 0)
+            {
+                ViewBag.KhuyenMai = $"Mã {nhap.MaKhuyenMai} ({nhap.TenKhuyenMai}): cả nhóm được giảm {nhap.TienGiamDuKien:N0} VNĐ, chia cho từng ghế khi giữ chỗ.";
+            }
             return View(model);
         }
 
@@ -237,6 +256,15 @@ namespace webdulich.Controllers
                 .Concat(Enumerable.Repeat("Trẻ nhỏ", nhap.SoTreNho))
                 .ToList();
 
+        // Phần giảm của từng ghế (cùng thứ tự với DanhSachGheNhap) khi đơn nhóm dùng mã km (RB-40)
+        private static List<decimal> TinhGiamDonNhom(TaoDonNhomViewModel nhap, LichKhoiHanhTour lich, KhuyenMai km)
+        {
+            var dsGia = DanhSachGheNhap(nhap)
+                .Select(loai => XuLyDon.GiaGhe(loai, lich.GiaNguoiLonHienThi, lich.GiaTreEmHienThi))
+                .ToList();
+            return XuLyDon.ChiaTienGiam(dsGia, XuLyDon.TinhTienGiam(km, dsGia.Sum()));
+        }
+
         // Giữ chỗ: trừ chỗ có điều kiện, tạo đơn nhóm, các ghế (ghế đầu của trưởng nhóm nếu đi cùng),
         // mã thanh toán riêng từng ghế và chỗ đã chọn sẵn, tất cả trong một giao dịch CSDL (F1, F2).
         private IActionResult TaoDonTuNhap(TaoDonNhomViewModel nhap, LichKhoiHanhTour lich, List<int?> viTri)
@@ -257,6 +285,19 @@ namespace webdulich.Controllers
                 return RedirectToAction("ChiTiet", "DiaDiem", new { id = nhap.TourId });
             }
 
+            // Kiểm lại mã lúc giữ chỗ: mã có thể vừa hết hạn hoặc hết lượt sau bước nhập (RB-40)
+            KhuyenMai? khuyenMai = null;
+            if (!string.IsNullOrEmpty(nhap.MaKhuyenMai))
+            {
+                khuyenMai = XuLyDon.LayKhuyenMaiHopLe(_context, nhap.MaKhuyenMai);
+                if (khuyenMai == null)
+                {
+                    TempData["Loi"] = $"Mã khuyến mãi {nhap.MaKhuyenMai} vừa hết hạn hoặc hết lượt. Bạn nhập lại hoặc bỏ mã nhé.";
+                    return RedirectToAction("TaoDon", new { id = nhap.TourId, lichId = nhap.LichId });
+                }
+            }
+            var dsGiam = khuyenMai != null ? TinhGiamDonNhom(nhap, lich, khuyenMai) : dsLoai.Select(_ => 0m).ToList();
+
             var maChuyenDi = XuLyDon.TaoMaChuyenDi(_context);
             var don = new DatTours
             {
@@ -272,7 +313,10 @@ namespace webdulich.Controllers
                 DienThoai = nhap.DienThoai.Trim(),
                 Email = nhap.Email?.Trim() ?? string.Empty,
                 DiaChi = string.Empty,
-                GhiChu = nhap.GhiChu
+                GhiChu = nhap.GhiChu,
+                // Đơn nhóm: tiền giảm lưu ở từng ghế, SoTienGiam của đơn luôn 0 (RB-40)
+                KhuyenMaiId = khuyenMai?.Id,
+                SoTienGiam = 0
             };
             for (int i = 0; i < soGhe; i++)
             {
@@ -280,6 +324,7 @@ namespace webdulich.Controllers
                 {
                     LoaiHanhKhach = dsLoai[i],
                     GiaLucDat = XuLyDon.GiaGhe(dsLoai[i], lich.GiaNguoiLonHienThi, lich.GiaTreEmHienThi),
+                    TienGiam = dsGiam[i],
                     MaThanhToan = $"{maChuyenDi}-{i + 1}",
                     TaiKhoanId = i == 0 && nhap.ToiDi ? taiKhoanId : null
                 });
@@ -395,6 +440,7 @@ namespace webdulich.Controllers
                     ThuTu = i + 1,
                     LoaiHanhKhach = h.LoaiHanhKhach,
                     GiaLucDat = h.GiaLucDat,
+                    TienGiam = h.TienGiam,
                     MaThanhToan = h.MaThanhToan,
                     // Chỉ hiện tên, không hiện giấy tờ của người khác (RB-20)
                     TenChu = !string.IsNullOrWhiteSpace(h.HoTen) ? h.HoTen : h.TaiKhoan?.HoTen,
@@ -738,6 +784,7 @@ namespace webdulich.Controllers
                         ThuTu = x.i + 1,
                         LoaiHanhKhach = x.h.LoaiHanhKhach,
                         GiaLucDat = x.h.GiaLucDat,
+                        TienGiam = x.h.TienGiam,
                         MaCho = choTheoGhe.TryGetValue(x.h.Id, out var maCho) ? maCho : null,
                         ConTrong = !x.h.TaiKhoanId.HasValue && string.IsNullOrWhiteSpace(x.h.HoTen)
                     }).ToList()
@@ -845,6 +892,7 @@ namespace webdulich.Controllers
                 GheId = ghe.Id,
                 TrangThai = trangThai,
                 GiaLucDat = ghe.GiaLucDat,
+                TienGiam = ghe.TienGiam,
                 LoaiHanhKhach = ghe.LoaiHanhKhach,
                 MaThanhToan = ghe.MaThanhToan,
                 DuocTra = duocTra,
@@ -853,7 +901,7 @@ namespace webdulich.Controllers
                     _context.GiaoDichThanhToans.AsNoTracking().Where(g => g.HanhKhachDatTourId == ghe.Id).ToList()),
                 TraHo = traHo,
                 ChuyenKhoan = duocTra && ghe.MaThanhToan != null
-                    ? ThongTinChuyenKhoan.Tao(_cauHinh, ghe.GiaLucDat, ghe.MaThanhToan)
+                    ? ThongTinChuyenKhoan.Tao(_cauHinh, ghe.SoTienPhaiTra, ghe.MaThanhToan)
                     : null
             };
         }
@@ -883,6 +931,7 @@ namespace webdulich.Controllers
                 DaGiaHan = don.DaGiaHan,
                 LoaiHanhKhach = ghe.LoaiHanhKhach,
                 GiaLucDat = ghe.GiaLucDat,
+                TienGiam = ghe.TienGiam,
                 MaCho = maCho,
                 TrangThai = trangThai,
                 DienHo = ghe.TaiKhoanId != taiKhoanId,
@@ -1100,7 +1149,7 @@ namespace webdulich.Controllers
 
             int soDong = _context.Database.ExecuteSqlInterpolated($@"
                 INSERT INTO GiaoDichThanhToans (HanhKhachDatTourId, NguoiTraId, SoTien, PhuongThuc, TrangThai, NgayTao)
-                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat, {phuongThuc}, 'ChoXacNhan', {GioVN.BayGio}
+                SELECT h.Id, {taiKhoanId.Value}, h.GiaLucDat - h.TienGiam, {phuongThuc}, 'ChoXacNhan', {GioVN.BayGio}
                 FROM HanhKhachDatTours h
                 WHERE h.Id = {id} AND h.NgayNha IS NULL
                   AND EXISTS (SELECT 1 FROM DatTours d WHERE d.Id = h.DatTourId AND d.TrangThai = 'GiuCho')

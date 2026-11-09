@@ -90,35 +90,10 @@ namespace webdulich.Controllers
             return danhSachHanhKhach;
         }
         // Hàm này sẽ kiểm tra mã khuyến mãi có hợp lệ hay không dựa trên các điều kiện như ngày bắt đầu, ngày kết thúc, trạng thái, và số lượt dùng
-        private KhuyenMai? LayKhuyenMaiHopLe(string? maKhuyenMai)
-        {
-            if (string.IsNullOrWhiteSpace(maKhuyenMai))
-            {
-                return null;
-            }
-            // Chuẩn hóa mã khuyến mãi bằng cách loại bỏ khoảng trắng và chuyển thành chữ hoa để so sánh một cách nhất quán với dữ liệu trong cơ sở dữ liệu 
-            string ma = maKhuyenMai.Trim().ToUpper();
-            var homNay = GioVN.HomNay;
-            // Truy vấn cơ sở dữ liệu để tìm khuyến mãi phù hợp với mã đã chuẩn hóa và đáp ứng các điều kiện về trạng thái, ngày bắt đầu, ngày kết thúc, và số lượt dùng
-            return _context.KhuyenMais.FirstOrDefault(x =>
-                x.MaKhuyenMai == ma &&
-                x.TrangThai == TrangThaiKhuyenMai.HoatDong &&
-                x.NgayBatDau <= homNay &&
-                x.NgayKetThuc >= homNay &&
-                // Lượt đã dùng = số đơn chưa hủy dùng mã (hủy đơn tự trả lượt)
-                (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy") < x.SoLuotDungToiDa.Value));
-        }
-        // Hàm này sẽ tính số tiền giảm dựa trên kiểu giảm giá của khuyến mãi (theo phần trăm hoặc theo số tiền cố định) và đảm bảo rằng số tiền giảm không vượt quá tổng tiền
-        private decimal TinhTienGiam(KhuyenMai khuyenMai, decimal tongTien)
-        {
-            // Nếu kiểu giảm giá là theo phần trăm, tính số tiền giảm bằng cách lấy tổng tiền nhân với giá trị giảm chia cho 100, và đảm bảo rằng số tiền giảm không vượt quá tổng tiền
-            if (khuyenMai.KieuGiamGia == "PhanTram")
-            {
-                return Math.Min(tongTien, tongTien * khuyenMai.GiaTriGiam / 100m);
-            }
+        // Kiểm mã và tính tiền giảm dùng chung với đơn nhóm (XuLyDon)
+        private KhuyenMai? LayKhuyenMaiHopLe(string? maKhuyenMai) => XuLyDon.LayKhuyenMaiHopLe(_context, maKhuyenMai);
 
-            return Math.Min(tongTien, khuyenMai.GiaTriGiam);
-        }
+        private static decimal TinhTienGiam(KhuyenMai khuyenMai, decimal tongTien) => XuLyDon.TinhTienGiam(khuyenMai, tongTien);
         // Hàm này sẽ tính tổng tiền trước khi áp dụng khuyến mãi dựa trên giá người lớn và giá trẻ em của tour hoặc lịch khởi hành, và số lượng người lớn và trẻ em
         private decimal TinhTongTienTruocGiam(Tour tour, LichKhoiHanhTour? lich, int soNguoiLon, int soTreNho)
         {
@@ -1198,6 +1173,7 @@ namespace webdulich.Controllers
                     GioKhoiHanh = x.GioKhoiHanh,
                     LoaiHanhKhach = x.Ghe.LoaiHanhKhach,
                     GiaLucDat = x.Ghe.GiaLucDat,
+                    TienGiam = x.Ghe.TienGiam,
                     MaCho = x.MaCho,
                     TrangThai = TrangThaiGhe.Tinh(x.Ghe, giaoDichGheNhom),
                     DonDaHuy = x.DonTrangThai == "DaHuy",

@@ -435,6 +435,8 @@ namespace webdulich.Migrations
 
                     b.ToTable("DatTours", t =>
                         {
+                            t.HasCheckConstraint("CK_DatTours_GiamDonNhom", "[LoaiDon] = 'CaNhan' OR [SoTienGiam] = 0");
+
                             t.HasCheckConstraint("CK_DatTours_LoaiDon", "[LoaiDon] IN ('CaNhan','Nhom')");
 
                             t.HasCheckConstraint("CK_DatTours_SoTienGiam", "[SoTienGiam] >= 0");
@@ -586,6 +588,10 @@ namespace webdulich.Migrations
                     b.Property<int?>("TaiKhoanId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TienGiam")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MaThanhToan")
@@ -605,6 +611,8 @@ namespace webdulich.Migrations
                             t.HasCheckConstraint("CK_HanhKhach_GiaLucDat", "[GiaLucDat] >= 0");
 
                             t.HasCheckConstraint("CK_HanhKhach_Loai", "[LoaiHanhKhach] IN (N'Người lớn', N'Trẻ nhỏ')");
+
+                            t.HasCheckConstraint("CK_HanhKhach_TienGiam", "[TienGiam] >= 0 AND [TienGiam] <= [GiaLucDat]");
                         });
                 });
 

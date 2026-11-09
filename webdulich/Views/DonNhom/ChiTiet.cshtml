@@ -125,7 +125,7 @@
                             <span class="dn-ghe-so">@g.ThuTu</span>
                             <div class="dn-ghe-ten">
                                 <strong>@(g.TenChu ?? "Ghế trống")@(g.LaCuaToi ? " (bạn)" : "")</strong>
-                                <small>@g.LoaiHanhKhach, @g.GiaLucDat.ToString("N0") VNĐ@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
+                                <small>@g.LoaiHanhKhach, @g.PhaiTra.ToString("N0") VNĐ@(g.TienGiam > 0 ? " (đã giảm " + g.TienGiam.ToString("N0") + ")" : "")@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
                             </div>
                             <span class="dn-nhan">@g.TrangThai</span>
                             @if (g.BiTuChoi && g.ChuaTra)
@@ -254,7 +254,11 @@
             <section class="dt-block">
                 <h2>Tổng tiền</h2>
                 <div class="dt-line"><span>Tổng cả nhóm</span><span>@don.TongTien.ToString("N0") VNĐ</span></div>
-                <div class="dt-line"><span>Đã trả</span><span>@Model.DsGhe.Where(g => g.TrangThai == TrangThaiGhe.DaTra).Sum(g => g.GiaLucDat).ToString("N0") VNĐ</span></div>
+                @if (don.SoTienGiam > 0)
+                {
+                    <div class="dt-line"><span>Khuyến mãi @don.MaKhuyenMai</span><span>-@don.SoTienGiam.ToString("N0") VNĐ</span></div>
+                }
+                <div class="dt-line"><span>Đã trả</span><span>@Model.DsGhe.Where(g => g.TrangThai == TrangThaiGhe.DaTra).Sum(g => g.PhaiTra).ToString("N0") VNĐ</span></div>
             </section>
 
             @if (don.TrangThai == "GiuCho")

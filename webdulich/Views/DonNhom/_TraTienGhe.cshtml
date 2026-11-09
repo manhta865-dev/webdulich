@@ -5,6 +5,11 @@
 <section class="dt-block dn-tra-tien">
     <h2>@(Model.TraHo ? "Trả hộ ghế này" : "Phần phải trả")</h2>
     <div class="dt-line"><span>@Model.LoaiHanhKhach</span><span>@Model.GiaLucDat.ToString("N0") VNĐ</span></div>
+    @if (Model.TienGiam > 0)
+    {
+        <div class="dt-line"><span>Khuyến mãi của nhóm</span><span>-@Model.TienGiam.ToString("N0") VNĐ</span></div>
+        <div class="dt-line"><strong>Phải trả</strong><strong>@Model.PhaiTra.ToString("N0") VNĐ</strong></div>
+    }
 
     @if (Model.TrangThai == TrangThaiGhe.DaTra)
     {

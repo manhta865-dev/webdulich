@@ -79,6 +79,18 @@
                 </div>
             </section>
 
+            <section class="dt-block">
+                <h2>Mã khuyến mãi</h2>
+                <div class="dn-fields">
+                    <div class="dn-field full">
+                        <label asp-for="MaKhuyenMai">Nhập mã nếu có (không bắt buộc)</label>
+                        <input asp-for="MaKhuyenMai" autocomplete="off" style="text-transform: uppercase" placeholder="Ví dụ HE2026" />
+                        <span asp-validation-for="MaKhuyenMai" class="dn-err"></span>
+                    </div>
+                </div>
+                <p class="dt-note">Tiền giảm chia cho từng ghế theo giá ghế, nên mỗi người trả phần của mình đã trừ khuyến mãi. Mỗi ghế vẫn trả ít nhất 1.000 VNĐ.</p>
+            </section>
+
             <div class="dt-actions">
                 <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@Model.TourId" class="tv-btn tv-btn-vien">Quay lại tour</a>
                 <button type="submit" class="tv-btn tv-btn-chinh">@(Model.CoSoDo ? "Tiếp tục chọn chỗ" : "Giữ chỗ cho nhóm")</button>

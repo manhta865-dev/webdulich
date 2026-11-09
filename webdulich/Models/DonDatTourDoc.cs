@@ -100,10 +100,11 @@ namespace webdulich.Models
                 SoNguoiLon = x.HanhKhachDatTours.Count(h => (x.TrangThai == "DaHuy" || h.NgayNha == null) && h.LoaiHanhKhach != "Trẻ nhỏ"),
                 SoTreNho = x.HanhKhachDatTours.Count(h => (x.TrangThai == "DaHuy" || h.NgayNha == null) && h.LoaiHanhKhach == "Trẻ nhỏ"),
                 TongTienTruocGiam = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat),
-                SoTienGiam = x.SoTienGiam,
+                // Tiền giảm: của đơn (đơn cá nhân) cộng phần giảm của các ghế (đơn nhóm, RB-40); một trong hai luôn bằng 0
+                SoTienGiam = x.SoTienGiam + x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.TienGiam),
                 // Số phải trả không âm: tiền giảm không bao giờ vượt tổng giá các ghế
-                TongTien = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat) > x.SoTienGiam
-                    ? x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat) - x.SoTienGiam
+                TongTien = x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat - h.TienGiam) > x.SoTienGiam
+                    ? x.HanhKhachDatTours.Where(h => x.TrangThai == "DaHuy" || h.NgayNha == null).Sum(h => h.GiaLucDat - h.TienGiam) - x.SoTienGiam
                     : 0,
                 MaKhuyenMai = x.KhuyenMai != null ? x.KhuyenMai.MaKhuyenMai : null,
 
@@ -175,6 +176,69 @@ namespace webdulich.Models
             var muonNhat = ngayKhoiHanh.Date.AddSeconds(-1);
             var theoSoGio = bayGio.AddHours(soGio);
             return theoSoGio < muonNhat ? theoSoGio : muonNhat;
+        }
+
+        // Mã khuyến mãi còn dùng được: đang hoạt động, trong thời hạn, còn lượt (lượt đã dùng = số đơn chưa hủy dùng mã).
+        // Dùng chung cho đơn cá nhân và đơn nhóm (một đơn nhóm dùng mã tính là một lượt).
+        public static KhuyenMai? LayKhuyenMaiHopLe(DuLichDbContext db, string? maKhuyenMai)
+        {
+            if (string.IsNullOrWhiteSpace(maKhuyenMai))
+            {
+                return null;
+            }
+            string ma = maKhuyenMai.Trim().ToUpper();
+            var homNay = GioVN.HomNay;
+            return db.KhuyenMais.FirstOrDefault(x =>
+                x.MaKhuyenMai == ma &&
+                x.TrangThai == TrangThaiKhuyenMai.HoatDong &&
+                x.NgayBatDau <= homNay &&
+                x.NgayKetThuc >= homNay &&
+                (!x.SoLuotDungToiDa.HasValue || x.DatTours.Count(d => d.TrangThai != "DaHuy") < x.SoLuotDungToiDa.Value));
+        }
+
+        // Số tiền giảm theo kiểu khuyến mãi (phần trăm hoặc số tiền cố định), không vượt tổng tiền
+        public static decimal TinhTienGiam(KhuyenMai khuyenMai, decimal tongTien)
+        {
+            if (khuyenMai.KieuGiamGia == "PhanTram")
+            {
+                return Math.Min(tongTien, tongTien * khuyenMai.GiaTriGiam / 100m);
+            }
+            return Math.Min(tongTien, khuyenMai.GiaTriGiam);
+        }
+
+        // Mỗi ghế đơn nhóm phải trả tối thiểu số này: giao dịch 0đ bị CSDL chặn và ghế miễn phí làm rối "ai đã trả" (RB-40)
+        public const decimal TienToiThieuMoiGhe = 1000m;
+
+        // RB-40: chia tiền giảm của đơn nhóm cho từng ghế theo tỷ lệ giá ghế (nhóm toàn người lớn thì chia đều),
+        // làm tròn xuống đồng, phần lẻ cộng vào các ghế đầu. Mỗi ghế còn phải trả ít nhất TienToiThieuMoiGhe,
+        // nên tổng giảm thực tế có thể nhỏ hơn số tính từ mã. Trả về phần giảm của từng ghế, cùng thứ tự với dsGia.
+        public static List<decimal> ChiaTienGiam(IReadOnlyList<decimal> dsGia, decimal tongGiam)
+        {
+            var ketQua = dsGia.Select(_ => 0m).ToList();
+            decimal tongGia = dsGia.Sum();
+            if (tongGiam <= 0 || tongGia <= 0)
+            {
+                return ketQua;
+            }
+
+            // Trần giảm của từng ghế
+            var tran = dsGia.Select(g => Math.Max(0m, g - TienToiThieuMoiGhe)).ToList();
+            tongGiam = Math.Min(Math.Floor(tongGiam), tran.Sum());
+
+            for (int i = 0; i < dsGia.Count; i++)
+            {
+                ketQua[i] = Math.Min(tran[i], Math.Floor(tongGiam * dsGia[i] / tongGia));
+            }
+
+            // Phần lẻ do làm tròn: cộng lần lượt vào các ghế còn dư trần
+            decimal conLai = tongGiam - ketQua.Sum();
+            for (int i = 0; i < dsGia.Count && conLai > 0; i++)
+            {
+                decimal them = Math.Min(conLai, tran[i] - ketQua[i]);
+                ketQua[i] += them;
+                conLai -= them;
+            }
+            return ketQua;
         }
 
         // Giá lúc đặt của một ghế theo loại hành khách

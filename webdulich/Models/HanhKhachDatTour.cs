@@ -28,6 +28,14 @@ namespace webdulich.Models
         // Snapshot giá lúc đặt
         public decimal GiaLucDat { get; set; }
 
+        // Phần tiền giảm của ghế này lúc đặt (snapshot, RB-40): đơn nhóm dùng mã khuyến mãi thì tiền giảm
+        // chia cho từng ghế theo tỷ lệ giá. Đơn cá nhân luôn 0 (giảm lưu ở DatTours.SoTienGiam).
+        public decimal TienGiam { get; set; }
+
+        // Số tiền ghế này phải trả
+        [NotMapped]
+        public decimal SoTienPhaiTra => GiaLucDat - TienGiam;
+
         // Nội dung chuyển khoản riêng của ghế
         public string? MaThanhToan { get; set; }
 

@@ -209,6 +209,7 @@ namespace webdulich.Models
             modelBuilder.Entity<DatTours>().Property(x => x.MaMoi).HasMaxLength(30);
 
             modelBuilder.Entity<HanhKhachDatTour>().Property(x => x.GiaLucDat).HasPrecision(18, 2);
+            modelBuilder.Entity<HanhKhachDatTour>().Property(x => x.TienGiam).HasPrecision(18, 2);
             modelBuilder.Entity<HanhKhachDatTour>().Property(x => x.MaThanhToan).HasMaxLength(30);
             modelBuilder.Entity<HanhKhachDatTour>()
                 .HasOne(x => x.TaiKhoan)
@@ -329,6 +330,8 @@ namespace webdulich.Models
                     t.HasCheckConstraint("CK_DatTours_LoaiDon", "[LoaiDon] IN ('CaNhan','Nhom')");
                     t.HasCheckConstraint("CK_DatTours_TrangThai", "[TrangThai] IN ('GiuCho','DaXacNhan','DaHuy')");
                     t.HasCheckConstraint("CK_DatTours_SoTienGiam", "[SoTienGiam] >= 0");
+                    // RB-40: đơn nhóm lưu tiền giảm theo từng ghế, không lưu ở đơn, để không tính giảm hai lần
+                    t.HasCheckConstraint("CK_DatTours_GiamDonNhom", "[LoaiDon] = 'CaNhan' OR [SoTienGiam] = 0");
                 });
             });
 
@@ -343,6 +346,8 @@ namespace webdulich.Models
                 {
                     t.HasCheckConstraint("CK_HanhKhach_Loai", "[LoaiHanhKhach] IN (N'Người lớn', N'Trẻ nhỏ')");
                     t.HasCheckConstraint("CK_HanhKhach_GiaLucDat", "[GiaLucDat] >= 0");
+                    // RB-40: phần giảm của ghế không âm, không vượt giá ghế
+                    t.HasCheckConstraint("CK_HanhKhach_TienGiam", "[TienGiam] >= 0 AND [TienGiam] <= [GiaLucDat]");
                 });
             });
 

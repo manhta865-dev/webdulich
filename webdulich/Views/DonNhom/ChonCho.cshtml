@@ -24,6 +24,11 @@
         Thành viên vẫn đổi được chỗ khi nhận ghế.
     </p>
 
+    @if (ViewBag.KhuyenMai is string khuyenMai)
+    {
+        <p class="cn-tom-tat"><strong>@khuyenMai</strong></p>
+    }
+
     <form asp-action="ChonCho" method="post">
         <partial name="_SoDoChoNgoi" model="Model" />
 
