@@ -29,6 +29,16 @@
                 <span class="ad-kpi-label">Doanh thu tháng @Model.Thang</span>
                 <strong>@Model.DoanhThuThang.ToString("N0") VNĐ</strong>
                 <small>@Model.SoDonDaThanhToanThang đơn đã thanh toán</small>
+                @if (Model.PhanTramSoVoiThangTruoc is decimal pt)
+                {
+                    <small class="ad-so-sanh @(pt >= 0 ? "tang" : "giam")">
+                        @(pt >= 0 ? "Tăng" : "Giảm") @Math.Abs(pt).ToString("0.#")% so với tháng @(Model.Thang == 1 ? 12 : Model.Thang - 1)
+                    </small>
+                }
+                else
+                {
+                    <small>Tháng trước chưa có doanh thu</small>
+                }
             </span>
         </a>
 
@@ -110,6 +120,48 @@
         </svg>
     </section>
 
+    @{
+        // Thanh chia màu theo trạng thái đơn 30 ngày qua
+        var tong30 = Math.Max(1, Model.TongDon30Ngay);
+        var dsTrangThai = new[]
+        {
+            (Ten: "Đã thanh toán", So: Model.DonDaThanhToan30Ngay, Lop: "da-tra"),
+            (Ten: "Đang kiểm tra", So: Model.DonDangKiemTra30Ngay, Lop: "kiem-tra"),
+            (Ten: "Chưa thanh toán", So: Model.DonChuaThanhToan30Ngay, Lop: "chua-tra"),
+            (Ten: "Đã hủy", So: Model.DonDaHuy30Ngay, Lop: "da-huy")
+        };
+    }
+    <section class="ad-card">
+        <div class="ad-card-head">
+            <h2>Tình trạng đơn 30 ngày qua</h2>
+            <span class="ad-badge">@Model.TongDon30Ngay đơn</span>
+        </div>
+        @if (Model.TongDon30Ngay > 0)
+        {
+            <div class="ad-tt-thanh" role="img" aria-label="@string.Join(", ", dsTrangThai.Select(t => $"{t.Ten} {t.So} đơn"))">
+                @foreach (var t in dsTrangThai.Where(t => t.So > 0))
+                {
+                    <span class="ad-tt-doan @t.Lop" style="flex-grow: @t.So" title="@t.Ten: @t.So đơn"></span>
+                }
+            </div>
+            <ul class="ad-tt-chu-thich">
+                @foreach (var t in dsTrangThai)
+                {
+                    <li>
+                        <i class="ad-tt-cham @t.Lop" aria-hidden="true"></i>
+                        <span>@t.Ten</span>
+                        <strong>@t.So</strong>
+                        <small>@((t.So * 100m / tong30).ToString("0"))%</small>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="tv-empty"><p>Chưa có đơn nào trong 30 ngày qua.</p></div>
+        }
+    </section>
+
     <div class="ad-two">
         <section class="ad-card">
             <div class="ad-card-head">
@@ -155,7 +207,13 @@
                         <li>
                             <div>
                                 <strong>@l.TenTour</strong>
-                                <span>Khởi hành @l.NgayKhoiHanh.ToString("dd/MM/yyyy")</span>
+                                <span>Khởi hành @l.NgayKhoiHanh.ToString("dd/MM/yyyy") · đã đặt @l.SoChoDaDat/@l.SoChoMoBan chỗ</span>
+                                @if (l.SoChoMoBan > 0)
+                                {
+                                    <span class="ad-lap-day@(l.SoChoCon <= 5 ? " sap-day" : "")" aria-hidden="true">
+                                        <i style="width: @((l.SoChoDaDat * 100 / l.SoChoMoBan))%"></i>
+                                    </span>
+                                }
                             </div>
                             <div class="ad-list-end">
                                 <span class="ad-seats@(l.SoChoCon <= 5 ? " it" : "")">@(l.SoChoCon > 0 ? "Còn " + l.SoChoCon + " chỗ" : "Hết chỗ")</span>

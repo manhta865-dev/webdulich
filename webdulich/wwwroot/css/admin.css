@@ -964,3 +964,58 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     font-size: var(--tv-cs-nho);
     font-weight: 600;
 }
+
+/* Tổng quan: so sánh doanh thu với tháng trước */
+.ad-kpi-body .ad-so-sanh { font-weight: 600; }
+.ad-kpi-body .ad-so-sanh.tang { color: var(--tv-thanh-cong); }
+.ad-kpi-body .ad-so-sanh.giam { color: var(--tv-loi); }
+
+/* Tổng quan: tình trạng đơn 30 ngày qua (thanh chia màu và chú thích) */
+.ad-tt-thanh {
+    display: flex;
+    gap: 3px;
+    height: 14px;
+    margin: var(--tv-k2) 0 var(--tv-k4);
+    overflow: hidden;
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-xam-nhat);
+}
+.ad-tt-doan { flex-basis: 0; min-width: 6px; transform-origin: left; }
+.ad-tt-doan.da-tra, .ad-tt-cham.da-tra { background: var(--tv-thanh-cong); }
+.ad-tt-doan.kiem-tra, .ad-tt-cham.kiem-tra { background: var(--tv-nhan); }
+.ad-tt-doan.chua-tra, .ad-tt-cham.chua-tra { background: var(--tv-canh-bao); }
+.ad-tt-doan.da-huy, .ad-tt-cham.da-huy { background: var(--tv-chu-phu); opacity: 0.55; }
+.ad-tt-chu-thich {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--tv-k3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.ad-tt-chu-thich li { display: flex; align-items: baseline; gap: var(--tv-k2); font-size: var(--tv-cs-thuong); }
+.ad-tt-chu-thich strong { margin-left: auto; font-size: var(--tv-cs-vua); }
+.ad-tt-chu-thich small { min-width: 34px; text-align: right; color: var(--tv-chu-phu); }
+.ad-tt-cham { width: 10px; height: 10px; flex-shrink: 0; border-radius: 3px; align-self: center; }
+
+/* Tổng quan: thanh lấp đầy chỗ của lịch sắp khởi hành */
+.ad-lap-day {
+    display: block;
+    width: 160px;
+    max-width: 100%;
+    height: 6px;
+    margin-top: var(--tv-k1);
+    overflow: hidden;
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-xam-nhat);
+}
+.ad-lap-day i { display: block; height: 100%; border-radius: inherit; background: var(--tv-nhan); transform-origin: left; }
+.ad-lap-day.sap-day i { background: var(--tv-canh-bao); }
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Thanh số liệu và cột biểu đồ mọc ra khi mở trang */
+    .ad-tt-doan, .ad-lap-day i { animation: ad-moc-ngang 700ms cubic-bezier(.2, .7, .2, 1) 200ms backwards; }
+    .ad-chart .ad-bar { transform-box: fill-box; transform-origin: bottom; animation: ad-moc-doc 700ms cubic-bezier(.2, .7, .2, 1) 150ms backwards; }
+}
+@keyframes ad-moc-ngang { from { transform: scaleX(0); } }
+@keyframes ad-moc-doc { from { transform: scaleY(0); } }

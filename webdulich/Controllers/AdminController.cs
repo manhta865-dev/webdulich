@@ -1359,6 +1359,26 @@ namespace webdulich.Controllers
 
             var thangNay = doanhThuTheoThang.FirstOrDefault(x => x.Thang == homNay.Month);
 
+            // Tháng trước (có thể thuộc năm trước nên truy vấn riêng)
+            var dauThangTruoc = new DateTime(homNay.Year, homNay.Month, 1).AddMonths(-1);
+            var dauThangNay = dauThangTruoc.AddMonths(1);
+            decimal doanhThuThangTruoc = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan && x.NgayDi >= dauThangTruoc && x.NgayDi < dauThangNay)
+                .Select(x => x.TongTien)
+                .ToList()
+                .Sum();
+
+            // Đơn đặt trong 30 ngày qua, đếm theo trạng thái thanh toán
+            var tu30NgayTruoc = homNay.AddDays(-30);
+            var demTrangThai = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .Where(x => x.NgayDat >= tu30NgayTruoc)
+                .Select(x => x.TrangThaiThanhToan)
+                .ToList()
+                .GroupBy(x => x)
+                .Select(g => new { TrangThai = g.Key, SoDon = g.Count() })
+                .ToList();
+            int Dem(string trangThai) => demTrangThai.FirstOrDefault(x => x.TrangThai == trangThai)?.SoDon ?? 0;
+
             var donDangKiemTra = _context.DatTours.AsNoTracking().ChonDon(_context)
                 .Where(x => x.TrangThaiThanhToan == TrangThaiThanhToanDon.DangKiemTra);
             var donChoXacNhan = donDangKiemTra
@@ -1390,6 +1410,11 @@ namespace webdulich.Controllers
                 Nam = homNay.Year,
                 DoanhThuThang = thangNay?.DoanhThu ?? 0,
                 SoDonDaThanhToanThang = thangNay?.SoDon ?? 0,
+                DoanhThuThangTruoc = doanhThuThangTruoc,
+                DonDaThanhToan30Ngay = Dem(TrangThaiThanhToanDon.DaThanhToan),
+                DonDangKiemTra30Ngay = Dem(TrangThaiThanhToanDon.DangKiemTra),
+                DonChuaThanhToan30Ngay = Dem(TrangThaiThanhToanDon.ChuaThanhToan),
+                DonDaHuy30Ngay = Dem(TrangThaiThanhToanDon.DaHuy),
                 SoDonChoXacNhan = donDangKiemTra.Count(),
                 SoLichSapKhoiHanh = lichSapKhoiHanhQuery.Count(),
                 SoTour = _context.Tours.Count(),
@@ -1418,6 +1443,13 @@ namespace webdulich.Controllers
                     .Take(6)
                     .ToList()
             };
+
+            // Số chỗ mở bán của các lịch sắp đi để hiện "đã đặt X/Y" (RB-37)
+            var moBan = SucChuaLich.SoChoMoBan(_context, model.LichSapKhoiHanh.Select(l => l.Id));
+            foreach (var l in model.LichSapKhoiHanh)
+            {
+                l.SoChoMoBan = moBan.TryGetValue(l.Id, out var mb) ? mb : 0;
+            }
 
             return View(model);
         }
