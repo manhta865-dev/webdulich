@@ -33,29 +33,91 @@
 
 .ai-help-toggle:hover { background: var(--tv-nhan-nhat); }
 
-/* ---------- Khung hộp thoại ----------
-   Hai nút nằm cạnh nhau một hàng ở góc phải dưới; hai khung cùng mở ra một chỗ ngay trên hàng nút,
-   và mỗi lần chỉ mở một khung (xem toggleChatBox, toggleAiHelpBox) nên không bao giờ đè lên nhau hay đè lên nút. */
+/* ---------- Cột nút nổi góc phải ----------
+   Xếp dọc từ dưới lên: chat với TravelVN (chỉ khi đã đăng nhập), trợ lý, Zalo.
+   Chưa đăng nhập thì không có nút chat nên hai nút còn lại hạ xuống một bậc. */
 .chat-widget,
-.ai-help-widget {
+.ai-help-widget,
+.zalo-noi {
     position: fixed;
-    bottom: 24px;
+    right: 24px;
     z-index: 2000;
     font-family: var(--tv-font);
 }
-.chat-widget { right: 24px; }
-.ai-help-widget { right: 92px; }
+.chat-widget { bottom: 24px; }
+.ai-help-widget { bottom: 24px; }
+.zalo-noi { bottom: 90px; }
+body:has(.chat-widget) .ai-help-widget { bottom: 90px; }
+body:has(.chat-widget) .zalo-noi { bottom: 156px; }
 
+/* Nút Zalo: màu xanh của Zalo, chữ "Zalo" */
+.zalo-noi {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #0068FF;
+    color: #FFFFFF;
+    box-shadow: var(--tv-bong-noi);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition: transform var(--tv-nhanh), background var(--tv-nhanh);
+}
+.zalo-noi:hover { background: #0057D9; color: #FFFFFF; }
+
+/* Rê chuột vào nút thì hiện nhãn bên trái */
+.chat-toggle,
+/* Nút Zalo đã position: fixed nên tự làm gốc cho nhãn; hai nút còn lại cần relative */
+.ai-help-toggle { position: relative; }
+.chat-toggle::after,
+.ai-help-toggle::after,
+.zalo-noi::after {
+    content: attr(data-nhan);
+    position: absolute;
+    right: calc(100% + 10px);
+    top: 50%;
+    padding: 6px 10px;
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-chu);
+    color: var(--tv-be-mat);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(6px, -50%);
+    transition: opacity var(--tv-nhanh), transform var(--tv-nhanh);
+}
+.chat-toggle:hover::after,
+.ai-help-toggle:hover::after,
+.zalo-noi:hover::after,
+.chat-toggle:focus-visible::after,
+.ai-help-toggle:focus-visible::after,
+.zalo-noi:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+@media (hover: none) {
+    .chat-toggle::after, .ai-help-toggle::after, .zalo-noi::after { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .chat-toggle:hover, .ai-help-toggle:hover, .zalo-noi:hover { transform: translateY(-2px); }
+}
+
+/* ---------- Khung hộp thoại ----------
+   Mở ra bên trái cột nút, sát đáy màn hình; mỗi lần chỉ mở một khung (xem toggleChatBox, toggleAiHelpBox)
+   nên không đè lên nhau và không che nút nào. */
 .chat-box,
 .ai-help-box {
     position: fixed;
-    right: 24px;
-    bottom: 92px;
+    right: 96px;
+    bottom: 24px;
     z-index: 2100;
     display: none;
     flex-direction: column;
     width: 360px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 48px);
     overflow: hidden;
     background: var(--tv-be-mat);
     border: 1px solid var(--tv-vien);
@@ -277,14 +339,19 @@
 
 /* ---------- Điện thoại ---------- */
 @media (max-width: 576px) {
-    .chat-widget { right: 16px; bottom: 16px; }
-    .ai-help-widget { right: 80px; bottom: 16px; }
+    /* Nút nhỏ hơn, cột nút sát mép; khung mở chiếm phần còn lại bên trái cột nút */
+    .chat-toggle, .ai-help-toggle, .zalo-noi { width: 48px; height: 48px; }
+    .chat-widget, .ai-help-widget, .zalo-noi { right: 14px; }
+    .chat-widget, .ai-help-widget { bottom: 16px; }
+    .zalo-noi { bottom: 74px; }
+    body:has(.chat-widget) .ai-help-widget { bottom: 74px; }
+    body:has(.chat-widget) .zalo-noi { bottom: 132px; }
 
     .chat-box,
     .ai-help-box {
-        inset: auto 12px 84px 12px;
+        inset: auto 72px 16px 10px;
         width: auto;
-        max-height: calc(100vh - 100px);
+        max-height: calc(100vh - 32px);
     }
 }
 

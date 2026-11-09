@@ -1,62 +1,38 @@
-/* Khung chung của TravelVN: màn hình chờ, thanh menu khách, khung admin và nhân viên.
+/* Khung chung của TravelVN: thanh menu khách, chuyển động khi mở trang, khung admin và nhân viên.
    Dùng token trong tokens.css. */
 
-/* ---------- Màn hình chờ ---------- */
-.tv-loader {
-    position: fixed;
-    inset: 0;
-    z-index: 3000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--tv-k4);
-    background: var(--tv-nen);
-    color: var(--tv-chu);
-    transition: opacity 240ms ease, visibility 240ms ease;
+/* ---------- Nội dung trang khách hiện dần khi mở trang ----------
+   Trang thường: khung trang trượt nhẹ lên, các khối con hiện lần lượt. Trang chủ: từng dải nội dung hiện lần lượt.
+   Chỉ dùng fill-mode backwards để sau khi chạy xong không còn transform (giữ đúng phần tử sticky, fixed bên trong). */
+@media (prefers-reduced-motion: no-preference) {
+    .tv-page.tv-noi-dung > *,
+    .tv-page.tv-noi-dung > * > *,
+    .page-full.tv-noi-dung > * {
+        animation: tv-hien-dan 460ms cubic-bezier(.2, .7, .2, 1) backwards;
+    }
+    .tv-page.tv-noi-dung > * > :nth-child(2),
+    .page-full.tv-noi-dung > :nth-child(2) { animation-delay: 60ms; }
+    .tv-page.tv-noi-dung > * > :nth-child(3),
+    .page-full.tv-noi-dung > :nth-child(3) { animation-delay: 120ms; }
+    .tv-page.tv-noi-dung > * > :nth-child(4),
+    .page-full.tv-noi-dung > :nth-child(4) { animation-delay: 180ms; }
+    .tv-page.tv-noi-dung > * > :nth-child(n+5),
+    .page-full.tv-noi-dung > :nth-child(n+5) { animation-delay: 240ms; }
+
+    /* Thẻ tour, thẻ ảnh, thẻ lịch sử: rê chuột thì nhấc nhẹ lên */
+    .tv-tour-card, .tv-photo-card, .gy-card, .ls-card {
+        transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+    .tv-tour-card:hover, .tv-photo-card:hover, .gy-card:hover, .ls-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 30px rgba(16, 48, 62, 0.14);
+    }
 }
 
-.tv-loader.hide {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+@keyframes tv-hien-dan {
+    from { opacity: 0; transform: translateY(16px); }
 }
 
-.tv-loader-brand {
-    display: flex;
-    align-items: center;
-    gap: var(--tv-k2);
-    font-size: var(--tv-cs-lon);
-    font-weight: 700;
-    color: var(--tv-nhan);
-}
-
-.tv-loader-bar {
-    width: 160px;
-    height: 4px;
-    border-radius: var(--tv-bo-nhan);
-    background: var(--tv-vien);
-    overflow: hidden;
-}
-
-.tv-loader-bar::after {
-    content: "";
-    display: block;
-    width: 40%;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--tv-nhan);
-    animation: tv-chay 900ms ease-in-out infinite;
-}
-
-@keyframes tv-chay {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(250%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .tv-loader-bar::after { animation: none; width: 100%; }
-}
 
 /* ---------- Thanh menu của khách ---------- */
 .tv-nav {
@@ -365,23 +341,72 @@
 .tv-side-nhom[open] > summary { color: #FFFFFF; font-weight: 600; }
 
 .tv-side-nhom > a {
+    position: relative;
+    gap: var(--tv-k2);
     min-height: 38px;
-    margin: 2px 0 2px 42px;
+    margin: 2px 0 2px 30px;
     padding: 0 var(--tv-k3);
     font-size: var(--tv-cs-nho);
 }
+.tv-side-nhom > a .tv-icon { width: 16px; height: 16px; opacity: 0.8; transition: opacity var(--tv-nhanh), transform var(--tv-nhanh); }
+.tv-side-nhom > a:hover .tv-icon,
+.tv-side-nhom > a.active .tv-icon { opacity: 1; }
+.tv-side-nhom > a:hover .tv-icon { transform: translateX(2px); }
+/* Đường dọc nối các mục con với nhóm */
+.tv-side-nhom > a::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.12);
+}
 .tv-side-nhom[open] { padding-bottom: var(--tv-k1); }
+
+/* Mở và đóng nhóm có chuyển động (trình duyệt hỗ trợ ::details-content, còn lại mở ngay như cũ) */
+.tv-side { interpolate-size: allow-keywords; }
+.tv-side-nhom::details-content {
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: height 260ms ease, opacity 200ms ease, content-visibility 260ms allow-discrete;
+}
+.tv-side-nhom[open]::details-content { height: auto; opacity: 1; }
 
 .tv-side a.tv-side-out { margin-top: auto; color: var(--tv-menu-phu); }
 
 @media (prefers-reduced-motion: reduce) {
-    .tv-side-nhom > summary::after { transition: none; }
+    .tv-side-nhom > summary::after,
+    .tv-side-nhom::details-content,
+    .tv-side-nhom > a .tv-icon { transition: none; }
 }
 
 .tv-main {
     flex: 1;
     min-width: 0;
     margin-left: 248px;
+}
+
+/* ---------- Chuyển trang mượt (cả trang khách và khu quản lý) ----------
+   Toàn site bật @view-transition (xem _Layout). Menu bên trái, thanh trên của admin và thanh menu của khách được đặt tên riêng
+   nên đứng yên, chỉ phần nội dung mờ đi rồi trượt nhẹ lên. */
+.tv-admin .tv-side { view-transition-name: tv-menu; }
+.tv-admin .tv-topbar { view-transition-name: tv-thanh-tren; }
+/* Trang khách: thanh menu trên cùng cũng đứng yên khi chuyển trang */
+.tv-nav { view-transition-name: tv-thanh-menu; }
+
+::view-transition-old(root) { animation: tv-trang-di 140ms ease-in both; }
+::view-transition-new(root) { animation: tv-trang-den 280ms cubic-bezier(.2, .7, .2, 1) both; }
+::view-transition-group(tv-menu) { animation: none; }
+
+@keyframes tv-trang-di { to { opacity: 0; } }
+@keyframes tv-trang-den { from { opacity: 0; transform: translateY(10px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-group(*) { animation: none; }
 }
 
 .tv-topbar {
@@ -519,6 +544,13 @@
 .tv-pay-momo { color: #A50064; }
 .tv-pay-zalopay { color: #0068FF; }
 .tv-pay-acb { color: #004B9B; }
+.tv-pay-vietqr { color: #00467F; letter-spacing: 0.02em; }
+.tv-pay-vietqr .tv-pay-v { color: #E31B23; font-size: 1.15em; }
+.tv-pay-napas { color: #1F3B8C; font-style: italic; font-weight: 700; text-transform: lowercase; }
+.tv-pay-napas em { color: #E31B23; font-style: italic; margin-left: 2px; }
+.tv-pay { transition: transform var(--tv-nhanh), box-shadow var(--tv-nhanh); }
+.tv-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2); }
+.tv-pay-note { margin: var(--tv-k3) 0 0; font-size: var(--tv-cs-nho); line-height: 1.5; opacity: 0.8; }
 
 .tv-footer-bottom {
     padding: var(--tv-k4);

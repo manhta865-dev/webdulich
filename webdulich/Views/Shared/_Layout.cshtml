@@ -80,16 +80,12 @@
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/widgets.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+    @* Chuyển trang mượt cho toàn site (View Transitions): thanh menu đứng yên, nội dung mờ đi rồi hiện lên.
+       Trình duyệt chưa hỗ trợ thì chuyển trang bình thường. Không còn màn hình chờ vì nó làm mỗi lần chuyển trang bị chớp. *@
+    <style>@@view-transition { navigation: auto; }</style>
 </head>
 
 <body>
-    <div id="travelLoader" class="tv-loader" role="status" aria-live="polite">
-        <div class="tv-loader-brand">
-            <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
-            TravelVN
-        </div>
-        <div class="tv-loader-bar"></div>
-    </div>
     <partial name="_Icons" />
 
     @if (currentRole == "admin")
@@ -110,36 +106,36 @@
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
                         <span>Tour và lịch</span>
                     </summary>
-                    <a asp-controller="Admin" asp-action="Index" class="@MucAdmin(mucTour)">Quản lý tour</a>
-                    <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@MucAdmin(mucLichDi)">Lịch đi</a>
-                    <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@MucAdmin(mucLichTrinh)">Lịch trình</a>
-                    <a asp-controller="Admin" asp-action="PhanCongTour" class="@MucAdmin(mucPhanCong)">Phân công tour</a>
+                    <a asp-controller="Admin" asp-action="Index" class="@MucAdmin(mucTour)"><svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg><span>Quản lý tour</span></a>
+                    <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@MucAdmin(mucLichDi)"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Lịch đi</span></a>
+                    <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@MucAdmin(mucLichTrinh)"><svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg><span>Lịch trình</span></a>
+                    <a asp-controller="Admin" asp-action="PhanCongTour" class="@MucAdmin(mucPhanCong)"><svg class="tv-icon" aria-hidden="true"><use href="#i-truck" /></svg><span>Phân công tour</span></a>
                 </details>
                 <details class="tv-side-nhom" name="menuAdmin" open="@moKinhDoanh">
                     <summary>
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
                         <span>Đơn và doanh thu</span>
                     </summary>
-                    <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)">Đơn đặt tour</a>
-                    <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)">Khuyến mãi</a>
-                    <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)">Doanh thu</a>
+                    <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg><span>Đơn đặt tour</span></a>
+                    <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)"><svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg><span>Khuyến mãi</span></a>
+                    <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chart" /></svg><span>Doanh thu</span></a>
                 </details>
                 <details class="tv-side-nhom" name="menuAdmin" open="@moNoiDung">
                     <summary>
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
                         <span>Nội dung</span>
                     </summary>
-                    <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")">Bài viết</a>
-                    <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")">Video</a>
+                    <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")"><svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg><span>Bài viết</span></a>
+                    <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")"><svg class="tv-icon" aria-hidden="true"><use href="#i-video" /></svg><span>Video</span></a>
                 </details>
                 <details class="tv-side-nhom" name="menuAdmin" open="@moConNguoi">
                     <summary>
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
                         <span>Khách và nhân sự</span>
                     </summary>
-                    <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)">Tin nhắn</a>
-                    <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)">Tài khoản</a>
-                    <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)">Nhân sự</a>
+                    <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Tin nhắn</span></a>
+                    <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg><span>Tài khoản</span></a>
+                    <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg><span>Nhân sự</span></a>
                 </details>
                 <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
@@ -252,6 +248,9 @@
                     <li><a asp-controller="BaiViet" asp-action="Index" class="@Active("BaiViet")">Bài viết</a></li>
                 </ul>
 
+                @* Trang nào cần ô tìm kiếm trên thanh menu thì khai báo section này (hiện có trang chủ) *@
+                @await RenderSectionAsync("TimKiemMenu", required: false)
+
                 <div class="tv-nav-actions">
                     <button type="button" class="tv-giao-dien" data-giao-dien aria-label="Bật nền tối" aria-pressed="false">
                         <svg class="tv-icon tv-giao-dien-trang" aria-hidden="true"><use href="#i-moon" /></svg>
@@ -297,7 +296,8 @@
             </div>
         </nav>
 
-        <div class="@(laTrangChu ? "page-full" : "container tv-page")">
+        @* tv-noi-dung: các khối bên trong hiện dần khi mở trang (layout.css) *@
+        <div class="@(laTrangChu ? "page-full" : "container tv-page") tv-noi-dung">
             @RenderBody()
         </div>
 
@@ -452,8 +452,8 @@
                 </div>
             </div>
 
-            <button type="button" class="chat-toggle" onclick="toggleChatBox()" aria-label="Chat với admin">
-                <svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg>
+            <button type="button" class="chat-toggle" onclick="toggleChatBox()" aria-label="Chat với TravelVN" data-nhan="Chat với TravelVN">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-tro-chuyen" /></svg>
             </button>
         </div>
 
@@ -570,18 +570,6 @@
         </script>
     }
 
-    <script>
-        // Tắt màn hình chờ ngay khi trang dựng xong, không đợi ảnh và phông tải hết
-        document.addEventListener("DOMContentLoaded", function () {
-            const loader = document.getElementById("travelLoader");
-
-            if (loader) {
-                setTimeout(function () {
-                    loader.classList.add("hide");
-                }, 150);
-            }
-        });
-    </script>
     @if (Context.Session.GetString("role") != "admin" && Context.Session.GetString("role") != "huongdanvien" && Context.Session.GetString("role") != "taixe")
     {
 
@@ -617,10 +605,16 @@
                 </div>
             </div>
 
-            <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()" aria-label="Hỏi nhanh trợ lý">
-                <svg class="tv-icon" aria-hidden="true"><use href="#i-help" /></svg>
+            <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()" aria-label="Hỏi nhanh trợ lý" data-nhan="Hỏi nhanh trợ lý">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-tro-ly" /></svg>
             </button>
         </div>
+
+        @* Nhắn Zalo trực tiếp: trên máy tính zalo.me mở trang có mã QR để quét, trên điện thoại mở thẳng ứng dụng Zalo.
+           Cùng link với chân trang (_Footer.cshtml); đổi số thì sửa cả hai chỗ. *@
+        <a class="zalo-noi" href="https://zalo.me/0342500619" target="_blank" rel="noopener" aria-label="Nhắn Zalo cho TravelVN" data-nhan="Nhắn Zalo">
+            <span aria-hidden="true">Zalo</span>
+        </a>
 
         <script>
             function toggleAiHelpBox() {

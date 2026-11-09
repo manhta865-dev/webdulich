@@ -490,3 +490,70 @@
     .home-video-lon-chu { padding: var(--tv-k5) var(--tv-k4) var(--tv-k4); }
     .home-video-lon-chu h3 { font-size: var(--tv-cs-vua); }
 }
+
+/* ---------- Ô tìm kiếm trên thanh menu (màn hình rộng) ----------
+   Kính mờ khi thanh menu còn trong suốt trên ảnh; khi cuộn xuống thanh menu thành nền đặc thì ô tìm kiếm đổi sang nền sáng. */
+.tv-nav-tim {
+    display: none;
+    flex: 1 1 320px;
+    align-items: center;
+    gap: var(--tv-k2);
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 4px 4px 4px var(--tv-k3);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: var(--tv-bo-nhan);
+    background: rgba(10, 30, 40, 0.28);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+    color: #FFFFFF;
+    transition: background var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+.tv-nav-tim .tv-icon { width: 18px; height: 18px; opacity: 0.85; }
+.tv-nav-tim input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    color: inherit;
+}
+.tv-nav-tim input::placeholder { color: rgba(255, 255, 255, 0.8); }
+.tv-nav-tim input:focus { outline: none; }
+.tv-nav-tim:focus-within { border-color: rgba(255, 255, 255, 0.8); background: rgba(10, 30, 40, 0.42); }
+.tv-nav-tim button {
+    height: 36px;
+    padding: 0 var(--tv-k4);
+    border: 0;
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-nhan);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--tv-nhanh);
+}
+.tv-nav-tim button:hover { background: var(--tv-nhan-nen-dam); }
+
+/* Thanh menu đã thành nền đặc (cuộn xuống hoặc mở menu) */
+.tv-nav--over.is-solid .tv-nav-tim,
+.tv-nav--over.is-open .tv-nav-tim {
+    border-color: var(--tv-vien);
+    background: var(--tv-nen);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    color: var(--tv-chu);
+}
+.tv-nav--over.is-solid .tv-nav-tim input::placeholder,
+.tv-nav--over.is-open .tv-nav-tim input::placeholder { color: var(--tv-chu-phu); }
+
+@media (min-width: 993px) {
+    .tv-nav-tim { display: flex; }
+    .tv-nav-links:has(+ .tv-nav-tim) { margin-right: 0; }
+    .hero-search { display: none; }
+    /* Không còn ô tìm kiếm giữa ảnh nên quả địa cầu nhích lên, không đè dải thẻ điểm đến */
+    .hero-globe { top: 64px; width: min(500px, 37vw); }
+}

@@ -28,6 +28,33 @@
 
 .ad-kpi:hover { border-color: var(--tv-nhan); color: var(--tv-chu); }
 
+/* ---------- Chuyển động khi mở trang ----------
+   Các khối của trang hiện dần từ trên xuống, ô số liệu hiện lần lượt. Chỉ dùng fill-mode backwards
+   để sau khi chạy xong không còn transform (transform giữ lại sẽ làm hỏng phần tử sticky và fixed bên trong). */
+@media (prefers-reduced-motion: no-preference) {
+    .ad-page > *,
+    .ad-kpis > * {
+        animation: ad-hien 420ms cubic-bezier(.2, .7, .2, 1) backwards;
+    }
+    .ad-page > :nth-child(2) { animation-delay: 50ms; }
+    .ad-page > :nth-child(3) { animation-delay: 100ms; }
+    .ad-page > :nth-child(4) { animation-delay: 150ms; }
+    .ad-page > :nth-child(5) { animation-delay: 200ms; }
+    .ad-page > :nth-child(n+6) { animation-delay: 250ms; }
+    .ad-kpis > :nth-child(1) { animation-delay: 80ms; }
+    .ad-kpis > :nth-child(2) { animation-delay: 140ms; }
+    .ad-kpis > :nth-child(3) { animation-delay: 200ms; }
+    .ad-kpis > :nth-child(n+4) { animation-delay: 260ms; }
+
+    /* Ô số liệu là đường dẫn: rê chuột thì nhấc nhẹ lên */
+    .ad-kpi { transition: border-color var(--tv-nhanh), transform 200ms ease, box-shadow 200ms ease; }
+    a.ad-kpi:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(16, 48, 62, 0.12); }
+}
+
+@keyframes ad-hien {
+    from { opacity: 0; transform: translateY(14px); }
+}
+
 .ad-kpi-icon {
     display: inline-flex;
     align-items: center;
@@ -498,7 +525,9 @@
 .ad-bv-cot { display: grid; gap: var(--tv-k4); position: sticky; top: 80px; }
 .ad-bv-tieu-de-khoi { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-thuong); font-weight: 600; }
 .ad-bv-nut-luu { display: grid; grid-template-columns: 1fr; gap: var(--tv-k2); }
-.ad-bv-quay-lai { display: inline-block; margin-top: var(--tv-k3); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+/* Nút quay lại: cùng kiểu nút viền, rộng bằng cột, mũi tên chỉ sang trái */
+.ad-bv-quay-lai { display: flex; justify-content: center; align-items: center; gap: var(--tv-k2); width: 100%; margin-top: var(--tv-k2); }
+.ad-bv-quay-lai .tv-icon { transform: scaleX(-1); }
 .ad-bv-cot .ad-bv-anh img { width: 100%; height: 150px; }
 
 @media (max-width: 1100px) {

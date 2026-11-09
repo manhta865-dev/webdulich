@@ -5,7 +5,7 @@
                 <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
                 TravelVN
             </div>
-            <p>Công ty Du lịch và Lữ hành TravelVN</p>
+            <p>Công ty Du lịch TravelVN</p>
             <p>
                 <a href="https://www.google.com/maps?q=201%2F1%20M%C3%A3%20L%C3%B2%2C%20B%C3%ACnh%20Tr%E1%BB%8B%20%C4%90%C3%B4ng%20A%2C%20B%C3%ACnh%20T%C3%A2n%2C%20TP.HCM"
                    target="_blank" rel="noopener">201/1 Mã Lò, Bình Trị Đông A, Bình Tân, TP.HCM</a>
@@ -40,22 +40,32 @@
                     </a>
                 </li>
                 <li>
-                    <a href="mailto:VietTravelVN@gmail.com">
+                    <a href="mailto:manhta865@gmail.com">
                         <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
-                        VietTravelVN@gmail.com
+                        manhta865@gmail.com
                     </a>
                 </li>
-                <li><a href="https://zalo.me/0342500619" target="_blank" rel="noopener">Nhắn qua Zalo</a></li>
+                <li>
+                    @* Cùng link với nút Zalo nổi ở góc phải (_Layout.cshtml); đổi số thì sửa cả hai chỗ *@
+                    <a href="https://zalo.me/0342500619" target="_blank" rel="noopener">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-zalo" /></svg>
+                        Nhắn Zalo 0342 500 619
+                    </a>
+                </li>
             </ul>
         </div>
 
         <div>
             <div class="tv-footer-title">Thanh toán</div>
-            @* Chỉ ghi phương thức nhận tiền đang dùng thật: chuyển khoản ACB và ví MoMo *@
+            @* Chỉ ghi cách nhận tiền đang dùng thật (lỗi 11 trong CLAUDE.md: không quảng cáo VISA, ZaloPay... khi chưa có).
+               QR của web là VietQR nên ứng dụng ngân hàng nào cũng quét được, qua mạng Napas 247. *@
             <div class="tv-pay-grid">
+                <div class="tv-pay tv-pay-vietqr"><span class="tv-pay-v">V</span>IETQR</div>
+                <div class="tv-pay tv-pay-napas">napas <em>247</em></div>
                 <div class="tv-pay tv-pay-acb">ACB</div>
                 <div class="tv-pay tv-pay-momo">MoMo</div>
             </div>
+            <p class="tv-pay-note">Quét QR bằng ứng dụng của mọi ngân hàng, mỗi ghế một mã riêng.</p>
         </div>
     </div>
 

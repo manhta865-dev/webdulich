@@ -22,6 +22,14 @@
     };
 }
 
+@section TimKiemMenu {
+    <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="tv-nav-tim" role="search">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>
+        <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt, Phú Quốc" aria-label="Điểm đến" />
+        <button type="submit">Tìm tour</button>
+    </form>
+}
+
 @section Styles {
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
@@ -62,6 +70,7 @@
         <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
     </div>
 
+    @* Màn hình nhỏ: ô tìm kiếm nằm trong ảnh lớn. Màn hình rộng: ô tìm kiếm nằm trên thanh menu (section TimKiemMenu) *@
     <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="hero-search home-search">
         <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt, Phú Quốc" aria-label="Điểm đến" />
         <button type="submit" class="tv-btn tv-btn-chinh">Tìm tour</button>
