@@ -475,6 +475,8 @@ namespace webdulich.Controllers
             var nguoiTheoCho = _context.ChoNgoiChuyenDis.AsNoTracking()
                 .Where(c => c.LichKhoiHanhTourId == datTour.LichKhoiHanhTourId)
                 .ToDictionary(c => c.ViTriChoNgoiId, c => c.HanhKhachDatTourId);
+            // Chỗ chuyến này không bán (RB-37): không hiện là "còn trống"
+            var khongMoBan = SucChuaLich.ViTriKhoa(_context, datTour.LichKhoiHanhTourId);
 
             return new SoDoNhom
             {
@@ -489,6 +491,10 @@ namespace webdulich.Controllers
                         var cho = new ChoTrenSoDo { Ma = v.MaViTri, Hang = v.Hang, Cot = v.Cot };
                         if (!nguoiTheoCho.TryGetValue(v.Id, out var gheId))
                         {
+                            if (khongMoBan.Contains(v.Id))
+                            {
+                                cho.Loai = "khong-ban";
+                            }
                             return cho;
                         }
                         if (!gheTheoId.TryGetValue(gheId, out var ghe))

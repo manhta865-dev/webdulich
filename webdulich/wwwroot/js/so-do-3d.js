@@ -43,6 +43,8 @@ function khoiTao(THREE) {
 
     const MAU = {
         "con-trong": { mau: 0xDCE3E6 },
+        // Chỗ không mở bán: ghế mờ như không có, để không ai tưởng là còn trống
+        "khong-ban": { mau: 0xC9D1D4, doTrong: 0.28 },
         "khach-khac": { mau: 0x7C8A91 },
         "trong": { mau: 0xB9DCE5 },
         "da-nhan": { mau: 0x8FB8C0 },
@@ -73,11 +75,12 @@ function khoiTao(THREE) {
     const dauXe = viTriZ(1) - 2.2, duoiXe = viTriZ(soHang) + 0.9;
     const rong = soCot + 0.6, dai = duoiXe - dauXe, giuaZ = (dauXe + duoiXe) / 2;
 
-    dungThan(THREE, canh, duLieu.LaMayBay, { rong, dai, dauXe, duoiXe, giuaZ });
+    // Loại phương tiện: máy bay, xe nhỏ kiểu van (16 chỗ, ít hàng), còn lại là xe khách (29, 45 chỗ)
+    const kieu = duLieu.LaMayBay ? "may-bay" : soHang <= 6 ? "van" : "xe-khach";
+    const thongTinThan = dungThan(THREE, canh, kieu, { rong, dai, dauXe, duoiXe, giuaZ, viTriX });
 
-    // Ghế: gom theo trạng thái rồi dùng InstancedMesh để máy bay 180 chỗ vẫn nhẹ
-    const hinhDem = new THREE.BoxGeometry(0.74, 0.2, 0.68);
-    const hinhTua = new THREE.BoxGeometry(0.74, 0.66, 0.16);
+    // Ghế: đệm, lưng hơi ngả, tựa đầu, hai tay vịn. Gom theo trạng thái rồi dùng InstancedMesh để máy bay 180 chỗ vẫn nhẹ.
+    const PHAN_GHE = phanGhe(THREE);
     const trungGian = new THREE.Object3D();
     const dsMesh = [];
     const vatLieuSang = [];
@@ -87,13 +90,15 @@ function khoiTao(THREE) {
         const m = MAU[loai];
         const vatLieu = new THREE.MeshStandardMaterial({
             color: m.mau, roughness: 0.55,
-            emissive: m.sang || 0x000000, emissiveIntensity: m.doSang || 0
+            emissive: m.sang || 0x000000, emissiveIntensity: m.doSang || 0,
+            transparent: !!m.doTrong, opacity: m.doTrong || 1, depthWrite: !m.doTrong
         });
         if (loai === "da-tra") vatLieuSang.push(vatLieu);
-        [[hinhDem, 0.38, 0], [hinhTua, 0.74, 0.28]].forEach(([hinh, y, lechZ]) => {
-            const mesh = new THREE.InstancedMesh(hinh, vatLieu, dsCho.length);
+        PHAN_GHE.forEach((p) => {
+            const mesh = new THREE.InstancedMesh(p.hinh, vatLieu, dsCho.length);
             dsCho.forEach((c, i) => {
-                trungGian.position.set(viTriX(c.Cot), y, viTriZ(c.Hang) + lechZ);
+                trungGian.position.set(viTriX(c.Cot) + p.x, p.y, viTriZ(c.Hang) + p.z);
+                trungGian.rotation.set(p.nga || 0, 0, 0);
                 trungGian.updateMatrix();
                 mesh.setMatrixAt(i, trungGian.matrix);
             });
@@ -103,25 +108,38 @@ function khoiTao(THREE) {
         });
     });
 
+    // Ghế tài xế (xe) màu xám đậm, cùng kiểu ghế khách
+    if (thongTinThan.gheLai) {
+        const vatLieuLai = new THREE.MeshStandardMaterial({ color: 0x4A5A62, roughness: 0.7 });
+        PHAN_GHE.forEach((p) => {
+            const m = new THREE.Mesh(p.hinh, vatLieuLai);
+            m.position.set(thongTinThan.gheLai.x + p.x, p.y, thongTinThan.gheLai.z + p.z);
+            m.rotation.x = p.nga || 0;
+            canh.add(m);
+        });
+    }
+
     // Nhãn mã chỗ cho ghế của nhóm
     const cuaNhom = duLieu.DsCho.filter((c) => c.Ten);
     cuaNhom.forEach((c) => {
         const nhan = taoNhan(THREE, c.Ma);
-        nhan.position.set(viTriX(c.Cot), 1.42, viTriZ(c.Hang) + 0.1);
+        nhan.position.set(viTriX(c.Cot), 1.75, viTriZ(c.Hang) + 0.2);
         canh.add(nhan);
     });
 
     // Xe nhỏ thì nhìn cả xe; sơ đồ dài như máy bay thì nhìn vào khu ghế của nhóm để ghế không bị li ti
-    const muTieu = new THREE.Vector3(0, 0.45, giuaZ);
-    let banKinh = Math.hypot(rong, dai) / 2 * 0.92;
+    const muTieu = new THREE.Vector3(0, 0.6, giuaZ);
+    // Thân xe mới có mũi, đuôi, gương nên rộng và dài hơn khu ghế một chút
+    let banKinh = Math.hypot(rong + 1.4, dai + 1.6) / 2 * 0.9;
     if (soHang > 15) {
         const dsZ = cuaNhom.map((c) => viTriZ(c.Hang));
         const nho = Math.min(...dsZ), lon = Math.max(...dsZ);
         muTieu.z = (nho + lon) / 2;
-        banKinh = Math.max(4.6, (lon - nho) / 2 + 3);
+        banKinh = Math.max(6.5, (lon - nho) / 2 + 4);
     }
 
-    let gocNgang = 2.5, gocDoc = 0.95, tuDong = !giamChuyenDong, dangHien = true;
+    // Xe: nhìn chếch từ bên hông phía trước để thấy dáng mũi, kính lái, bánh xe. Máy bay: nhìn cao hơn để thấy ghế qua nửa trên trong suốt
+    let gocNgang = duLieu.LaMayBay ? 2.5 : 2.2, gocDoc = duLieu.LaMayBay ? 0.9 : 1.02, tuDong = !giamChuyenDong, dangHien = true;
 
     function datCamera(thoiGian) {
         const ngang = gocNgang + (tuDong ? Math.sin(thoiGian * 0.0003) * 0.28 : 0);
@@ -183,7 +201,7 @@ function khoiTao(THREE) {
         }
         tip.textContent = cho.Ten
             ? cho.Ma + ": " + cho.Ten + ", " + cho.TrangThai.toLowerCase()
-            : cho.Ma + (cho.Loai === "khach-khac" ? ": khách ngoài nhóm" : ": còn trống");
+            : cho.Ma + (cho.Loai === "khach-khac" ? ": khách ngoài nhóm" : cho.Loai === "khong-ban" ? ": không mở bán" : ": còn trống");
         tip.hidden = false;
         const r = khung.getBoundingClientRect();
         const x = Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 8);
@@ -233,11 +251,65 @@ function khoiTao(THREE) {
     });
 }
 
-function dungThan(THREE, canh, laMayBay, k) {
-    const { rong, dai, dauXe, duoiXe, giuaZ } = k;
-    const mauThan = new THREE.MeshStandardMaterial({ color: 0x0A6E8A, roughness: 0.5 });
-    const mauSan = new THREE.MeshStandardMaterial({ color: 0x33454E, roughness: 0.9 });
-    const mauKinh = new THREE.MeshStandardMaterial({ color: 0x9CD3E0, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
+// Các phần của một ghế, tọa độ so với tâm chỗ ngồi (khách quay mặt về đầu xe, tức hướng z âm)
+function phanGhe(THREE) {
+    return [
+        { hinh: new THREE.BoxGeometry(0.66, 0.16, 0.6), x: 0, y: 0.42, z: 0.02 },                // đệm ngồi
+        { hinh: new THREE.BoxGeometry(0.66, 0.72, 0.13), x: 0, y: 0.84, z: 0.31, nga: -0.16 },   // lưng tựa hơi ngả ra sau
+        { hinh: new THREE.BoxGeometry(0.4, 0.2, 0.12), x: 0, y: 1.3, z: 0.39, nga: -0.16 },      // tựa đầu
+        { hinh: new THREE.BoxGeometry(0.07, 0.08, 0.5), x: -0.36, y: 0.6, z: 0.06 },             // tay vịn trái
+        { hinh: new THREE.BoxGeometry(0.07, 0.08, 0.5), x: 0.36, y: 0.6, z: 0.06 },              // tay vịn phải
+        { hinh: new THREE.BoxGeometry(0.5, 0.3, 0.42), x: 0, y: 0.2, z: 0.06 }                   // chân ghế
+    ];
+}
+
+// Dựng thân phương tiện quanh khu ghế. Xe: phần dưới cửa sổ đặc, dải kính trong suốt có khung, không có mui
+// để nhìn thấy ghế. Máy bay: thân ống, nửa trên trong suốt. Trả về vị trí ghế tài xế (nếu có).
+function dungThan(THREE, canh, kieu, k) {
+    return kieu === "may-bay" ? dungMayBay(THREE, canh, k) : dungXe(THREE, canh, kieu, k);
+}
+
+// Bóng mờ dưới gầm cho xe có cảm giác đứng trên mặt đất
+function bongDo(THREE, canh, rong, dai, y, z) {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const ctx = c.getContext("2d");
+    const g = ctx.createRadialGradient(64, 64, 8, 64, 64, 64);
+    g.addColorStop(0, "rgba(16,36,44,0.45)");
+    g.addColorStop(1, "rgba(16,36,44,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    const t = new THREE.CanvasTexture(c);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(rong, dai), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(0, y, z);
+    canh.add(m);
+}
+
+function dungXe(THREE, canh, kieu, k) {
+    const { rong, dauXe, duoiXe, viTriX } = k;
+    const laVan = kieu === "van";
+
+    // Kích thước theo loại xe (đơn vị = một ô ghế)
+    const day = laVan ? -0.3 : -0.42;            // đáy thân
+    const that = laVan ? 0.78 : 0.86;            // mép dưới cửa sổ
+    const mui = laVan ? 2.0 : 2.28;              // nóc
+    const rBanh = laVan ? 0.4 : 0.52;
+    const beNgang = rong + 0.3;
+    const zDau = dauXe - (laVan ? 0.45 : 0.25);  // mặt trước cản
+    const zDuoi = duoiXe + 0.3;
+    const xD = -zDau, xS = -zDuoi;               // tọa độ trong hình 2D (đầu xe là x lớn)
+    const daiNap = laVan ? 0.75 : 0.06;          // nắp capo: van có mũi ngắn, xe khách đầu phẳng
+    const nghiengKinh = laVan ? 1.05 : 0.28;     // kính lái lùi vào bao nhiêu ở mép trên
+
+    const mauThan = new THREE.MeshStandardMaterial({ color: 0xF3F6F7, roughness: 0.35, metalness: 0.1, side: THREE.DoubleSide });
+    const mauKinh = new THREE.MeshStandardMaterial({ color: 0x7FB9CB, roughness: 0.1, transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide });
+    // Kính lái, kính đuôi tối màu như kính xe thật
+    const mauKinhToi = new THREE.MeshStandardMaterial({ color: 0x1C3440, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide });
+    const mauKhung = new THREE.MeshStandardMaterial({ color: 0x1F2B31, roughness: 0.6 });
+    const mauSan = new THREE.MeshStandardMaterial({ color: 0x3B4A52, roughness: 0.9 });
+    const mauNhan = new THREE.MeshStandardMaterial({ color: 0x0A6E8A, roughness: 0.45 });
+    const mauVay = new THREE.MeshStandardMaterial({ color: 0x2E3A40, roughness: 0.7 });
     const hop = (r, c, d, vatLieu, x, y, z) => {
         const m = new THREE.Mesh(new THREE.BoxGeometry(r, c, d), vatLieu);
         m.position.set(x, y, z);
@@ -245,47 +317,269 @@ function dungThan(THREE, canh, laMayBay, k) {
         return m;
     };
 
-    hop(rong, 0.14, dai, mauSan, 0, 0.14, giuaZ);
-    hop(rong + 0.12, 0.42, dai + 0.12, mauThan, 0, -0.14, giuaZ);
+    // Dáng nghiêng phần thân dưới cửa sổ (trong hình 2D: trục ngang là chiều dài, x lớn là đầu xe;
+    // khi dựng vách hông, đầu xe nằm ở z âm như sơ đồ ghế): cản trước, nắp capo ngắn, đuôi bo tròn
+    const duoi = new THREE.Shape();
+    duoi.moveTo(xS + 0.25, day);
+    duoi.lineTo(xD - 0.2, day);
+    duoi.quadraticCurveTo(xD, day, xD, day + 0.22);
+    duoi.lineTo(xD, laVan ? 0.48 : that - 0.05);
+    duoi.quadraticCurveTo(xD - 0.05, laVan ? 0.68 : that, xD - daiNap, that);
+    duoi.lineTo(xS, that);
+    duoi.lineTo(xS, day + 0.25);
+    duoi.quadraticCurveTo(xS, day, xS + 0.25, day);
+    // Dải kính quanh xe: kính lái nghiêng ở đầu, đuôi bo tròn, không có mui
+    const kinh = new THREE.Shape();
+    kinh.moveTo(xS, that);
+    kinh.lineTo(xD - daiNap, that);
+    kinh.lineTo(xD - daiNap - nghiengKinh, mui - 0.12);
+    kinh.quadraticCurveTo(xD - daiNap - nghiengKinh - 0.12, mui, xD - daiNap - nghiengKinh - 0.3, mui);
+    kinh.lineTo(xS + 0.3, mui);
+    kinh.quadraticCurveTo(xS, mui, xS, mui - 0.3);
+    kinh.lineTo(xS, that);
 
-    // Hai bên và đuôi trong suốt để thấy ghế
-    [-1, 1].forEach((ben) => hop(0.06, 1.3, dai, mauKinh, ben * (rong / 2 + 0.03), 0.8, giuaZ));
-    hop(rong, 1.3, 0.06, mauKinh, 0, 0.8, duoiXe);
+    // Thân là các tấm vách, bên trong rỗng và không có mui để nhìn thấy ghế:
+    // hai hông theo đúng dáng nghiêng, mặt trước, nắp capo, kính lái, vách đuôi, kính đuôi
+    const vachHong = (hinh2D, vatLieu, x) => {
+        const g = new THREE.ShapeGeometry(hinh2D, 14);
+        g.rotateY(Math.PI / 2);
+        const m = new THREE.Mesh(g, vatLieu);
+        m.position.x = x;
+        canh.add(m);
+        const vienM = new THREE.LineSegments(new THREE.EdgesGeometry(g, 20),
+            new THREE.LineBasicMaterial({ color: 0x1F2B31, transparent: true, opacity: 0.35 }));
+        vienM.position.x = x;
+        canh.add(vienM);
+    };
+    // Tấm phẳng nối hai điểm (y, z) theo bề ngang xe
+    const tamNgang = (y1, z1, y2, z2, vatLieu, day = 0.05) => {
+        const dai = Math.hypot(y2 - y1, z2 - z1);
+        const m = new THREE.Mesh(new THREE.BoxGeometry(beNgang, dai, day), vatLieu);
+        m.position.set(0, (y1 + y2) / 2, (z1 + z2) / 2);
+        m.rotation.x = Math.atan2(z2 - z1, y2 - y1);
+        canh.add(m);
+        return m;
+    };
+    [-1, 1].forEach((ben) => {
+        vachHong(duoi, mauThan, ben * beNgang / 2);
+        vachHong(kinh, mauKinh, ben * beNgang / 2);
+    });
+    const dinhCan = laVan ? 0.48 : that - 0.05;
+    tamNgang(day + 0.2, zDau, dinhCan, zDau, mauThan, 0.08);                       // mặt trước, cản
+    tamNgang(dinhCan, zDau, that, zDau + daiNap, mauThan);                          // nắp capo
+    tamNgang(that, zDau + daiNap, mui - 0.1, zDau + daiNap + nghiengKinh, mauKinhToi); // kính lái
+    tamNgang(day + 0.2, zDuoi, that, zDuoi, mauThan, 0.08);                         // vách đuôi
+    tamNgang(that, zDuoi, mui - 0.25, zDuoi, mauKinhToi);                          // kính đuôi
+    // Đoạn mui đặc phía trên khoang tài xế (phần còn lại để trống cho thấy ghế)
+    const zMuiDau = zDau + daiNap + nghiengKinh;
+    const daiMuiDau = laVan ? 0.7 : 1.0;
+    hop(beNgang, 0.08, daiMuiDau, mauThan, 0, mui - 0.02, zMuiDau + daiMuiDau / 2 - 0.05);
 
-    if (laMayBay) {
-        const mui = new THREE.Mesh(new THREE.ConeGeometry(rong / 2 + 0.06, rong * 0.9, 24), mauThan);
-        mui.rotation.x = -Math.PI / 2;
-        mui.scale.y = 1;
-        mui.position.set(0, 0.2, dauXe - rong * 0.45);
-        canh.add(mui);
+    // Sàn trong xe
+    hop(rong, 0.1, zDuoi - zDau - 0.4, mauSan, 0, 0.16, (zDau + zDuoi) / 2 + 0.1);
+
+    const mat = beNgang / 2 + 0.012;           // mặt ngoài hai bên hông
+    const zKinhDau = zDau + daiNap + nghiengKinh + 0.25;  // cửa sổ hông bắt đầu sau kính lái
+
+    [-1, 1].forEach((ben) => {
+        const x = ben * mat;
+        // Vạch màu nhấn dọc thân, viền váy tối dưới cùng
+        hop(0.02, 0.09, zDuoi - zDau - 0.6, mauNhan, x, that - 0.22, (zDau + zDuoi) / 2 + 0.15);
+        hop(0.02, 0.16, zDuoi - zDau - 0.3, mauVay, x, day + 0.1, (zDau + zDuoi) / 2);
+        // Khung cửa sổ: thanh trên, thanh dưới, các trụ đứng
+        hop(0.05, 0.07, zDuoi - zKinhDau, mauKhung, x, mui - 0.04, (zKinhDau + zDuoi) / 2);
+        hop(0.05, 0.06, zDuoi - zDau - daiNap, mauKhung, x, that + 0.02, (zDau + daiNap + zDuoi) / 2);
+        const buoc = laVan ? 1.25 : 1.55;
+        for (let z = zKinhDau; z <= zDuoi - 0.2; z += buoc) {
+            hop(0.05, mui - that, 0.09, mauKhung, x, (mui + that) / 2, z);
+        }
+        // Trụ A chạy theo mép kính lái
+        const dauDuoi = new THREE.Vector3(x, that, zDau + daiNap);
+        const dauTren = new THREE.Vector3(x, mui - 0.05, zDau + daiNap + nghiengKinh);
+        const truA = hop(0.06, dauDuoi.distanceTo(dauTren), 0.1, mauKhung, x, (that + mui) / 2, (dauDuoi.z + dauTren.z) / 2);
+        truA.rotation.x = Math.atan2(dauTren.z - dauDuoi.z, dauTren.y - dauDuoi.y);
+        // Gương chiếu hậu
+        hop(0.32, 0.05, 0.05, mauKhung, ben * (mat + 0.16), that + 0.45, zDau + daiNap + 0.1);
+        hop(0.06, laVan ? 0.3 : 0.42, 0.16, mauKhung, ben * (mat + 0.32), that + 0.35, zDau + daiNap + 0.08);
+        // Đèn pha và đèn hậu
+        const den = new THREE.MeshStandardMaterial({ color: 0xFFF6DA, emissive: 0xFFE7A8, emissiveIntensity: 0.55 });
+        hop(laVan ? 0.42 : 0.36, laVan ? 0.14 : 0.18, 0.04, den, ben * (beNgang / 2 - 0.3), laVan ? 0.52 : 0.08, zDau - 0.05);
+        const denHau = new THREE.MeshStandardMaterial({ color: 0xC0392B, emissive: 0xA01E12, emissiveIntensity: 0.5 });
+        hop(0.18, laVan ? 0.7 : 0.5, 0.04, denHau, ben * (beNgang / 2 - 0.12), laVan ? 0.75 : 0.35, zDuoi + 0.05);
+    });
+
+    // Lưới tản nhiệt, biển số
+    hop(beNgang * (laVan ? 0.5 : 0.62), laVan ? 0.26 : 0.16, 0.04, mauKhung, 0, laVan ? 0.24 : -0.12, zDau - 0.05);
+    hop(0.62, 0.16, 0.03, new THREE.MeshStandardMaterial({ color: 0xFFFFFF }), 0, laVan ? -0.06 : -0.3, zDau - 0.07);
+
+    // Cửa lên xe: viền tối bên phải phía trước (xe khách) hoặc cửa lùa bên phải (van)
+    const zCua = laVan ? zKinhDau + 0.9 : zDau + 0.55;
+    hop(0.02, that - day - 0.15, 0.04, mauKhung, mat, (that + day) / 2 + 0.05, zCua - 0.45);
+    hop(0.02, that - day - 0.15, 0.04, mauKhung, mat, (that + day) / 2 + 0.05, zCua + 0.45);
+
+    // Bánh xe: lốp, mâm bạc, vòm bánh tối
+    const lop = new THREE.CylinderGeometry(rBanh, rBanh, 0.32, 28);
+    const mam = new THREE.CylinderGeometry(rBanh * 0.55, rBanh * 0.55, 0.34, 20);
+    const vom = new THREE.CircleGeometry(rBanh * 1.12, 28);
+    const mauLop = new THREE.MeshStandardMaterial({ color: 0x1B2226, roughness: 0.95 });
+    const mauMam = new THREE.MeshStandardMaterial({ color: 0xC9D2D6, roughness: 0.3, metalness: 0.6 });
+    const zBanh = [zDau + (laVan ? 0.95 : 1.45), zDuoi - (laVan ? 1.05 : 2.3)];
+    const yBanh = day - rBanh * 0.25;
+    zBanh.forEach((z) => {
         [-1, 1].forEach((ben) => {
-            const canh1 = hop(rong * 1.1, 0.1, 4, mauThan, ben * (rong / 2 + rong * 0.55), 0.05, giuaZ);
-            canh1.rotation.y = ben * 0.25;
+            const lopM = new THREE.Mesh(lop, mauLop);
+            lopM.rotation.z = Math.PI / 2;
+            lopM.position.set(ben * (beNgang / 2 - 0.05), yBanh, z);
+            canh.add(lopM);
+            const mamM = new THREE.Mesh(mam, mauMam);
+            mamM.rotation.z = Math.PI / 2;
+            mamM.position.copy(lopM.position);
+            canh.add(mamM);
+            const vomM = new THREE.Mesh(vom, mauVay);
+            vomM.rotation.y = ben * Math.PI / 2;
+            vomM.position.set(ben * (mat + 0.004), yBanh + 0.02, z);
+            canh.add(vomM);
         });
-        hop(0.14, 2, 2.4, mauThan, 0, 1.2, duoiXe - 0.8);
-    } else {
-        // Kính lái, ghế lái, vô lăng, bánh xe
-        const kinh = hop(rong, 1.4, 0.06, mauKinh, 0, 0.8, dauXe + 0.14);
-        kinh.rotation.x = -0.2;
-        const mauGheLai = new THREE.MeshStandardMaterial({ color: 0x5B6B73, roughness: 0.7 });
-        hop(0.74, 0.2, 0.68, mauGheLai, -rong / 2 + 0.8, 0.38, dauXe + 1.5);
-        hop(0.74, 0.66, 0.16, mauGheLai, -rong / 2 + 0.8, 0.74, dauXe + 1.78);
-        const volang = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.04, 8, 20), mauSan);
-        volang.rotation.x = -0.8;
-        volang.position.set(-rong / 2 + 0.8, 0.8, dauXe + 0.8);
-        canh.add(volang);
+    });
 
-        const mauBanh = new THREE.MeshStandardMaterial({ color: 0x1E282D, roughness: 0.9 });
-        const hinhBanh = new THREE.CylinderGeometry(0.46, 0.46, 0.3, 24);
-        [dauXe + 1.3, duoiXe - 1.3].forEach((z) => {
-            [-1, 1].forEach((ben) => {
-                const banh = new THREE.Mesh(hinhBanh, mauBanh);
-                banh.rotation.z = Math.PI / 2;
-                banh.position.set(ben * (rong / 2 + 0.02), -0.34, z);
-                canh.add(banh);
-            });
+    bongDo(THREE, canh, beNgang * 1.7, (zDuoi - zDau) * 1.15, yBanh - rBanh + 0.01, (zDau + zDuoi) / 2);
+
+    // Vô lăng trước ghế tài xế (bên trái)
+    const xLai = viTriX(1);
+    const zLai = zDau + daiNap + (laVan ? 1.05 : 1.1);
+    const volang = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 8, 24), mauKhung);
+    volang.rotation.x = -1.0;
+    volang.position.set(xLai, 0.95, zLai - 0.55);
+    canh.add(volang);
+    hop(0.06, 0.06, 0.4, mauKhung, xLai, 0.82, zLai - 0.38).rotation.x = -0.6;
+
+    return { gheLai: { x: xLai, z: zLai } };
+}
+
+function dungMayBay(THREE, canh, k) {
+    const { rong, dauXe, duoiXe } = k;
+    const R = rong / 2 + 0.35;                    // bán kính thân
+    const truc = 0.2 + R * 0.32;                  // sàn khoang nằm dưới trục thân
+    const zMui = dauXe + 0.6, zDuoi = duoiXe + 0.4;
+    const daiThan = zDuoi - zMui;
+    const goc = Math.PI * 0.6;                    // phần đặc ôm từ đáy lên quá nửa thân
+
+    const bac = new THREE.MeshStandardMaterial({ color: 0xD9E0E4, roughness: 0.35, metalness: 0.35, side: THREE.DoubleSide });
+    const kinh = new THREE.MeshStandardMaterial({ color: 0x9FCFDD, roughness: 0.1, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide });
+    const nhan = new THREE.MeshStandardMaterial({ color: 0x0A6E8A, roughness: 0.4, side: THREE.DoubleSide });
+    const dam = new THREE.MeshStandardMaterial({ color: 0x1F2B31, roughness: 0.6 });
+
+    // Thân ống: một lát cắt theo góc quanh trục (theta = 0 là đáy)
+    const ong = (r1, r2, dai, batDau, rongGoc, vatLieu, z) => {
+        const g = new THREE.CylinderGeometry(r2, r1, dai, 48, 1, true, batDau, rongGoc);
+        g.rotateX(Math.PI / 2);
+        const m = new THREE.Mesh(g, vatLieu);
+        m.position.set(0, truc, z);
+        canh.add(m);
+        return m;
+    };
+    ong(R, R, daiThan, -goc, goc * 2, bac, (zMui + zDuoi) / 2);
+    ong(R, R, daiThan, goc, Math.PI * 2 - goc * 2, kinh, (zMui + zDuoi) / 2);
+    // Vạch màu chạy dọc thân ở hai bên
+    ong(R + 0.01, R + 0.01, daiThan, goc - 0.07, 0.05, nhan, (zMui + zDuoi) / 2);
+    ong(R + 0.01, R + 0.01, daiThan, -goc + 0.02, 0.05, nhan, (zMui + zDuoi) / 2);
+
+    // Mũi thuôn: nửa quả cầu kéo dài về phía trước, nửa dưới đặc, nửa trên trong suốt
+    const mui = (batDau, rongGoc, vatLieu) => {
+        const g = new THREE.SphereGeometry(R, 40, 20, batDau, rongGoc, 0, Math.PI / 2);
+        g.rotateX(-Math.PI / 2);
+        g.scale(1, 1, 2.1);
+        const m = new THREE.Mesh(g, vatLieu);
+        m.position.set(0, truc, zMui);
+        canh.add(m);
+    };
+    mui(Math.PI * 1.5 - goc, goc * 2, bac);
+    mui(Math.PI * 1.5 + goc, Math.PI * 2 - goc * 2, kinh);
+
+    // Đuôi: ống thon dần, hơi vểnh lên
+    const daiDuoi = R * 2.6;
+    const duoi1 = ong(R, R * 0.22, daiDuoi, -goc, goc * 2, bac, zDuoi + daiDuoi / 2);
+    const duoi2 = ong(R, R * 0.22, daiDuoi, goc, Math.PI * 2 - goc * 2, kinh, zDuoi + daiDuoi / 2);
+    [duoi1, duoi2].forEach((m) => { m.position.y += R * 0.12; m.rotation.x = -0.1; });
+
+    // Hình phẳng đùn mỏng (cánh, đuôi)
+    const tamPhang = (diem, day, vatLieu) => {
+        const s = new THREE.Shape();
+        s.moveTo(diem[0][0], diem[0][1]);
+        diem.slice(1).forEach((d) => s.lineTo(d[0], d[1]));
+        return new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: day, bevelEnabled: false }), vatLieu);
+    };
+
+    // Đuôi đứng (mặt phẳng dọc thân), màu nhấn
+    const caoDuoi = R * 1.5;
+    const duoiDung = tamPhang([[0, 0], [R * 1.6, 0], [R * 1.9, caoDuoi], [R * 1.25, caoDuoi]], 0.22, nhan);
+    duoiDung.geometry.rotateY(-Math.PI / 2);
+    duoiDung.position.set(0.11, truc + R * 0.8, zDuoi + daiDuoi * 0.35);
+    canh.add(duoiDung);
+
+    // Cánh và đuôi ngang: hình chiếu bằng, xuôi về sau; nửa trái lật từ nửa phải
+    const canhPhang = (goc0, sai, dayCanh, dauSau, cuoiTruoc, cuoiSau, y, z, vatLieu) => {
+        [-1, 1].forEach((ben) => {
+            const m = tamPhang([[goc0, 0], [goc0 + sai, -cuoiTruoc], [goc0 + sai, -cuoiSau], [goc0, -dauSau]], dayCanh, vatLieu);
+            m.geometry.rotateX(-Math.PI / 2);
+            m.geometry.scale(ben, 1, 1);
+            m.position.set(0, y, z);
+            canh.add(m);
         });
-    }
+    };
+    const zCanh = (zMui + zDuoi) / 2 - R * 0.6;
+    const saiCanh = R * 2.7;
+    canhPhang(R * 0.6, saiCanh, 0.16, R * 1.5, R * 1.25, R * 1.75, truc - R * 0.55, zCanh, bac);
+    canhPhang(R * 0.25, R * 1.2, 0.1, R * 0.8, R * 0.7, R * 1.0, truc + R * 0.25, zDuoi + daiDuoi * 0.45, bac);
+
+    // Động cơ dưới cánh và đầu cánh vểnh lên
+    [-1, 1].forEach((ben) => {
+        const xDc = ben * (R * 0.6 + saiCanh * 0.38);
+        // Mép trước cánh ở vị trí động cơ lùi 0.38 * 1.25R so với gốc cánh; động cơ nhô ra trước mép đó một chút
+        const zDc = zCanh + R * 0.32;
+        const dc = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.3, R * 0.26, R * 1.1, 28), nhan);
+        dc.rotation.x = Math.PI / 2;
+        dc.position.set(xDc, truc - R * 0.95, zDc);
+        canh.add(dc);
+        const cuaGio = new THREE.Mesh(new THREE.CircleGeometry(R * 0.26, 28), dam);
+        cuaGio.rotation.y = Math.PI;
+        cuaGio.position.set(xDc, truc - R * 0.95, zDc - R * 0.56);
+        canh.add(cuaGio);
+        const vay = new THREE.Mesh(new THREE.BoxGeometry(0.12, R * 0.45, R * 0.35), bac);
+        vay.position.set(ben * (R * 0.6 + saiCanh), truc - R * 0.55 + R * 0.2, zCanh + R * 1.25 + R * 0.12);
+        vay.rotation.z = -ben * 0.2;
+        canh.add(vay);
+    });
+
+    // Dãy cửa sổ hai bên, ngay dưới mép phần thân đặc
+    const gocCuaSo = goc - 0.16;
+    const soCuaSo = Math.max(1, Math.floor((daiThan - 2) / 0.9));
+    const cuaSo = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.3, 0.2), dam, soCuaSo * 2);
+    const tg = new THREE.Object3D();
+    let i = 0;
+    [-1, 1].forEach((ben) => {
+        for (let n = 0; n < soCuaSo; n++) {
+            const nx = ben * Math.sin(gocCuaSo), ny = -Math.cos(gocCuaSo);
+            tg.position.set(nx * (R + 0.02), truc + ny * (R + 0.02), zMui + 1.2 + n * 0.9);
+            tg.rotation.set(0, 0, Math.atan2(ny, nx));
+            tg.updateMatrix();
+            cuaSo.setMatrixAt(i++, tg.matrix);
+        }
+    });
+    canh.add(cuaSo);
+
+    // Kính buồng lái trên mũi
+    const kinhLai = new THREE.Mesh(new THREE.BoxGeometry(R * 0.9, 0.2, 0.5), dam);
+    kinhLai.position.set(0, truc + R * 0.55, zMui - R * 1.35);
+    kinhLai.rotation.x = 0.5;
+    canh.add(kinhLai);
+
+    // Sàn khoang
+    const san = new THREE.Mesh(new THREE.BoxGeometry(rong, 0.1, daiThan), new THREE.MeshStandardMaterial({ color: 0x3B4A52, roughness: 0.9 }));
+    san.position.set(0, 0.16, (zMui + zDuoi) / 2);
+    canh.add(san);
+
+    return {};
 }
 
 function taoNhan(THREE, chu) {

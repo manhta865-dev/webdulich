@@ -199,7 +199,7 @@
                         <div class="dn-2d-luoi" style="--so-cot: @Model.SoDo.SoCot">
                             @foreach (var c in Model.SoDo.DsCho)
                             {
-                                string moTa = c.Ten != null ? $"{c.Ma}: {c.Ten}, {c.TrangThai}" : c.Loai == "khach-khac" ? $"{c.Ma}: khách ngoài nhóm" : $"{c.Ma}: còn trống";
+                                string moTa = c.Ten != null ? $"{c.Ma}: {c.Ten}, {c.TrangThai}" : c.Loai == "khach-khac" ? $"{c.Ma}: khách ngoài nhóm" : c.Loai == "khong-ban" ? $"{c.Ma}: không mở bán" : $"{c.Ma}: còn trống";
                                 <span class="dn-cho @c.Loai@(c.Ten != null ? " cua-nhom" : "")" style="grid-row: @c.Hang; grid-column: @c.Cot" title="@moTa">@c.Ma</span>
                             }
                         </div>
@@ -212,6 +212,10 @@
                         <li><i class="dn-cho trong"></i>Chưa có người nhận</li>
                         <li><i class="dn-cho khach-khac"></i>Khách ngoài nhóm</li>
                         <li><i class="dn-cho con-trong"></i>Còn trống</li>
+                        @if (Model.SoDo.DsCho.Any(c => c.Loai == "khong-ban"))
+                        {
+                            <li><i class="dn-cho khong-ban"></i>Không mở bán</li>
+                        }
                     </ul>
                     <p class="dn-hint dn-3d-nhac" hidden>Kéo để xoay. Rê chuột hoặc chạm vào một ghế để xem tên.</p>
                 </section>

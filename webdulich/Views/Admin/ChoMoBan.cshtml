@@ -8,6 +8,7 @@
     ViewData["Title"] = "Chọn chỗ mở bán";
     var theoViTri = Model.DsViTri.ToDictionary(v => (v.Hang, v.Cot));
     int soMo = Model.DsViTri.Count(v => !v.KhongMoBan);
+    int soCoKhach = Model.DsViTri.Count(v => v.DaCoNguoi);
 }
 
 @section Styles {
@@ -33,7 +34,10 @@
         @Html.AntiForgeryToken()
 
         <div class="ad-mb-tom-tat">
-            <p class="ad-mb-so" aria-live="polite">Mở bán <strong data-dem-mo>@soMo</strong> / @Model.DsViTri.Count chỗ</p>
+            <p class="ad-mb-so" aria-live="polite">
+                Mở bán <strong data-dem-mo>@soMo</strong> / @Model.DsViTri.Count chỗ:
+                @soCoKhach chỗ đã có khách, còn <strong data-dem-trong>@(soMo - soCoKhach)</strong> chỗ trống để bán
+            </p>
             <p class="ad-hint-nho">
                 Bấm vào ghế để mở hoặc khóa. Ghế sọc xám là chỗ không bán (ví dụ ghế hướng dẫn viên).
                 @if (dangGiu > 0)
@@ -53,7 +57,7 @@
         <div class="cn-legend" aria-hidden="true">
             <span><i class="cn-mau trong"></i>Mở bán</span>
             <span><i class="cn-mau khong-mo-ban"></i>Không mở bán</span>
-            <span><i class="cn-mau co-nguoi"></i>Đã có khách</span>
+            <span><i class="cn-mau ad-co-khach"></i>Đã có khách (luôn mở bán)</span>
         </div>
 
         <div class="cn-layout">
@@ -130,11 +134,14 @@
         var goc = document.querySelector("[data-mo-ban]");
         if (!goc) return;
         var dem = goc.querySelector("[data-dem-mo]");
+        var demTrong = goc.querySelector("[data-dem-trong]");
         var oTick = goc.querySelectorAll("input[name=moBan]");
+        var soCoKhach = @soCoKhach;
         function demLai() {
             var n = 0;
             oTick.forEach(function (o) { if (o.checked) n++; });
             dem.textContent = n;
+            if (demTrong) demTrong.textContent = n - soCoKhach;
         }
         oTick.forEach(function (o) { o.addEventListener("change", demLai); });
         var moHet = goc.querySelector("[data-mo-het]");

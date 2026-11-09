@@ -557,6 +557,8 @@
     color: var(--tv-chu-phu);
 }
 .dn-cho.khach-khac { background: #7C8A91; color: #FFFFFF; }
+/* Chỗ không mở bán (RB-37): sọc nhạt, chữ mờ */
+.dn-cho.khong-ban { background: repeating-linear-gradient(45deg, var(--tv-xam-nhat) 0 4px, var(--tv-vien) 4px 8px); color: var(--tv-chu-phu); opacity: 0.7; }
 .dn-cho.trong { background: #B9DCE5; color: var(--tv-chu-tren-sang); }
 .dn-cho.da-nhan { background: #8FB8C0; color: var(--tv-chu-tren-sang); }
 .dn-cho.da-dien { background: var(--tv-nhan); color: #FFFFFF; }
