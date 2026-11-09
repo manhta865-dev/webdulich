@@ -77,7 +77,8 @@ namespace webdulich.Models
         public IFormFile? HinhFile { get; set; }
 
         [NotMapped]
-        public List<IFormFile> HinhPhuFiles { get; set; } = new List<IFormFile>();
+        // Ảnh phụ không bắt buộc (cho phép rỗng để không bị coi là ô bắt buộc khi kiểm tra form)
+        public List<IFormFile>? HinhPhuFiles { get; set; }
 
         [NotMapped]
         public string TenDiaDiemHienThi =>

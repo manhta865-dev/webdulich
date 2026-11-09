@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using webdulich.Models;
+using webdulich.Services;
 using Microsoft.AspNetCore.Identity;
 
 // Số hiện kiểu Việt Nam (3.000.000) trên mọi máy chủ. Giữ gốc en-US và dấu thập phân là dấu chấm để đọc đúng
@@ -16,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 var cheDoSecure = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 
 // Add services
-builder.Services.AddControllersWithViews()
+builder.Services.AddControllersWithViews(o => o.DungTiengViet())
     .AddCookieTempDataProvider(o => o.Cookie.SecurePolicy = cheDoSecure);
 
 // Lax chứ không Strict: mở link mời từ Zalo, Messenger vẫn còn đăng nhập

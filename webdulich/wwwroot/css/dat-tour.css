@@ -116,14 +116,17 @@
 
 .dt-page textarea.form-control { min-height: 96px; }
 
-/* ---------- Thông báo lỗi: chỉ hiện sau khi bấm gửi ---------- */
+/* ---------- Thông báo lỗi ----------
+   Luôn hiện câu báo lỗi ngay dưới ô sai (trước đây bị ẩn nên chỉ thấy viền đỏ, không biết thiếu gì).
+   Phần kiểm tra trên trình duyệt chỉ báo lỗi sau khi người dùng bấm gửi hoặc rời khỏi ô, nên không hiện lỗi khi vừa mở trang. */
 .dt-page .field-validation-error,
 .dt-page .text-danger {
-    display: none;
+    display: block;
     margin-top: var(--tv-k1);
     font-size: var(--tv-cs-nho);
     color: var(--tv-loi) !important;
 }
+.dt-page .text-danger:empty { display: none; }
 
 .booking-form.show-validation .field-validation-error,
 .booking-form.show-validation .text-danger:not(:empty) { display: block; }
