@@ -1064,3 +1064,15 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     .nv-ds .ad-table tr { break-inside: avoid; }
     .nv-ds * { animation: none !important; }
 }
+
+/* Đặt tại quầy (AdminDatTaiQuay, RB-42) */
+.dq .ad-card + .ad-card, .dq .dq-form > .ad-card { margin-top: var(--tv-k4); }
+.dq-tieu-de { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-vua); font-weight: 700; }
+.dq-so-nguoi { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--tv-k3); }
+.dq-so-nguoi > div { width: 200px; }
+.dq-tom-loi:empty, .dq-tom-loi:has(ul:empty), .dq-tom-loi.validation-summary-valid { display: none; }
+.dq-tom-loi ul { margin: 0; padding-left: var(--tv-k4); }
+.dq-thu-tien { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k4); justify-content: space-between; }
+.dq-tong { display: flex; flex-direction: column; align-items: flex-end; }
+.dq-tong span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dq-tong strong { font-size: var(--tv-cs-lon); color: var(--tv-gia); }

@@ -281,6 +281,11 @@
 
                                         @if (choPhepHuy)
                                         {
+                                            @* Khách đến văn phòng: admin đặt hộ, thu tiền mặt, khóa chỗ (RB-42) *@
+                                            @if (item.SoChoCon > 0 && item.NgayKhoiHanh.Date > GioVN.HomNay)
+                                            {
+                                                <a asp-controller="AdminDatTaiQuay" asp-action="Index" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Đặt tại quầy</a>
+                                            }
                                             <form asp-controller="Admin"
                                                   asp-action="DoiTrangThaiBanLich"
                                                   asp-route-id="@item.Id"

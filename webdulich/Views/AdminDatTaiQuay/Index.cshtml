@@ -1,0 +1,111 @@
+@model webdulich.Models.DatTaiQuayViewModel
+@* Đặt tại quầy (RB-42): admin tạo đơn hộ khách đến văn phòng, thu tiền mặt ngay, chọn chỗ trên xe. *@
+@{
+    ViewData["Title"] = "Đặt tại quầy";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cho-ngoi.css" asp-append-version="true" />
+}
+
+<div class="ad-page dq">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Đặt tại quầy</h1>
+            <p>@Model.TenTour, khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : ""). Còn @Model.SoChoCon chỗ.</p>
+        </div>
+        <a asp-controller="Admin" asp-action="LichKhoiHanh" asp-route-id="@Model.TourId" class="tv-btn tv-btn-vien">Quay lại lịch</a>
+    </div>
+
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+    <div asp-validation-summary="ModelOnly" class="ad-alert loi dq-tom-loi"></div>
+
+    @* Bước 1: số người. Đổi số thì tải lại form để sơ đồ có đúng số ô chọn chỗ. *@
+    <section class="ad-card">
+        <h2 class="dq-tieu-de">1. Số khách</h2>
+        <form method="get" asp-action="Index" asp-route-id="@Model.LichId" class="dq-so-nguoi">
+            <div>
+                <label class="form-label" for="soNguoiLon">Người lớn (@Model.GiaNguoiLon.ToString("N0") VNĐ)</label>
+                <input id="soNguoiLon" name="soNguoiLon" type="number" min="1" max="45" value="@Model.SoNguoiLon" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label" for="soTreNho">Trẻ nhỏ (@Model.GiaTreEm.ToString("N0") VNĐ)</label>
+                <input id="soTreNho" name="soTreNho" type="number" min="0" max="45" value="@Model.SoTreNho" class="form-control" />
+            </div>
+            <button type="submit" class="tv-btn tv-btn-vien">Cập nhật số khách</button>
+        </form>
+    </section>
+
+    <form method="post" asp-action="Index" class="dq-form"
+          data-xac-nhan="Tạo đơn tại quầy cho @(Model.SoNguoiLon + Model.SoTreNho) khách và ghi nhận đã thu @Model.TongTien.ToString("N0") VNĐ tiền mặt?"
+          data-xac-nhan-tieu-de="Xác nhận đã thu tiền?" data-xac-nhan-nut="Đã thu, lưu đơn">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="LichId" />
+        <input type="hidden" asp-for="SoNguoiLon" />
+        <input type="hidden" asp-for="SoTreNho" />
+
+        <section class="ad-card">
+            <h2 class="dq-tieu-de">2. Người liên hệ</h2>
+            <div class="ad-inline-grid">
+                <div>
+                    <label asp-for="TenKhach" class="form-label">Họ tên</label>
+                    <input asp-for="TenKhach" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="TenKhach" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="DienThoai" class="form-label">Số điện thoại</label>
+                    <input asp-for="DienThoai" type="tel" inputmode="numeric" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="DienThoai" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Email" class="form-label">Email (không bắt buộc)</label>
+                    <input asp-for="Email" type="email" class="form-control" autocomplete="off" />
+                </div>
+                <div>
+                    <label asp-for="GhiChu" class="form-label">Ghi chú (không bắt buộc)</label>
+                    <input asp-for="GhiChu" class="form-control" autocomplete="off" />
+                </div>
+            </div>
+        </section>
+
+        <section class="ad-card">
+            <h2 class="dq-tieu-de">3. Họ tên hành khách</h2>
+            <p class="ad-hint">Không bắt buộc. Có thể điền sau ở trang chi tiết đơn. Giấy tờ điền ở trang chi tiết đơn.</p>
+            <div class="ad-inline-grid">
+                @for (int i = 0; i < Model.SoNguoiLon + Model.SoTreNho; i++)
+                {
+                    <div>
+                        <label class="form-label" for="hoTen@(i)">Khách @(i + 1), @(i < Model.SoNguoiLon ? "người lớn" : "trẻ nhỏ")</label>
+                        <input id="hoTen@(i)" name="HoTen[@i]" value="@(i < Model.HoTen.Count ? Model.HoTen[i] : "")" class="form-control" autocomplete="off" />
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (Model.SoDo != null)
+        {
+            <section class="ad-card">
+                <h2 class="dq-tieu-de">4. Chỗ ngồi</h2>
+                <p class="ad-hint">Bấm vào ghế trống để chọn chỗ cho từng khách. Để "TravelVN xếp" thì hệ thống xếp vào chỗ trống đầu xe.</p>
+                <partial name="_SoDoChoNgoi" model="Model.SoDo" />
+            </section>
+        }
+
+        <section class="ad-card dq-thu-tien">
+            <div>
+                <h2 class="dq-tieu-de">Thu tiền mặt tại quầy</h2>
+                <p class="ad-hint">Bấm lưu nghĩa là bạn đã nhận đủ tiền. Đơn được xác nhận ngay, chỗ bị khóa trên xe.</p>
+            </div>
+            <div class="dq-tong">
+                <span>@(Model.SoNguoiLon + Model.SoTreNho) khách</span>
+                <strong>@Model.TongTien.ToString("N0") VNĐ</strong>
+            </div>
+            <button type="submit" class="tv-btn tv-btn-chinh">Lưu đơn và xác nhận đã thu tiền</button>
+        </section>
+    </form>
+</div>
