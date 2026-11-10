@@ -1,0 +1,155 @@
+@model webdulich.Models.DanhSachKhachViewModel
+@using webdulich.Models
+@* Danh sách hành khách của chuyến cho hướng dẫn viên và tài xế được phân công (RB-41).
+   Hướng dẫn viên thấy 4 số cuối giấy tờ; tài xế không thấy cột giấy tờ. *@
+@{
+    ViewData["Title"] = "Danh sách khách";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page nv-ds">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Danh sách khách</h1>
+            <p>
+                @Model.TenTour, khởi hành @Model.NgayKhoiHanh.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")@(Model.TenXe != null ? ", " + Model.TenXe : "")
+            </p>
+        </div>
+        <div class="nv-ds-nut">
+            <a asp-action="LichLamViec" class="tv-btn tv-btn-vien">Quay lại lịch</a>
+            <button type="button" class="tv-btn tv-btn-chinh" onclick="window.print()">In danh sách</button>
+        </div>
+    </div>
+
+    <div class="ad-kpis">
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg></span>
+            <span class="ad-kpi-body">
+                <span class="ad-kpi-label">Tổng số khách</span>
+                <strong>@Model.DsKhach.Count</strong>
+                <small>@Model.SoNguoiLon người lớn, @Model.SoTreNho trẻ nhỏ</small>
+            </span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-check" /></svg></span>
+            <span class="ad-kpi-body">
+                <span class="ad-kpi-label">Đã trả tiền</span>
+                <strong>@Model.SoDaTra</strong>
+                <small>Đã được TravelVN xác nhận</small>
+            </span>
+        </div>
+        <div class="ad-kpi@(Model.SoChuaTra > 0 ? " ad-kpi-canh-bao" : "")">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg></span>
+            <span class="ad-kpi-body">
+                <span class="ad-kpi-label">Chưa trả hoặc đang kiểm tra</span>
+                <strong>@Model.SoChuaTra</strong>
+                <small>Ghế chưa trả quá hạn giữ chỗ sẽ được nhả</small>
+            </span>
+        </div>
+    </div>
+
+    @if (Model.DsKhach.Any())
+    {
+        <div class="ad-toolbar nv-ds-tim">
+            <input type="search" class="form-control" placeholder="Tìm theo tên khách, mã chỗ hoặc mã đơn" aria-label="Tìm khách" data-tim-khach />
+        </div>
+
+        <div class="ad-table-card">
+            <div class="ad-table-wrap">
+                <table class="ad-table" data-bang-khach>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Họ tên</th>
+                            <th>Chỗ</th>
+                            @if (Model.LaHuongDanVien)
+                            {
+                                <th>Giấy tờ</th>
+                            }
+                            <th>Đơn</th>
+                            <th>Người liên hệ</th>
+                            <th>Thanh toán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.DsKhach.Count; i++)
+                        {
+                            var k = Model.DsKhach[i];
+                            var lopTt = k.ThanhToan == ThanhToanKhach.DaTra ? "status-paid" : k.ThanhToan == ThanhToanKhach.DangKiemTra ? "status-checking" : "status-unpaid";
+                            <tr data-tim="@($"{k.HoTen} {k.MaCho} {k.MaChuyenDi}".ToLowerInvariant())">
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <div class="ad-cell-stack">
+                                        <strong>@(string.IsNullOrWhiteSpace(k.HoTen) ? "Chưa điền tên" : k.HoTen)</strong>
+                                        <span class="ad-sub">@k.LoaiHanhKhach</span>
+                                    </div>
+                                </td>
+                                <td><strong>@(k.MaCho ?? "Chưa có")</strong></td>
+                                @if (Model.LaHuongDanVien)
+                                {
+                                    <td class="ad-mono">@(k.GiayToRutGon ?? "Chưa điền")</td>
+                                }
+                                <td>
+                                    <div class="ad-cell-stack">
+                                        <span class="ad-mono">@k.MaChuyenDi</span>
+                                        <span class="ad-sub">@(k.LaDonNhom ? "Đơn nhóm" : "Đơn cá nhân")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-cell-stack">
+                                        <span>@k.NguoiLienHe</span>
+                                        @if (!string.IsNullOrWhiteSpace(k.DienThoaiLienHe))
+                                        {
+                                            <a href="tel:@k.DienThoaiLienHe" class="ad-sub">@k.DienThoaiLienHe</a>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-cell-stack">
+                                        <span class="badge-status @lopTt">@k.ThanhToan</span>
+                                        @if (k.ThanhToan != ThanhToanKhach.DaTra && k.HanGiuCho.HasValue)
+                                        {
+                                            <span class="ad-sub">Giữ chỗ đến @k.HanGiuCho.Value.ToString("HH:mm dd/MM")</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="ad-hint nv-ds-hint" data-khong-thay hidden>Không có khách nào khớp với từ tìm.</p>
+        @if (Model.LaHuongDanVien)
+        {
+            <p class="ad-hint nv-ds-hint">Chỉ hiện 4 số cuối giấy tờ để đối chiếu khi làm thủ tục. Cần số đầy đủ thì liên hệ TravelVN.</p>
+        }
+    }
+    else
+    {
+        <div class="tv-empty"><p>Chuyến này chưa có khách đặt.</p></div>
+    }
+</div>
+
+<script>
+    (function () {
+        var o = document.querySelector("[data-tim-khach]");
+        var bang = document.querySelector("[data-bang-khach]");
+        if (!o || !bang) return;
+        var dong = bang.querySelectorAll("tbody tr");
+        var khongThay = document.querySelector("[data-khong-thay]");
+        o.addEventListener("input", function () {
+            var tu = o.value.trim().toLowerCase(), so = 0;
+            dong.forEach(function (d) {
+                var hien = !tu || d.dataset.tim.indexOf(tu) >= 0;
+                d.hidden = !hien;
+                if (hien) so++;
+            });
+            khongThay.hidden = so > 0;
+        });
+    })();
+</script>

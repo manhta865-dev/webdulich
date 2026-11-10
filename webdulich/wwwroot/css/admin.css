@@ -1048,3 +1048,19 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 }
 @keyframes ad-moc-ngang { from { transform: scaleX(0); } }
 @keyframes ad-moc-doc { from { transform: scaleY(0); } }
+
+/* Danh sách khách của nhân viên (NhanVien/DanhSachKhach, RB-41) */
+.nv-ds .ad-pagehead { display: flex; flex-wrap: wrap; gap: var(--tv-k3); justify-content: space-between; align-items: flex-start; }
+.nv-ds-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
+.nv-ds-tim { margin-bottom: var(--tv-k3); }
+.nv-ds-tim input { max-width: 420px; }
+.nv-ds-hint { margin-top: var(--tv-k3); }
+
+/* Bản in: chỉ còn tiêu đề, ô tóm tắt và bảng khách */
+@media print {
+    .tv-side, .tv-topbar, .tv-side-toggle, .nv-ds-nut, .nv-ds-tim, .nv-ds-hint[data-khong-thay] { display: none !important; }
+    .tv-main { margin-left: 0 !important; }
+    .nv-ds .ad-table-card, .nv-ds .ad-kpi { box-shadow: none; border-color: #999; }
+    .nv-ds .ad-table tr { break-inside: avoid; }
+    .nv-ds * { animation: none !important; }
+}

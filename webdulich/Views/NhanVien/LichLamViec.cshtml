@@ -33,6 +33,7 @@
                             <th>Hướng dẫn viên</th>
                             <th>Tài xế</th>
                             <th>Ghi chú</th>
+                            <th>Hành khách</th>
                         </tr>
                     </thead>
 
@@ -55,6 +56,9 @@
                                 <td>@item.HuongDanVien?.TaiKhoan?.HoTen</td>
                                 <td>@(item.TaiXe?.TaiKhoan?.HoTen ?? "Không có")</td>
                                 <td>@(string.IsNullOrWhiteSpace(item.GhiChu) ? "Không có" : item.GhiChu)</td>
+                                <td>
+                                    <a asp-action="DanhSachKhach" asp-route-id="@item.LichKhoiHanhTourId" class="tv-btn tv-btn-vien ad-btn-nho">Danh sách khách</a>
+                                </td>
                             </tr>
                         }
                     </tbody>
