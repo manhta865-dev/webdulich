@@ -1,0 +1,231 @@
+/* Bản đồ tour và Lịch khởi hành theo tháng (DiaDiem/BanDo, DiaDiem/LichKhoiHanh). Dùng token trong tokens.css. */
+
+.kp-dau {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k5);
+}
+.kp-dau h1 { margin: 0; font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+.kp-dau p { margin: var(--tv-k1) 0 0; color: var(--tv-chu-phu); }
+
+/* Dải chuyển cách xem: danh sách, bản đồ, lịch */
+.kp-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-be-mat);
+}
+.kp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k2);
+    min-height: 36px;
+    padding: 0 var(--tv-k4);
+    border-radius: var(--tv-bo-nhan);
+    color: var(--tv-chu-phu);
+    font-size: var(--tv-cs-thuong);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--tv-nhanh), color var(--tv-nhanh);
+}
+.kp-tab .tv-icon { width: 16px; height: 16px; }
+.kp-tab:hover { color: var(--tv-nhan-dam); background: var(--tv-nhan-nhat); }
+.kp-tab.active { background: var(--tv-nhan); color: #FFFFFF; }
+.ds-head .kp-tabs { margin-bottom: var(--tv-k4); }
+@media (max-width: 420px) { .kp-tab .tv-icon { display: none; } }
+
+/* ---------- Bản đồ ---------- */
+.kp-bd {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k7);
+}
+.kp-bd-khung {
+    position: relative;
+    height: 640px;
+    overflow: hidden;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: #CFE6EE;
+}
+.kp-bd-cho { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: var(--tv-k4); text-align: center; color: var(--tv-chu-phu); }
+
+.kp-bd-ds {
+    max-height: 640px;
+    overflow-y: auto;
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-be-mat);
+}
+.kp-bd-ds h2 { margin: var(--tv-k3) 0 var(--tv-k2); font-size: var(--tv-cs-nho); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tv-nhan-dam); }
+.kp-bd-ds h2:first-child { margin-top: 0; }
+.kp-bd-ds ul { margin: 0; padding: 0; list-style: none; }
+.kp-bd-muc {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tv-k2);
+    width: 100%;
+    padding: var(--tv-k2) var(--tv-k3);
+    border: 0;
+    border-radius: var(--tv-bo-nut);
+    background: transparent;
+    color: var(--tv-chu);
+    font-family: inherit;
+    font-size: var(--tv-cs-thuong);
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--tv-nhanh);
+}
+.kp-bd-muc:hover, .kp-bd-muc.active { background: var(--tv-nhan-nhat); }
+.kp-bd-ten { font-weight: 600; }
+.kp-bd-gia { white-space: nowrap; font-size: var(--tv-cs-nho); color: var(--tv-gia); }
+.kp-bd-ghi { margin: var(--tv-k3) 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+/* Chấm điểm đến và nhãn đảo trên bản đồ */
+.kp-cham {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--tv-font);
+}
+.kp-cham-ten {
+    order: -1;
+    margin-bottom: 4px;
+    padding: 2px 8px;
+    border-radius: var(--tv-bo-nhan);
+    background: #FFFFFF;
+    color: #17262E;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+.kp-cham-nut {
+    width: 16px;
+    height: 16px;
+    border: 3px solid #FFFFFF;
+    border-radius: 50%;
+    background: var(--tv-gia);
+    box-shadow: 0 0 0 0 rgba(228, 87, 46, 0.5);
+    animation: kp-nhip 2.4s ease-out infinite;
+}
+.kp-cham-trong .kp-cham-nut { background: #7C8A91; animation: none; }
+.kp-cham:hover .kp-cham-ten, .kp-cham:focus-visible .kp-cham-ten { background: var(--tv-nhan); color: #FFFFFF; }
+@keyframes kp-nhip {
+    0% { box-shadow: 0 0 0 0 rgba(228, 87, 46, 0.5); }
+    70% { box-shadow: 0 0 0 12px rgba(228, 87, 46, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(228, 87, 46, 0); }
+}
+.kp-dao { color: #0A6E8A; font: 700 0.75rem var(--tv-font); text-shadow: 0 0 3px #FFFFFF; pointer-events: none; }
+
+/* Thẻ tour khi bấm vào điểm */
+.kp-popup .maplibregl-popup-content { padding: var(--tv-k3); border-radius: var(--tv-bo-khoi); font-family: var(--tv-font); }
+.kp-pop-dau { margin: 0 var(--tv-k5) var(--tv-k2) 0; font-weight: 700; color: #17262E; }
+.kp-pop-tour { display: flex; gap: var(--tv-k3); padding: var(--tv-k2); border-radius: var(--tv-bo-nut); color: #17262E; text-decoration: none; }
+.kp-pop-tour:hover { background: #E3F1F5; }
+.kp-pop-tour img { width: 76px; height: 64px; flex-shrink: 0; border-radius: 8px; object-fit: cover; }
+.kp-pop-chu { display: flex; flex-direction: column; gap: 2px; font-size: 0.8125rem; color: #5B6B73; }
+.kp-pop-chu strong { font-size: 0.875rem; color: #17262E; }
+
+/* ---------- Lịch tháng ---------- */
+.kp-lich-thanh { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--tv-k3); margin-bottom: var(--tv-k3); }
+.kp-lich-thang { display: flex; align-items: center; gap: var(--tv-k3); }
+.kp-lich-thang h2 { min-width: 190px; margin: 0; text-align: center; font-size: var(--tv-cs-lon); font-weight: 700; }
+.kp-lich-nut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+    transition: border-color var(--tv-nhanh), color var(--tv-nhanh);
+}
+.kp-lich-nut:hover { border-color: var(--tv-nhan); color: var(--tv-nhan); }
+.kp-lat { transform: scaleX(-1); }
+.kp-lich-nay { min-height: 40px; }
+.kp-lich-loc { display: flex; align-items: center; gap: var(--tv-k2); }
+.kp-lich-loc label { font-weight: 600; white-space: nowrap; }
+.kp-lich-loc select { min-width: 200px; }
+
+.kp-lich-chu { display: flex; flex-wrap: wrap; gap: var(--tv-k4); margin: 0 0 var(--tv-k3); padding: 0; list-style: none; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.kp-lich-chu li { display: flex; align-items: center; gap: var(--tv-k2); }
+.kp-lich-chu i { width: 12px; height: 12px; border-radius: 3px; }
+
+.kp-lich {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin-bottom: var(--tv-k7);
+    overflow: hidden;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-vien);
+    gap: 1px;
+}
+.kp-lich-thu { padding: var(--tv-k2); background: var(--tv-nhan); color: #FFFFFF; font-size: var(--tv-cs-nho); font-weight: 700; text-align: center; }
+.kp-o { display: flex; flex-direction: column; gap: 4px; min-height: 116px; padding: var(--tv-k2); background: var(--tv-be-mat); }
+.kp-o-trong { background: var(--tv-nen); }
+.kp-o.da-qua { background: var(--tv-mat-nhat); }
+.kp-o.da-qua .kp-o-ngay { color: var(--tv-chu-phu); opacity: 0.6; }
+.kp-o-ngay { font-size: var(--tv-cs-nho); font-weight: 700; }
+.kp-o-thu { display: none; }
+.kp-o.hom-nay { box-shadow: inset 0 0 0 2px var(--tv-nhan); }
+.kp-o.hom-nay .kp-o-ngay { color: var(--tv-nhan); }
+
+.kp-tour {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 6px;
+    border-left: 3px solid;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: transform var(--tv-nhanh), box-shadow var(--tv-nhanh);
+}
+.kp-tour:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(16, 48, 62, 0.14); }
+.kp-tour-ten { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.kp-tour-phu { opacity: 0.85; }
+.kp-tour.con-nhieu, .kp-lich-chu .con-nhieu { border-color: var(--tv-thanh-cong); background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.kp-tour.sap-het, .kp-lich-chu .sap-het { border-color: var(--tv-canh-bao); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); }
+.kp-tour.het, .kp-lich-chu .het { border-color: var(--tv-chu-phu); background: var(--tv-xam-nhat); color: var(--tv-chu-phu); }
+.kp-lich-chu i.con-nhieu { background: var(--tv-thanh-cong); }
+.kp-lich-chu i.sap-het { background: var(--tv-canh-bao); }
+.kp-lich-chu i.het { background: var(--tv-chu-phu); }
+.kp-lich-rong { margin-top: calc(-1 * var(--tv-k5)); margin-bottom: var(--tv-k7); }
+
+@media (prefers-reduced-motion: reduce) {
+    .kp-cham-nut { animation: none; }
+}
+
+@media (max-width: 992px) {
+    .kp-bd { grid-template-columns: 1fr; }
+    .kp-bd-khung { height: 480px; }
+    .kp-bd-ds { max-height: none; }
+}
+
+/* Điện thoại: lịch thành danh sách, chỉ còn các ngày có tour */
+@media (max-width: 720px) {
+    .kp-lich { display: flex; flex-direction: column; gap: 0; background: var(--tv-be-mat); }
+    .kp-lich-thu, .kp-o-trong, .kp-o:not(.co-tour) { display: none; }
+    .kp-o { min-height: 0; padding: var(--tv-k3); border-bottom: 1px solid var(--tv-vien); }
+    .kp-o-thu { display: inline; }
+    .kp-tour { font-size: var(--tv-cs-nho); }
+    .kp-tour-ten { white-space: normal; }
+    .kp-lich-thang h2 { min-width: 0; font-size: var(--tv-cs-vua); }
+    .kp-tabs { display: flex; width: 100%; }
+    .kp-tab { flex: 1; justify-content: center; gap: 6px; padding: 0 var(--tv-k2); white-space: nowrap; font-size: var(--tv-cs-nho); }
+}

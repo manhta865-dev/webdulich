@@ -1,0 +1,26 @@
+@model webdulich.Models.Tour
+@* Chọn vị trí địa điểm trên bản đồ (RB-44), dùng ở form thêm tour và sửa tour (js/chon-vi-tri.js).
+   Gõ hoặc chọn địa điểm: bản đồ tự nhảy tới vị trí đã lưu của địa điểm đó, chưa có thì tới vị trí gợi ý theo tên.
+   Admin bấm vào bản đồ để chọn lại; thu nhỏ bản đồ để chọn điểm đến nước ngoài. "Bỏ vị trí": địa điểm không có chấm. *@
+@{
+    var dsDiaDiem = ViewBag.ToaDoDiaDiem as List<object> ?? new List<object>();
+    string So(decimal? x) => x.HasValue ? x.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
+}
+
+<div class="ad-vt" id="chonViTri"
+     data-goi-y="@System.Text.Json.JsonSerializer.Serialize(webdulich.Models.ToaDoDiaDanh.BangGoiY())"
+     data-dia-diem="@System.Text.Json.JsonSerializer.Serialize(dsDiaDiem)">
+    <div class="ad-vt-dau">
+        <label class="form-label mb-0">Vị trí trên bản đồ</label>
+        <span class="ad-vt-trang-thai" id="viTriTrangThai" aria-live="polite">Chưa chọn vị trí</span>
+    </div>
+    <p class="ad-vt-ghi">Bản đồ tự nhảy tới địa điểm bạn nhập. Bấm vào bản đồ nếu muốn chỉnh lại cho đúng chỗ; tour nước ngoài thì thu nhỏ bản đồ rồi bấm vào nước đó. Vị trí này dùng cho Bản đồ tour và quả địa cầu ở trang chủ.</p>
+    <div class="ad-vt-ban-do" id="viTriBanDo"><p class="ad-vt-cho">Đang tải bản đồ…</p></div>
+    <div class="ad-vt-nut">
+        <button type="button" class="tv-btn tv-btn-vien ad-btn-nho" id="viTriBo">Bỏ vị trí</button>
+    </div>
+    <input type="hidden" asp-for="ViDoDiaDiem" value="@So(Model?.ViDoDiaDiem)" />
+    <input type="hidden" asp-for="KinhDoDiaDiem" value="@So(Model?.KinhDoDiaDiem)" />
+    <span asp-validation-for="ViDoDiaDiem" class="text-danger"></span>
+</div>
+<script src="~/js/chon-vi-tri.js" asp-append-version="true" type="module"></script>

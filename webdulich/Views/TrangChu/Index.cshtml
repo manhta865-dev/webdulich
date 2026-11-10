@@ -65,7 +65,8 @@
         </div>
     }
 
-    <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")">
+    <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")"
+         data-diem="@System.Text.Json.JsonSerializer.Serialize(ViewBag.DiemQuaDiaCau)">
         <canvas aria-hidden="true"></canvas>
         <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
     </div>

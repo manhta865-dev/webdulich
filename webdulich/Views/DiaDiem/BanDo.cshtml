@@ -1,0 +1,71 @@
+@model List<webdulich.Models.TourTrenBanDo>
+@* Bản đồ tour: chấm trên bản đồ, mở ở Việt Nam, có cả tour nước ngoài (js/ban-do-tour.js); bên cạnh là danh sách theo vùng.
+   Danh sách luôn có sẵn từ máy chủ nên vẫn dùng được khi bản đồ không tải được. *@
+@{
+    ViewData["Title"] = "Bản đồ tour";
+    var chuaCoViTri = ViewBag.ChuaCoViTri as List<webdulich.Models.TourTrenBanDo> ?? new List<webdulich.Models.TourTrenBanDo>();
+    // Nhóm không có chấm trên bản đồ (địa điểm chưa chọn vị trí): bấm thẳng sang trang tour
+    var nhomKhongCham = new[] { ("Tour khác", chuaCoViTri) };
+    var duLieu = Model.Select(t => new
+    {
+        t.Id, t.TenTour, t.DiemDen, t.Vung, t.Vi, t.Kinh, t.SoLich,
+        Anh = string.IsNullOrEmpty(t.Anh) ? null : Url.Content("~/images/dulich/" + t.Anh),
+        Gia = t.GiaTu.HasValue ? t.GiaTu.Value.ToString("N0") + " VNĐ" : null,
+        Ngay = t.NgayGanNhat?.ToString("dd/MM/yyyy"),
+        Link = Url.Action("ChiTiet", "DiaDiem", new { id = t.Id })
+    });
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/kham-pha.css" asp-append-version="true" />
+}
+
+<section class="kp-dau">
+    <div>
+        <h1>Bản đồ tour</h1>
+        <p>Chọn một điểm trên bản đồ để xem tour đang bán ở đó, giá thấp nhất và ngày đi gần nhất.</p>
+    </div>
+    <partial name="_TabKhamPha" />
+</section>
+
+<section class="kp-bd">
+    <div class="kp-bd-khung" id="banDoTour" data-dulieu="@System.Text.Json.JsonSerializer.Serialize(duLieu)">
+        <p class="kp-bd-cho">Đang tải bản đồ…</p>
+    </div>
+
+    <aside class="kp-bd-ds" aria-label="Tour theo vùng">
+        @foreach (var vung in Model.GroupBy(t => t.Vung))
+        {
+            <h2>@vung.Key</h2>
+            <ul>
+                @foreach (var t in vung)
+                {
+                    <li>
+                        <button type="button" class="kp-bd-muc" data-tour="@t.Id">
+                            <span class="kp-bd-ten">@t.DiemDen</span>
+                            <span class="kp-bd-gia">@(t.GiaTu.HasValue ? "từ " + t.GiaTu.Value.ToString("N0") : "chưa có lịch")</span>
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+        @foreach (var (tenNhom, dsNhom) in nhomKhongCham.Where(n => n.Item2.Any()))
+        {
+            <h2>@tenNhom</h2>
+            <ul>
+                @foreach (var t in dsNhom)
+                {
+                    <li>
+                        <a class="kp-bd-muc" asp-action="ChiTiet" asp-route-id="@t.Id">
+                            <span class="kp-bd-ten">@t.DiemDen</span>
+                            <span class="kp-bd-gia">@(t.GiaTu.HasValue ? "từ " + t.GiaTu.Value.ToString("N0") : "chưa có lịch")</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </aside>
+</section>
+
+<script src="~/js/ban-do-tour.js" asp-append-version="true" type="module"></script>

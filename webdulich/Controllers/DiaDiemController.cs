@@ -82,6 +82,61 @@ namespace webdulich.Controllers
 
             return View(ds.ToList());
         }
+        // Bản đồ tour: mỗi tour đang bán là một chấm trên bản đồ Việt Nam, kèm giá thấp nhất và ngày đi gần nhất.
+        // Tọa độ lấy điểm cuối lịch trình admin đã nhập; chưa có thì tra theo tên địa điểm (ToaDoDiaDanh).
+        public IActionResult BanDo()
+        {
+            var (ds, chuaCoViTri) = TourTrenBanDo.LayTatCa(_context);
+            ViewBag.ChuaCoViTri = chuaCoViTri;
+            return View(ds);
+        }
+
+        // Lịch khởi hành theo tháng: mỗi ngày hiện các tour đi hôm đó, màu theo số chỗ còn. Lọc theo điểm đến.
+        public IActionResult LichKhoiHanh(int? thang, int? nam, int? diaDiem)
+        {
+            var homNay = GioVN.HomNay;
+            int t = thang is >= 1 and <= 12 ? thang.Value : homNay.Month;
+            int n = nam is >= 2000 and <= 2100 ? nam.Value : homNay.Year;
+            var dau = new DateTime(n, t, 1);
+            var cuoi = dau.AddMonths(1);
+
+            var q = _context.LichKhoiHanhTours.AsNoTracking()
+                .Where(l => l.TrangThai != TrangThaiLich.DaHuy && l.NgayKhoiHanh >= dau && l.NgayKhoiHanh < cuoi && !l.Tour!.NgungBan);
+            if (diaDiem.HasValue)
+            {
+                q = q.Where(l => l.Tour!.DiaDiemId == diaDiem.Value);
+            }
+
+            var m = new LichThangViewModel
+            {
+                Thang = t,
+                Nam = n,
+                DiaDiemId = diaDiem,
+                // Tự có điểm đến mới khi admin thêm tour đang bán ở địa điểm đó; tên đưa về cùng kiểu viết, xếp theo tiếng Việt
+                DsDiaDiem = _context.DiaDiems.AsNoTracking()
+                    .Where(d => _context.Tours.Any(x => x.DiaDiemId == d.MaDiaDiem && !x.NgungBan))
+                    .Select(d => new { d.MaDiaDiem, d.TenDiaDiem }).ToList()
+                    .Select(d => (d.MaDiaDiem, ToaDoDiaDanh.TenHienThi(d.TenDiaDiem)))
+                    .OrderBy(d => d.Item2, StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), true))
+                    .ToList(),
+                DsLich = q.Include(l => l.Tour)
+                    .OrderBy(l => l.NgayKhoiHanh).ThenBy(l => l.GioKhoiHanh)
+                    .ToList()
+                    .Select(l => new LichTrongNgay
+                    {
+                        LichId = l.Id,
+                        TourId = l.TourId,
+                        TenTour = l.Tour?.TenTour ?? string.Empty,
+                        Ngay = l.NgayKhoiHanh,
+                        Gio = l.GioKhoiHanh,
+                        SoChoCon = l.SoChoCon,
+                        Gia = l.GiaNguoiLonHienThi,
+                        DatDuoc = l.ChoPhepDatTour && l.SoChoCon > 0
+                    }).ToList()
+            };
+            return View(m);
+        }
+
         // Phương thức này xử lý yêu cầu hiển thị trang chủ của địa điểm. Nó đơn giản chuyển hướng đến phương thức DanhSach để hiển thị danh sách tour.
         public IActionResult Index()
         {

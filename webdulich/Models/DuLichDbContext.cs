@@ -115,6 +115,14 @@ namespace webdulich.Models
                 e.ToTable(t => t.HasCheckConstraint("CK_Video_MaYouTube",
                     "LEN([MaYouTube]) = 11 AND [MaYouTube] NOT LIKE '%[^A-Za-z0-9_-]%'"));
             });
+            // Vị trí địa điểm (RB-44): trong nước hay nước ngoài đều được, miễn là tọa độ hợp lệ trên Trái Đất
+            modelBuilder.Entity<DiaDiem>(e =>
+            {
+                e.Property(x => x.ViDo).HasPrecision(9, 6);
+                e.Property(x => x.KinhDo).HasPrecision(9, 6);
+                e.ToTable(t => t.HasCheckConstraint("CK_DiaDiem_ToaDo",
+                    "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN -90 AND 90 AND [KinhDo] BETWEEN -180 AND 180)"));
+            });
             // Đánh giá chuyến đi (RB-43): một tài khoản một đánh giá cho một lịch; giữ đánh giá khi đã có,
             // nên chặn xóa lịch và tài khoản (Restrict) giống dữ liệu đơn đặt
             modelBuilder.Entity<DanhGiaTour>(e =>

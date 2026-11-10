@@ -42,6 +42,11 @@ namespace webdulich.Controllers
                 })
                 .ToList();
 
+            // Vị trí đã lưu của từng địa điểm cho bản đồ chọn vị trí ở form tour (_ChonViTri, RB-44)
+            ViewBag.ToaDoDiaDiem = _context.DiaDiems.AsNoTracking()
+                .Select(x => new { id = x.MaDiaDiem, ten = x.TenDiaDiem, vi = x.ViDo, kinh = x.KinhDo })
+                .AsEnumerable().Cast<object>().ToList();
+
             ViewBag.LoaiDiaHinhList = _context.LoaiDiaHinhs
                 .OrderBy(x => x.TenLoaiDiaHinh)
                 .Select(x => new SelectListItem
@@ -187,6 +192,38 @@ namespace webdulich.Controllers
             tour.DiaDiem = diaDiem.TenDiaDiem; // Gán tên địa điểm cho tour.DiaDiem để hiển thị. Mặc dù trường này có thể không cần thiết nếu đã có DiaDiemId, nhưng nó giúp hiển thị tên địa điểm dễ dàng hơn trong các view mà không cần phải truy vấn thêm.
         }
 
+        // Kiểm tra vị trí admin chọn trên bản đồ (RB-44): cùng có hoặc cùng rỗng, là tọa độ hợp lệ như CHECK CK_DiaDiem_ToaDo
+        private void KiemTraViTri(Tour tour)
+        {
+            bool coVi = tour.ViDoDiaDiem.HasValue, coKinh = tour.KinhDoDiaDiem.HasValue;
+            if (coVi != coKinh
+                || (coVi && (tour.ViDoDiaDiem < -90 || tour.ViDoDiaDiem > 90 || tour.KinhDoDiaDiem < -180 || tour.KinhDoDiaDiem > 180)))
+            {
+                ModelState.AddModelError(nameof(tour.ViDoDiaDiem), "Vị trí chưa đúng, hãy bấm chọn lại trên bản đồ.");
+            }
+        }
+
+        // Ghi vị trí vào địa điểm của tour. Có script (viTriCoJs = 1): giá trị form là đúng, kể cả rỗng (admin bấm "Bỏ vị trí").
+        // Không có script: giữ vị trí cũ; địa điểm chưa có vị trí thì gợi ý theo tên (ToaDoDiaDanh).
+        // Vị trí thuộc địa điểm nên mọi tour cùng địa điểm dùng chung.
+        private void LuuViTriDiaDiem(Tour tour)
+        {
+            if (!tour.DiaDiemId.HasValue) return;
+            var diaDiem = _context.DiaDiems.Find(tour.DiaDiemId.Value);
+            if (diaDiem == null) return;
+
+            if (Request.Form["viTriCoJs"] == "1")
+            {
+                diaDiem.ViDo = tour.ViDoDiaDiem.HasValue ? Math.Round(tour.ViDoDiaDiem.Value, 6) : null;
+                diaDiem.KinhDo = tour.KinhDoDiaDiem.HasValue ? Math.Round(tour.KinhDoDiaDiem.Value, 6) : null;
+            }
+            else if (!diaDiem.ViDo.HasValue && ToaDoDiaDanh.Tim(diaDiem.TenDiaDiem) is { } goiY)
+            {
+                diaDiem.ViDo = (decimal)goiY.Vi;
+                diaDiem.KinhDo = (decimal)goiY.Kinh;
+            }
+        }
+
         private const long AnhTourToiDaMb = 10;
 
         // Kiểm tra ảnh đại diện và ảnh phụ trước khi lưu tour; ảnh sai thì báo ngay trên form, chưa ghi gì xuống đĩa hay CSDL
@@ -315,6 +352,8 @@ namespace webdulich.Controllers
                     x.DanhMuc.TenDanhMuc == loaiTour
                 );
             }
+            // Tour trong nước đang bán mà chưa có vị trí trên bản đồ (RB-44): nhắc admin mở Sửa để bấm chọn
+            ViewBag.TourChuaCoViTri = TourTrenBanDo.LayTatCa(_context).ChuaCoViTri.Select(x => x.Id).ToHashSet();
             // Lưu lại từ khóa và loại tour đã chọn để giao diện có thể hiển thị lại sau khi tìm kiếm.
             ViewBag.Search = search;
             ViewBag.LoaiTour = loaiTour;
@@ -370,6 +409,7 @@ namespace webdulich.Controllers
                 ModelState.AddModelError("HinhFile", "Vui lòng chọn hình ảnh");
             }
             KiemTraAnhTour(tour);
+            KiemTraViTri(tour);
             // Nếu có bất kỳ lỗi nào, hệ thống không lưu database mà trả lại form cùng dữ liệu đã nhập và thông báo lỗi.
             if (!ModelState.IsValid)
             {
@@ -379,6 +419,7 @@ namespace webdulich.Controllers
             tour.HinhAnh = await LuuHinhTourAsync(tour.HinhFile!);
             // Nếu địa điểm đã tồn tại thì gán DiaDiemId. Nếu chưa có thì tạo địa điểm mới rồi liên kết với tour.
             GanDiaDiemChoTour(tour);
+            LuuViTriDiaDiem(tour);
             // Thêm tour vào bảng Tours và lưu database.
             _context.Tours.Add(tour);
             await _context.SaveChangesAsync();
@@ -478,6 +519,8 @@ namespace webdulich.Controllers
             {
                 tour.PhuongTien = tour.PhuongTienInfo.TenPhuongTien;
             }
+            tour.ViDoDiaDiem = tour.DiaDiemInfo?.ViDo;
+            tour.KinhDoDiaDiem = tour.DiaDiemInfo?.KinhDo;
             // Nạp các danh sách lựa chọn và gửi dữ liệu tour sang Sua.cshtml.
             NapDuLieuDropdown();
             return View("Sua", tour);
@@ -513,6 +556,7 @@ namespace webdulich.Controllers
                 ModelState.Remove("MoTa");
             }
             KiemTraAnhTour(tour);
+            KiemTraViTri(tour);
             if (!ModelState.IsValid)
             {
                 return View("Sua", tour);
@@ -593,6 +637,7 @@ namespace webdulich.Controllers
             }
 
             await LuuHinhPhuTourAsync(tourCu.Id, tour.HinhPhuFiles); // Các ảnh phụ mới được thêm vào, còn ảnh phụ cũ vẫn được giữ.
+            LuuViTriDiaDiem(tour);
            // Lưu tất cả thay đổi vào database sau khi đã cập nhật thông tin tour, loại địa hình, phong cách và hình ảnh.
             _context.Tours.Update(tourCu);
             await _context.SaveChangesAsync();

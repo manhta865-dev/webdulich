@@ -1,0 +1,16 @@
+@* Chuyển nhanh giữa ba cách xem tour: danh sách, bản đồ, lịch khởi hành theo tháng *@
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    string Lop(string a) => "kp-tab" + (string.Equals(action, a, StringComparison.OrdinalIgnoreCase) ? " active" : "");
+}
+<nav class="kp-tabs" aria-label="Cách xem tour">
+    <a asp-controller="DiaDiem" asp-action="DanhSach" class="@Lop("DanhSach")" aria-current="@(action == "DanhSach" ? "page" : null)">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-grid" /></svg>Danh sách
+    </a>
+    <a asp-controller="DiaDiem" asp-action="BanDo" class="@Lop("BanDo")" aria-current="@(action == "BanDo" ? "page" : null)">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>Bản đồ
+    </a>
+    <a asp-controller="DiaDiem" asp-action="LichKhoiHanh" class="@Lop("LichKhoiHanh")" aria-current="@(action == "LichKhoiHanh" ? "page" : null)">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>Lịch khởi hành
+    </a>
+</nav>

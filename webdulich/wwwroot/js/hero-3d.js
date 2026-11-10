@@ -70,7 +70,11 @@ function khoiTao() {
         [13.75, 100.5, 4.5], [11.55, 104.92, 3], [17.97, 102.6, 2.5], [16.87, 96.2, 3],
         [3.14, 101.69, 3.5], [1.35, 103.82, 3.5], [14.6, 120.98, 4], [22.3, 114.17, 4], [23.13, 113.26, 4]
     ];
-    const DIEM_DEN = [
+    // Điểm đến lấy từ tour đang bán (TrangChuController.Index, data-diem); admin thêm tour là quả cầu tự có chấm mới.
+    // Danh sách cố định bên dưới chỉ dùng khi chưa có tour nào tra được vị trí.
+    let diemTuTour = [];
+    try { diemTuTour = JSON.parse(khung.dataset.diem || "[]"); } catch (e) { diemTuTour = []; }
+    const DIEM_DEN = diemTuTour.length ? diemTuTour : [
         { ten: "Hà Nội", lat: 21.03, lon: 105.85 },
         { ten: "Sa Pa", lat: 22.34, lon: 103.84 },
         { ten: "Hạ Long", lat: 20.95, lon: 107.07 },
@@ -447,7 +451,10 @@ function khoiTao() {
         capNhatTenDao();
         // Tự chuyển điểm đến mỗi 2,6 giây nếu không có điểm nào đang được trỏ tới
         if (diHover < 0 && !dangKeo) {
-            const idx = Math.floor(t / 2600) % diemDen.length;
+            // Bỏ qua điểm đang ở mặt sau quả cầu (ví dụ tour nước ngoài xa Việt Nam) để nhãn không bị trống
+            const n = diemDen.length;
+            let idx = Math.floor(t / 2600) % n;
+            for (let k = 0; k < n && huongVeCamera(diemDen[idx]) < 0.2; k++) idx = (idx + 1) % n;
             if (idx !== tChon) tChon = idx;
         }
         let i = diHover >= 0 ? diHover : tChon;
@@ -460,7 +467,7 @@ function khoiTao() {
         if (diDangChon !== i) {
             diDangChon = i;
             nhan.textContent = d.ten;
-            nhan.href = duongDanTour + (duongDanTour.indexOf("?") >= 0 ? "&" : "?") + "keyword=" + encodeURIComponent(d.ten);
+            nhan.href = d.link || duongDanTour + (duongDanTour.indexOf("?") >= 0 ? "&" : "?") + "keyword=" + encodeURIComponent(d.ten);
         }
         nhan.classList.add("hien");
     }

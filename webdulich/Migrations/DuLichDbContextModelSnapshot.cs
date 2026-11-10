@@ -507,6 +507,10 @@ namespace webdulich.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("KinhDo")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.Property<string>("MoTa")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -515,9 +519,16 @@ namespace webdulich.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("ViDo")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.HasKey("MaDiaDiem");
 
-                    b.ToTable("DiaDiems");
+                    b.ToTable("DiaDiems", t =>
+                        {
+                            t.HasCheckConstraint("CK_DiaDiem_ToaDo", "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN -90 AND 90 AND [KinhDo] BETWEEN -180 AND 180)");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.GiaoDichThanhToan", b =>

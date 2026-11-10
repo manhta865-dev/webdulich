@@ -100,6 +100,21 @@ namespace webdulich.Controllers
                 .Take(3)
                 .ToList();
 
+            // Điểm trên quả địa cầu: mỗi điểm đến có tour đang bán một chấm, cùng nguồn với Bản đồ tour.
+            // Một tour thì bấm sang thẳng trang tour, nhiều tour thì sang danh sách đã lọc theo điểm đến.
+            ViewBag.DiemQuaDiaCau = TourTrenBanDo.LayTatCa(_context).CoViTri
+                .GroupBy(t => t.DiemDen.ToLower())
+                .Select(g => new
+                {
+                    ten = g.First().DiemDen,
+                    lat = Math.Round(g.First().Vi, 3),
+                    lon = Math.Round(g.First().Kinh, 3),
+                    link = g.Count() == 1
+                        ? Url.Action("ChiTiet", "DiaDiem", new { id = g.First().Id })
+                        : Url.Action("DanhSach", "DiaDiem", new { keyword = g.First().DiemDen })
+                })
+                .ToList();
+
             return View(tours);
         }
     }

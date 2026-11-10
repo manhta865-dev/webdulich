@@ -55,6 +55,13 @@ namespace webdulich.Models
         [NotMapped]
         public string DiaDiem { get; set; } = string.Empty;
 
+        // Vị trí địa điểm admin chọn trên bản đồ ở form tour; lưu vào DiaDiems.ViDo, KinhDo (RB-44), không lưu ở Tours
+        [NotMapped]
+        public decimal? ViDoDiaDiem { get; set; }
+
+        [NotMapped]
+        public decimal? KinhDoDiaDiem { get; set; }
+
         [NotMapped]
         public string? LoaiTour { get; set; }
 

@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Quản lý Tour";
     string loaiTourHienTai = ViewBag.LoaiTour as string;
+    var tourChuaCoViTri = ViewBag.TourChuaCoViTri as HashSet<int> ?? new HashSet<int>();
 }
 
 @section Styles {
@@ -107,6 +108,10 @@
                                             @if (item.NgungBan)
                                             {
                                                 <span class="ad-tag ngung">Ngừng bán</span>
+                                            }
+                                            @if (tourChuaCoViTri.Contains(item.Id))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="ad-tag ngung" title="Tour chưa hiện trên Bản đồ tour và quả địa cầu. Bấm để chọn vị trí.">Chưa có vị trí trên bản đồ</a>
                                             }
                                         </div>
                                     </div>

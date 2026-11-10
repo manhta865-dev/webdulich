@@ -1076,3 +1076,15 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 .dq-tong { display: flex; flex-direction: column; align-items: flex-end; }
 .dq-tong span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .dq-tong strong { font-size: var(--tv-cs-lon); color: var(--tv-gia); }
+
+/* ---------- Chọn vị trí địa điểm trên bản đồ (Admin/_ChonViTri, RB-44) ---------- */
+.ad-vt { padding: var(--tv-k4); border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-khoi); background: var(--tv-nen); }
+.ad-vt-dau { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--tv-k2); }
+.ad-vt-trang-thai { padding: 2px 10px; border-radius: var(--tv-bo-nhan); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-size: var(--tv-cs-nho); font-weight: 600; }
+.ad-vt-trang-thai.co { background: var(--tv-thanh-cong-nhat); color: var(--tv-thanh-cong); }
+.ad-vt-ghi { margin: var(--tv-k2) 0 var(--tv-k3); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-vt-ban-do { position: relative; height: 340px; overflow: hidden; border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-nut); background: #CFE6EE; }
+.ad-vt-cho { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: var(--tv-k4); text-align: center; color: var(--tv-chu-phu); }
+.ad-vt-nut { margin-top: var(--tv-k3); }
+/* Danh sách tour: tour trong nước chưa có vị trí trên bản đồ */
+.ad-badge-vt { margin-left: var(--tv-k2); }

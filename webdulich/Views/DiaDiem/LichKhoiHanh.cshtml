@@ -1,0 +1,105 @@
+@model webdulich.Models.LichThangViewModel
+@* Lịch khởi hành theo tháng: mỗi ô ngày hiện tour đi hôm đó, màu theo số chỗ còn. Bấm vào để đặt đúng lịch đó.
+   Điện thoại: chỉ hiện các ngày có tour, xếp thành danh sách. *@
+@{
+    ViewData["Title"] = "Lịch khởi hành";
+    var dau = Model.DauThang;
+    var truoc = dau.AddMonths(-1);
+    var sau = dau.AddMonths(1);
+    // Lưới bắt đầu từ thứ Hai
+    int lech = ((int)dau.DayOfWeek + 6) % 7;
+    int soNgay = DateTime.DaysInMonth(Model.Nam, Model.Thang);
+    int soO = (int)Math.Ceiling((lech + soNgay) / 7.0) * 7;
+    var homNay = GioVN.HomNay;
+    var theoNgay = Model.DsLich.GroupBy(l => l.Ngay.Date).ToDictionary(g => g.Key, g => g.ToList());
+    string[] thu = { "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN" };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/kham-pha.css" asp-append-version="true" />
+}
+
+<section class="kp-dau">
+    <div>
+        <h1>Lịch khởi hành</h1>
+        <p>Chọn ngày cả nhóm rảnh trước, rồi xem hôm đó có tour nào. Bấm vào tour để đặt đúng lịch đó.</p>
+    </div>
+    <partial name="_TabKhamPha" />
+</section>
+
+<div class="kp-lich-thanh">
+    <div class="kp-lich-thang">
+        <a class="kp-lich-nut" asp-action="LichKhoiHanh" asp-route-thang="@truoc.Month" asp-route-nam="@truoc.Year" asp-route-diaDiem="@Model.DiaDiemId" aria-label="Tháng trước">
+            <svg class="tv-icon kp-lat" aria-hidden="true"><use href="#i-arrow" /></svg>
+        </a>
+        <h2>Tháng @Model.Thang năm @Model.Nam</h2>
+        <a class="kp-lich-nut" asp-action="LichKhoiHanh" asp-route-thang="@sau.Month" asp-route-nam="@sau.Year" asp-route-diaDiem="@Model.DiaDiemId" aria-label="Tháng sau">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+        </a>
+        @if (Model.Thang != homNay.Month || Model.Nam != homNay.Year)
+        {
+            <a class="tv-btn tv-btn-vien kp-lich-nay" asp-action="LichKhoiHanh" asp-route-diaDiem="@Model.DiaDiemId">Tháng này</a>
+        }
+    </div>
+
+    <form method="get" asp-action="LichKhoiHanh" class="kp-lich-loc">
+        <input type="hidden" name="thang" value="@Model.Thang" />
+        <input type="hidden" name="nam" value="@Model.Nam" />
+        <label for="locDiaDiem">Điểm đến</label>
+        <select id="locDiaDiem" name="diaDiem" class="form-select" onchange="this.form.submit()">
+            <option value="">Tất cả điểm đến</option>
+            @foreach (var d in Model.DsDiaDiem)
+            {
+                <option value="@d.Id" selected="@(Model.DiaDiemId == d.Id ? "selected" : null)">@d.Ten</option>
+            }
+        </select>
+        <noscript><button type="submit" class="tv-btn tv-btn-vien">Lọc</button></noscript>
+    </form>
+</div>
+
+<ul class="kp-lich-chu" aria-hidden="true">
+    <li><i class="con-nhieu"></i>Còn nhiều chỗ</li>
+    <li><i class="sap-het"></i>Còn 5 chỗ trở xuống</li>
+    <li><i class="het"></i>Hết chỗ hoặc ngừng nhận đặt</li>
+</ul>
+
+<div class="kp-lich" role="grid" aria-label="Lịch tháng @Model.Thang năm @Model.Nam">
+    @foreach (var t in thu)
+    {
+        <div class="kp-lich-thu" role="columnheader">@t</div>
+    }
+    @for (int o = 0; o < soO; o++)
+    {
+        int ngaySo = o - lech + 1;
+        if (ngaySo < 1 || ngaySo > soNgay)
+        {
+            <div class="kp-o kp-o-trong" aria-hidden="true"></div>
+            continue;
+        }
+        var ngay = new DateTime(Model.Nam, Model.Thang, ngaySo);
+        theoNgay.TryGetValue(ngay, out var dsHomDo);
+        bool daQua = ngay < homNay;
+        <div class="kp-o@(daQua ? " da-qua" : "")@(ngay == homNay ? " hom-nay" : "")@(dsHomDo != null ? " co-tour" : "")" role="gridcell">
+            <span class="kp-o-ngay"><span class="kp-o-thu">@thu[o % 7], </span>@ngaySo</span>
+            @if (dsHomDo != null)
+            {
+                foreach (var l in dsHomDo)
+                {
+                    var muc = l.DatDuoc ? l.MucCho : "het";
+                    <a class="kp-tour @muc"
+                       href="@(l.DatDuoc ? Url.Action("DatTour", "DatTour", new { id = l.TourId, lichId = l.LichId }) : Url.Action("ChiTiet", "DiaDiem", new { id = l.TourId }))"
+                       title="@l.TenTour: @(l.Gio.HasValue ? l.Gio.Value.ToString(@"hh\:mm") + ", " : "")@(l.DatDuoc ? "còn " + l.SoChoCon + " chỗ" : "không còn nhận đặt"), @l.Gia.ToString("N0") VNĐ">
+                        <span class="kp-tour-ten">@l.TenTour</span>
+                        <span class="kp-tour-phu">@(l.DatDuoc ? "Còn " + l.SoChoCon + " chỗ" : "Hết chỗ")</span>
+                    </a>
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (!Model.DsLich.Any())
+{
+    <div class="tv-empty kp-lich-rong"><p>Tháng này chưa có lịch khởi hành@(Model.DiaDiemId.HasValue ? " cho điểm đến đã chọn" : ""). Bạn xem tháng sau nhé.</p></div>
+}
