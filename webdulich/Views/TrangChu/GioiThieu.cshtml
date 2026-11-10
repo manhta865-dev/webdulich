@@ -1,0 +1,309 @@
+@* Trang Giới thiệu. Số liệu và ảnh lấy từ CSDL (TrangChuController.GioiThieu); không viết cứng con số hay lời khen
+   (lỗi 11 trong CLAUDE.md). Mọi tính năng, luật và câu trả lời bên dưới đều khớp với chức năng web đang chạy:
+   giữ chỗ theo cấu hình DonNhom:SoGioGiuCho, nhả ghế chưa trả khi hết hạn (DonDatTourDoc.NhaGheChuaTra),
+   hoàn tiền xử lý ngoài hệ thống (DonDatTourDoc.HuyDon). Thẻ "tiến độ nhóm" ở đầu trang là ví dụ minh họa, có ghi rõ. *@
+@{
+    ViewData["Title"] = "Giới thiệu";
+    int soTour = ViewBag.SoTour, soDiemDen = ViewBag.SoDiemDen, soLich = ViewBag.SoLichSapToi;
+    int soGio = ViewBag.SoGioGiuCho;
+    var dsAnh = ViewBag.AnhDiemDen as List<(int Id, string DiemDen, string Anh)> ?? new();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/gioi-thieu.css" asp-append-version="true" />
+}
+
+<section class="gt-bia">
+    <img src="~/images/dulich/sapa.jpg" alt="" />
+    <div class="gt-bia-trong">
+        <div class="gt-bia-chu">
+            <nav aria-label="Vị trí trang">
+                <a asp-controller="TrangChu" asp-action="Index">Trang chủ</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Giới thiệu</span>
+            </nav>
+            <h1>Đi cùng nhau,<br />mỗi người trả phần mình</h1>
+            <p>TravelVN là nơi đặt tour trong nước dành cho nhóm bạn, gia đình và đồng nghiệp. Một người giữ chỗ, cả nhóm tự lo phần của mình.</p>
+            <div class="gt-bia-nut">
+                <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-chinh">Xem tour đang bán</a>
+                <a href="#cach-dat" class="tv-btn gt-nut-kinh">Cách đặt tour nhóm</a>
+            </div>
+        </div>
+
+        <figure class="gt-minh-hoa" aria-label="Ví dụ minh họa màn hình tiến độ của trưởng nhóm">
+            <figcaption>
+                <span>Tiến độ nhóm</span>
+                <small>Ví dụ minh họa</small>
+            </figcaption>
+            <div class="gt-mh-thanh" aria-hidden="true"><i style="width: 60%"></i></div>
+            <p class="gt-mh-tom">3 trên 5 ghế đã trả, còn 18 giờ giữ chỗ</p>
+            <ul>
+                <li class="da-tra"><span>Ghế 1 · Trưởng nhóm</span><b>Đã trả</b></li>
+                <li class="da-tra"><span>Ghế 2 · Thành viên</span><b>Đã trả</b></li>
+                <li class="da-tra"><span>Ghế 3 · Thành viên</span><b>Đã trả</b></li>
+                <li class="cho"><span>Ghế 4 · Đã nhận</span><b>Chờ trả</b></li>
+                <li class="trong"><span>Ghế 5 · Chưa ai nhận</span><b>Còn trống</b></li>
+            </ul>
+        </figure>
+    </div>
+</section>
+
+<ul class="gt-so" aria-label="TravelVN trong vài con số">
+    <li>
+        <span class="gt-so-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg></span>
+        <div><strong data-dem="@soTour">@soTour</strong><span>tour đang mở bán</span></div>
+    </li>
+    <li>
+        <span class="gt-so-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg></span>
+        <div><strong data-dem="@soDiemDen">@soDiemDen</strong><span>điểm đến khắp Việt Nam</span></div>
+    </li>
+    <li>
+        <span class="gt-so-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+        <div><strong data-dem="@soLich">@soLich</strong><span>chuyến sắp khởi hành</span></div>
+    </li>
+    <li>
+        <span class="gt-so-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg></span>
+        <div><strong><span data-dem="@soGio">@soGio</span> giờ</strong><span>giữ chỗ cho cả nhóm</span></div>
+    </li>
+</ul>
+
+<section class="gt-khoi gt-ve gt-hien">
+    <div class="gt-ve-chu">
+        <span class="gt-nhan">Về chúng tôi</span>
+        <h2>Vì sao có TravelVN</h2>
+        <p>
+            Đi chơi theo nhóm vui nhất là lúc đi, mệt nhất là lúc đặt. Thường sẽ có một người đứng ra gom tên, xin số giấy tờ qua tin nhắn,
+            ứng tiền cho cả nhóm, rồi mất cả tuần nhắc từng người chuyển lại.
+        </p>
+        <p>
+            TravelVN làm cho việc đó thành việc của từng người. Mỗi chỗ trên chuyến đi là một <strong>ghế có chủ riêng</strong>:
+            ai nhận ghế nào thì tự điền thông tin và tự trả phần ghế đó. Trưởng nhóm chỉ cần giữ chỗ và gửi link.
+        </p>
+    </div>
+
+    <div class="gt-so-sanh">
+        <div class="gt-ss-cot gt-ss-cu">
+            <h3>Cách đặt quen thuộc</h3>
+            <ul>
+                <li>Một người ứng trước tiền cho cả nhóm</li>
+                <li>Số giấy tờ gửi qua tin nhắn nhóm, ai cũng đọc được</li>
+                <li>Không rõ ai đã chuyển lại, ai chưa</li>
+                <li>Không có hạn chốt, chỗ có thể hết trong lúc chờ</li>
+            </ul>
+        </div>
+        <div class="gt-ss-cot gt-ss-moi">
+            <h3>Đặt nhóm trên TravelVN</h3>
+            <ul>
+                <li>Mỗi người tự trả phần mình bằng QR riêng</li>
+                <li>Giấy tờ chỉ người đó và TravelVN xem được</li>
+                <li>Trưởng nhóm thấy từng ghế: đã trả, chờ trả, còn trống</li>
+                <li>Chỗ được giữ @soGio giờ, hết hạn tự nhả ghế chưa trả</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="gt-khoi gt-buoc gt-hien" id="cach-dat">
+    <div class="gt-tieu-de">
+        <span class="gt-nhan">Cách hoạt động</span>
+        <h2>Bốn bước đặt tour nhóm</h2>
+    </div>
+    <ol>
+        <li>
+            <span class="gt-buoc-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+            <span class="gt-buoc-so">Bước 1</span>
+            <h3>Trưởng nhóm giữ chỗ</h3>
+            <p>Chọn tour, ngày đi và số ghế. TravelVN giữ chỗ cho cả nhóm trong @soGio giờ, hoặc ngắn hơn nếu ngày đi đã gần.</p>
+        </li>
+        <li>
+            <span class="gt-buoc-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg></span>
+            <span class="gt-buoc-so">Bước 2</span>
+            <h3>Gửi link mời</h3>
+            <p>Dán link vào nhóm chat. Mỗi thành viên mở link, nhận một ghế và chọn chỗ ngồi trên sơ đồ xe.</p>
+        </li>
+        <li>
+            <span class="gt-buoc-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
+            <span class="gt-buoc-so">Bước 3</span>
+            <h3>Mỗi người tự trả</h3>
+            <p>Mỗi ghế có mã QR chuyển khoản riêng, đúng số tiền của ghế đó. Quét bằng ứng dụng ngân hàng nào cũng được.</p>
+        </li>
+        <li>
+            <span class="gt-buoc-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-check" /></svg></span>
+            <span class="gt-buoc-so">Bước 4</span>
+            <h3>Chốt đơn</h3>
+            <p>Trưởng nhóm theo dõi từng ghế và chốt khi đủ người. Hết hạn mà còn ghế chưa trả, ghế đó được nhả cho người khác.</p>
+        </li>
+    </ol>
+</section>
+
+@if (dsAnh.Count >= 3)
+{
+    <section class="gt-khoi gt-diem gt-hien">
+        <div class="gt-tieu-de gt-tieu-de-ngang">
+            <div>
+                <span class="gt-nhan">Điểm đến</span>
+                <h2>Từ núi rừng phía Bắc đến biển đảo phía Nam</h2>
+            </div>
+            <a asp-controller="DiaDiem" asp-action="BanDo" class="tv-link tv-link-di">Xem trên bản đồ</a>
+        </div>
+        <div class="gt-anh">
+            @foreach (var a in dsAnh)
+            {
+                <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@a.Id" class="gt-anh-o">
+                    <img src="~/images/dulich/@a.Anh" alt="" loading="lazy" />
+                    <span>@a.DiemDen</span>
+                </a>
+            }
+        </div>
+    </section>
+}
+
+<section class="gt-khoi gt-tinh-nang gt-hien">
+    <div class="gt-tieu-de">
+        <span class="gt-nhan">Trên website</span>
+        <h2>Những gì bạn dùng được ngay</h2>
+    </div>
+    <div class="gt-tn-luoi">
+        <a asp-controller="DiaDiem" asp-action="BanDo" class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+            <h3>Bản đồ tour</h3>
+            <p>Bấm vào một điểm trên bản đồ Việt Nam để xem tour ở đó, giá thấp nhất và ngày đi gần nhất.</p>
+        </a>
+        <a asp-controller="DiaDiem" asp-action="LichKhoiHanh" class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+            <h3>Lịch khởi hành theo tháng</h3>
+            <p>Chọn ngày cả nhóm rảnh trước, rồi xem hôm đó có tour nào và còn bao nhiêu chỗ.</p>
+        </a>
+        <a asp-controller="GoiYTour" asp-action="Index" class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>
+            <h3>Gợi ý tour</h3>
+            <p>Trả lời vài câu về sở thích, thời gian và ngân sách, TravelVN lọc ra tour hợp với nhóm.</p>
+        </a>
+        <div class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-grid" /></svg>
+            <h3>Chọn chỗ ngồi trước</h3>
+            <p>Sơ đồ xe hiện chỗ trống, chỗ đã có người. Chỗ đã chọn không bị bán trùng cho người khác.</p>
+        </div>
+        <div class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg>
+            <h3>Khuyến mãi chia đều</h3>
+            <p>Nhập mã khuyến mãi cho đơn nhóm, số tiền giảm được chia vào phần của từng ghế.</p>
+        </div>
+        <div class="gt-tn">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
+            <h3>Đi một mình cũng được</h3>
+            <p>Không đi nhóm thì đặt đơn cá nhân như bình thường, hoặc đến văn phòng đặt và trả tiền mặt tại quầy.</p>
+        </div>
+    </div>
+</section>
+
+<section class="gt-khoi gt-cam-ket gt-hien">
+    <div class="gt-tieu-de">
+        <span class="gt-nhan">Cam kết</span>
+        <h2>Điều TravelVN giữ đúng</h2>
+    </div>
+    <ul>
+        <li>
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+            <div><h3>Giá rõ ràng</h3><p>Giá hiển thị là giá của từng lịch khởi hành. Khuyến mãi trừ thẳng vào phần của từng người.</p></div>
+        </li>
+        <li>
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
+            <div><h3>Giấy tờ riêng tư</h3><p>Chỉ bạn và TravelVN xem được số giấy tờ của bạn. Trưởng nhóm không thấy, hướng dẫn viên chỉ thấy vài số cuối.</p></div>
+        </li>
+        <li>
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg>
+            <div><h3>Đối chiếu từng khoản</h3><p>Tiền chuyển khoản được nhân viên đối chiếu với sao kê rồi mới xác nhận ghế đã trả.</p></div>
+        </li>
+        <li>
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
+            <div><h3>Hạn chốt minh bạch</h3><p>Hạn giữ chỗ hiện ngay trên đơn. Ghế đã trả luôn được giữ, chỉ ghế chưa trả mới bị nhả.</p></div>
+        </li>
+    </ul>
+</section>
+
+<section class="gt-khoi gt-hoi gt-hien">
+    <div class="gt-tieu-de">
+        <span class="gt-nhan">Hỏi đáp</span>
+        <h2>Câu hỏi thường gặp</h2>
+    </div>
+    <div class="gt-hoi-ds">
+        <details>
+            <summary>Trưởng nhóm có phải trả tiền cho cả nhóm không?</summary>
+            <p>Không. Trưởng nhóm chỉ giữ chỗ và trả phần ghế của mình. Mỗi thành viên trả phần ghế họ nhận bằng mã QR riêng.</p>
+        </details>
+        <details>
+            <summary>Chỗ được giữ trong bao lâu?</summary>
+            <p>Tối đa @soGio giờ kể từ lúc tạo đơn nhóm. Nếu ngày khởi hành đã gần, hạn giữ chỗ được rút ngắn và hiện rõ trên đơn trước khi bạn tạo.</p>
+        </details>
+        <details>
+            <summary>Nếu một người trong nhóm không trả thì sao?</summary>
+            <p>Khi hết hạn giữ chỗ, chỉ ghế chưa trả bị nhả để người khác đặt. Những ghế đã trả hoặc đang chờ xác nhận chuyển khoản vẫn được giữ. Trưởng nhóm cũng có thể chốt đơn sớm khi đủ người.</p>
+        </details>
+        <details>
+            <summary>Trưởng nhóm có xem được giấy tờ của thành viên không?</summary>
+            <p>Không. Trưởng nhóm chỉ thấy tên và tình trạng thanh toán của từng ghế. Số giấy tờ chỉ người đó và TravelVN xem được.</p>
+        </details>
+        <details>
+            <summary>Tôi chuyển khoản rồi, bao lâu thì ghế được xác nhận?</summary>
+            <p>Nhân viên đối chiếu sao kê rồi xác nhận. Trong lúc chờ, ghế của bạn ở trạng thái chờ xác nhận và không bị nhả.</p>
+        </details>
+        <details>
+            <summary>Tôi muốn hủy đơn thì làm thế nào?</summary>
+            <p>Vào Lịch sử đặt tour để hủy đơn. Với khoản đã thanh toán, bạn liên hệ TravelVN qua điện thoại hoặc Zalo bên dưới để được hỗ trợ.</p>
+        </details>
+    </div>
+</section>
+
+<section class="gt-cuoi gt-hien">
+    <img src="~/images/dulich/phuquoc.jpg" alt="" loading="lazy" />
+    <div class="gt-cuoi-trong">
+        <div class="gt-cuoi-chu">
+            <h2>Nhóm bạn đã chọn được ngày đi chưa?</h2>
+            <p>Xem lịch khởi hành theo tháng, chọn ngày cả nhóm rảnh rồi giữ chỗ chỉ trong vài phút.</p>
+            <div class="gt-bia-nut">
+                <a asp-controller="DiaDiem" asp-action="LichKhoiHanh" class="tv-btn tv-btn-chinh">Xem lịch khởi hành</a>
+                <a asp-controller="GoiYTour" asp-action="Index" class="tv-btn gt-nut-kinh">Gợi ý tour cho tôi</a>
+            </div>
+        </div>
+        <ul class="gt-lien-he" aria-label="Liên hệ">
+            <li><svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>201/1 Mã Lò, Bình Trị Đông A, Bình Tân, TP.HCM</li>
+            <li><svg class="tv-icon" aria-hidden="true"><use href="#i-phone" /></svg><a href="tel:0342500619">0342 500 619</a></li>
+            <li><svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg><a href="mailto:manhta865@gmail.com">manhta865@gmail.com</a></li>
+            <li><svg class="tv-icon" aria-hidden="true"><use href="#i-zalo" /></svg><a href="https://zalo.me/0342500619" target="_blank" rel="noopener">Nhắn Zalo</a></li>
+        </ul>
+    </div>
+</section>
+
+<script>
+    // Khối hiện dần khi cuộn tới; số liệu đếm lên. Bỏ qua khi người dùng tắt chuyển động hoặc trình duyệt cũ.
+    (function () {
+        var giam = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (giam || !("IntersectionObserver" in window)) return;
+        document.documentElement.classList.add("gt-co-hieu-ung");
+        var quan = new IntersectionObserver(function (ds) {
+            ds.forEach(function (m) {
+                if (!m.isIntersecting) return;
+                m.target.classList.add("da-hien");
+                quan.unobserve(m.target);
+            });
+        }, { rootMargin: "0px 0px -10% 0px" });
+        document.querySelectorAll(".gt-hien").forEach(function (k) { quan.observe(k); });
+
+        document.querySelectorAll("[data-dem]").forEach(function (el) {
+            var dich = parseInt(el.dataset.dem, 10);
+            if (!(dich > 0)) return;
+            var batDau = null;
+            el.textContent = "0";
+            function buoc(t) {
+                if (batDau === null) batDau = t;
+                var p = Math.min((t - batDau) / 900, 1);
+                el.textContent = Math.round(dich * (1 - Math.pow(1 - p, 3))).toLocaleString("vi-VN");
+                if (p < 1) requestAnimationFrame(buoc);
+            }
+            requestAnimationFrame(buoc);
+            // Tab chạy nền thì trình duyệt dừng requestAnimationFrame: vẫn hiện đúng số cuối
+            setTimeout(function () { el.textContent = dich.toLocaleString("vi-VN"); }, 1500);
+        });
+    })();
+</script>

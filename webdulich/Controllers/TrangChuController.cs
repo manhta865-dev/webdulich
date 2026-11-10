@@ -117,5 +117,29 @@ namespace webdulich.Controllers
 
             return View(tours);
         }
+
+        // Trang Giới thiệu: thông tin công ty và cách đặt tour nhóm. Mọi con số lấy từ dữ liệu thật,
+        // không viết cứng kiểu "100+ tour, 500+ khách" (lỗi 11 trong CLAUDE.md).
+        public IActionResult GioiThieu([FromServices] IConfiguration cauHinh)
+        {
+            var homNay = GioVN.HomNay;
+            // Cùng khóa cấu hình với DatTourController, DonNhomController để câu chữ khớp luật đang chạy
+            ViewBag.SoGioGiuCho = cauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
+            // Ảnh điểm đến cho dải ảnh: lấy từ tour đang bán, mỗi điểm đến một ảnh
+            ViewBag.AnhDiemDen = _context.Tours
+                .Where(t => !t.NgungBan && t.HinhAnh != null && t.HinhAnh != "")
+                .OrderBy(t => t.Id)
+                .Select(t => new { t.Id, t.TenTour, DiaDiem = t.DiaDiemInfo != null ? t.DiaDiemInfo.TenDiaDiem : null, t.HinhAnh })
+                .AsEnumerable()
+                .GroupBy(t => (t.DiaDiem ?? t.TenTour).Trim().ToLower())
+                .Select(g => g.First())
+                .Take(5) // vừa khít lưới: một ảnh lớn 2x2 và bốn ảnh nhỏ
+                .Select(t => (t.Id, DiemDen: ToaDoDiaDanh.TenHienThi(t.DiaDiem ?? t.TenTour), Anh: t.HinhAnh!))
+                .ToList();
+            ViewBag.SoTour = _context.Tours.Count(t => !t.NgungBan);
+            ViewBag.SoDiemDen = _context.Tours.Where(t => !t.NgungBan && t.DiaDiemId != null).Select(t => t.DiaDiemId).Distinct().Count();
+            ViewBag.SoLichSapToi = _context.LichKhoiHanhTours.Count(l => l.TrangThai != TrangThaiLich.DaHuy && l.NgayKhoiHanh > homNay);
+            return View();
+        }
     }
 }
