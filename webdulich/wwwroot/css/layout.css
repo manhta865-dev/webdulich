@@ -275,8 +275,10 @@ p a:not([class]):hover, li a:not([class]):hover, td a:not([class]):hover { text-
     .tv-nav.is-open .tv-nav-actions { display: flex; flex-wrap: wrap; padding-bottom: var(--tv-k2); }
     .tv-nav-links a { min-height: 44px; }
     /* Điện thoại: menu tài khoản nằm luôn trong khung menu, không nổi */
-    .tv-tk { width: 100%; }
-    .tv-tk-menu { position: static; margin-top: var(--tv-k1); border: 0; box-shadow: none; padding: 0; }
+    .tv-nav .tv-tk { width: 100%; }
+    .tv-nav .tv-tk-menu { position: static; margin-top: var(--tv-k1); border: 0; box-shadow: none; padding: 0; }
+    /* Thanh trên của admin, nhân viên: menu vẫn nổi, chỉ ẩn tên cho gọn */
+    .tv-topbar .tv-tk-ten { display: none; }
 }
 
 .tv-page { padding-top: var(--tv-k5); padding-bottom: var(--tv-k7); }

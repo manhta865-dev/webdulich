@@ -186,7 +186,10 @@
                                             </button>
                                         </form>
 
-                                        <form method="post" asp-controller="Admin" asp-action="XoaKhuyenMai" onsubmit="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?');">
+                                        <form method="post" asp-controller="Admin" asp-action="XoaKhuyenMai"
+                                              data-xac-nhan-tieu-de="Xóa khuyến mãi này?"
+                                              data-xac-nhan="Mã chưa có đơn nào dùng sẽ bị xóa hẳn. Mã đã có đơn dùng thì không xóa được, hệ thống chuyển sang Tạm ngưng để giữ lịch sử đơn."
+                                              data-xac-nhan-nut="Xóa khuyến mãi" data-xac-nhan-nguy-hiem>
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@item.Id" />
                                             <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Xóa</button>

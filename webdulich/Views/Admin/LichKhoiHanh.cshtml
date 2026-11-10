@@ -300,7 +300,9 @@
                                                   asp-action="HuyLichKhoiHanh"
                                                   asp-route-id="@item.Id"
                                                   method="post"
-                                                  onsubmit="return confirm('Bạn chắc chắn muốn hủy lịch khởi hành này không? Các đơn đặt tour liên quan sẽ chuyển sang trạng thái Đã hủy.');">
+                                                  data-xac-nhan-tieu-de="Hủy lịch khởi hành này?"
+                                                  data-xac-nhan="Mọi đơn của lịch này sẽ chuyển sang Đã hủy và khách không đặt thêm được. Tiền khách đã trả cần hoàn lại ngoài hệ thống. Việc này không hoàn tác được."
+                                                  data-xac-nhan-nut="Hủy lịch" data-xac-nhan-nguy-hiem>
                                                 @Html.AntiForgeryToken()
 
                                                 <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">

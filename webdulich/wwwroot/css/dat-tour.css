@@ -432,3 +432,6 @@
 
 /* Khối đầu tiên trong form đứng sau một khối khác ở ngoài form */
 .dt-block + form > .dt-block:first-child { margin-top: var(--tv-k4); }
+
+/* Báo đã hết chỗ khi tăng số khách (thay alert) */
+.dt-het-cho { margin: var(--tv-k3) 0 0; padding: var(--tv-k2) var(--tv-k3); border-radius: var(--tv-bo-nut); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-size: var(--tv-cs-nho); font-weight: 600; }

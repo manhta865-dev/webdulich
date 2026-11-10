@@ -138,10 +138,6 @@
                     <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg><span>Tài khoản</span></a>
                     <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg><span>Nhân sự</span></a>
                 </details>
-                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
-                    <span>Đăng xuất</span>
-                </a>
             </aside>
             <div class="tv-scrim" id="tvScrim"></div>
 
@@ -161,17 +157,31 @@
                         <svg class="tv-icon tv-giao-dien-trang" aria-hidden="true"><use href="#i-moon" /></svg>
                         <svg class="tv-icon tv-giao-dien-toi" aria-hidden="true"><use href="#i-sun" /></svg>
                     </button>
-                    <div class="tv-user">
-                        @if (hasAvatar)
-                        {
-                            <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
-                        }
-                        else
-                        {
-                            <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
-                        }
-                        <span class="tv-user-text">@currentUser</span>
-                    </div>
+                    @* Bấm vào tên để xổ menu: hồ sơ và đăng xuất (cùng kiểu menu tài khoản của khách) *@
+                    <details class="tv-tk" id="tvTaiKhoan">
+                        <summary class="tv-user" aria-label="Tài khoản của @currentUser">
+                            @if (hasAvatar)
+                            {
+                                <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="" />
+                            }
+                            else
+                            {
+                                <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
+                            }
+                            <span class="tv-tk-ten">@currentUser</span>
+                        </summary>
+                        <div class="tv-tk-menu">
+                            <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="@Active("TaiKhoan", "SuaHoSo")">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
+                                Hồ sơ của tôi
+                            </a>
+                            <div class="tv-tk-ngan"></div>
+                            <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-tk-thoat">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
+                                Đăng xuất
+                            </a>
+                        </div>
+                    </details>
                 </div>
 
                 <div class="tv-content">
@@ -194,10 +204,6 @@
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
                     <span>Lịch làm việc</span>
                 </a>
-                <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-side-out">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
-                    <span>Đăng xuất</span>
-                </a>
             </aside>
             <div class="tv-scrim" id="tvScrim"></div>
 
@@ -211,17 +217,31 @@
                         <svg class="tv-icon tv-giao-dien-trang" aria-hidden="true"><use href="#i-moon" /></svg>
                         <svg class="tv-icon tv-giao-dien-toi" aria-hidden="true"><use href="#i-sun" /></svg>
                     </button>
-                    <div class="tv-user">
-                        @if (hasAvatar)
-                        {
-                            <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="Ảnh đại diện" />
-                        }
-                        else
-                        {
-                            <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
-                        }
-                        <span class="tv-user-text">@currentUser</span>
-                    </div>
+                    @* Bấm vào tên để xổ menu: hồ sơ và đăng xuất (cùng kiểu menu tài khoản của khách) *@
+                    <details class="tv-tk" id="tvTaiKhoan">
+                        <summary class="tv-user" aria-label="Tài khoản của @currentUser">
+                            @if (hasAvatar)
+                            {
+                                <img class="tv-avatar" src="~/images/avatar/@avatarFile" alt="" />
+                            }
+                            else
+                            {
+                                <span class="tv-avatar" aria-hidden="true">@firstLetter</span>
+                            }
+                            <span class="tv-tk-ten">@currentUser</span>
+                        </summary>
+                        <div class="tv-tk-menu">
+                            <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="@Active("TaiKhoan", "SuaHoSo")">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg>
+                                Hồ sơ của tôi
+                            </a>
+                            <div class="tv-tk-ngan"></div>
+                            <a asp-controller="TaiKhoan" asp-action="DangXuat" class="tv-tk-thoat">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-logout" /></svg>
+                                Đăng xuất
+                            </a>
+                        </div>
+                    </details>
                 </div>
 
                 <div class="tv-content">

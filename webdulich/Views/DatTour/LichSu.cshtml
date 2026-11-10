@@ -258,12 +258,13 @@
                                 <form asp-controller="DatTour"
                                       asp-action="HuyDatTour"
                                       asp-route-id="@item.Id"
-                                      method="post">
+                                      method="post"
+                                      data-xac-nhan-tieu-de="Hủy đơn @item.MaChuyenDi?"
+                                      data-xac-nhan="Chỗ đang giữ cho đơn này sẽ được trả lại để người khác đặt. Việc này không hoàn tác được; muốn đi lại thì bạn đặt đơn mới."
+                                      data-xac-nhan-nut="Hủy đơn" data-xac-nhan-nguy-hiem>
                                     @Html.AntiForgeryToken()
 
-                                    <button type="submit"
-                                            class="tv-btn tv-btn-huy"
-                                            onclick="return confirm('Bạn có chắc muốn hủy đơn này?');">
+                                    <button type="submit" class="tv-btn tv-btn-huy">
                                         Hủy đơn
                                     </button>
                                 </form>

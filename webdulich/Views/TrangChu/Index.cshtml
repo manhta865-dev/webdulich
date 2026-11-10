@@ -389,16 +389,16 @@
                     document.execCommand('copy');
                     showPromoToast(code);
                 } catch (err) {
-                    alert("Không thể sao chép mã. Bạn hãy chọn mã và sao chép thủ công.");
+                    showPromoToast(code, "Chưa sao chép được, bạn hãy tự chép mã: ");
                 }
                 document.body.removeChild(textArea);
             }
         }
 
-        function showPromoToast(code) {
+        function showPromoToast(code, loiNhan) {
             const toast = document.getElementById("promoToast");
             if (!toast) return;
-            toast.textContent = "Đã sao chép mã: " + code;
+            toast.textContent = (loiNhan || "Đã sao chép mã: ") + code;
             toast.classList.add("show");
             setTimeout(function () {
                 toast.classList.remove("show");

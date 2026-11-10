@@ -131,7 +131,12 @@
                                         <a asp-controller="Admin" asp-action="Edit" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Sửa</a>
 
                                         <form method="post" asp-controller="Admin" asp-action="DoiNgungBan" asp-route-id="@item.Id"
-                                              onsubmit="return confirm('@(item.NgungBan ? "Mở bán lại tour này?" : "Ngừng bán tour này? Khách sẽ không thấy và không đặt được nữa.")');">
+                                              data-xac-nhan-tieu-de="@(item.NgungBan ? "Mở bán lại tour này?" : "Ngừng bán tour này?")"
+                                              data-xac-nhan="@(item.NgungBan
+                                                  ? $"Tour \"{item.TenTour}\" sẽ hiện lại cho khách và nhận đặt ở các lịch đang mở bán."
+                                                  : $"Khách sẽ không thấy tour \"{item.TenTour}\" và không đặt được nữa. Các đơn đã đặt vẫn giữ nguyên. Bạn mở bán lại được bất cứ lúc nào.")"
+                                              data-xac-nhan-nut="@(item.NgungBan ? "Mở bán lại" : "Ngừng bán")"
+                                              data-xac-nhan-nguy-hiem="@(item.NgungBan ? "false" : "true")">
                                             <button type="submit" class="tv-btn @(item.NgungBan ? "tv-btn-vien" : "tv-btn-huy") ad-btn-nho">
                                                 @(item.NgungBan ? "Mở bán lại" : "Ngừng bán")
                                             </button>
