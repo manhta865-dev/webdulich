@@ -1,6 +1,11 @@
 /* Khung chung của TravelVN: thanh menu khách, chuyển động khi mở trang, khung admin và nhân viên.
    Dùng token trong tokens.css. */
 
+/* Hàng 5 ngôi sao chỉ để xem (đánh giá tour): sao có class "co" tô màu */
+.tv-sao { display: inline-flex; gap: 1px; color: var(--tv-vien); font-size: 1rem; line-height: 1; letter-spacing: 0; }
+.tv-sao i { font-style: normal; }
+.tv-sao i.co { color: #F5A524; }
+
 /* ---------- Nội dung trang khách hiện dần khi mở trang ----------
    Trang thường: khung trang trượt nhẹ lên, các khối con hiện lần lượt. Trang chủ: từng dải nội dung hiện lần lượt.
    Chỉ dùng fill-mode backwards để sau khi chạy xong không còn transform (giữ đúng phần tử sticky, fixed bên trong). */

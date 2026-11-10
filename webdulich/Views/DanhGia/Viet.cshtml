@@ -1,0 +1,83 @@
+@model webdulich.Models.DanhGiaForm
+@* Viết hoặc sửa đánh giá một chuyến đã đi (DanhGiaController.Viet). Sao chọn bằng radio nên dùng được bằng bàn phím. *@
+@{
+    bool daCo = ViewBag.DaCo;
+    ViewData["Title"] = daCo ? "Sửa đánh giá" : "Đánh giá chuyến đi";
+    DateTime ngayDi = ViewBag.NgayDi;
+    string? anh = ViewBag.Anh;
+    string[] moTaSao = { "", "Không hài lòng", "Chưa tốt", "Bình thường", "Tốt", "Rất tốt" };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/danh-gia.css" asp-append-version="true" />
+}
+
+<div class="dg-trang">
+    <a asp-controller="DatTour" asp-action="LichSu" class="tv-link dg-ve">Lịch sử đặt tour</a>
+
+    <div class="dg-khung">
+        <div class="dg-chuyen">
+            @if (!string.IsNullOrEmpty(anh))
+            {
+                <img src="~/images/dulich/@anh" alt="" />
+            }
+            <div>
+                <h1>@(daCo ? "Sửa đánh giá" : "Chuyến đi của bạn thế nào?")</h1>
+                <p><strong>@ViewBag.TenTour</strong>, khởi hành @ngayDi.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+
+        @if (ViewBag.BiAn == true)
+        {
+            <p class="dg-ghi-an" role="status">Đánh giá này đang bị TravelVN ẩn khỏi trang tour. Bạn vẫn sửa được nội dung.</p>
+        }
+
+        <form asp-action="Viet" method="post" class="dg-form" novalidate>
+            <input type="hidden" asp-for="LichId" />
+
+            <fieldset class="dg-sao-chon">
+                <legend>Chấm điểm <span aria-hidden="true">*</span></legend>
+                <div class="dg-sao-hang">
+                    @for (int s = 5; s >= 1; s--)
+                    {
+                        <input type="radio" id="sao@(s)" name="SoSao" value="@s" checked="@(Model.SoSao == s ? "checked" : null)" />
+                        <label for="sao@(s)" title="@moTaSao[s]"><span class="visually-hidden">@s sao, @moTaSao[s]</span>★</label>
+                    }
+                </div>
+                <output class="dg-sao-chu" aria-live="polite">@(Model.SoSao > 0 ? moTaSao[Model.SoSao] : "Chọn từ 1 đến 5 sao")</output>
+                <span asp-validation-for="SoSao" class="text-danger"></span>
+            </fieldset>
+
+            <div class="dg-o">
+                <label asp-for="NoiDung">Nhận xét <small>(không bắt buộc)</small></label>
+                <textarea asp-for="NoiDung" rows="6" maxlength="1000" class="form-control"
+                          placeholder="Lịch trình, hướng dẫn viên, xe, chỗ ăn ở… Điều gì làm bạn thích hoặc chưa hài lòng?"></textarea>
+                <div class="dg-dem"><span id="soKyTu">@(Model.NoiDung?.Length ?? 0)</span>/1000</div>
+                <span asp-validation-for="NoiDung" class="text-danger"></span>
+            </div>
+
+            <p class="dg-luu-y">Đánh giá hiện ở trang tour với tên rút gọn của bạn. Số giấy tờ và thông tin liên hệ không hiện.</p>
+
+            <div class="dg-nut">
+                <button type="submit" class="tv-btn tv-btn-chinh">@(daCo ? "Lưu thay đổi" : "Gửi đánh giá")</button>
+                <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-vien">Để sau</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var moTa = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(moTaSao));
+        var chu = document.querySelector(".dg-sao-chu");
+        document.querySelectorAll(".dg-sao-hang input").forEach(function (o) {
+            o.addEventListener("change", function () {
+                chu.textContent = moTa[o.value];
+                var loi = document.querySelector('[data-valmsg-for="SoSao"]');
+                if (loi) loi.textContent = "";
+            });
+        });
+        var o = document.getElementById("NoiDung"), dem = document.getElementById("soKyTu");
+        o.addEventListener("input", function () { dem.textContent = o.value.length; });
+    })();
+</script>

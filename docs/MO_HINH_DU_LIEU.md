@@ -96,6 +96,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 | **KhuyenMai** | Bỏ `SoLuotDaDung` (đếm từ `DatTours` chưa hủy). `TrangThai` chỉ còn `HoatDong`, `TamNgung` |
 | **TinNhanLienHe** | Bỏ `HoTen`, `Email`. `TaiKhoanId` bắt buộc, FK Cascade |
 | **DiaDiem** | Giữ `GiaTour` (giá tham khảo do admin nhập, không vi phạm 3NF) |
+| **DanhGiaTours** (mới, Mo17) | `DanhGiaTours(Id, LichKhoiHanhTourId FK, TaiKhoanId FK, SoSao, NoiDung, NgayTao, NgaySua, DangHien)`. UNIQUE `(TaiKhoanId, LichKhoiHanhTourId)`, CHECK `SoSao BETWEEN 1 AND 5`, `NoiDung` nvarchar(1000). Phụ thuộc hàm: `Id → mọi cột`, `(TaiKhoanId, LichKhoiHanhTourId) → mọi cột` (khóa ứng viên); không cột không khóa nào suy ra cột khác nên đạt 3NF. **Không lưu `TourId`** (suy ra qua lịch) và **không lưu điểm trung bình** (RB-43) |
 | **AspNet\* (7 bảng)** | Dư, xóa ở migration riêng cuối cùng (mục 7, bước 8) |
 
 ## 3. Quan hệ và kiểu xóa
@@ -116,6 +117,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 | ChoKhongMoBan.LichKhoiHanhTourId | LichKhoiHanhTours | Cascade (dữ liệu con thuần túy của lịch) |
 | ChoKhongMoBan.ViTriChoNgoiId | ViTriChoNgoi | Restrict |
 | TinNhanLienHe.TaiKhoanId | TaiKhoans | Cascade |
+| DanhGiaTour.LichKhoiHanhTourId, TaiKhoanId | LichKhoiHanhTours, TaiKhoans | Restrict (đánh giá là dữ liệu lịch sử; vi phạm thì ẩn bằng `DangHien`) |
 
 ## 4. Giá trị trạng thái
 
@@ -140,6 +142,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 | Tour của đơn | `DatTours → LichKhoiHanhTour → Tour` |
 | Ngày đi của đơn | `DatTours → LichKhoiHanhTour.NgayKhoiHanh` |
 | Số chỗ mở bán của lịch | số `ViTriChoNgoi` của xe (`SoDoChoNgoiId`) − số dòng `ChoKhongMoBans` của lịch (`SucChuaLich.SoChoMoBan`) |
+| Điểm trung bình, số lượt đánh giá của tour | `AVG(SoSao)`, `COUNT(*)` của `DanhGiaTours` có `DangHien = 1`, nối qua `LichKhoiHanhTours.TourId` (`DanhGiaDoc.TongHop`) |
 
 **Snapshot hợp lệ, giữ lại:** `GiaLucDat` (giá lúc đặt, giá hiện tại có thể đổi), `SoTienGiam` (khuyến mãi có thể bị sửa sau đó), `HanhKhachDatTour.TienGiam` (Mo16: phần giảm của từng ghế đơn nhóm lúc đặt; không suy ra được từ khuyến mãi hiện tại vì khuyến mãi có thể sửa, và tỷ lệ chia phụ thuộc các ghế lúc tạo đơn).
 
@@ -265,3 +268,4 @@ Ràng buộc thêm (kiểm trong code):
 | RB-40 | Khuyến mãi đơn nhóm (Mo16): trưởng nhóm nhập mã lúc tạo đơn, kiểm như đơn cá nhân (`XuLyDon.LayKhuyenMaiHopLe`), kiểm lại lúc giữ chỗ. Tiền giảm tính trên tổng giá các ghế rồi chia cho từng ghế theo tỷ lệ giá, làm tròn xuống đồng, phần lẻ cộng vào ghế đầu (`XuLyDon.ChiaTienGiam`); mỗi ghế vẫn trả ít nhất 1.000đ. Lưu ở `HanhKhachDatTours.TienGiam`, CHECK `0 <= TienGiam <= GiaLucDat`; đơn nhóm có `SoTienGiam = 0` (CHECK `LoaiDon = 'CaNhan' OR SoTienGiam = 0`) để không tính giảm hai lần. Ghế phải trả `GiaLucDat − TienGiam` (QR, giao dịch, trang ghế, tổng đơn). Ghế bị nhả thì phần giảm của ghế đó mất theo. Một đơn nhóm dùng mã tính là một lượt |
 | RB-41 | Danh sách hành khách của chuyến (`NhanVien/DanhSachKhach`): chỉ hướng dẫn viên hoặc tài xế có dòng `PhanCongTours` đúng lịch đó mới xem được (người khác nhận 404). Gồm ghế chưa nhả của đơn chưa hủy, xếp theo chỗ ngồi. Hướng dẫn viên thấy 4 số cuối giấy tờ để làm thủ tục; tài xế không thấy giấy tờ. Ai cũng thấy tên, chỗ, người liên hệ của đơn và trạng thái thanh toán. Cùng tinh thần RB-20: chỉ cho xem phần thông tin cần cho công việc |
 | RB-42 | Đặt tại quầy (`AdminDatTaiQuay`): chỉ admin; lịch chưa hủy và chưa tới ngày đi (lịch tạm ngưng bán online vẫn bán tại quầy được). Tạo đơn cá nhân `DaXacNhan`, `TaiKhoanId` rỗng, ghi chú "Đặt tại quầy", kèm giao dịch `ThanhCong` phương thức "Tiền mặt tại quầy", `NguoiXacNhanId` là admin. Trừ chỗ bằng câu UPDATE có điều kiện (RB-12), chỗ chọn tay phải thuộc xe và đang mở bán (RB-18, RB-37), ghế còn lại tự xếp (RB-36), tất cả trong một giao dịch CSDL. Chỗ của khách tại quầy nhờ vậy bị khóa với khách online, có trong danh sách khách (RB-41) và doanh thu |
+| RB-43 | Đánh giá tour (Mo17, `DanhGiaTours`): chỉ tài khoản vai trò `user` có ghế chưa nhả, đã trả (giao dịch `ThanhCong` của ghế hoặc của cả đơn), trong đơn chưa hủy, trên lịch chưa hủy và chuyến đã về (`DATEDIFF(day, NgayKhoiHanh, hôm nay) >= Tour.SoNgay`) mới viết được (`DanhGiaDoc.LichDuocDanhGia`; trái lại 404). Chủ ghế: đơn nhóm là người nhận ghế, đơn cá nhân và tại quầy là người đặt. Mỗi tài khoản một đánh giá cho một lịch (UNIQUE), sửa lại được nhưng không tự bỏ được trạng thái ẩn. 1 đến 5 sao (CHECK), nhận xét tối đa 1000 ký tự. Trang tour chỉ hiện đánh giá `DangHien`, tên người viết rút gọn, không hiện giấy tờ hay liên hệ. Admin chỉ ẩn hoặc hiện, không xóa. Tài khoản đã có đánh giá không xóa được |

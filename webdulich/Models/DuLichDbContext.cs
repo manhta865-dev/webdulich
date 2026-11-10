@@ -35,6 +35,7 @@ namespace webdulich.Models
         public DbSet<ViTriChoNgoi> ViTriChoNgois { get; set; }
         public DbSet<ChoNgoiChuyenDi> ChoNgoiChuyenDis { get; set; }
         public DbSet<ChoKhongMoBan> ChoKhongMoBans { get; set; }
+        public DbSet<DanhGiaTour> DanhGiaTours { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -113,6 +114,15 @@ namespace webdulich.Models
                 e.HasOne(x => x.Tour).WithMany().HasForeignKey(x => x.TourId).OnDelete(DeleteBehavior.SetNull);
                 e.ToTable(t => t.HasCheckConstraint("CK_Video_MaYouTube",
                     "LEN([MaYouTube]) = 11 AND [MaYouTube] NOT LIKE '%[^A-Za-z0-9_-]%'"));
+            });
+            // Đánh giá chuyến đi (RB-43): một tài khoản một đánh giá cho một lịch; giữ đánh giá khi đã có,
+            // nên chặn xóa lịch và tài khoản (Restrict) giống dữ liệu đơn đặt
+            modelBuilder.Entity<DanhGiaTour>(e =>
+            {
+                e.HasIndex(x => new { x.TaiKhoanId, x.LichKhoiHanhTourId }).IsUnique();
+                e.HasOne(x => x.LichKhoiHanhTour).WithMany().HasForeignKey(x => x.LichKhoiHanhTourId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.TaiKhoan).WithMany().HasForeignKey(x => x.TaiKhoanId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t => t.HasCheckConstraint("CK_DanhGia_SoSao", "[SoSao] BETWEEN 1 AND 5"));
             });
             modelBuilder.Entity<BaiViet>(e =>
             {

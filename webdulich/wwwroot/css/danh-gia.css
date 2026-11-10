@@ -1,0 +1,129 @@
+/* Đánh giá tour (RB-43): trang viết đánh giá, khối đánh giá ở chi tiết tour, khối chuyến đã đi ở Lịch sử, trang admin.
+   Dùng token trong tokens.css. Ngôi sao chỉ xem (.tv-sao) nằm ở layout.css. */
+
+/* ---------- Trang viết đánh giá ---------- */
+.dg-trang { max-width: 720px; margin: 0 auto var(--tv-k7); }
+.dg-ve { margin-bottom: var(--tv-k4); }
+.dg-ve::before { content: "←"; }
+.dg-khung {
+    padding: var(--tv-k6);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-be-mat);
+    box-shadow: 0 16px 40px rgba(16, 48, 62, 0.08);
+}
+.dg-chuyen { display: flex; align-items: center; gap: var(--tv-k4); padding-bottom: var(--tv-k5); border-bottom: 1px solid var(--tv-vien); }
+.dg-chuyen img { width: 96px; height: 80px; flex-shrink: 0; border-radius: var(--tv-bo-khoi); object-fit: cover; }
+.dg-chuyen h1 { margin: 0; font-size: var(--tv-cs-lon); font-weight: 700; }
+.dg-chuyen p { margin: var(--tv-k1) 0 0; color: var(--tv-chu-phu); }
+.dg-ghi-an { margin: var(--tv-k4) 0 0; padding: var(--tv-k3) var(--tv-k4); border-radius: var(--tv-bo-nut); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-size: var(--tv-cs-nho); }
+
+.dg-form { margin-top: var(--tv-k5); }
+.dg-sao-chon { margin: 0 0 var(--tv-k5); padding: 0; border: 0; }
+.dg-sao-chon legend { margin-bottom: var(--tv-k2); font-size: var(--tv-cs-thuong); font-weight: 600; }
+/* Sao xếp ngược (5 trước) để dùng bộ chọn ~ : rê hoặc chọn một sao thì tô cả các sao bên trái */
+.dg-sao-hang { display: inline-flex; flex-direction: row-reverse; gap: 4px; }
+.dg-sao-hang input { position: absolute; opacity: 0; pointer-events: none; }
+.dg-sao-hang label {
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--tv-vien);
+    cursor: pointer;
+    transition: color 0.12s ease, transform 0.12s ease;
+}
+.dg-sao-hang label:hover, .dg-sao-hang label:hover ~ label,
+.dg-sao-hang input:checked ~ label { color: #F5A524; }
+.dg-sao-hang label:hover { transform: scale(1.12); }
+.dg-sao-hang input:focus-visible + label { outline: 2px solid var(--tv-nhan); outline-offset: 2px; border-radius: 4px; }
+.dg-sao-chu { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); font-weight: 600; color: var(--tv-chu-phu); }
+
+.dg-o label { display: block; margin-bottom: var(--tv-k2); font-weight: 600; }
+.dg-o label small { font-weight: 400; color: var(--tv-chu-phu); }
+.dg-dem { margin-top: var(--tv-k1); text-align: right; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-luu-y { margin: var(--tv-k4) 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k3); }
+
+/* ---------- Tóm tắt dưới tên tour ---------- */
+.dg-tom { display: inline-flex; align-items: center; gap: var(--tv-k2); margin: var(--tv-k2) 0 0; color: var(--tv-chu); font-size: var(--tv-cs-thuong); }
+.dg-tom:hover { color: var(--tv-nhan); }
+.dg-tom span:last-child { color: var(--tv-chu-phu); }
+
+/* ---------- Khối đánh giá ở chi tiết tour ---------- */
+.dg-tour { margin-top: var(--tv-k7); }
+.dg-tour h2 { margin: 0 0 var(--tv-k4); }
+.dg-tour-rong { margin: 0; padding: var(--tv-k5); border: 1px dashed var(--tv-vien); border-radius: var(--tv-bo-khoi); color: var(--tv-chu-phu); }
+.dg-tong {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: var(--tv-k5);
+    align-items: center;
+    padding: var(--tv-k5);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-be-mat);
+}
+.dg-tong-diem { display: flex; flex-direction: column; align-items: center; gap: var(--tv-k1); text-align: center; }
+.dg-tong-diem strong { font-size: 3rem; font-weight: 800; line-height: 1; }
+.dg-tong-diem .tv-sao { font-size: 1.25rem; }
+.dg-tong-diem > span:last-child { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-tong-thanh { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dg-tong-thanh li { display: grid; grid-template-columns: 44px minmax(0, 1fr) 28px; align-items: center; gap: var(--tv-k2); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-tong-thanh li span:last-child { text-align: right; }
+.dg-thanh { height: 8px; overflow: hidden; border-radius: 99px; background: var(--tv-nen); }
+.dg-thanh i { display: block; height: 100%; border-radius: inherit; background: #F5A524; }
+
+.dg-ds { display: grid; gap: var(--tv-k3); margin: var(--tv-k4) 0 0; padding: 0; list-style: none; }
+.dg-ds li { padding: var(--tv-k4) var(--tv-k5); border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-khoi); background: var(--tv-be-mat); }
+.dg-dau { display: flex; align-items: center; gap: var(--tv-k3); }
+.dg-dau > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.dg-dau > div span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-ten-chu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 700;
+}
+.dg-ds p { margin: var(--tv-k3) 0 0; line-height: 1.65; white-space: pre-line; }
+
+/* ---------- Lịch sử: chuyến đã đi ---------- */
+.ls-dg-khu { margin: var(--tv-k6) 0; }
+.ls-dg-khu h2 { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-lon); font-weight: 700; }
+.ls-dg-ds { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--tv-k3); }
+.ls-dg {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k3);
+    padding: var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    background: var(--tv-be-mat);
+}
+.ls-dg img { width: 64px; height: 64px; flex-shrink: 0; border-radius: var(--tv-bo-nut); object-fit: cover; }
+.ls-dg-chu { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.ls-dg-chu h3 { margin: 0; overflow: hidden; font-size: var(--tv-cs-thuong); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.ls-dg-chu > span:not(.tv-sao) { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ls-dg-an { font-size: 0.75rem; color: var(--tv-canh-bao); }
+.ls-dg .tv-btn { flex-shrink: 0; }
+
+/* ---------- Admin ---------- */
+.dg-ad-so { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tv-k3); margin: 0 0 var(--tv-k4); padding: 0; list-style: none; }
+.dg-ad-so li { display: flex; flex-direction: column; padding: var(--tv-k4); border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-khoi); background: var(--tv-be-mat); }
+.dg-ad-so strong { font-size: 1.75rem; font-weight: 700; color: var(--tv-nhan); }
+.dg-ad-so span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-ad-loc { margin-bottom: var(--tv-k4); }
+.dg-ad-phu { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dg-ad-noi-dung { max-width: 420px; white-space: pre-line; }
+
+@media (max-width: 576px) {
+    .dg-khung { padding: var(--tv-k4); }
+    .dg-tong { grid-template-columns: 1fr; }
+    .dg-ad-so { grid-template-columns: 1fr; }
+    .ls-dg { flex-wrap: wrap; }
+    .ls-dg .tv-btn { width: 100%; }
+}

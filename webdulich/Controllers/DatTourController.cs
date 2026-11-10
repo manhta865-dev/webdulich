@@ -1181,6 +1181,23 @@ namespace webdulich.Controllers
                 })
                 .ToList();
 
+            // Chuyến đã đi xong và đã trả tiền: mời đánh giá (RB-43)
+            var dsLichDaDi = DanhGiaDoc.LichDuocDanhGia(_context, taiKhoanId.Value);
+            ViewBag.ChuyenDaDi = _context.LichKhoiHanhTours.AsNoTracking()
+                .Where(l => dsLichDaDi.Contains(l.Id))
+                .OrderByDescending(l => l.NgayKhoiHanh)
+                .Select(l => new ChuyenDaDi
+                {
+                    LichId = l.Id,
+                    TourId = l.TourId,
+                    TenTour = l.Tour!.TenTour,
+                    Anh = l.Tour.HinhAnh,
+                    NgayDi = l.NgayKhoiHanh,
+                    SoSao = _context.DanhGiaTours.Where(d => d.LichKhoiHanhTourId == l.Id && d.TaiKhoanId == taiKhoanId.Value).Select(d => (int?)d.SoSao).FirstOrDefault(),
+                    DangHien = _context.DanhGiaTours.Where(d => d.LichKhoiHanhTourId == l.Id && d.TaiKhoanId == taiKhoanId.Value).Select(d => d.DangHien).FirstOrDefault()
+                })
+                .ToList();
+
             return View(ds);
         }
         // Hàm này sẽ xử lý yêu cầu POST khi người dùng muốn hủy đơn đặt tour, kiểm tra quyền truy cập của người dùng, xác minh rằng người dùng có quyền hủy đơn đặt tour này, cập nhật trạng thái thanh toán của đơn đặt tour thành "Đã hủy", và nếu có lịch khởi hành liên quan, tăng số chỗ còn lại của lịch khởi hành lên số người đã đặt. Sau khi cập nhật thông tin, lưu thay đổi vào cơ sở dữ liệu và chuyển hướng về trang lịch sử với thông báo kết quả.

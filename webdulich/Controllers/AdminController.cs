@@ -1310,12 +1310,13 @@ namespace webdulich.Controllers
             bool coDonDatTour = _context.DatTours.Any(x => x.TaiKhoanId == id)
                 || _context.HanhKhachDatTours.Any(x => x.TaiKhoanId == id)
                 || _context.GiaoDichThanhToans.Any(x => x.NguoiXacNhanId == id || x.NguoiTraId == id)
-                || _context.BaiViets.Any(x => x.TacGiaId == id);
+                || _context.BaiViets.Any(x => x.TacGiaId == id)
+                || _context.DanhGiaTours.Any(x => x.TaiKhoanId == id);
             // Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
             if (coDonDatTour)
             {
                 TempData["error"] =
-                    "Không thể xóa tài khoản vì tài khoản này đã có đơn đặt tour, ghế, giao dịch thanh toán hoặc bài viết.";
+                    "Không thể xóa tài khoản vì tài khoản này đã có đơn đặt tour, ghế, giao dịch thanh toán, bài viết hoặc đánh giá.";
                 return RedirectToAction("TaiKhoan");
             }
             // Nếu không có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.

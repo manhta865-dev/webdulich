@@ -27,11 +27,17 @@
 
     var loaiTourText = Model.DanhMuc?.TenDanhMuc ?? "Tour du lịch";
     var phuongTienText = Model.PhuongTienHienThi;
+
+    double diemTB = ViewBag.DiemTrungBinh is double tb ? tb : 0;
+    int soDanhGia = ViewBag.SoDanhGia is int sl ? sl : 0;
+    var demSao = ViewBag.DemSao as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var dsDanhGia = ViewBag.DanhGia as List<webdulich.Models.DanhGiaHienThi> ?? new List<webdulich.Models.DanhGiaHienThi>();
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chi-tiet.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/danh-gia.css" asp-append-version="true" />
 }
 
 <nav class="ct-crumb" aria-label="Điều hướng">
@@ -81,6 +87,20 @@
         </div>
 
         <h1 class="ct-title">@Model.TenTour</h1>
+
+        @if (soDanhGia > 0)
+        {
+            <a href="#danhGia" class="dg-tom" aria-label="Điểm đánh giá @diemTB.ToString("0.0") trên 5, @soDanhGia lượt">
+                <span class="tv-sao" aria-hidden="true">
+                    @for (int s = 1; s <= 5; s++)
+                    {
+                        <i class="@(s <= Math.Round(diemTB) ? "co" : "")">★</i>
+                    }
+                </span>
+                <strong>@diemTB.ToString("0.0")</strong>
+                <span>(@soDanhGia đánh giá)</span>
+            </a>
+        }
 
         <div class="ct-price">
             <span class="tv-price-label">Giá trọn gói từ</span>
@@ -192,6 +212,65 @@
             </div>
             <script src="~/js/video-nhe.js" asp-append-version="true"></script>
         }
+
+        @* Đánh giá của khách đã đi (RB-43). Chỉ khách có ghế đã trả của chuyến đã về mới viết được, từ trang Lịch sử. *@
+        <div class="dg-tour" id="danhGia">
+            <h2>Đánh giá của khách đã đi</h2>
+            @if (soDanhGia == 0)
+            {
+                <p class="dg-tour-rong">Tour này chưa có đánh giá. Khách đã đi xong chuyến có thể viết đánh giá ở trang Lịch sử đặt tour.</p>
+            }
+            else
+            {
+                <div class="dg-tong">
+                    <div class="dg-tong-diem">
+                        <strong>@diemTB.ToString("0.0")</strong>
+                        <span class="tv-sao" aria-hidden="true">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                <i class="@(s <= Math.Round(diemTB) ? "co" : "")">★</i>
+                            }
+                        </span>
+                        <span>@soDanhGia đánh giá</span>
+                    </div>
+                    <ul class="dg-tong-thanh" aria-label="Số lượt theo số sao">
+                        @for (int s = 5; s >= 1; s--)
+                        {
+                            int n = demSao.TryGetValue(s, out var x) ? x : 0;
+                            <li>
+                                <span>@s sao</span>
+                                <span class="dg-thanh" aria-hidden="true"><i style="width: @(n * 100 / soDanhGia)%"></i></span>
+                                <span>@n</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <ul class="dg-ds">
+                    @foreach (var d in dsDanhGia)
+                    {
+                        <li>
+                            <div class="dg-dau">
+                                <span class="dg-ten-chu" aria-hidden="true">@d.TenNguoi.Split(' ').Last()[0]</span>
+                                <div>
+                                    <strong>@d.TenNguoi</strong>
+                                    <span>Đi ngày @d.NgayDi.ToString("dd/MM/yyyy")</span>
+                                </div>
+                                <span class="tv-sao" aria-label="@d.SoSao trên 5 sao">
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        <i class="@(s <= d.SoSao ? "co" : "")" aria-hidden="true">★</i>
+                                    }
+                                </span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(d.NoiDung))
+                            {
+                                <p>@d.NoiDung</p>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
     </section>
 
     <aside id="departureSection" class="ct-departures">

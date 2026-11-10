@@ -114,6 +114,29 @@ namespace webdulich.Controllers
                 .OrderBy(x => x.ThuTu).ThenBy(x => x.Id)
                 .ToList();
 
+            // Đánh giá đang hiện của mọi lịch thuộc tour (RB-43); điểm trung bình tính tại chỗ, không lưu
+            var (trungBinh, soLuot) = DanhGiaDoc.TongHop(_context, id);
+            ViewBag.DiemTrungBinh = trungBinh;
+            ViewBag.SoDanhGia = soLuot;
+            ViewBag.DemSao = _context.DanhGiaTours.Where(d => d.DangHien && d.LichKhoiHanhTour!.TourId == id)
+                .GroupBy(d => d.SoSao).Select(g => new { g.Key, SoLuot = g.Count() })
+                .AsEnumerable().ToDictionary(x => x.Key, x => x.SoLuot);
+            ViewBag.DanhGia = _context.DanhGiaTours.AsNoTracking()
+                .Where(d => d.DangHien && d.LichKhoiHanhTour!.TourId == id)
+                .OrderByDescending(d => d.NgaySua ?? d.NgayTao)
+                .Take(20)
+                .Select(d => new { d.TaiKhoan!.HoTen, d.SoSao, d.NoiDung, d.LichKhoiHanhTour!.NgayKhoiHanh, NgayViet = d.NgaySua ?? d.NgayTao })
+                .AsEnumerable()
+                .Select(d => new DanhGiaHienThi
+                {
+                    TenNguoi = DanhGiaDoc.TenRutGon(d.HoTen),
+                    SoSao = d.SoSao,
+                    NoiDung = d.NoiDung,
+                    NgayDi = d.NgayKhoiHanh,
+                    NgayViet = d.NgayViet
+                })
+                .ToList();
+
             return View(tour);
         }
     }

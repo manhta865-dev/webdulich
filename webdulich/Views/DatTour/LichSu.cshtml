@@ -9,10 +9,12 @@
     var daHuy = Model != null ? Model.Count(x => x.TrangThaiThanhToan == "Đã hủy") : 0;
     var choTheoDon = ViewBag.ChoTheoDon as Dictionary<int, List<string>> ?? new Dictionary<int, List<string>>();
     var gheNhom = ViewBag.GheNhom as List<webdulich.Models.GheNhomTrongLichSu> ?? new List<webdulich.Models.GheNhomTrongLichSu>();
+    var chuyenDaDi = ViewBag.ChuyenDaDi as List<webdulich.Models.ChuyenDaDi> ?? new List<webdulich.Models.ChuyenDaDi>();
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/lich-su.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/danh-gia.css" asp-append-version="true" />
 }
 
 <div class="ls-page">
@@ -47,6 +49,44 @@
             <span>Đã hủy</span>
         </div>
     </div>
+
+    @if (chuyenDaDi.Any())
+    {
+        @* Chuyến đã về và bạn đã trả tiền (DanhGiaDoc.LichDuocDanhGia): mời đánh giá hoặc sửa đánh giá cũ *@
+        <section class="ls-dg-khu" aria-labelledby="tieuDeDanhGia">
+            <h2 id="tieuDeDanhGia">Chuyến bạn đã đi</h2>
+            <div class="ls-dg-ds">
+                @foreach (var c in chuyenDaDi)
+                {
+                    <article class="ls-dg">
+                        @if (!string.IsNullOrEmpty(c.Anh))
+                        {
+                            <img src="~/images/dulich/@c.Anh" alt="" loading="lazy" />
+                        }
+                        <div class="ls-dg-chu">
+                            <h3>@c.TenTour</h3>
+                            <span>Khởi hành @c.NgayDi.ToString("dd/MM/yyyy")</span>
+                            @if (c.SoSao.HasValue)
+                            {
+                                <span class="tv-sao" aria-label="Bạn chấm @c.SoSao trên 5 sao">
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        <i class="@(s <= c.SoSao ? "co" : "")" aria-hidden="true">★</i>
+                                    }
+                                </span>
+                                @if (!c.DangHien)
+                                {
+                                    <small class="ls-dg-an">Đánh giá đang bị ẩn</small>
+                                }
+                            }
+                        </div>
+                        <a asp-controller="DanhGia" asp-action="Viet" asp-route-lichId="@c.LichId"
+                           class="tv-btn @(c.SoSao.HasValue ? "tv-btn-vien" : "tv-btn-chinh")">@(c.SoSao.HasValue ? "Sửa đánh giá" : "Viết đánh giá")</a>
+                    </article>
+                }
+            </div>
+        </section>
+    }
 
     @if (gheNhom.Any())
     {
