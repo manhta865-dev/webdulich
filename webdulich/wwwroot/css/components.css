@@ -26,16 +26,7 @@
     color: var(--tv-chu-phu);
 }
 
-.tv-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--tv-k1);
-    font-weight: 600;
-    color: var(--tv-nhan);
-    text-decoration: none;
-}
-
-.tv-link:hover { color: var(--tv-nhan-dam); text-decoration: underline; }
+/* .tv-link nằm ở layout.css */
 
 .tv-grid {
     display: grid;

@@ -82,7 +82,7 @@
     <section class="ad-card">
         <div class="ad-card-head">
             <h2>Doanh thu năm @Model.Nam</h2>
-            <a asp-action="DoanhThu" class="tv-link">Xem báo cáo</a>
+            <a asp-action="DoanhThu" class="tv-link tv-link-di">Xem báo cáo</a>
         </div>
         <p class="ad-note">Tính theo ngày đi của các đơn đã thanh toán.</p>
 
@@ -166,7 +166,7 @@
         <section class="ad-card">
             <div class="ad-card-head">
                 <h2>Đơn chờ xác nhận</h2>
-                <a asp-action="DonDatTour" class="tv-link">Xem tất cả đơn</a>
+                <a asp-action="DonDatTour" class="tv-link tv-link-di">Xem tất cả đơn</a>
             </div>
 
             @if (Model.DonChoXacNhan.Any())
@@ -196,7 +196,7 @@
         <section class="ad-card">
             <div class="ad-card-head">
                 <h2>Lịch sắp khởi hành</h2>
-                <a asp-action="QuanLyLichKhoiHanh" class="tv-link">Quản lý lịch</a>
+                <a asp-action="QuanLyLichKhoiHanh" class="tv-link tv-link-di">Quản lý lịch</a>
             </div>
 
             @if (Model.LichSapKhoiHanh.Any())

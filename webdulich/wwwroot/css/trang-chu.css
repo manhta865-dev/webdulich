@@ -550,8 +550,9 @@
 .tv-nav--over.is-solid .tv-nav-tim input::placeholder,
 .tv-nav--over.is-open .tv-nav-tim input::placeholder { color: var(--tv-chu-phu); }
 
-@media (min-width: 993px) {
-    .tv-nav-tim { display: flex; }
+/* Từ 1200px trở lên mới đủ chỗ cho menu, ô tìm kiếm và tên tài khoản trên một hàng; hẹp hơn thì ô tìm nằm trong ảnh lớn */
+@media (min-width: 1200px) {
+    .tv-nav-tim { display: flex; min-width: 0; }
     .tv-nav-links:has(+ .tv-nav-tim) { margin-right: 0; }
     .hero-search { display: none; }
     /* Không còn ô tìm kiếm giữa ảnh nên quả địa cầu nhích lên, không đè dải thẻ điểm đến */

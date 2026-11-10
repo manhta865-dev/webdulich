@@ -128,7 +128,7 @@
                         <h2>Tour trong nước</h2>
                         <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
                     </div>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
                 </div>
                 <div class="tv-grid-photo">
                     @foreach (var item in tourTrongNuoc)
@@ -146,7 +146,7 @@
                     <div>
                         <h2>Tour nước ngoài</h2>
                     </div>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
                 </div>
                 <div class="tv-grid-photo">
                     @foreach (var item in tourNgoaiNuoc)
@@ -165,7 +165,7 @@
                     <h2>Một số tour để bắt đầu</h2>
                     <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
                 </div>
-                <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link">Xem tất cả tour</a>
+                <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
             </div>
 
             @if (Model != null && Model.Any())
@@ -273,7 +273,7 @@
                 <div>
                     <h2>Bài viết mới</h2>
                 </div>
-                <a asp-controller="BaiViet" asp-action="Index" class="tv-link">Xem tất cả bài viết</a>
+                <a asp-controller="BaiViet" asp-action="Index" class="tv-link tv-link-di">Xem tất cả bài viết</a>
             </div>
             <div class="bv-luoi">
                 @foreach (var bai in dsBaiViet)

@@ -1,6 +1,29 @@
 /* Khung chung của TravelVN: thanh menu khách, chuyển động khi mở trang, khung admin và nhân viên.
    Dùng token trong tokens.css. */
 
+/* ---------- Liên kết ----------
+   Thay màu xanh dương gạch chân mặc định của Bootstrap bằng màu nhấn của web.
+   Liên kết có class riêng (nút, menu, thẻ) vẫn theo kiểu của class đó vì class mạnh hơn thẻ a. */
+a { color: var(--tv-nhan); text-decoration: none; text-underline-offset: 3px; transition: color 0.15s ease; }
+a:hover { color: var(--tv-nhan-dam); }
+p a:not([class]), li a:not([class]), td a:not([class]) { font-weight: 600; }
+p a:not([class]):hover, li a:not([class]):hover, td a:not([class]):hover { text-decoration: underline; }
+
+/* Liên kết chữ có mũi tên nhỏ, dùng cho "Xem tất cả", "Xem trên bản đồ"... (chuyển từ components.css để mọi trang dùng được) */
+.tv-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    font-weight: 600;
+    color: var(--tv-nhan);
+    text-decoration: none;
+}
+.tv-link:hover { color: var(--tv-nhan-dam); text-decoration: underline; }
+/* Thêm tv-link-di cho liên kết dẫn sang trang khác ("Xem ..."): có mũi tên, rê chuột thì mũi tên nhích */
+.tv-link-di::after { content: "→"; transition: transform 0.15s ease; }
+.tv-link-di:hover { text-decoration: none; }
+.tv-link-di:hover::after { transform: translateX(3px); }
+
 /* Hàng 5 ngôi sao chỉ để xem (đánh giá tour): sao có class "co" tô màu */
 .tv-sao { display: inline-flex; gap: 1px; color: var(--tv-vien); font-size: 1rem; line-height: 1; letter-spacing: 0; }
 .tv-sao i { font-style: normal; }
@@ -74,6 +97,7 @@
     display: flex;
     align-items: center;
     gap: var(--tv-k1);
+    flex-shrink: 0;
     margin: 0 auto 0 0;
     padding: 0;
     list-style: none;
@@ -81,6 +105,7 @@
 
 .tv-nav-links a {
     display: inline-flex;
+    white-space: nowrap; /* "Trang chủ", "Gợi ý tour" không bị bẻ thành hai dòng khi thanh menu chật */
     align-items: center;
     min-height: 40px;
     padding: 0 var(--tv-k3);
