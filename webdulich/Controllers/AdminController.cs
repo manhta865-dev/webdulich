@@ -1182,14 +1182,26 @@ namespace webdulich.Controllers
         }
 
         // Đây là action hiển thị danh sách tài khoản người dùng trong trang quản trị. Admin có thể tìm kiếm tài khoản theo họ tên, email hoặc số điện thoại đăng nhập, vai trò. Admin cũng có thể chỉnh sửa hoặc xóa tài khoản người dùng từ trang này.
-        public IActionResult TaiKhoan(string search)
+        public IActionResult TaiKhoan(string search, string? vaiTro)
         {
             if (!LaAdmin())
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
 
-            var ds = _context.TaiKhoans.AsQueryable(); // Truy vấn danh sách tài khoản từ database và cho phép áp dụng bộ lọc tìm kiếm nếu admin nhập vào ô tìm kiếm. Nếu admin nhập từ khóa tìm kiếm nào đó thì hệ thống sẽ lọc danh sách tài khoản để chỉ hiển thị những tài khoản có họ tên, email hoặc số điện thoại đăng nhập, vai trò chứa từ khóa đó. Nếu admin không nhập gì vào ô tìm kiếm thì sẽ hiển thị tất cả tài khoản.
+            // Số liệu đầu trang tính trên mọi tài khoản, không theo bộ lọc
+            ViewBag.DemVaiTro = _context.TaiKhoans.GroupBy(x => x.VaiTro).Select(g => new { g.Key, SoLuong = g.Count() })
+                .AsEnumerable().ToDictionary(x => x.Key ?? "", x => x.SoLuong);
+            // Số đơn đứng tên từng tài khoản, hiện trên thẻ
+            ViewBag.SoDon = _context.DatTours.Where(d => d.TaiKhoanId != null).GroupBy(d => d.TaiKhoanId!.Value)
+                .Select(g => new { g.Key, SoLuong = g.Count() }).ToDictionary(x => x.Key, x => x.SoLuong);
+            ViewBag.VaiTro = vaiTro;
+
+            var ds = _context.TaiKhoans.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(vaiTro))
+            {
+                ds = ds.Where(x => x.VaiTro == vaiTro);
+            } // Truy vấn danh sách tài khoản từ database và cho phép áp dụng bộ lọc tìm kiếm nếu admin nhập vào ô tìm kiếm. Nếu admin nhập từ khóa tìm kiếm nào đó thì hệ thống sẽ lọc danh sách tài khoản để chỉ hiển thị những tài khoản có họ tên, email hoặc số điện thoại đăng nhập, vai trò chứa từ khóa đó. Nếu admin không nhập gì vào ô tìm kiếm thì sẽ hiển thị tất cả tài khoản.
             // Chỉ tìm kiếm khi người dùng có nhập từ khóa hợp lệ.
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -1203,7 +1215,61 @@ namespace webdulich.Controllers
 
             ViewBag.Search = search; // Lưu lại từ khóa đã nhập để giao diện có thể hiển thị lại sau khi tìm kiếm.
 
-            return View(ds.ToList());
+            return View(ds.OrderByDescending(x => x.NgayTao).ToList());
+        }
+
+        // Chi tiết một tài khoản: thông tin, số liệu, đơn đã đặt, ghế nhận trong đơn nhóm, đánh giá.
+        // Không hiện số giấy tờ hành khách (RB-20): xem ở trang sửa đơn khi cần.
+        public IActionResult ChiTietTaiKhoan(int id)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var tk = _context.TaiKhoans.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            if (tk == null)
+            {
+                return NotFound();
+            }
+
+            var m = new ChiTietTaiKhoanViewModel { TaiKhoan = tk };
+
+            // Đơn đứng tên tài khoản, mới nhất trước; số người, tiền, trạng thái tính từ ghế và giao dịch như trang Lịch sử
+            m.DsDon = _context.DatTours.AsNoTracking()
+                .Where(d => d.TaiKhoanId == id)
+                .ChonDon(_context)
+                .OrderByDescending(d => d.Id)
+                .ToList();
+
+            // Ghế nhận trong đơn nhóm của người khác
+            m.DsGheNhom = _context.HanhKhachDatTours.AsNoTracking()
+                .Where(h => h.TaiKhoanId == id && h.DatTour!.LoaiDon == "Nhom" && h.DatTour.TaiKhoanId != id)
+                .OrderByDescending(h => h.Id)
+                .Select(h => new GheNhomCuaTaiKhoan
+                {
+                    DonId = h.DatTourId,
+                    MaChuyenDi = h.DatTour!.MaChuyenDi,
+                    TenTour = h.DatTour.LichKhoiHanhTour!.Tour!.TenTour,
+                    NgayDi = h.DatTour.LichKhoiHanhTour.NgayKhoiHanh,
+                    DaNha = h.NgayNha != null,
+                    DaTra = _context.GiaoDichThanhToans.Any(g => g.HanhKhachDatTourId == h.Id && g.TrangThai == "ThanhCong")
+                })
+                .ToList();
+
+            m.DsDanhGia = _context.DanhGiaTours.AsNoTracking()
+                .Where(d => d.TaiKhoanId == id)
+                .Include(d => d.LichKhoiHanhTour).ThenInclude(l => l!.Tour)
+                .OrderByDescending(d => d.NgayTao)
+                .ToList();
+
+            // Tổng tiền đã trả: giao dịch thành công do tài khoản này trả, hoặc của đơn đứng tên tài khoản
+            m.TongDaTra = _context.GiaoDichThanhToans
+                .Where(g => g.TrangThai == "ThanhCong"
+                    && (g.NguoiTraId == id || (g.DatTourId != null && g.DatTour!.TaiKhoanId == id)))
+                .Sum(g => (decimal?)g.SoTien) ?? 0;
+
+            return View(m);
         }
 
         // Đây là tính năng sửa tk người dùng ( chưa sử dụng tới vì mục đích lý do bảo mật và logic của sản phầm nên chức năng này chưa sử dụng đến ) ( để đến khi qua đồ án chuyên ngành có thể sẽ dùng lại )

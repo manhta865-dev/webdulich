@@ -1,12 +1,19 @@
 ﻿@model List<webdulich.Models.TaiKhoan>
 
+@* Quản lý tài khoản dạng thẻ: lọc theo vai trò, tìm theo tên, email, số điện thoại. Bấm thẻ để xem chi tiết. *@
 @{
     ViewData["Title"] = "Quản lý tài khoản";
 
-    var tongTaiKhoan = Model != null ? Model.Count : 0;
-    var tongAdmin = Model != null ? Model.Count(x => x.VaiTro == "admin") : 0;
-    var tongUser = Model != null ? Model.Count(x => x.VaiTro == "user") : 0;
-    var tongNhanSu = Model != null ? Model.Count(x => x.VaiTro == "huongdanvien" || x.VaiTro == "taixe") : 0;
+    var demVaiTro = ViewBag.DemVaiTro as Dictionary<string, int> ?? new Dictionary<string, int>();
+    var soDon = ViewBag.SoDon as Dictionary<int, int> ?? new Dictionary<int, int>();
+    string? vaiTroLoc = ViewBag.VaiTro;
+    int Dem(string v) => demVaiTro.TryGetValue(v, out var n) ? n : 0;
+    var tongTaiKhoan = demVaiTro.Values.Sum();
+    var tongAdmin = Dem("admin");
+    var tongUser = Dem("user");
+    var tongNhanSu = Dem("huongdanvien") + Dem("taixe");
+    int? toiId = Context.Session.GetInt32("taiKhoanId");
+    var dsLoc = new[] { ("", "Tất cả"), ("user", "Khách hàng"), ("huongdanvien", "Hướng dẫn viên"), ("taixe", "Tài xế"), ("admin", "Quản trị viên") };
 }
 
 @section Styles {
@@ -58,6 +65,7 @@
 
     <div class="ad-toolbar">
         <form asp-controller="Admin" asp-action="TaiKhoan" method="get" class="ad-search">
+            <input type="hidden" name="vaiTro" value="@vaiTroLoc" />
             <input type="text"
                    name="search"
                    value="@ViewBag.Search"
@@ -71,78 +79,68 @@
         </form>
     </div>
 
-    <div class="ad-table-card">
-        <div class="ad-table-wrap">
-            <table class="ad-table">
-                <thead>
-                    <tr>
-                        <th>Họ tên</th>
-                        <th>Email / số điện thoại</th>
-                        <th>Vai trò</th>
-                        <th>Ngày tạo</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @if (Model != null && Model.Count > 0)
-                    {
-                        foreach (var item in Model)
-                        {
-                            var vaiTro = (item.VaiTro ?? "").Trim().ToLower();
-
-                            <tr>
-                                <td><strong>@item.HoTen</strong></td>
-
-                                <td>@webdulich.Models.DinhDanhTaiKhoan.HienThi(item)</td>
-
-                                <td>
-                                    @if (vaiTro == "admin")
-                                    {
-                                        <span class="ad-role admin">Admin</span>
-                                    }
-                                    else if (vaiTro == "huongdanvien")
-                                    {
-                                        <span class="ad-role staff">Nhân sự - HDV</span>
-                                    }
-                                    else if (vaiTro == "taixe")
-                                    {
-                                        <span class="ad-role driver">Nhân sự - Tài xế</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="ad-role user">User</span>
-                                    }
-                                </td>
-
-                                <td>
-                                    @(item.NgayTao == DateTime.MinValue
-                                        ? "Chưa cập nhật"
-                                        : item.NgayTao.ToString("dd/MM/yyyy HH:mm"))
-                                </td>
-
-                                <td>
-                                    <div class="ad-row-actions">
-                                        <button type="button"
-                                                class="tv-btn tv-btn-huy ad-btn-nho btn-xoa"
-                                                data-id="@item.Id">
-                                            Xóa
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="ad-empty-cell">Chưa có tài khoản nào.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+    <div class="tv-chips tk-loc" role="group" aria-label="Lọc theo vai trò">
+        @foreach (var (gt, ten) in dsLoc)
+        {
+            <a asp-action="TaiKhoan" asp-route-vaiTro="@(gt == "" ? null : gt)" asp-route-search="@ViewBag.Search"
+               class="tv-chip@((vaiTroLoc ?? "") == gt ? " active" : "")">@ten</a>
+        }
     </div>
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="tk-luoi">
+            @foreach (var item in Model)
+            {
+                int n = soDon.TryGetValue(item.Id, out var x) ? x : 0;
+                bool laToi = toiId == item.Id;
+                <article class="tk-the">
+                    <a asp-action="ChiTietTaiKhoan" asp-route-id="@item.Id" class="tk-the-chinh" aria-label="Xem chi tiết tài khoản @item.HoTen">
+                        <span class="tk-the-anh">
+                            @if (!string.IsNullOrEmpty(item.AnhDaiDien))
+                            {
+                                <img src="~/images/avatar/@item.AnhDaiDien" alt="" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span aria-hidden="true">@((item.HoTen ?? "?").Trim().Split(' ').Last().FirstOrDefault())</span>
+                            }
+                        </span>
+                        <span class="tk-the-chu">
+                            <span class="ad-role @webdulich.Models.VaiTroHienThi.Lop(item.VaiTro)">@webdulich.Models.VaiTroHienThi.Ten(item.VaiTro)</span>
+                            <strong>@item.HoTen@(laToi ? " (bạn)" : "")</strong>
+                            <span>
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
+                                @(string.IsNullOrEmpty(item.Email) ? "Chưa có email" : item.Email)
+                            </span>
+                            <span>
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-phone" /></svg>
+                                @(string.IsNullOrEmpty(item.SoDienThoai) ? "Chưa có số điện thoại" : item.SoDienThoai)
+                            </span>
+                        </span>
+                    </a>
+                    <div class="tk-the-chan">
+                        <span>
+                            <strong>@n</strong> đơn
+                            · tham gia @(item.NgayTao == DateTime.MinValue ? "chưa rõ" : item.NgayTao.ToString("dd/MM/yyyy"))
+                        </span>
+                        <div class="tk-the-nut">
+                            <a asp-action="ChiTietTaiKhoan" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Chi tiết</a>
+                            @if (!laToi)
+                            {
+                                <button type="button" class="tv-btn tv-btn-huy ad-btn-nho btn-xoa" data-id="@item.Id"
+                                        aria-label="Xóa tài khoản @item.HoTen">Xóa</button>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="tv-empty"><p>Không có tài khoản nào khớp bộ lọc.</p></div>
+    }
 </div>
 
 <div class="modal fade" id="modalXoa" tabindex="-1">

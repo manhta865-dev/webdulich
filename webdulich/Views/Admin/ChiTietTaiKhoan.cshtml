@@ -1,0 +1,153 @@
+@model webdulich.Models.ChiTietTaiKhoanViewModel
+@* Chi tiết tài khoản cho admin (AdminController.ChiTietTaiKhoan). Không hiện số giấy tờ hành khách (RB-20). *@
+@{
+    var tk = Model.TaiKhoan;
+    ViewData["Title"] = "Tài khoản " + tk.HoTen;
+    bool laToi = Context.Session.GetInt32("taiKhoanId") == tk.Id;
+    string NhanTrangThai(webdulich.Models.DonDatTourDoc d) =>
+        d.DaHuy ? "tat" : d.DaThanhToan ? "" : "canh-bao";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <a asp-action="TaiKhoan" class="tv-link tk-ve">Quản lý tài khoản</a>
+
+    <section class="tk-ho-so">
+        <div class="tk-ho-so-anh">
+            @if (!string.IsNullOrEmpty(tk.AnhDaiDien))
+            {
+                <img src="~/images/avatar/@tk.AnhDaiDien" alt="Ảnh đại diện của @tk.HoTen" />
+            }
+            else
+            {
+                <span aria-hidden="true">@((tk.HoTen ?? "?").Trim().Split(' ').Last().FirstOrDefault())</span>
+            }
+        </div>
+        <div class="tk-ho-so-chu">
+            <span class="ad-role @webdulich.Models.VaiTroHienThi.Lop(tk.VaiTro)">@webdulich.Models.VaiTroHienThi.Ten(tk.VaiTro)</span>
+            <h1>@tk.HoTen@(laToi ? " (bạn)" : "")</h1>
+            <ul>
+                <li><svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>@(string.IsNullOrEmpty(tk.Email) ? "Chưa có email" : tk.Email)</li>
+                <li><svg class="tv-icon" aria-hidden="true"><use href="#i-phone" /></svg>@(string.IsNullOrEmpty(tk.SoDienThoai) ? "Chưa có số điện thoại" : tk.SoDienThoai)</li>
+                <li><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>Tham gia @(tk.NgayTao == DateTime.MinValue ? "chưa rõ" : tk.NgayTao.ToString("dd/MM/yyyy"))</li>
+            </ul>
+        </div>
+        @if (laToi)
+        {
+            <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="tv-btn tv-btn-chinh tk-ho-so-nut">Sửa hồ sơ của tôi</a>
+        }
+    </section>
+
+    <div class="ad-kpis">
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đơn còn hiệu lực</span><strong>@Model.SoDonConHieuLuc</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Tổng đã trả</span><strong>@Model.TongDaTra.ToString("N0") đ</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Ghế trong đơn nhóm</span><strong>@Model.SoGheNhomConGiu</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đánh giá đã viết</span><strong>@Model.DsDanhGia.Count</strong></span>
+        </div>
+    </div>
+
+    <section class="ad-table-card tk-khoi">
+        <h2>Đơn đã đặt <small>(@Model.DsDon.Count, gồm @Model.SoDonDaHuy đơn đã hủy)</small></h2>
+        @if (Model.DsDon.Any())
+        {
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr><th>Mã chuyến</th><th>Tour</th><th>Ngày đi</th><th>Loại</th><th>Số người</th><th>Tổng tiền</th><th>Trạng thái</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.DsDon)
+                        {
+                            <tr>
+                                <td><a asp-action="SuaDonDatTour" asp-route-id="@d.Id">@d.MaChuyenDi</a></td>
+                                <td>@d.TenTour</td>
+                                <td>@d.NgayDi.ToString("dd/MM/yyyy")</td>
+                                <td>@(d.LoaiDon == "Nhom" ? "Nhóm" : "Cá nhân")</td>
+                                <td>@d.SoNguoi</td>
+                                <td>@d.TongTien.ToString("N0") đ</td>
+                                <td><span class="ad-badge @NhanTrangThai(d)">@d.TrangThaiThanhToan</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="tk-rong">Tài khoản này chưa đặt đơn nào.</p>
+        }
+    </section>
+
+    @if (Model.DsGheNhom.Any())
+    {
+        <section class="ad-table-card tk-khoi">
+            <h2>Ghế nhận trong đơn nhóm của người khác</h2>
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead><tr><th>Mã chuyến</th><th>Tour</th><th>Ngày đi</th><th>Tình trạng ghế</th></tr></thead>
+                    <tbody>
+                        @foreach (var g in Model.DsGheNhom)
+                        {
+                            <tr>
+                                <td><a asp-action="SuaDonDatTour" asp-route-id="@g.DonId">@g.MaChuyenDi</a></td>
+                                <td>@g.TenTour</td>
+                                <td>@g.NgayDi.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="ad-badge @(g.DaNha ? "tat" : g.DaTra ? "" : "canh-bao")">@(g.DaNha ? "Đã nhả" : g.DaTra ? "Đã trả" : "Chưa trả")</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+    @if (Model.DsDanhGia.Any())
+    {
+        <section class="ad-table-card tk-khoi">
+            <h2>Đánh giá đã viết</h2>
+            <ul class="tk-dg">
+                @foreach (var dg in Model.DsDanhGia)
+                {
+                    <li>
+                        <div>
+                            <strong>@dg.LichKhoiHanhTour?.Tour?.TenTour</strong>
+                            <span>đi ngày @dg.LichKhoiHanhTour?.NgayKhoiHanh.ToString("dd/MM/yyyy")</span>
+                            <span class="tv-sao" aria-label="@dg.SoSao trên 5 sao">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    <i class="@(s <= dg.SoSao ? "co" : "")" aria-hidden="true">★</i>
+                                }
+                            </span>
+                            @if (!dg.DangHien)
+                            {
+                                <span class="ad-badge canh-bao">Đang ẩn</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(dg.NoiDung))
+                        {
+                            <p>@dg.NoiDung</p>
+                        }
+                    </li>
+                }
+            </ul>
+            <a asp-controller="AdminDanhGia" asp-action="Index" class="tv-link tv-link-di">Quản lý đánh giá</a>
+        </section>
+    }
+</div>

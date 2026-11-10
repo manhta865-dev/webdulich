@@ -1088,3 +1088,85 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 .ad-vt-nut { margin-top: var(--tv-k3); }
 /* Danh sách tour: tour trong nước chưa có vị trí trên bản đồ */
 .ad-badge-vt { margin-left: var(--tv-k2); }
+
+/* ---------- Quản lý tài khoản dạng thẻ và trang chi tiết (Admin/TaiKhoan, Admin/ChiTietTaiKhoan) ---------- */
+.tk-loc { margin: 0 0 var(--tv-k4); }
+.tk-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--tv-k4); }
+.tk-the {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-be-mat);
+    overflow: hidden;
+    transition: transform var(--tv-nhanh), box-shadow var(--tv-nhanh), border-color var(--tv-nhanh);
+}
+.tk-the:hover { transform: translateY(-2px); border-color: var(--tv-nhan); box-shadow: 0 12px 28px rgba(16, 48, 62, 0.1); }
+.tk-the-chinh { display: flex; flex: 1; gap: var(--tv-k4); padding: var(--tv-k4); color: var(--tv-chu); text-decoration: none; }
+.tk-the-chinh:hover { color: var(--tv-chu); }
+.tk-the-anh, .tk-ho-so-anh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-weight: 700;
+}
+.tk-the-anh { width: 72px; height: 72px; font-size: 1.75rem; }
+.tk-the-anh img, .tk-ho-so-anh img { width: 100%; height: 100%; object-fit: cover; }
+.tk-the-chu { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tk-the-chu .ad-role { align-self: flex-start; }
+.tk-the-chu strong { overflow: hidden; font-size: var(--tv-cs-vua); text-overflow: ellipsis; white-space: nowrap; }
+.tk-the-chu > span:not(.ad-role) { display: flex; align-items: center; gap: 6px; overflow: hidden; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); text-overflow: ellipsis; white-space: nowrap; }
+.tk-the-chu .tv-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.tk-the-chan {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k2);
+    padding: var(--tv-k3) var(--tv-k4);
+    border-top: 1px solid var(--tv-vien);
+    background: var(--tv-nen);
+    font-size: var(--tv-cs-nho);
+    color: var(--tv-chu-phu);
+}
+.tk-the-chan strong { color: var(--tv-chu); }
+.tk-the-nut { display: flex; gap: var(--tv-k2); }
+
+.tk-ve { margin-bottom: var(--tv-k4); }
+.tk-ve::before { content: "←"; }
+.tk-ho-so {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--tv-k5);
+    margin-bottom: var(--tv-k4);
+    padding: var(--tv-k5);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: linear-gradient(135deg, var(--tv-nhan-nhat), var(--tv-be-mat) 60%);
+}
+.tk-ho-so-anh { width: 112px; height: 112px; font-size: 2.5rem; box-shadow: 0 0 0 4px var(--tv-be-mat), 0 10px 24px rgba(16, 48, 62, 0.15); }
+.tk-ho-so-chu { flex: 1; min-width: 240px; }
+.tk-ho-so-chu h1 { margin: var(--tv-k2) 0 var(--tv-k2); font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+.tk-ho-so-chu ul { display: flex; flex-wrap: wrap; gap: var(--tv-k2) var(--tv-k5); margin: 0; padding: 0; list-style: none; color: var(--tv-chu-phu); }
+.tk-ho-so-chu li { display: flex; align-items: center; gap: 6px; }
+.tk-ho-so-chu .tv-icon { width: 16px; height: 16px; color: var(--tv-nhan); }
+.tk-khoi { margin-top: var(--tv-k4); padding: var(--tv-k4); }
+.tk-khoi h2 { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-lon); font-weight: 700; }
+.tk-khoi h2 small { font-size: var(--tv-cs-nho); font-weight: 500; color: var(--tv-chu-phu); }
+.tk-rong { margin: 0; color: var(--tv-chu-phu); }
+.tk-dg { display: grid; gap: var(--tv-k3); margin: 0 0 var(--tv-k3); padding: 0; list-style: none; }
+.tk-dg li { padding: var(--tv-k3); border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-nut); }
+.tk-dg li > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k2); }
+.tk-dg li > div > span:not(.tv-sao):not(.ad-badge) { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.tk-dg p { margin: var(--tv-k2) 0 0; white-space: pre-line; }
+@media (max-width: 576px) {
+    .tk-luoi { grid-template-columns: 1fr; }
+    .tk-ho-so { flex-direction: column; text-align: center; }
+    .tk-ho-so-chu ul { justify-content: center; }
+}
