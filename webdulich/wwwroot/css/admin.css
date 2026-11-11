@@ -1217,3 +1217,43 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 @media (max-width: 576px) {
     .dn-ngay, .dn-the-ds { grid-template-columns: 1fr; }
 }
+
+/* ---------- Lương nhân viên (AdminLuong, NhanVien/PhieuLuong, _PhieuLuong, RB-46) ---------- */
+.lg-thanh { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--tv-k3); margin-bottom: var(--tv-k4); }
+.lg-thang { display: flex; align-items: center; gap: var(--tv-k3); }
+.lg-thang h2 { min-width: 150px; margin: 0; text-align: center; font-size: var(--tv-cs-lon); font-weight: 700; }
+.lg-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
+.lg-phu { margin: 2px 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.lg-canh-bao { margin: 0 0 var(--tv-k3); padding: var(--tv-k2) var(--tv-k3); border-radius: var(--tv-bo-nut); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-size: var(--tv-cs-nho); font-weight: 600; }
+.lg-bang-thang td { white-space: nowrap; }
+.lg-h2 { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-lon); font-weight: 700; }
+.lg-phieu { padding: var(--tv-k5); margin-bottom: var(--tv-k4); }
+.lg-phieu-dau { display: flex; align-items: center; justify-content: space-between; gap: var(--tv-k2); margin-bottom: var(--tv-k3); }
+.lg-phieu-dau h2 { margin: 0; font-size: var(--tv-cs-lon); font-weight: 700; }
+.lg-bang { width: 100%; border-collapse: collapse; }
+.lg-bang th, .lg-bang td { padding: var(--tv-k3) var(--tv-k2); border-bottom: 1px solid var(--tv-vien); vertical-align: top; }
+.lg-bang th { width: 30%; font-weight: 600; text-align: left; }
+.lg-bang td:nth-child(2) { color: var(--tv-chu-phu); font-size: var(--tv-cs-nho); }
+.lg-bang td:nth-child(2) small { display: block; margin-top: 2px; }
+.lg-bang td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lg-bang tfoot th, .lg-bang tfoot td { border-bottom: 0; padding-top: var(--tv-k4); font-size: var(--tv-cs-lon); font-weight: 800; color: var(--tv-nhan); }
+.lg-hai-cot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k4); margin-bottom: var(--tv-k4); }
+.lg-khoi { padding: var(--tv-k4); margin-bottom: var(--tv-k4); }
+.lg-hai-cot .lg-khoi { margin-bottom: 0; }
+.lg-khoi h3 { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-vua); font-weight: 700; }
+.lg-ds { display: grid; gap: var(--tv-k2); margin: 0; padding: 0; list-style: none; }
+.lg-ds li { display: flex; align-items: center; gap: var(--tv-k3); padding: var(--tv-k2) var(--tv-k3); border: 1px solid var(--tv-vien); border-radius: var(--tv-bo-nut); }
+.lg-ds li > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.lg-ds li > div span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.lg-ds b { white-space: nowrap; }
+.lg-cong { color: var(--tv-thanh-cong); }
+.lg-tru { color: var(--tv-loi); }
+.lg-them-khoan { display: grid; grid-template-columns: 150px 200px minmax(0, 1fr) auto; gap: var(--tv-k2); }
+@media (max-width: 860px) {
+    .lg-hai-cot { grid-template-columns: 1fr; }
+    .lg-them-khoan { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 576px) {
+    .lg-them-khoan { grid-template-columns: 1fr; }
+    .lg-bang th { width: auto; }
+}

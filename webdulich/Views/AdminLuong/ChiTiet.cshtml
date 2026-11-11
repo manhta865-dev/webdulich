@@ -1,0 +1,102 @@
+@model webdulich.Models.PhieuLuong
+@* Chi tiết lương một nhân viên trong một tháng (AdminLuongController.ChiTiet, RB-46) *@
+@{
+    var p = Model;
+    var tk = p.NhanVien.TaiKhoan;
+    bool tuongLai = ViewBag.TuongLai;
+    ViewData["Title"] = "Lương " + tk?.HoTen;
+    var dau = new DateTime(p.Nam, p.Thang, 1);
+    var truoc = dau.AddMonths(-1);
+    var sau = dau.AddMonths(1);
+    ViewData["ChoXoaKhoan"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page lg">
+    <a asp-action="Index" asp-route-nam="@p.Nam" asp-route-thang="@p.Thang" class="tv-link tk-ve">Bảng lương tháng @p.Thang/@p.Nam</a>
+
+    <div class="ad-pagehead">
+        <div>
+            <h1>@tk?.HoTen</h1>
+            <p>@webdulich.Models.VaiTroHienThi.Ten(tk?.VaiTro)@(string.IsNullOrEmpty(tk?.SoDienThoai) ? "" : " · " + tk.SoDienThoai)</p>
+        </div>
+        <a asp-action="MucLuong" asp-route-id="@p.NhanVien.Id" class="tv-btn tv-btn-vien">Mức lương</a>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="lg-thanh">
+        <div class="lg-thang">
+            <a asp-action="ChiTiet" asp-route-id="@p.NhanVien.Id" asp-route-nam="@truoc.Year" asp-route-thang="@truoc.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng trước">←</a>
+            <h2>Tháng @p.Thang/@p.Nam</h2>
+            <a asp-action="ChiTiet" asp-route-id="@p.NhanVien.Id" asp-route-nam="@sau.Year" asp-route-thang="@sau.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng sau">→</a>
+        </div>
+        <div class="lg-nut">
+            @if (!p.DaChot && p.CoMucLuong && !tuongLai)
+            {
+                <form asp-action="Chot" method="post"
+                      data-xac-nhan-tieu-de="Chốt lương tháng @p.Thang/@p.Nam?"
+                      data-xac-nhan="Lương của @tk?.HoTen sẽ cố định ở @p.Tong.ToString("N0") đ. Muốn sửa sau đó thì bấm Mở lại (khi chưa trả)."
+                      data-xac-nhan-nut="Chốt lương">
+                    <input type="hidden" name="id" value="@p.NhanVien.Id" />
+                    <input type="hidden" name="nam" value="@p.Nam" />
+                    <input type="hidden" name="thang" value="@p.Thang" />
+                    <input type="hidden" name="quayVe" value="chitiet" />
+                    <button type="submit" class="tv-btn tv-btn-chinh">Chốt lương</button>
+                </form>
+            }
+            @if (p.DaChot && !p.DaTra)
+            {
+                <form asp-action="MoLai" method="post"
+                      data-xac-nhan-tieu-de="Mở lại bảng lương?" data-xac-nhan="Số liệu sẽ quay về tạm tính theo dữ liệu hiện tại; bạn cần chốt lại sau khi sửa."
+                      data-xac-nhan-nut="Mở lại">
+                    <input type="hidden" name="id" value="@p.NhanVien.Id" />
+                    <input type="hidden" name="nam" value="@p.Nam" />
+                    <input type="hidden" name="thang" value="@p.Thang" />
+                    <button type="submit" class="tv-btn tv-btn-vien">Mở lại</button>
+                </form>
+                <form asp-action="DaTra" method="post"
+                      data-xac-nhan-tieu-de="Đã trả lương?" data-xac-nhan="Đánh dấu đã chuyển @p.Tong.ToString("N0") đ cho @tk?.HoTen. Sau đó không mở lại được."
+                      data-xac-nhan-nut="Đã trả">
+                    <input type="hidden" name="id" value="@p.NhanVien.Id" />
+                    <input type="hidden" name="nam" value="@p.Nam" />
+                    <input type="hidden" name="thang" value="@p.Thang" />
+                    <input type="hidden" name="quayVe" value="chitiet" />
+                    <button type="submit" class="tv-btn tv-btn-chinh">Đã trả</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <partial name="_PhieuLuong" model="p" />
+
+    @if (!p.DaChot)
+    {
+        <section class="ad-table-card lg-khoi">
+            <h3>Thêm thưởng hoặc phạt</h3>
+            <form asp-action="ThemKhoan" method="post" class="lg-them-khoan">
+                <input type="hidden" name="id" value="@p.NhanVien.Id" />
+                <input type="hidden" name="nam" value="@p.Nam" />
+                <input type="hidden" name="thang" value="@p.Thang" />
+                <select name="laPhat" class="form-select" aria-label="Loại khoản">
+                    <option value="false">Thưởng (+)</option>
+                    <option value="true">Phạt (−)</option>
+                </select>
+                <input type="number" name="soTien" min="1000" step="1000" class="form-control" placeholder="Số tiền, ví dụ 500000" aria-label="Số tiền" required />
+                <input type="text" name="noiDung" maxlength="300" class="form-control" placeholder="Nội dung, ví dụ: khách khen chuyến Đà Lạt" aria-label="Nội dung" required />
+                <button type="submit" class="tv-btn tv-btn-chinh">Thêm</button>
+            </form>
+        </section>
+    }
+</div>

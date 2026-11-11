@@ -1406,12 +1406,15 @@ namespace webdulich.Controllers
                 bool daDuocPhanCong = _context.PhanCongTours.Any(x =>
                     x.HuongDanVienId == nhanVien.Id ||
                     x.TaiXeId == nhanVien.Id)
-                    || _context.DonXinNghis.Any(x => x.NhanVienId == nhanVien.Id);
+                    || _context.DonXinNghis.Any(x => x.NhanVienId == nhanVien.Id)
+                    || _context.MucLuongNhanViens.Any(x => x.NhanVienId == nhanVien.Id)
+                    || _context.KhoanLuongs.Any(x => x.NhanVienId == nhanVien.Id)
+                    || _context.BangLuongs.Any(x => x.NhanVienId == nhanVien.Id);
                 // Nếu nhân viên đó đã được phân công vào lịch tour nào đó thì sẽ không cho phép xóa tài khoản này và hiển thị thông báo lỗi yêu cầu chuyển nhân viên sang trạng thái tạm nghỉ thay vì xóa. Nếu chưa được phân công vào lịch tour nào đó thì sẽ cho phép xóa tài khoản này và cũng sẽ xóa luôn bản ghi của nhân viên đó khỏi bảng NhanViens để đảm bảo tính toàn vẹn dữ liệu.
                 if (daDuocPhanCong)
                 {
                     TempData["error"] =
-                        "Không thể xóa nhân sự này vì đã có lịch phân công tour hoặc đơn xin nghỉ. Hãy chuyển nhân sự sang trạng thái tạm nghỉ.";
+                        "Không thể xóa nhân sự này vì đã có lịch phân công tour, đơn xin nghỉ hoặc dữ liệu lương. Hãy chuyển nhân sự sang trạng thái tạm nghỉ.";
                     return RedirectToAction("TaiKhoan");
                 }
 
@@ -1425,7 +1428,9 @@ namespace webdulich.Controllers
                 || _context.GiaoDichThanhToans.Any(x => x.NguoiXacNhanId == id || x.NguoiTraId == id)
                 || _context.BaiViets.Any(x => x.TacGiaId == id)
                 || _context.DanhGiaTours.Any(x => x.TaiKhoanId == id)
-                || _context.DonXinNghis.Any(x => x.NguoiDuyetId == id);
+                || _context.DonXinNghis.Any(x => x.NguoiDuyetId == id)
+                || _context.KhoanLuongs.Any(x => x.NguoiTaoId == id)
+                || _context.BangLuongs.Any(x => x.NguoiChotId == id || x.NguoiTraId == id);
             // Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
             if (coDonDatTour)
             {

@@ -1,0 +1,138 @@
+@model webdulich.Models.PhieuLuong
+@* Phiếu lương một tháng (RB-46), dùng ở Admin/Luong/ChiTiet và NhanVien/PhieuLuong.
+   ViewData["ChoXoaKhoan"] = true: hiện nút xóa thưởng/phạt (admin, tháng chưa chốt). *@
+@{
+    var p = Model;
+    bool choXoa = ViewData["ChoXoaKhoan"] as bool? == true && !p.DaChot;
+    string Tien(decimal x) => x.ToString("N0") + " đ";
+}
+
+<section class="ad-table-card lg-phieu">
+    <div class="lg-phieu-dau">
+        <h2>Phiếu lương tháng @p.Thang/@p.Nam</h2>
+        <span class="ad-badge @(p.DaTra ? "" : p.DaChot ? "" : "canh-bao")">@p.TrangThai</span>
+    </div>
+    @if (!p.CoMucLuong)
+    {
+        <p class="lg-canh-bao">Chưa có mức lương áp dụng cho tháng này nên chưa tính được lương.</p>
+    }
+    <table class="lg-bang">
+        <tbody>
+            <tr><th>Lương cơ bản</th><td></td><td>@Tien(p.LuongCoBan)</td></tr>
+            <tr><th>Tiền công đi tour</th><td>@p.SoNgayDiTour ngày × @Tien(p.TienCongNgay)</td><td>+ @Tien(p.TienCong)</td></tr>
+            <tr>
+                <th>Trừ nghỉ quá phép</th>
+                <td>
+                    @p.SoNgayNghiTruLuong ngày × (@Tien(p.LuongCoBan) ÷ @p.SoNgayCongChuan)
+                    @if (!p.DaChot && p.SoNgayNghi > 0)
+                    {
+                        <small>Nghỉ @p.SoNgayNghi ngày trong tháng; đã dùng @p.SoNgayPhepDaDung/@p.SoNgayPhepNam ngày phép năm</small>
+                    }
+                </td>
+                <td>− @Tien(p.TienTruNghi)</td>
+            </tr>
+            <tr><th>Thưởng, phạt</th><td>@p.DsKhoan.Count khoản</td><td>@(p.TongKhoan >= 0 ? "+ " : "− ")@Tien(Math.Abs(p.TongKhoan))</td></tr>
+        </tbody>
+        <tfoot>
+            <tr><th>Thực nhận</th><td></td><td>@Tien(p.Tong)</td></tr>
+        </tfoot>
+    </table>
+    @if (p.DaChot)
+    {
+        <p class="lg-phu">
+            Chốt bởi @p.BangLuong!.NguoiChot?.HoTen lúc @p.BangLuong.NgayChot.ToString("dd/MM/yyyy HH:mm").
+            @if (p.DaTra)
+            {
+                <span>Đã trả bởi @p.BangLuong.NguoiTra?.HoTen lúc @p.BangLuong.NgayTra!.Value.ToString("dd/MM/yyyy HH:mm").</span>
+            }
+            Số liệu đã cố định từ lúc chốt.
+        </p>
+    }
+    else
+    {
+        <p class="lg-phu">Đây là số tạm tính theo phân công và đơn nghỉ hiện tại, sẽ cố định khi quản trị viên chốt lương.</p>
+    }
+</section>
+
+<div class="lg-hai-cot">
+    <section class="ad-table-card lg-khoi">
+        <h3>Chuyến đi tour trong tháng</h3>
+        @if (p.DsChuyen.Any())
+        {
+            <ul class="lg-ds">
+                @foreach (var c in p.DsChuyen)
+                {
+                    <li>
+                        <div>
+                            <strong>@c.TenTour</strong>
+                            <span>@c.VaiTro · @c.NgayDi.ToString("dd/MM")@(c.NgayVe > c.NgayDi ? " – " + c.NgayVe.ToString("dd/MM") : "")</span>
+                        </div>
+                        <b>@c.SoNgayTrongThang ngày</b>
+                    </li>
+                }
+            </ul>
+            @if (p.DaChot && p.DsChuyen.Sum(c => c.SoNgayTrongThang) != p.SoNgayDiTour)
+            {
+                <p class="lg-phu">Phân công đã thay đổi sau khi chốt; lương tính theo @p.SoNgayDiTour ngày lúc chốt.</p>
+            }
+        }
+        else
+        {
+            <p class="lg-phu">Không có chuyến nào được phân công trong tháng.</p>
+        }
+    </section>
+
+    <section class="ad-table-card lg-khoi">
+        <h3>Nghỉ phép trong tháng</h3>
+        @if (p.DsDonNghi.Any())
+        {
+            <ul class="lg-ds">
+                @foreach (var d in p.DsDonNghi)
+                {
+                    <li>
+                        <div>
+                            <strong>@d.TuNgay.ToString("dd/MM")@(d.SoNgay > 1 ? " – " + d.DenNgay.ToString("dd/MM") : "")</strong>
+                            <span>@d.LyDo</span>
+                        </div>
+                        <b>@d.SoNgay ngày</b>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="lg-phu">Không có ngày nghỉ đã duyệt trong tháng.</p>
+        }
+    </section>
+</div>
+
+<section class="ad-table-card lg-khoi">
+    <h3>Thưởng, phạt</h3>
+    @if (p.DsKhoan.Any())
+    {
+        <ul class="lg-ds">
+            @foreach (var k in p.DsKhoan)
+            {
+                <li>
+                    <div>
+                        <strong>@k.NoiDung</strong>
+                        <span>@k.NguoiTao?.HoTen · @k.NgayTao.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <b class="@(k.SoTien >= 0 ? "lg-cong" : "lg-tru")">@(k.SoTien >= 0 ? "+ " : "− ")@Tien(Math.Abs(k.SoTien))</b>
+                    @if (choXoa)
+                    {
+                        <form asp-controller="AdminLuong" asp-action="XoaKhoan" asp-route-khoanId="@k.Id" method="post"
+                              data-xac-nhan-tieu-de="Xóa khoản này?" data-xac-nhan="Khoản &quot;@k.NoiDung&quot; sẽ bị xóa khỏi lương tháng @p.Thang/@p.Nam."
+                              data-xac-nhan-nut="Xóa khoản" data-xac-nhan-nguy-hiem>
+                            <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Xóa</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="lg-phu">Chưa có khoản thưởng hoặc phạt.</p>
+    }
+</section>

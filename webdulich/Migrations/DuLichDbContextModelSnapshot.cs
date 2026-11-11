@@ -291,6 +291,71 @@ namespace webdulich.Migrations
                         });
                 });
 
+            modelBuilder.Entity("webdulich.Models.BangLuong", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("LuongCoBan")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Nam")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NgayChot")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NgayTra")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NguoiChotId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("NguoiTraId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NhanVienId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoNgayCongChuan")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoNgayDiTour")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoNgayNghiTruLuong")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Thang")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TienCongNgay")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NguoiChotId");
+
+                    b.HasIndex("NguoiTraId");
+
+                    b.HasIndex("NhanVienId", "Nam", "Thang")
+                        .IsUnique();
+
+                    b.ToTable("BangLuongs", t =>
+                        {
+                            t.HasCheckConstraint("CK_BangLuong_SoLieu", "[LuongCoBan] >= 0 AND [TienCongNgay] >= 0 AND [SoNgayDiTour] >= 0 AND [SoNgayNghiTruLuong] >= 0 AND [SoNgayCongChuan] > 0");
+
+                            t.HasCheckConstraint("CK_BangLuong_Thang", "[Thang] BETWEEN 1 AND 12 AND [Nam] BETWEEN 2000 AND 2100");
+
+                            t.HasCheckConstraint("CK_BangLuong_Tra", "([NguoiTraId] IS NULL AND [NgayTra] IS NULL) OR ([NguoiTraId] IS NOT NULL AND [NgayTra] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("webdulich.Models.ChoKhongMoBan", b =>
                 {
                     b.Property<int>("LichKhoiHanhTourId")
@@ -728,6 +793,52 @@ namespace webdulich.Migrations
                         });
                 });
 
+            modelBuilder.Entity("webdulich.Models.KhoanLuong", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Nam")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NguoiTaoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NhanVienId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NoiDung")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<decimal>("SoTien")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Thang")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NguoiTaoId");
+
+                    b.HasIndex("NhanVienId", "Nam", "Thang");
+
+                    b.ToTable("KhoanLuongs", t =>
+                        {
+                            t.HasCheckConstraint("CK_KhoanLuong_SoTien", "[SoTien] <> 0");
+
+                            t.HasCheckConstraint("CK_KhoanLuong_Thang", "[Thang] BETWEEN 1 AND 12 AND [Nam] BETWEEN 2000 AND 2100");
+                        });
+                });
+
             modelBuilder.Entity("webdulich.Models.KhuyenMai", b =>
                 {
                     b.Property<int>("Id")
@@ -898,6 +1009,46 @@ namespace webdulich.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LoaiDiaHinhs");
+                });
+
+            modelBuilder.Entity("webdulich.Models.MucLuongNhanVien", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ApDungTu")
+                        .HasColumnType("date");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<decimal>("LuongCoBan")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NhanVienId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TienCongNgay")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NhanVienId", "ApDungTu")
+                        .IsUnique();
+
+                    b.ToTable("MucLuongNhanViens", t =>
+                        {
+                            t.HasCheckConstraint("CK_MucLuong_SoTien", "[LuongCoBan] >= 0 AND [TienCongNgay] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("webdulich.Models.NhanVien", b =>
@@ -1377,6 +1528,32 @@ namespace webdulich.Migrations
                     b.Navigation("Tour");
                 });
 
+            modelBuilder.Entity("webdulich.Models.BangLuong", b =>
+                {
+                    b.HasOne("webdulich.Models.TaiKhoan", "NguoiChot")
+                        .WithMany()
+                        .HasForeignKey("NguoiChotId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("webdulich.Models.TaiKhoan", "NguoiTra")
+                        .WithMany()
+                        .HasForeignKey("NguoiTraId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("webdulich.Models.NhanVien", "NhanVien")
+                        .WithMany()
+                        .HasForeignKey("NhanVienId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NguoiChot");
+
+                    b.Navigation("NguoiTra");
+
+                    b.Navigation("NhanVien");
+                });
+
             modelBuilder.Entity("webdulich.Models.ChoKhongMoBan", b =>
                 {
                     b.HasOne("webdulich.Models.LichKhoiHanhTour", "LichKhoiHanhTour")
@@ -1534,6 +1711,25 @@ namespace webdulich.Migrations
                     b.Navigation("TaiKhoan");
                 });
 
+            modelBuilder.Entity("webdulich.Models.KhoanLuong", b =>
+                {
+                    b.HasOne("webdulich.Models.TaiKhoan", "NguoiTao")
+                        .WithMany()
+                        .HasForeignKey("NguoiTaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("webdulich.Models.NhanVien", "NhanVien")
+                        .WithMany()
+                        .HasForeignKey("NhanVienId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NguoiTao");
+
+                    b.Navigation("NhanVien");
+                });
+
             modelBuilder.Entity("webdulich.Models.LichKhoiHanhTour", b =>
                 {
                     b.HasOne("webdulich.Models.SoDoChoNgoi", "SoDoChoNgoi")
@@ -1562,6 +1758,17 @@ namespace webdulich.Migrations
                         .IsRequired();
 
                     b.Navigation("Tour");
+                });
+
+            modelBuilder.Entity("webdulich.Models.MucLuongNhanVien", b =>
+                {
+                    b.HasOne("webdulich.Models.NhanVien", "NhanVien")
+                        .WithMany()
+                        .HasForeignKey("NhanVienId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NhanVien");
                 });
 
             modelBuilder.Entity("webdulich.Models.NhanVien", b =>

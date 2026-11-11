@@ -37,6 +37,9 @@ namespace webdulich.Models
         public DbSet<ChoKhongMoBan> ChoKhongMoBans { get; set; }
         public DbSet<DanhGiaTour> DanhGiaTours { get; set; }
         public DbSet<DonXinNghi> DonXinNghis { get; set; }
+        public DbSet<MucLuongNhanVien> MucLuongNhanViens { get; set; }
+        public DbSet<KhoanLuong> KhoanLuongs { get; set; }
+        public DbSet<BangLuong> BangLuongs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -123,6 +126,44 @@ namespace webdulich.Models
                 e.Property(x => x.KinhDo).HasPrecision(9, 6);
                 e.ToTable(t => t.HasCheckConstraint("CK_DiaDiem_ToaDo",
                     "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN -90 AND 90 AND [KinhDo] BETWEEN -180 AND 180)"));
+            });
+            // Lương nhân viên (RB-46): tiền decimal(18,2); dữ liệu lương là lịch sử tài chính nên Restrict
+            modelBuilder.Entity<MucLuongNhanVien>(e =>
+            {
+                e.Property(x => x.LuongCoBan).HasPrecision(18, 2);
+                e.Property(x => x.TienCongNgay).HasPrecision(18, 2);
+                e.HasIndex(x => new { x.NhanVienId, x.ApDungTu }).IsUnique();
+                e.HasOne(x => x.NhanVien).WithMany().HasForeignKey(x => x.NhanVienId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t => t.HasCheckConstraint("CK_MucLuong_SoTien", "[LuongCoBan] >= 0 AND [TienCongNgay] >= 0"));
+            });
+            modelBuilder.Entity<KhoanLuong>(e =>
+            {
+                e.Property(x => x.SoTien).HasPrecision(18, 2);
+                e.HasIndex(x => new { x.NhanVienId, x.Nam, x.Thang });
+                e.HasOne(x => x.NhanVien).WithMany().HasForeignKey(x => x.NhanVienId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiTao).WithMany().HasForeignKey(x => x.NguoiTaoId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_KhoanLuong_Thang", "[Thang] BETWEEN 1 AND 12 AND [Nam] BETWEEN 2000 AND 2100");
+                    t.HasCheckConstraint("CK_KhoanLuong_SoTien", "[SoTien] <> 0");
+                });
+            });
+            modelBuilder.Entity<BangLuong>(e =>
+            {
+                e.Property(x => x.LuongCoBan).HasPrecision(18, 2);
+                e.Property(x => x.TienCongNgay).HasPrecision(18, 2);
+                e.HasIndex(x => new { x.NhanVienId, x.Nam, x.Thang }).IsUnique();
+                e.HasOne(x => x.NhanVien).WithMany().HasForeignKey(x => x.NhanVienId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiChot).WithMany().HasForeignKey(x => x.NguoiChotId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiTra).WithMany().HasForeignKey(x => x.NguoiTraId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_BangLuong_Thang", "[Thang] BETWEEN 1 AND 12 AND [Nam] BETWEEN 2000 AND 2100");
+                    t.HasCheckConstraint("CK_BangLuong_SoLieu",
+                        "[LuongCoBan] >= 0 AND [TienCongNgay] >= 0 AND [SoNgayDiTour] >= 0 AND [SoNgayNghiTruLuong] >= 0 AND [SoNgayCongChuan] > 0");
+                    t.HasCheckConstraint("CK_BangLuong_Tra",
+                        "([NguoiTraId] IS NULL AND [NgayTra] IS NULL) OR ([NguoiTraId] IS NOT NULL AND [NgayTra] IS NOT NULL)");
+                });
             });
             // Đơn xin nghỉ (RB-45): nhân viên đã có đơn thì không xóa được (Restrict), người duyệt cũng vậy
             modelBuilder.Entity<DonXinNghi>(e =>

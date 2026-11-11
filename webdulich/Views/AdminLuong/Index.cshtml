@@ -1,0 +1,134 @@
+@model List<webdulich.Models.PhieuLuong>
+@* Bảng lương tháng (AdminLuongController.Index, RB-46) *@
+@{
+    int nam = ViewBag.Nam, thang = ViewBag.Thang;
+    bool tuongLai = ViewBag.TuongLai;
+    ViewData["Title"] = "Lương nhân viên";
+    var dau = new DateTime(nam, thang, 1);
+    var truoc = dau.AddMonths(-1);
+    var sau = dau.AddMonths(1);
+    int soChuaChot = Model.Count(p => !p.DaChot && p.CoMucLuong);
+    string Tien(decimal x) => x.ToString("N0") + " đ";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page lg">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Lương nhân viên</h1>
+            <p>Lương = lương cơ bản + ngày đi tour × tiền công ngày − ngày nghỉ quá @ViewBag.SoNgayPhepNam ngày phép năm × (lương cơ bản ÷ @ViewBag.SoNgayCongChuan) + thưởng, phạt.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="lg-thanh">
+        <div class="lg-thang">
+            <a asp-action="Index" asp-route-nam="@truoc.Year" asp-route-thang="@truoc.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng trước">←</a>
+            <h2>Tháng @thang/@nam</h2>
+            <a asp-action="Index" asp-route-nam="@sau.Year" asp-route-thang="@sau.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng sau">→</a>
+        </div>
+        @if (!tuongLai && soChuaChot > 0)
+        {
+            <form asp-action="Chot" method="post"
+                  data-xac-nhan-tieu-de="Chốt lương tháng @thang/@nam?"
+                  data-xac-nhan="Số liệu của @soChuaChot người sẽ được cố định. Sau khi chốt, sửa phân công hay đơn nghỉ không còn làm đổi lương tháng này; muốn sửa thì mở lại từng bảng lương chưa trả."
+                  data-xac-nhan-nut="Chốt lương">
+                <input type="hidden" name="nam" value="@nam" />
+                <input type="hidden" name="thang" value="@thang" />
+                <button type="submit" class="tv-btn tv-btn-chinh">Chốt cả tháng (@soChuaChot người)</button>
+            </form>
+        }
+    </div>
+
+    <div class="ad-kpis">
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Tổng quỹ lương</span><strong>@Tien(Model.Sum(p => p.Tong))</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-check" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đã chốt</span><strong>@Model.Count(p => p.DaChot)/@Model.Count</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đã trả</span><strong>@Tien(Model.Where(p => p.DaTra).Sum(p => p.Tong))</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Ngày đi tour</span><strong>@Model.Sum(p => p.SoNgayDiTour)</strong></span>
+        </div>
+    </div>
+
+    @if (tuongLai)
+    {
+        <p class="lg-canh-bao">Tháng này chưa tới: số dưới đây chỉ tạm tính theo phân công đã có, chưa chốt được.</p>
+    }
+
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table lg-bang-thang">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th><th>Lương cơ bản</th><th>Ngày tour</th><th>Tiền công</th>
+                        <th>Trừ nghỉ</th><th>Thưởng, phạt</th><th>Thực nhận</th><th>Trạng thái</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        var tk = p.NhanVien.TaiKhoan;
+                        <tr>
+                            <td>
+                                <a asp-action="ChiTiet" asp-route-id="@p.NhanVien.Id" asp-route-nam="@nam" asp-route-thang="@thang"><strong>@tk?.HoTen</strong></a>
+                                <div class="lg-phu">@webdulich.Models.VaiTroHienThi.Ten(tk?.VaiTro)@(p.NhanVien.DangLamViec ? "" : " · đã nghỉ việc")</div>
+                            </td>
+                            @if (!p.CoMucLuong)
+                            {
+                                <td colspan="6"><a asp-action="MucLuong" asp-route-id="@p.NhanVien.Id" class="tv-link tv-link-di">Chưa đặt mức lương</a></td>
+                            }
+                            else
+                            {
+                                <td>@Tien(p.LuongCoBan)</td>
+                                <td>@p.SoNgayDiTour</td>
+                                <td>@Tien(p.TienCong)</td>
+                                <td>@(p.SoNgayNghiTruLuong > 0 ? "− " + Tien(p.TienTruNghi) + " (" + p.SoNgayNghiTruLuong + " ngày)" : "–")</td>
+                                <td>@(p.DsKhoan.Any() ? (p.TongKhoan >= 0 ? "+ " : "− ") + Tien(Math.Abs(p.TongKhoan)) : "–")</td>
+                                <td><strong>@Tien(p.Tong)</strong></td>
+                            }
+                            <td><span class="ad-badge @(p.DaChot ? "" : "canh-bao")">@p.TrangThai</span></td>
+                            <td>
+                                <div class="lg-nut">
+                                    <a asp-action="ChiTiet" asp-route-id="@p.NhanVien.Id" asp-route-nam="@nam" asp-route-thang="@thang" class="tv-btn tv-btn-vien ad-btn-nho">Chi tiết</a>
+                                    @if (p.DaChot && !p.DaTra)
+                                    {
+                                        <form asp-action="DaTra" method="post"
+                                              data-xac-nhan-tieu-de="Đã trả lương cho @tk?.HoTen?"
+                                              data-xac-nhan="Đánh dấu đã chuyển @Tien(p.Tong) lương tháng @thang/@nam. Sau khi đánh dấu, bảng lương không mở lại được nữa."
+                                              data-xac-nhan-nut="Đã trả">
+                                            <input type="hidden" name="id" value="@p.NhanVien.Id" />
+                                            <input type="hidden" name="nam" value="@nam" />
+                                            <input type="hidden" name="thang" value="@thang" />
+                                            <button type="submit" class="tv-btn tv-btn-chinh ad-btn-nho">Đã trả</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

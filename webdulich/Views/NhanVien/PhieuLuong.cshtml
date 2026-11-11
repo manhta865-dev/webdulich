@@ -1,0 +1,44 @@
+@model webdulich.Models.PhieuLuong
+@* Phiếu lương của nhân viên đang đăng nhập (NhanVienController.PhieuLuong, RB-46). Không có nút sửa. *@
+@{
+    var p = Model;
+    ViewData["Title"] = "Phiếu lương";
+    var dsDaChot = ViewBag.DsThangDaChot as List<(int Nam, int Thang, bool DaTra)> ?? new();
+    var dau = new DateTime(p.Nam, p.Thang, 1);
+    var truoc = dau.AddMonths(-1);
+    var sau = dau.AddMonths(1);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page lg">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Phiếu lương</h1>
+            <p>Lương tháng gồm lương cơ bản, tiền công các ngày đi tour được phân công, trừ ngày nghỉ quá @p.SoNgayPhepNam ngày phép năm, và các khoản thưởng, phạt.</p>
+        </div>
+    </div>
+
+    <div class="lg-thanh">
+        <div class="lg-thang">
+            <a asp-action="PhieuLuong" asp-route-nam="@truoc.Year" asp-route-thang="@truoc.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng trước">←</a>
+            <h2>Tháng @p.Thang/@p.Nam</h2>
+            <a asp-action="PhieuLuong" asp-route-nam="@sau.Year" asp-route-thang="@sau.Month" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Tháng sau">→</a>
+        </div>
+        @if (dsDaChot.Any())
+        {
+            <div class="tv-chips">
+                @foreach (var (n, t, daTra) in dsDaChot.Take(6))
+                {
+                    <a asp-action="PhieuLuong" asp-route-nam="@n" asp-route-thang="@t"
+                       class="tv-chip@(n == p.Nam && t == p.Thang ? " active" : "")">@t/@n@(daTra ? "" : " · chưa trả")</a>
+                }
+            </div>
+        }
+    </div>
+
+    <partial name="_PhieuLuong" model="p" />
+</div>

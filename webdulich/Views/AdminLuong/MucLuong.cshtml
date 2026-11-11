@@ -1,0 +1,115 @@
+@model webdulich.Models.MucLuongForm
+@using webdulich.Models
+@* Mức lương của một nhân viên, có lịch sử (AdminLuongController.MucLuong, RB-46) *@
+@{
+    var nv = ViewBag.NhanVien as NhanVien;
+    var dsMuc = ViewBag.DsMuc as List<MucLuongNhanVien> ?? new List<MucLuongNhanVien>();
+    ViewData["Title"] = "Mức lương " + nv?.TaiKhoan?.HoTen;
+    var homNay = GioVN.HomNay;
+    var dangApDung = dsMuc.FirstOrDefault(m => m.ApDungTu <= homNay);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page lg">
+    <a asp-action="ChiTiet" asp-route-id="@nv?.Id" class="tv-link tk-ve">Lương của @nv?.TaiKhoan?.HoTen</a>
+
+    <div class="ad-pagehead">
+        <div>
+            <h1>Mức lương: @nv?.TaiKhoan?.HoTen</h1>
+            <p>Đổi mức lương thì thêm mức mới với ngày áp dụng; các tháng trước vẫn tính theo mức cũ.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+
+    <div class="dn-luoi">
+        <section class="ad-card">
+            <h2 class="lg-h2">Đặt mức lương mới</h2>
+            <form asp-action="MucLuong" method="post" novalidate>
+                <input type="hidden" asp-for="NhanVienId" />
+                <div class="dn-ngay">
+                    <div>
+                        <label asp-for="LuongCoBan" class="form-label">Lương cơ bản mỗi tháng (đ)</label>
+                        <input asp-for="LuongCoBan" type="number" min="0" step="100000" class="form-control" placeholder="Ví dụ 6000000" />
+                        <span asp-validation-for="LuongCoBan" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="TienCongNgay" class="form-label">Tiền công mỗi ngày đi tour (đ)</label>
+                        <input asp-for="TienCongNgay" type="number" min="0" step="10000" class="form-control" placeholder="Ví dụ 300000" />
+                        <span asp-validation-for="TienCongNgay" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="ApDungTu" class="form-label">Áp dụng từ ngày</label>
+                        <input asp-for="ApDungTu" class="form-control" />
+                        <span asp-validation-for="ApDungTu" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+                        <input asp-for="GhiChu" class="form-control" placeholder="Ví dụ: tăng lương sau 1 năm" />
+                        <span asp-validation-for="GhiChu" class="text-danger"></span>
+                    </div>
+                </div>
+                <button type="submit" class="tv-btn tv-btn-chinh mt-3">Lưu mức lương</button>
+            </form>
+        </section>
+
+        <aside class="dn-tom">
+            <div class="ad-kpi">
+                <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
+                <span class="ad-kpi-body"><span class="ad-kpi-label">Lương cơ bản hiện tại</span><strong>@(dangApDung != null ? dangApDung.LuongCoBan.ToString("N0") + " đ" : "Chưa đặt")</strong></span>
+            </div>
+            <div class="ad-kpi">
+                <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg></span>
+                <span class="ad-kpi-body"><span class="ad-kpi-label">Tiền công ngày hiện tại</span><strong>@(dangApDung != null ? dangApDung.TienCongNgay.ToString("N0") + " đ" : "Chưa đặt")</strong></span>
+            </div>
+        </aside>
+    </div>
+
+    <section class="ad-table-card lg-khoi">
+        <h3>Lịch sử mức lương</h3>
+        @if (dsMuc.Any())
+        {
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead><tr><th>Áp dụng từ</th><th>Lương cơ bản</th><th>Tiền công ngày</th><th>Ghi chú</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var m in dsMuc)
+                        {
+                            <tr>
+                                <td>@m.ApDungTu.ToString("dd/MM/yyyy")</td>
+                                <td>@m.LuongCoBan.ToString("N0") đ</td>
+                                <td>@m.TienCongNgay.ToString("N0") đ</td>
+                                <td>@m.GhiChu</td>
+                                <td>
+                                    @if (m == dangApDung)
+                                    {
+                                        <span class="ad-badge">Đang áp dụng</span>
+                                    }
+                                    else if (m.ApDungTu > homNay)
+                                    {
+                                        <span class="ad-badge canh-bao">Sắp áp dụng</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="lg-phu">Chưa có mức lương nào.</p>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

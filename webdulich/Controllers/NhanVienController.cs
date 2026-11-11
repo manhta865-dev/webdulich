@@ -178,6 +178,26 @@ namespace webdulich.Controllers
             return View(model);
         }
 
+        // ---------- Phiếu lương (RB-46) ----------
+        // Nhân viên xem lương của mình: tháng đang chọn (tạm tính hoặc đã chốt) và các tháng đã chốt
+        public IActionResult PhieuLuong(int? nam, int? thang, [FromServices] IConfiguration cauHinh)
+        {
+            var nv = NhanVienDangNhap();
+            if (nv == null) return RedirectToAction("DangNhap", "TaiKhoan");
+
+            var homNay = GioVN.HomNay;
+            int n = nam is >= 2000 and <= 2100 ? nam.Value : homNay.Year;
+            int t = thang is >= 1 and <= 12 ? thang.Value : homNay.Month;
+            ViewBag.DsThangDaChot = _context.BangLuongs.AsNoTracking()
+                .Where(b => b.NhanVienId == nv.Id)
+                .OrderByDescending(b => b.Nam).ThenByDescending(b => b.Thang)
+                .Select(b => new { b.Nam, b.Thang, DaTra = b.NgayTra != null })
+                .AsEnumerable()
+                .Select(b => (b.Nam, b.Thang, b.DaTra))
+                .ToList();
+            return View(TinhLuong.Tinh(_context, nv, n, t, TinhLuong.SoNgayPhepNam(cauHinh), TinhLuong.SoNgayCongChuan(cauHinh)));
+        }
+
         // ---------- Đơn xin nghỉ (RB-45) ----------
 
         // Nhân viên đang đăng nhập (hướng dẫn viên hoặc tài xế), null nếu không phải
