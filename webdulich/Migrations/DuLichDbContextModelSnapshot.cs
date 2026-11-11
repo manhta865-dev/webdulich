@@ -531,6 +531,64 @@ namespace webdulich.Migrations
                         });
                 });
 
+            modelBuilder.Entity("webdulich.Models.DonXinNghi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DenNgay")
+                        .HasColumnType("date");
+
+                    b.Property<string>("GhiChuDuyet")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("LyDo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("NgayDuyet")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("NgayGui")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("NguoiDuyetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NhanVienId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("TuNgay")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NguoiDuyetId");
+
+                    b.HasIndex("TrangThai");
+
+                    b.HasIndex("NhanVienId", "TuNgay");
+
+                    b.ToTable("DonXinNghis", t =>
+                        {
+                            t.HasCheckConstraint("CK_DonNghi_Duyet", "([TrangThai] IN ('ChoDuyet','DaRut') AND [NguoiDuyetId] IS NULL AND [NgayDuyet] IS NULL) OR ([TrangThai] IN ('DaDuyet','TuChoi') AND [NguoiDuyetId] IS NOT NULL AND [NgayDuyet] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_DonNghi_Ngay", "[DenNgay] >= [TuNgay]");
+
+                            t.HasCheckConstraint("CK_DonNghi_TrangThai", "[TrangThai] IN ('ChoDuyet','DaDuyet','TuChoi','DaRut')");
+                        });
+                });
+
             modelBuilder.Entity("webdulich.Models.GiaoDichThanhToan", b =>
                 {
                     b.Property<int>("Id")
@@ -1407,6 +1465,24 @@ namespace webdulich.Migrations
                     b.Navigation("LichKhoiHanhTour");
 
                     b.Navigation("TaiKhoan");
+                });
+
+            modelBuilder.Entity("webdulich.Models.DonXinNghi", b =>
+                {
+                    b.HasOne("webdulich.Models.TaiKhoan", "NguoiDuyet")
+                        .WithMany()
+                        .HasForeignKey("NguoiDuyetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("webdulich.Models.NhanVien", "NhanVien")
+                        .WithMany()
+                        .HasForeignKey("NhanVienId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NguoiDuyet");
+
+                    b.Navigation("NhanVien");
                 });
 
             modelBuilder.Entity("webdulich.Models.GiaoDichThanhToan", b =>

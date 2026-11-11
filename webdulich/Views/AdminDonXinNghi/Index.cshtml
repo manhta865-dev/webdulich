@@ -1,0 +1,123 @@
+@model List<webdulich.Models.DonXinNghi>
+@using webdulich.Models
+@* Duyệt đơn xin nghỉ của nhân viên (AdminDonXinNghiController, RB-45) *@
+@{
+    ViewData["Title"] = "Đơn xin nghỉ";
+    string loc = ViewBag.Loc;
+    int soChoDuyet = ViewBag.SoChoDuyet, dangNghi = ViewBag.DangNghiHomNay;
+    var chuyenTrung = ViewBag.ChuyenTrung as Dictionary<int, List<ChuyenTrungNgayNghi>> ?? new();
+    var dsLoc = new[] { ("cho", "Chờ duyệt (" + soChoDuyet + ")"), ("da", "Đã xử lý"), ("tat", "Tất cả") };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page dn">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Đơn xin nghỉ</h1>
+            <p>Hướng dẫn viên, tài xế gửi đơn nghỉ theo ngày. Người đã được duyệt nghỉ sẽ không được phân công vào chuyến trùng ngày.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">
+            @TempData["success"]
+            @if (TempData["canDoiPhanCong"] != null)
+            {
+                <a asp-controller="Admin" asp-action="PhanCongTour" class="tv-link tv-link-di">Mở Phân công tour</a>
+            }
+        </div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="ad-kpis dn-kpi">
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đơn chờ duyệt</span><strong>@soChoDuyet</strong></span>
+        </div>
+        <div class="ad-kpi">
+            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg></span>
+            <span class="ad-kpi-body"><span class="ad-kpi-label">Đang nghỉ hôm nay</span><strong>@dangNghi</strong></span>
+        </div>
+    </div>
+
+    <div class="tv-chips dn-loc">
+        @foreach (var (gt, ten) in dsLoc)
+        {
+            <a asp-action="Index" asp-route-loc="@gt" class="tv-chip@(loc == gt ? " active" : "")">@ten</a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="tv-empty"><p>@(loc == "cho" ? "Không có đơn nào đang chờ duyệt." : "Chưa có đơn xin nghỉ nào.")</p></div>
+    }
+    else
+    {
+        <div class="dn-the-ds">
+            @foreach (var d in Model)
+            {
+                chuyenTrung.TryGetValue(d.Id, out var trung);
+                var tk = d.NhanVien?.TaiKhoan;
+                <article class="dn-the">
+                    <div class="dn-the-dau">
+                        <div>
+                            <strong>@tk?.HoTen</strong>
+                            <span class="ad-role @VaiTroHienThi.Lop(tk?.VaiTro)">@VaiTroHienThi.Ten(tk?.VaiTro)</span>
+                        </div>
+                        <span class="ad-badge @TrangThaiDonNghi.Lop(d.TrangThai)">@TrangThaiDonNghi.Ten(d.TrangThai)</span>
+                    </div>
+                    <p class="dn-the-ngay">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+                        @d.TuNgay.ToString("dd/MM/yyyy")@(d.SoNgay > 1 ? " – " + d.DenNgay.ToString("dd/MM/yyyy") : "")
+                        <span>(@d.SoNgay ngày)</span>
+                    </p>
+                    <p class="dn-ly-do">@d.LyDo</p>
+                    <p class="dn-phu">Gửi lúc @d.NgayGui.ToString("dd/MM/yyyy HH:mm")</p>
+
+                    @if (trung != null && trung.Any())
+                    {
+                        <div class="dn-trung">
+                            <strong>Trùng @trung.Count chuyến đã phân công</strong>
+                            <ul>
+                                @foreach (var c in trung)
+                                {
+                                    <li>@c.TenTour, @c.NgayDi.ToString("dd/MM")@(c.NgayVe > c.NgayDi ? " – " + c.NgayVe.ToString("dd/MM") : "")</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (d.TrangThai == TrangThaiDonNghi.ChoDuyet)
+                    {
+                        <form asp-action="XuLy" asp-route-id="@d.Id" method="post" class="dn-xu-ly">
+                            <input type="text" name="ghiChu" maxlength="300" class="form-control"
+                                   placeholder="Ghi chú cho nhân viên (bắt buộc khi từ chối)" aria-label="Ghi chú cho nhân viên" />
+                            <div class="dn-xu-ly-nut">
+                                <button type="submit" name="dongY" value="false" class="tv-btn tv-btn-huy ad-btn-nho">Từ chối</button>
+                                <button type="submit" name="dongY" value="true" class="tv-btn tv-btn-chinh ad-btn-nho">Duyệt</button>
+                            </div>
+                        </form>
+                    }
+                    else if (d.NgayDuyet.HasValue)
+                    {
+                        <p class="dn-phu">
+                            @(d.TrangThai == TrangThaiDonNghi.DaDuyet ? "Duyệt" : "Từ chối") bởi @d.NguoiDuyet?.HoTen lúc @d.NgayDuyet.Value.ToString("dd/MM HH:mm")
+                            @if (!string.IsNullOrEmpty(d.GhiChuDuyet))
+                            {
+                                <br /><span>Ghi chú: @d.GhiChuDuyet</span>
+                            }
+                        </p>
+                    }
+                </article>
+            }
+        </div>
+    }
+</div>

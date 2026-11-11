@@ -674,3 +674,17 @@ p a:not([class]):hover, li a:not([class]):hover, td a:not([class]):hover { text-
 
 /* Ảnh và bản đồ không đổi màu; khung xem trước ở chế độ tối dịu lại chút */
 :root[data-theme="dark"] .tv-footer-map iframe { filter: brightness(0.85); }
+
+/* Số việc đang chờ cạnh mục menu admin (đơn xin nghỉ chờ duyệt) */
+.tv-side-dem {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 99px;
+    background: var(--tv-loi);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+}

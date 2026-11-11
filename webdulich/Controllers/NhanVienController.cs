@@ -177,5 +177,101 @@ namespace webdulich.Controllers
 
             return View(model);
         }
+
+        // ---------- Đơn xin nghỉ (RB-45) ----------
+
+        // Nhân viên đang đăng nhập (hướng dẫn viên hoặc tài xế), null nếu không phải
+        private NhanVien? NhanVienDangNhap()
+        {
+            var role = HttpContext.Session.GetString("role");
+            var taiKhoanId = HttpContext.Session.GetInt32("taiKhoanId");
+            if (!taiKhoanId.HasValue || (role != "huongdanvien" && role != "taixe")) return null;
+            return _context.NhanViens.Include(x => x.TaiKhoan).FirstOrDefault(x => x.TaiKhoanId == taiKhoanId.Value);
+        }
+
+        private void NapDanhSachDon(NhanVien nv)
+        {
+            ViewBag.NhanVien = nv;
+            var ds = _context.DonXinNghis.AsNoTracking()
+                .Include(d => d.NguoiDuyet)
+                .Where(d => d.NhanVienId == nv.Id)
+                .OrderByDescending(d => d.NgayGui)
+                .ToList();
+            ViewBag.DsDon = ds;
+            // Chuyến đã phân công rơi vào ngày nghỉ của đơn còn hiệu lực, để nhân viên biết trước
+            ViewBag.ChuyenTrung = ds.Where(d => d.TrangThai is TrangThaiDonNghi.ChoDuyet or TrangThaiDonNghi.DaDuyet)
+                .ToDictionary(d => d.Id, d => XuLyDonNghi.ChuyenTrung(_context, nv.Id, d.TuNgay, d.DenNgay));
+        }
+
+        public IActionResult DonXinNghi()
+        {
+            var nv = NhanVienDangNhap();
+            if (nv == null) return RedirectToAction("DangNhap", "TaiKhoan");
+            NapDanhSachDon(nv);
+            var homNay = GioVN.HomNay;
+            return View(new DonXinNghiForm { TuNgay = homNay.AddDays(1), DenNgay = homNay.AddDays(1) });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DonXinNghi(DonXinNghiForm form)
+        {
+            var nv = NhanVienDangNhap();
+            if (nv == null) return RedirectToAction("DangNhap", "TaiKhoan");
+
+            var homNay = GioVN.HomNay;
+            if (form.TuNgay.HasValue && form.TuNgay.Value.Date < homNay)
+                ModelState.AddModelError(nameof(form.TuNgay), "Không xin nghỉ cho ngày đã qua.");
+            if (form.TuNgay.HasValue && form.DenNgay.HasValue)
+            {
+                if (form.DenNgay.Value.Date < form.TuNgay.Value.Date)
+                    ModelState.AddModelError(nameof(form.DenNgay), "Ngày kết thúc phải từ ngày bắt đầu trở đi.");
+                else if ((form.DenNgay.Value.Date - form.TuNgay.Value.Date).Days + 1 > 60)
+                    ModelState.AddModelError(nameof(form.DenNgay), "Mỗi đơn xin nghỉ tối đa 60 ngày.");
+                else if (_context.DonXinNghis.Any(d => d.NhanVienId == nv.Id
+                    && (d.TrangThai == TrangThaiDonNghi.ChoDuyet || d.TrangThai == TrangThaiDonNghi.DaDuyet)
+                    && d.TuNgay <= form.DenNgay.Value.Date && d.DenNgay >= form.TuNgay.Value.Date))
+                    ModelState.AddModelError(nameof(form.TuNgay), "Bạn đã có đơn chờ duyệt hoặc đã duyệt trùng những ngày này.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                NapDanhSachDon(nv);
+                return View(form);
+            }
+
+            _context.DonXinNghis.Add(new DonXinNghi
+            {
+                NhanVienId = nv.Id,
+                TuNgay = form.TuNgay!.Value.Date,
+                DenNgay = form.DenNgay!.Value.Date,
+                LyDo = form.LyDo!.Trim(),
+                TrangThai = TrangThaiDonNghi.ChoDuyet,
+                NgayGui = GioVN.BayGio
+            });
+            _context.SaveChanges();
+
+            int soChuyen = XuLyDonNghi.ChuyenTrung(_context, nv.Id, form.TuNgay.Value, form.DenNgay.Value).Count;
+            TempData["success"] = soChuyen == 0
+                ? "Đã gửi đơn xin nghỉ, chờ quản trị viên duyệt."
+                : $"Đã gửi đơn xin nghỉ. Lưu ý: những ngày này bạn đang được phân công {soChuyen} chuyến, quản trị viên sẽ sắp xếp người thay khi duyệt.";
+            return RedirectToAction("DonXinNghi");
+        }
+
+        // Rút đơn khi còn chờ duyệt. Câu UPDATE có điều kiện để không rút nhầm đơn admin vừa duyệt.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RutDonXinNghi(int id)
+        {
+            var nv = NhanVienDangNhap();
+            if (nv == null) return RedirectToAction("DangNhap", "TaiKhoan");
+
+            int soDong = _context.Database.ExecuteSqlInterpolated(
+                $"UPDATE DonXinNghis SET TrangThai = {TrangThaiDonNghi.DaRut} WHERE Id = {id} AND NhanVienId = {nv.Id} AND TrangThai = {TrangThaiDonNghi.ChoDuyet}");
+            TempData[soDong == 1 ? "success" : "error"] = soDong == 1
+                ? "Đã rút đơn xin nghỉ."
+                : "Không rút được: đơn đã được xử lý hoặc không phải của bạn.";
+            return RedirectToAction("DonXinNghi");
+        }
     }
 }

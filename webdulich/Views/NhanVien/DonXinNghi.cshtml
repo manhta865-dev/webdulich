@@ -1,0 +1,151 @@
+@model webdulich.Models.DonXinNghiForm
+@using webdulich.Models
+@* Đơn xin nghỉ của nhân viên (RB-45): gửi đơn, xem trạng thái, rút đơn còn chờ duyệt. *@
+@{
+    ViewData["Title"] = "Đơn xin nghỉ";
+    var dsDon = ViewBag.DsDon as List<DonXinNghi> ?? new List<DonXinNghi>();
+    var chuyenTrung = ViewBag.ChuyenTrung as Dictionary<int, List<ChuyenTrungNgayNghi>> ?? new();
+    var homNay = GioVN.HomNay;
+    int soChoDuyet = dsDon.Count(d => d.TrangThai == TrangThaiDonNghi.ChoDuyet);
+    int soNgayDaNghi = dsDon.Where(d => d.TrangThai == TrangThaiDonNghi.DaDuyet && d.TuNgay.Year == homNay.Year).Sum(d => d.SoNgay);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page dn">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Đơn xin nghỉ</h1>
+            <p>Gửi đơn trước ngày nghỉ để quản trị viên kịp sắp xếp người thay cho các chuyến bạn đang được phân công.</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+
+    <div class="dn-luoi">
+        <section class="ad-card dn-form">
+            <h2>Gửi đơn mới</h2>
+            <form asp-action="DonXinNghi" method="post" novalidate>
+                <div class="dn-ngay">
+                    <div>
+                        <label asp-for="TuNgay" class="form-label">Từ ngày</label>
+                        <input asp-for="TuNgay" class="form-control" min="@homNay.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="TuNgay" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="DenNgay" class="form-label">Đến ngày</label>
+                        <input asp-for="DenNgay" class="form-control" min="@homNay.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DenNgay" class="text-danger"></span>
+                    </div>
+                </div>
+                <p class="dn-so-ngay" id="dnSoNgay" aria-live="polite"></p>
+                <div class="mb-3">
+                    <label asp-for="LyDo" class="form-label">Lý do</label>
+                    <textarea asp-for="LyDo" class="form-control" rows="4" maxlength="500"
+                              placeholder="Ví dụ: việc gia đình, khám sức khỏe, nghỉ phép năm…"></textarea>
+                    <span asp-validation-for="LyDo" class="text-danger"></span>
+                </div>
+                <button type="submit" class="tv-btn tv-btn-chinh">Gửi đơn</button>
+            </form>
+        </section>
+
+        <aside class="dn-tom">
+            <div class="ad-kpi">
+                <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg></span>
+                <span class="ad-kpi-body"><span class="ad-kpi-label">Đơn đang chờ duyệt</span><strong>@soChoDuyet</strong></span>
+            </div>
+            <div class="ad-kpi">
+                <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+                <span class="ad-kpi-body"><span class="ad-kpi-label">Ngày nghỉ đã duyệt năm @homNay.Year</span><strong>@soNgayDaNghi</strong></span>
+            </div>
+        </aside>
+    </div>
+
+    <section class="ad-table-card dn-ds">
+        <h2>Đơn đã gửi</h2>
+        @if (dsDon.Any())
+        {
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr><th>Thời gian nghỉ</th><th>Lý do</th><th>Trạng thái</th><th>Phản hồi</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in dsDon)
+                        {
+                            chuyenTrung.TryGetValue(d.Id, out var trung);
+                            <tr>
+                                <td>
+                                    <strong>@d.TuNgay.ToString("dd/MM/yyyy")@(d.SoNgay > 1 ? " – " + d.DenNgay.ToString("dd/MM/yyyy") : "")</strong>
+                                    <div class="dn-phu">@d.SoNgay ngày · gửi @d.NgayGui.ToString("dd/MM HH:mm")</div>
+                                    @if (trung != null && trung.Any())
+                                    {
+                                        <div class="dn-trung">Trùng @trung.Count chuyến: @string.Join(", ", trung.Select(c => c.TenTour + " " + c.NgayDi.ToString("dd/MM")))</div>
+                                    }
+                                </td>
+                                <td class="dn-ly-do">@d.LyDo</td>
+                                <td><span class="ad-badge @TrangThaiDonNghi.Lop(d.TrangThai)">@TrangThaiDonNghi.Ten(d.TrangThai)</span></td>
+                                <td>
+                                    @if (d.NgayDuyet.HasValue)
+                                    {
+                                        <div class="dn-phu">@d.NguoiDuyet?.HoTen, @d.NgayDuyet.Value.ToString("dd/MM HH:mm")</div>
+                                        @if (!string.IsNullOrEmpty(d.GhiChuDuyet))
+                                        {
+                                            <div>@d.GhiChuDuyet</div>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    @if (d.TrangThai == TrangThaiDonNghi.ChoDuyet)
+                                    {
+                                        <form asp-action="RutDonXinNghi" asp-route-id="@d.Id" method="post"
+                                              data-xac-nhan-tieu-de="Rút đơn xin nghỉ?"
+                                              data-xac-nhan="Đơn nghỉ từ @d.TuNgay.ToString("dd/MM/yyyy") sẽ không còn được duyệt. Muốn nghỉ lại thì bạn gửi đơn mới."
+                                              data-xac-nhan-nut="Rút đơn">
+                                            <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Rút đơn</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="dn-rong">Bạn chưa gửi đơn xin nghỉ nào.</p>
+        }
+    </section>
+</div>
+
+<script>
+    // Hiện số ngày nghỉ ngay khi chọn ngày
+    (function () {
+        var tu = document.getElementById("TuNgay"), den = document.getElementById("DenNgay"), ra = document.getElementById("dnSoNgay");
+        function capNhat() {
+            if (tu.value && den.value < tu.value) den.value = tu.value;
+            den.min = tu.value || den.min;
+            if (!tu.value || !den.value) { ra.textContent = ""; return; }
+            var n = Math.round((new Date(den.value) - new Date(tu.value)) / 86400000) + 1;
+            ra.textContent = n > 0 ? "Nghỉ " + n + " ngày" : "";
+        }
+        tu.addEventListener("change", capNhat);
+        den.addEventListener("change", capNhat);
+        capNhat();
+    })();
+</script>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

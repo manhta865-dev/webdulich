@@ -1170,3 +1170,50 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     .tk-ho-so { flex-direction: column; text-align: center; }
     .tk-ho-so-chu ul { justify-content: center; }
 }
+
+/* ---------- Đơn xin nghỉ (NhanVien/DonXinNghi, AdminDonXinNghi, RB-45) ---------- */
+.dn-luoi { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--tv-k4); align-items: start; margin-bottom: var(--tv-k4); }
+.dn-form h2, .dn-ds h2 { margin: 0 0 var(--tv-k3); font-size: var(--tv-cs-lon); font-weight: 700; }
+.dn-ngay { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k3); }
+.dn-so-ngay { min-height: 1.4em; margin: var(--tv-k2) 0; font-size: var(--tv-cs-nho); font-weight: 600; color: var(--tv-nhan); }
+.dn-tom { display: grid; gap: var(--tv-k3); }
+.dn-ds { padding: var(--tv-k4); }
+.dn-phu { margin: 2px 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.dn-ly-do { max-width: 360px; white-space: pre-line; }
+.dn-rong { margin: 0; color: var(--tv-chu-phu); }
+.dn-trung {
+    margin-top: var(--tv-k2);
+    padding: var(--tv-k2) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-canh-bao-nhat);
+    color: var(--tv-canh-bao);
+    font-size: var(--tv-cs-nho);
+}
+.dn-trung ul { margin: 4px 0 0; padding-left: var(--tv-k4); }
+.dn-kpi { margin-bottom: var(--tv-k4); }
+.dn-loc { margin-bottom: var(--tv-k4); }
+.dn-the-ds { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--tv-k4); }
+.dn-the {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tv-k2);
+    padding: var(--tv-k4);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-be-mat);
+}
+.dn-the-dau { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--tv-k2); }
+.dn-the-dau > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.dn-the-dau strong { font-size: var(--tv-cs-vua); }
+.dn-the-ngay { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 700; }
+.dn-the-ngay .tv-icon { width: 16px; height: 16px; color: var(--tv-nhan); }
+.dn-the-ngay span { font-weight: 500; color: var(--tv-chu-phu); }
+.dn-the .dn-ly-do { max-width: none; margin: 0; }
+.dn-xu-ly { display: grid; gap: var(--tv-k2); margin-top: auto; padding-top: var(--tv-k2); border-top: 1px solid var(--tv-vien); }
+.dn-xu-ly-nut { display: flex; justify-content: flex-end; gap: var(--tv-k2); }
+@media (max-width: 860px) {
+    .dn-luoi { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+    .dn-ngay, .dn-the-ds { grid-template-columns: 1fr; }
+}

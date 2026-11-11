@@ -46,7 +46,9 @@
     bool moTour = LaAdminCo(mucTour) || LaAdminCo(mucLichDi) || LaAdminCo(mucLichTrinh) || LaAdminCo(mucPhanCong);
     bool moKinhDoanh = LaAdminCo(mucDon) || LaAdminCo(mucKhuyenMai) || LaAdminCo(mucDoanhThu);
     bool moNoiDung = controllerName is "AdminBaiViet" or "AdminVideo" or "AdminDanhGia";
-    bool moConNguoi = LaAdminCo(mucTinNhan) || LaAdminCo(mucTaiKhoan) || LaAdminCo(mucNhanSu);
+    bool moConNguoi = LaAdminCo(mucTinNhan) || LaAdminCo(mucTaiKhoan) || LaAdminCo(mucNhanSu) || controllerName == "AdminDonXinNghi";
+    // Số đơn xin nghỉ đang chờ duyệt, hiện cạnh mục menu của admin (RB-45)
+    int soDonNghiCho = currentRole == "admin" ? ChatDb.DonXinNghis.Count(d => d.TrangThai == TrangThaiDonNghi.ChoDuyet) : 0;
     string? nhomHienTai = moTour ? "Tour và lịch" : moKinhDoanh ? "Đơn và doanh thu" : moNoiDung ? "Nội dung" : moConNguoi ? "Khách và nhân sự" : null;
 }
 
@@ -137,6 +139,7 @@
                     <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Tin nhắn</span></a>
                     <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg><span>Tài khoản</span></a>
                     <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg><span>Nhân sự</span></a>
+                    <a asp-controller="AdminDonXinNghi" asp-action="Index" class="@Active("AdminDonXinNghi")"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Đơn xin nghỉ</span>@if (soDonNghiCho > 0) {<b class="tv-side-dem" aria-label="@soDonNghiCho đơn chờ duyệt">@soDonNghiCho</b>}</a>
                 </details>
             </aside>
             <div class="tv-scrim" id="tvScrim"></div>
@@ -203,6 +206,10 @@
                 <a asp-controller="NhanVien" asp-action="LichLamViec" class="@Active("NhanVien", "LichLamViec")">
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
                     <span>Lịch làm việc</span>
+                </a>
+                <a asp-controller="NhanVien" asp-action="DonXinNghi" class="@Active("NhanVien", "DonXinNghi")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                    <span>Đơn xin nghỉ</span>
                 </a>
             </aside>
             <div class="tv-scrim" id="tvScrim"></div>

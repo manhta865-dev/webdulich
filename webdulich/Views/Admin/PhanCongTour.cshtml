@@ -18,9 +18,18 @@
     <div class="ad-pagehead">
         <div>
             <h1>Phân công tour</h1>
-            <p>Chọn lịch khởi hành, hướng dẫn viên và tài xế phụ trách tour.</p>
+            <p>Chọn lịch khởi hành, hướng dẫn viên và tài xế phụ trách tour. Người đã được duyệt nghỉ trùng ngày chuyến không phân công được.</p>
         </div>
     </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
 
     <section class="ad-form-block">
         <h2>Thêm phân công</h2>

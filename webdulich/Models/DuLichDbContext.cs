@@ -36,6 +36,7 @@ namespace webdulich.Models
         public DbSet<ChoNgoiChuyenDi> ChoNgoiChuyenDis { get; set; }
         public DbSet<ChoKhongMoBan> ChoKhongMoBans { get; set; }
         public DbSet<DanhGiaTour> DanhGiaTours { get; set; }
+        public DbSet<DonXinNghi> DonXinNghis { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -122,6 +123,22 @@ namespace webdulich.Models
                 e.Property(x => x.KinhDo).HasPrecision(9, 6);
                 e.ToTable(t => t.HasCheckConstraint("CK_DiaDiem_ToaDo",
                     "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN -90 AND 90 AND [KinhDo] BETWEEN -180 AND 180)"));
+            });
+            // Đơn xin nghỉ (RB-45): nhân viên đã có đơn thì không xóa được (Restrict), người duyệt cũng vậy
+            modelBuilder.Entity<DonXinNghi>(e =>
+            {
+                e.HasIndex(x => new { x.NhanVienId, x.TuNgay });
+                e.HasIndex(x => x.TrangThai);
+                e.HasOne(x => x.NhanVien).WithMany().HasForeignKey(x => x.NhanVienId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiDuyet).WithMany().HasForeignKey(x => x.NguoiDuyetId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_DonNghi_Ngay", "[DenNgay] >= [TuNgay]");
+                    t.HasCheckConstraint("CK_DonNghi_TrangThai", "[TrangThai] IN ('ChoDuyet','DaDuyet','TuChoi','DaRut')");
+                    t.HasCheckConstraint("CK_DonNghi_Duyet",
+                        "([TrangThai] IN ('ChoDuyet','DaRut') AND [NguoiDuyetId] IS NULL AND [NgayDuyet] IS NULL) " +
+                        "OR ([TrangThai] IN ('DaDuyet','TuChoi') AND [NguoiDuyetId] IS NOT NULL AND [NgayDuyet] IS NOT NULL)");
+                });
             });
             // Đánh giá chuyến đi (RB-43): một tài khoản một đánh giá cho một lịch; giữ đánh giá khi đã có,
             // nên chặn xóa lịch và tài khoản (Restrict) giống dữ liệu đơn đặt
