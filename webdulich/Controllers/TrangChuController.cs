@@ -120,6 +120,18 @@ namespace webdulich.Controllers
 
         // Trang Giới thiệu: thông tin công ty và cách đặt tour nhóm. Mọi con số lấy từ dữ liệu thật,
         // không viết cứng kiểu "100+ tour, 500+ khách" (lỗi 11 trong CLAUDE.md).
+        // Trang báo lỗi dùng chung (Program.cs): ma = 404 là không tìm thấy trang, còn lại là lỗi hệ thống.
+        // Mở thẳng địa chỉ này (không qua lỗi thật) thì trả 404 để công cụ tìm kiếm không coi đây là trang thường.
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Loi(int? ma)
+        {
+            var loiGoc = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            int maLoi = loiGoc != null ? 500 : ma is >= 400 and <= 599 ? ma.Value : 404;
+            Response.StatusCode = maLoi;
+            ViewBag.MaLoi = maLoi;
+            return View("~/Views/Shared/Error.cshtml");
+        }
+
         public IActionResult GioiThieu([FromServices] IConfiguration cauHinh)
         {
             var homNay = GioVN.HomNay;

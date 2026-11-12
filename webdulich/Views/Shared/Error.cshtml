@@ -1,25 +1,44 @@
-﻿@model ErrorViewModel
+﻿@* Trang báo lỗi dùng chung (TrangChuController.Loi): 404 là không tìm thấy trang, 500 là lỗi hệ thống.
+   Không hiện chi tiết lỗi cho khách (chi tiết nằm trong nhật ký máy chủ). *@
 @{
-    ViewData["Title"] = "Error";
+    int maLoi = ViewBag.MaLoi is int m ? m : 500;
+    bool khongThay = maLoi == 404;
+    bool laAdmin = Context.Session.GetString("role") == "admin";
+    ViewData["Title"] = khongThay ? "Không tìm thấy trang" : "Có lỗi xảy ra";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <style>
+        .loi-trang { max-width: 560px; margin: var(--tv-k8, 64px) auto; padding: 0 var(--tv-k4); text-align: center; }
+        .loi-ma { font-size: clamp(4rem, 14vw, 7rem); font-weight: 800; line-height: 1; color: var(--tv-nhan); letter-spacing: -0.03em; }
+        .loi-trang h1 { margin: var(--tv-k3) 0 var(--tv-k2); font-size: var(--tv-cs-tieu-de); font-weight: 700; }
+        .loi-trang p { margin: 0 0 var(--tv-k5); line-height: 1.7; color: var(--tv-chu-phu); }
+        .loi-nut { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--tv-k3); }
+    </style>
 }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+<section class="loi-trang">
+    <div class="loi-ma" aria-hidden="true">@maLoi</div>
+    @if (khongThay)
+    {
+        <h1>Không tìm thấy trang</h1>
+        <p>Địa chỉ này không có hoặc đã được đổi. Bạn kiểm tra lại đường dẫn, hoặc quay về trang chính để tìm tour.</p>
+    }
+    else
+    {
+        <h1>Có lỗi xảy ra</h1>
+        <p>Hệ thống đang gặp trục trặc nên chưa xử lý được yêu cầu của bạn. Bạn thử lại sau ít phút; nếu vẫn lỗi, hãy nhắn TravelVN qua Zalo hoặc số 0342 500 619.</p>
+    }
+    <div class="loi-nut">
+        @if (laAdmin)
+        {
+            <a asp-controller="Admin" asp-action="TongQuan" class="tv-btn tv-btn-chinh">Về trang tổng quan</a>
+        }
+        else
+        {
+            <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-chinh">Về trang chủ</a>
+            <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-vien">Xem tour đang bán</a>
+        }
+    </div>
+</section>

@@ -78,10 +78,14 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    // Lỗi bất ngờ: hiện trang báo lỗi tiếng Việt (TrangChu/Loi). Trước đây trỏ tới /Home/Error không tồn tại nên khách thấy trang trắng.
+    app.UseExceptionHandler("/TrangChu/Loi");
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+// Địa chỉ sai (404) và các mã lỗi khác không có nội dung: hiện trang báo cùng giao diện web thay cho trang trắng
+app.UseStatusCodePagesWithReExecute("/TrangChu/Loi", "?ma={0}");
 
 app.UseStaticFiles();
 app.UseRouting();
