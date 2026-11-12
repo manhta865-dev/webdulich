@@ -124,6 +124,11 @@ namespace webdulich.Controllers
             {
                 return RedirectToAction("DangNhap", "TaiKhoan");
             }
+            // Như bước mở form: chỉ khách hàng tạo đơn nhóm. Trước đây gửi thẳng form thì admin, nhân viên vẫn tạo được.
+            if (!LaKhach())
+            {
+                return RedirectToAction("Index", "TrangChu");
+            }
 
             var lich = LayLich(model.TourId, model.LichId);
             if (lich == null)
@@ -238,7 +243,8 @@ namespace webdulich.Controllers
         public IActionResult ChonCho(List<int?> viTri)
         {
             var nhap = DocNhap();
-            if (nhap == null || !TaiKhoanDangNhap().HasValue)
+            // Bước giữ chỗ cũng kiểm vai trò: phiên có thể đổi tài khoản giữa hai bước
+            if (nhap == null || !TaiKhoanDangNhap().HasValue || !LaKhach())
             {
                 return RedirectToAction("Index", "TrangChu");
             }
