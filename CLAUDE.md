@@ -43,7 +43,7 @@ Skills trong `.claude/skills/` (dùng đúng lúc):
 - Controllers: Admin, DatTour, DiaDiem (trang danh sách và chi tiết tour), DiemTour, GoiYTour, LienHe, NhanVien, QuanTri, TaiKhoan, TrangChu.
 - Luồng đặt tour hiện tại: `DatTour` (GET/POST) → `ThanhToan` → `XacNhanThanhToan` → `ThanhCong`; dữ liệu tạm giữ trong Session; thanh toán đang **giả lập**.
 - **Hai database riêng:** `WebDuLich` trên máy (SQL Server Express) và bản trên host `travelvn.runasp.net` (asp.monster). Cập nhật cấu trúc phải áp dụng cho cả hai, bản host qua script.
-- Hiện web host chạy HTTP, không HTTPS.
+- Web host đã chạy HTTPS (http:// tự chuyển sang https://, có HSTS 7 ngày; kiểm tra ngày 12/11/2026). Khi chạy thật, cookie phiên chỉ gửi qua HTTPS.
 
 ## Lỗi và rủi ro đã biết (ưu tiên sửa theo kế hoạch)
 
