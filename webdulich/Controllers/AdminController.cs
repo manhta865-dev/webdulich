@@ -1339,7 +1339,7 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("SoDienThoai", "Số điện thoại này đã thuộc tài khoản khác.");
             }
-            if (!string.IsNullOrWhiteSpace(model.MatKhauMoi) && model.MatKhauMoi.Trim().Length < 6)
+            if (!string.IsNullOrWhiteSpace(model.MatKhauMoi) && model.MatKhauMoi.Length < 6)
             {
                 ModelState.AddModelError("MatKhauMoi", "Mật khẩu mới cần ít nhất 6 ký tự.");
             }
@@ -1360,7 +1360,8 @@ namespace webdulich.Controllers
             // Trước đây mật khẩu được lưu thẳng chuỗi nhập vào (không băm); giờ băm như đăng ký
             if (!string.IsNullOrWhiteSpace(model.MatKhauMoi))
             {
-                tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi.Trim());
+                // Không cắt dấu cách, cùng cách với đăng ký và đăng nhập
+                tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi);
             }
             tk.VaiTro = model.VaiTro;
 

@@ -132,7 +132,8 @@ namespace webdulich.Controllers
             }
 
             tk.HoTen = tk.HoTen.Trim();
-            tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(tk.MatKhau.Trim()); // Mã hóa mật khẩu
+            // Mã hóa đúng mật khẩu người dùng gõ, không cắt dấu cách: lúc đăng nhập cũng so nguyên văn
+            tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(tk.MatKhau);
             tk.VaiTro = "user"; // Tài khoản tự đăng ký mặc định là user.
             tk.NgayTao = GioVN.BayGio;
             tk.AnhDaiDien = "";
@@ -390,7 +391,7 @@ namespace webdulich.Controllers
                 {
                     ModelState.AddModelError("MatKhauHienTai", "Mật khẩu hiện tại chưa đúng.");
                 }
-                if (model.MatKhauMoi!.Trim().Length < 6)
+                if (model.MatKhauMoi!.Length < 6)
                 {
                     ModelState.AddModelError("MatKhauMoi", "Mật khẩu mới cần ít nhất 6 ký tự.");
                 }
@@ -429,7 +430,8 @@ namespace webdulich.Controllers
             user.SoDienThoai = soDienThoai;
             if (doiMatKhau)
             {
-                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi!.Trim());
+                // Giữ nguyên văn như lúc đăng ký (không cắt dấu cách) để đăng nhập so khớp được
+                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi!);
             }
             if (anhMoi != null)
             {
