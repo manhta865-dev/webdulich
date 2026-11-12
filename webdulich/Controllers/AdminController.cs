@@ -1572,6 +1572,9 @@ namespace webdulich.Controllers
                 l.SoChoMoBan = moBan.TryGetValue(l.Id, out var mb) ? mb : 0;
             }
 
+            // Chuyến chưa đi xong có người đã được duyệt nghỉ trùng ngày: nhắc admin đổi người (RB-45)
+            ViewBag.SoPhanCongCanDoi = XuLyDonNghi.PhanCongCanDoiNguoi(_context).Count;
+
             return View(model);
         }
         // Đây là action hiển thị báo cáo doanh thu trong trang quản trị. Admin có thể xem tổng doanh thu, số đơn đã thanh toán, trung bình đơn, doanh thu theo năm và tour bán chạy nhất trong tháng. Admin cũng có thể lọc báo cáo theo tháng và năm để xem doanh thu của tháng đó hoặc năm đó.
@@ -2602,6 +2605,8 @@ namespace webdulich.Controllers
             }
 
             ViewBag.Search = search;
+            // Phân công có người đã được duyệt nghỉ trùng ngày chuyến: gắn nhãn để admin đổi người (RB-45)
+            ViewBag.CanDoiNguoi = XuLyDonNghi.PhanCongCanDoiNguoi(_context);
 
             return View(ds.OrderByDescending(x => x.Id).ToList());
         }

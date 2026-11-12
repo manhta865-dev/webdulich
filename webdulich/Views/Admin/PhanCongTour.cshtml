@@ -7,6 +7,7 @@
     var lichList = ViewBag.LichKhoiHanhList as List<SelectListItem>;
     var hdvList = ViewBag.HuongDanVienList as List<SelectListItem>;
     var taiXeList = ViewBag.TaiXeList as List<SelectListItem> ?? new List<SelectListItem>();
+    var canDoiNguoi = ViewBag.CanDoiNguoi as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
 @section Styles {
@@ -100,7 +101,14 @@
                         var tour = lich?.Tour;
 
                         <tr>
-                            <td><strong>@tour?.TenTour</strong></td>
+                            <td>
+                                <strong>@tour?.TenTour</strong>
+                                @if (canDoiNguoi.TryGetValue(item.Id, out var canDoi))
+                                {
+                                    @* Người được phân công đã được duyệt nghỉ trùng ngày chuyến (RB-45): nhắc đổi người *@
+                                    <a asp-controller="Admin" asp-action="SuaPhanCongTour" asp-route-id="@item.Id" class="ad-tag ngung pc-can-doi">@canDoi</a>
+                                }
+                            </td>
                             <td>@lich?.NgayKhoiHanh.ToString("dd/MM/yyyy")</td>
                             <td>
                                 @(lich?.GioKhoiHanh.HasValue == true

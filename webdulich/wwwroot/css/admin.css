@@ -1257,3 +1257,7 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
     .lg-them-khoan { grid-template-columns: 1fr; }
     .lg-bang th { width: auto; }
 }
+
+/* Nhãn "Cần đổi người" ở bảng phân công (RB-45) */
+.pc-can-doi { display: inline-block; margin-top: 4px; white-space: normal; text-decoration: none; }
+.pc-can-doi:hover { text-decoration: underline; }

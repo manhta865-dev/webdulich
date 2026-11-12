@@ -66,6 +66,10 @@
                         <div>
                             <strong>@c.TenTour</strong>
                             <span>@c.VaiTro · @c.NgayDi.ToString("dd/MM")@(c.NgayVe > c.NgayDi ? " – " + c.NgayVe.ToString("dd/MM") : "")</span>
+                            @if (c.NgayNghiTrung.Any())
+                            {
+                                <span class="lg-tru">Không tính công @string.Join(", ", c.NgayNghiTrung.Select(n => n.ToString("dd/MM"))) vì đã duyệt nghỉ</span>
+                            }
                         </div>
                         <b>@c.SoNgayTrongThang ngày</b>
                     </li>

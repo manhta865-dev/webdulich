@@ -127,6 +127,49 @@ namespace webdulich.Models
                 .ToList();
         }
 
+        // Phân công của chuyến chưa hủy, chưa đi xong mà hướng dẫn viên hoặc tài xế đã được duyệt nghỉ trùng ngày chuyến
+        // (duyệt nghỉ sau khi đã phân công). Kết quả: mã phân công → lời nhắc "Cần đổi người: ..." (RB-45, RB-46).
+        public static Dictionary<int, string> PhanCongCanDoiNguoi(DuLichDbContext db)
+        {
+            var homNay = GioVN.HomNay;
+            var dsPhanCong = db.PhanCongTours.AsNoTracking()
+                .Where(p => p.LichKhoiHanhTour!.TrangThai != TrangThaiLich.DaHuy)
+                .Select(p => new
+                {
+                    p.Id, p.HuongDanVienId, p.TaiXeId,
+                    TenHdv = p.HuongDanVien!.TaiKhoan!.HoTen,
+                    TenTaiXe = p.TaiXe != null ? p.TaiXe.TaiKhoan!.HoTen : null,
+                    p.LichKhoiHanhTour!.NgayKhoiHanh,
+                    SoNgay = p.LichKhoiHanhTour.Tour!.SoNgay ?? 1
+                })
+                .AsEnumerable()
+                .Select(p => new { p, Di = p.NgayKhoiHanh.Date, Ve = p.NgayKhoiHanh.Date.AddDays(Math.Max(p.SoNgay, 1) - 1) })
+                .Where(x => x.Ve >= homNay)
+                .ToList();
+            if (dsPhanCong.Count == 0) return new();
+
+            var dsNvId = dsPhanCong.SelectMany(x => new[] { (int?)x.p.HuongDanVienId, x.p.TaiXeId }).Where(i => i.HasValue).Select(i => i!.Value).Distinct().ToList();
+            var dsNghi = db.DonXinNghis.AsNoTracking()
+                .Where(d => d.TrangThai == TrangThaiDonNghi.DaDuyet && dsNvId.Contains(d.NhanVienId) && d.DenNgay >= homNay)
+                .ToList();
+
+            var ketQua = new Dictionary<int, string>();
+            foreach (var x in dsPhanCong)
+            {
+                var loi = new List<string>();
+                void Kiem(int? nvId, string? ten)
+                {
+                    if (!nvId.HasValue) return;
+                    var d = dsNghi.FirstOrDefault(n => n.NhanVienId == nvId.Value && n.TuNgay <= x.Ve && n.DenNgay >= x.Di);
+                    if (d != null) loi.Add($"{ten} nghỉ {d.TuNgay:dd/MM}–{d.DenNgay:dd/MM}");
+                }
+                Kiem(x.p.HuongDanVienId, x.p.TenHdv);
+                Kiem(x.p.TaiXeId, x.p.TenTaiXe);
+                if (loi.Count > 0) ketQua[x.p.Id] = "Cần đổi người: " + string.Join("; ", loi);
+            }
+            return ketQua;
+        }
+
         // Đơn đã duyệt của nhân viên giao với khoảng ngày (dùng để chặn phân công, RB-45)
         public static DonXinNghi? NghiDaDuyetTrung(DuLichDbContext db, int nhanVienId, DateTime tu, DateTime den) =>
             db.DonXinNghis.AsNoTracking()

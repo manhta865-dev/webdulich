@@ -22,6 +22,15 @@
     <h1 class="visually-hidden">Tổng quan</h1>
     <p class="ad-lead">Số liệu tính đến hôm nay, @GioVN.HomNay.ToString("dd/MM/yyyy").</p>
 
+    @if (ViewBag.SoPhanCongCanDoi is int soCanDoi && soCanDoi > 0)
+    {
+        @* Chuyến sắp đi có người được phân công đã được duyệt nghỉ trùng ngày (RB-45) *@
+        <div class="ad-alert loi" role="alert">
+            Có @soCanDoi chuyến sắp đi có hướng dẫn viên hoặc tài xế đã được duyệt nghỉ trùng ngày.
+            <a asp-action="PhanCongTour" class="tv-link tv-link-di">Đổi người ở Phân công tour</a>
+        </div>
+    }
+
     <div class="ad-kpis">
         <a asp-action="DoanhThu" class="ad-kpi">
             <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>

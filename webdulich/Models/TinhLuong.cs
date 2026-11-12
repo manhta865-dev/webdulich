@@ -10,8 +10,11 @@ namespace webdulich.Models
         public DateTime NgayDi { get; set; }
         public DateTime NgayVe { get; set; }
         public string VaiTro { get; set; } = string.Empty;
-        // Số ngày của chuyến rơi vào tháng đang tính (chuyến vắt qua hai tháng thì chia theo ngày)
+        // Số ngày được tính công: ngày của chuyến rơi vào tháng đang tính (chuyến vắt qua hai tháng thì chia theo ngày),
+        // trừ những ngày nhân viên đã được duyệt nghỉ
         public int SoNgayTrongThang { get; set; }
+        // Ngày của chuyến trong tháng trùng ngày đã duyệt nghỉ: không tính công (RB-46)
+        public List<DateTime> NgayNghiTrung { get; set; } = new();
     }
 
     // Phiếu lương một tháng của một nhân viên: tạm tính từ dữ liệu thật, hoặc lấy từ bản đã chốt
@@ -56,7 +59,6 @@ namespace webdulich.Models
             var cuoiThang = dauThang.AddMonths(1).AddDays(-1);
             var p = new PhieuLuong { NhanVien = nv, Nam = nam, Thang = thang };
 
-            p.DsChuyen = ChuyenTrongThang(db, nv.Id, dauThang, cuoiThang);
             p.DsKhoan = db.KhoanLuongs.AsNoTracking().Include(k => k.NguoiTao)
                 .Where(k => k.NhanVienId == nv.Id && k.Nam == nam && k.Thang == thang)
                 .OrderBy(k => k.NgayTao).ToList();
@@ -76,6 +78,9 @@ namespace webdulich.Models
             p.SoNgayPhepDaDung = Math.Min(ngayNghi.Count(n => n <= cuoiThang), soNgayPhepNam);
             p.DsDonNghi = dsDonNam.Where(d => d.TuNgay <= cuoiThang && d.DenNgay >= dauThang).ToList();
             p.SoNgayPhepNam = soNgayPhepNam;
+
+            // Ngày đã duyệt nghỉ thì không tính công đi tour, kể cả khi admin chưa kịp đổi người phân công
+            p.DsChuyen = ChuyenTrongThang(db, nv.Id, dauThang, cuoiThang, ngayNghi.ToHashSet());
 
             p.BangLuong = db.BangLuongs.AsNoTracking().Include(b => b.NguoiChot).Include(b => b.NguoiTra)
                 .FirstOrDefault(b => b.NhanVienId == nv.Id && b.Nam == nam && b.Thang == thang);
@@ -104,8 +109,10 @@ namespace webdulich.Models
             return p;
         }
 
-        // Chuyến được phân công (lịch chưa hủy) có ngày rơi vào khoảng [tu, den]; mỗi ngày tính một công
-        public static List<ChuyenTinhCong> ChuyenTrongThang(DuLichDbContext db, int nhanVienId, DateTime tu, DateTime den)
+        // Chuyến được phân công (lịch chưa hủy) có ngày rơi vào khoảng [tu, den]; mỗi ngày tính một công,
+        // trừ ngày nằm trong ngayDaNghi (ngày đã duyệt nghỉ: không thể vừa nghỉ vừa đi tour)
+        public static List<ChuyenTinhCong> ChuyenTrongThang(DuLichDbContext db, int nhanVienId, DateTime tu, DateTime den,
+            ISet<DateTime>? ngayDaNghi = null)
         {
             return db.PhanCongTours.AsNoTracking()
                 .Where(x => (x.HuongDanVienId == nhanVienId || x.TaiXeId == nhanVienId)
@@ -126,6 +133,8 @@ namespace webdulich.Models
                     var ve = di.AddDays(Math.Max(x.SoNgay, 1) - 1);
                     var batDau = di > tu ? di : tu;
                     var ketThuc = ve < den ? ve : den;
+                    var cacNgay = Enumerable.Range(0, Math.Max((ketThuc - batDau).Days + 1, 0)).Select(i => batDau.AddDays(i)).ToList();
+                    var trungNghi = ngayDaNghi == null ? new List<DateTime>() : cacNgay.Where(ngayDaNghi.Contains).ToList();
                     return new ChuyenTinhCong
                     {
                         LichId = x.LichKhoiHanhTourId,
@@ -133,10 +142,12 @@ namespace webdulich.Models
                         NgayDi = di,
                         NgayVe = ve,
                         VaiTro = x.HuongDanVienId == nhanVienId ? "Hướng dẫn viên" : "Tài xế",
-                        SoNgayTrongThang = Math.Max((ketThuc - batDau).Days + 1, 0)
+                        SoNgayTrongThang = cacNgay.Count - trungNghi.Count,
+                        NgayNghiTrung = trungNghi
                     };
                 })
-                .Where(c => c.SoNgayTrongThang > 0)
+                // Giữ cả chuyến bị trừ hết công vì nghỉ, để phiếu lương giải thích được vì sao không tính
+                .Where(c => c.SoNgayTrongThang > 0 || c.NgayNghiTrung.Count > 0)
                 .OrderBy(c => c.NgayDi)
                 .ToList();
         }
