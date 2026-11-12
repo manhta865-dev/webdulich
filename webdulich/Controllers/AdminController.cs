@@ -2479,10 +2479,10 @@ namespace webdulich.Controllers
             var lichKhoiHanhs = _context.LichKhoiHanhTours
                 .AsNoTracking()
                 .Include(x => x.Tour)
+                // Không lọc theo số chỗ còn: hướng dẫn viên, tài xế không chiếm chỗ bán, chuyến đã kín vẫn cần phân công
                 .Where(x =>
                     x.TrangThai != TrangThaiLich.DaHuy &&
                     x.NgayKhoiHanh >= homNay &&
-                    x.SoChoCon > 0 &&
                     (
                         x.Id == lichHienTaiId ||
                         !_context.PhanCongTours.Any(pc =>
@@ -2501,7 +2501,7 @@ namespace webdulich.Controllers
                         $"{x.Tour?.TenTour} - " +
                         $"{x.NgayKhoiHanh:dd/MM/yyyy} - " +
                         $"{(x.GioKhoiHanh.HasValue ? x.GioKhoiHanh.Value.ToString(@"hh\:mm") : "--:--")} - " +
-                        $"Còn {x.SoChoCon} chỗ"
+                        (x.SoChoCon > 0 ? $"Còn {x.SoChoCon} chỗ" : "Đã kín chỗ")
                 })
                 .ToList();
 
@@ -2648,12 +2648,7 @@ namespace webdulich.Controllers
                         "LichKhoiHanhTourId",
                         "Không thể phân công cho lịch đã qua.");
                 }
-                else if (lich.SoChoCon <= 0)
-                {
-                    ModelState.AddModelError(
-                        "LichKhoiHanhTourId",
-                        "Lịch khởi hành đã hết chỗ.");
-                }
+                // Không chặn lịch đã kín chỗ: số chỗ là chỗ bán cho khách, không liên quan người dẫn đoàn
             }
 
             if (_context.PhanCongTours.Any(x =>
