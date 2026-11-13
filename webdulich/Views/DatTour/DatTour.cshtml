@@ -10,6 +10,24 @@
     decimal giaTreEm = lichKhoiHanh?.GiaTreEm ?? giaNguoiLon * 0.5m;
     var maChuyenDiTam = tour != null ? $"TRAVELVN-{tour.Id}-{GioVN.BayGio:yyyyMMddHHmmss}" : "TRAVELVN";
     var coLoi = !ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0);
+    // Lỗi không gắn với ô nào trên form (hết chỗ, thiếu người lớn, thiếu thông tin hành khách)
+    // và lỗi chuyển về từ bước xác nhận (TempData). Lỗi của ô nhập đã hiện ngay dưới ô đó.
+    var oCoChoBaoLoi = new HashSet<string> { "TenKhach", "DienThoai", "Email", "DiaChi", "GhiChu" };
+    if (!(Model.LichKhoiHanhTourId > 0))
+    {
+        oCoChoBaoLoi.Add("NgayDi");
+    }
+    var dsLoiChung = ViewData.ModelState
+        .Where(kv => !oCoChoBaoLoi.Contains(kv.Key))
+        .SelectMany(kv => kv.Value!.Errors)
+        .Select(e => e.ErrorMessage)
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .Distinct()
+        .ToList();
+    if (TempData["Loi"] is string loiChuyenVe && !string.IsNullOrWhiteSpace(loiChuyenVe))
+    {
+        dsLoiChung.Insert(0, loiChuyenVe);
+    }
 }
 
 @section Styles {
@@ -20,6 +38,16 @@
     <h1>Đặt tour</h1>
 
     <partial name="_BuocDatTour" model="1" />
+
+    @if (dsLoiChung.Any())
+    {
+        <div class="dt-loi" role="alert">
+            @foreach (var loi in dsLoiChung)
+            {
+                <p>@loi</p>
+            }
+        </div>
+    }
 
     <div class="dt-layout">
         <div>

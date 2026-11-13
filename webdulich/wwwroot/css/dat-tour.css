@@ -433,5 +433,10 @@
 /* Khối đầu tiên trong form đứng sau một khối khác ở ngoài form */
 .dt-block + form > .dt-block:first-child { margin-top: var(--tv-k4); }
 
+/* Lỗi từ máy chủ không gắn với ô nhập nào (hết chỗ, thông tin hành khách không khớp) */
+.dt-loi { margin: 0 0 var(--tv-k4); padding: var(--tv-k3) var(--tv-k4); border-radius: var(--tv-bo-nut); background: var(--tv-loi-nhat); color: var(--tv-loi); font-weight: 600; }
+.dt-loi p { margin: 0; }
+.dt-loi p + p { margin-top: var(--tv-k1); }
+
 /* Báo đã hết chỗ khi tăng số khách (thay alert) */
 .dt-het-cho { margin: var(--tv-k3) 0 0; padding: var(--tv-k2) var(--tv-k3); border-radius: var(--tv-bo-nut); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-size: var(--tv-cs-nho); font-weight: 600; }
