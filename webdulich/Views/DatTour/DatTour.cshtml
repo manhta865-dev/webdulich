@@ -8,7 +8,6 @@
     decimal giaTour = tour != null ? tour.Gia : 0;
     decimal giaNguoiLon = lichKhoiHanh?.GiaNguoiLon ?? giaTour;
     decimal giaTreEm = lichKhoiHanh?.GiaTreEm ?? giaNguoiLon * 0.5m;
-    var maChuyenDiTam = tour != null ? $"TRAVELVN-{tour.Id}-{GioVN.BayGio:yyyyMMddHHmmss}" : "TRAVELVN";
     var coLoi = !ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0);
     // Lỗi không gắn với ô nào trên form (hết chỗ, thiếu người lớn, thiếu thông tin hành khách)
     // và lỗi chuyển về từ bước xác nhận (TempData). Lỗi của ô nhập đã hiện ngay dưới ô đó.
@@ -216,11 +215,6 @@
                         <span>@lichKhoiHanh.SoChoCon chỗ</span>
                     </div>
                 }
-
-                <div class="dt-line">
-                    <span>Mã chuyến đi</span>
-                    <span>@maChuyenDiTam</span>
-                </div>
 
                 <div class="dt-line">
                     <span>Giá tour / người lớn</span>
