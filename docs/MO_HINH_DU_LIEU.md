@@ -182,7 +182,7 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | RB-14 | Mọi lịch có xe (`SoDoChoNgoiId` NOT NULL, Mo15). Xe do admin chọn và phải thuộc đúng phương tiện của tour (ví dụ tour đi xe du lịch chỉ chọn Xe 16, 29, 45 chỗ). Đổi xe chỉ khi chưa có khách chọn chỗ trên xe hiện tại, và xe mới phải đủ chỗ cho số khách đã giữ |
 | RB-15 | `PhanCongTour`: người được chọn làm hướng dẫn viên phải có `TaiKhoan.VaiTro = huongdanvien`, tài xế phải là `taixe` |
 | RB-16 | Nhả ghế (đặt `NgayNha`) thì xóa dòng `ChoNgoiChuyenDi` của ghế đó và cộng lại `SoChoCon` |
-| RB-17 | Hủy đơn: nhả mọi ghế chưa nhả, trả chỗ, không còn tính lượt khuyến mãi |
+| RB-17 | Hủy đơn: nhả mọi ghế chưa nhả, trả chỗ, không còn tính lượt khuyến mãi; giao dịch còn `ChoXacNhan` của đơn và của ghế thành `ThatBai` (giao dịch `ThanhCong` giữ nguyên, hoàn tiền ngoài hệ thống). Áp dụng cả khi đơn bị hủy theo lịch |
 | RB-18 | `ChoNgoiChuyenDi.LichKhoiHanhTourId` phải trùng lịch của đơn chứa ghế; `ViTriChoNgoi` phải thuộc `SoDoChoNgoi` của lịch đó |
 | RB-19 | Không đặt cho lịch `DaHuy`, `TamNgung`, đã qua ngày khởi hành (sửa lỗi 5) |
 | RB-20 | Trưởng nhóm xem tiến độ nhưng không xem `SoGiayTo` của ghế người khác |

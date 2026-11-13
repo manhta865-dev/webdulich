@@ -2429,6 +2429,15 @@ namespace webdulich.Controllers
             }
             _context.ChoNgoiChuyenDis.RemoveRange(
                 _context.ChoNgoiChuyenDis.Where(c => dsGheId.Contains(c.HanhKhachDatTourId)));
+            // Giao dịch còn chờ của đơn (đơn cá nhân) và của ghế (đơn nhóm) thành ThatBai, giống XuLyDon.HuyDon;
+            // nếu không, đơn đã hủy vẫn hiện "Chờ xác nhận" mà admin không xử lý được. Tiền đã chuyển hoàn ngoài hệ thống.
+            var dsDonId = dsDon.Select(d => d.Id).ToList();
+            foreach (var gd in _context.GiaoDichThanhToans.Where(g => g.TrangThai == "ChoXacNhan"
+                && ((g.DatTourId != null && dsDonId.Contains(g.DatTourId.Value))
+                    || (g.HanhKhachDatTourId != null && dsGheId.Contains(g.HanhKhachDatTourId.Value)))))
+            {
+                gd.TrangThai = "ThatBai";
+            }
             lich.SoChoCon = SucChuaLich.SoChoMoBan(_context, lich.Id);
             // Cập nhật trạng thái thanh toán của các đơn đặt tour liên quan thành "Đã hủy" và thêm ghi chú giải thích lý do hủy là do admin đã hủy lịch khởi hành. Điều này sẽ giúp khách hàng hiểu được lý do tại sao đơn đặt tour của họ bị hủy và cũng giúp admin quản lý các đơn đặt tour liên quan đến lịch khởi hành đã bị hủy một cách hiệu quả hơn.
             foreach (var don in dsDon)
