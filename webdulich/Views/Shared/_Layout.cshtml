@@ -335,6 +335,12 @@
             @RenderBody()
         </div>
 
+        @* Nhắc ghế, đơn nhóm sắp hết hạn mà chưa trả (RB-47). Trang đơn nhóm đã có đồng hồ đếm ngược nên không hiện ở đó. *@
+        @if (currentUser != null && controllerName != "DonNhom")
+        {
+            @await Component.InvokeAsync("NhacGiuCho")
+        }
+
         <partial name="_Footer" />
     }
 

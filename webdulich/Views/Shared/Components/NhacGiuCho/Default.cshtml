@@ -1,0 +1,43 @@
+@model List<webdulich.Services.NhacTrenWeb>
+@{
+    // Khóa để nhớ khách đã đóng khung này trong phiên trình duyệt; có nhắc mới (mã hoặc hạn khác) thì hiện lại
+    var khoa = string.Join("|", Model.Select(x => x.MaChuyenDi + "@" + x.HanGiuCho.ToString("yyyyMMddHHmm")));
+}
+<aside class="tv-nhac" id="tvNhac" data-khoa="@khoa" role="status" aria-label="Nhắc thanh toán đơn nhóm" hidden>
+    <div class="tv-nhac-dau">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
+        <strong>Sắp hết hạn giữ chỗ</strong>
+        <button type="button" class="tv-nhac-dong" aria-label="Đóng nhắc">&times;</button>
+    </div>
+    <ul>
+        @foreach (var n in Model.Take(3))
+        {
+            <li>
+                <a href="@Url.Content("~/" + n.DuongDan)">
+                    <span class="tv-nhac-ma">@n.MaChuyenDi · @n.TenTour</span>
+                    <span>@n.NoiDung</span>
+                    <span class="tv-nhac-han">Hạn @n.HanGiuCho.ToString("HH:mm dd/MM")</span>
+                </a>
+            </li>
+        }
+    </ul>
+    @if (Model.Count > 3)
+    {
+        <a class="tv-nhac-them" asp-controller="DatTour" asp-action="LichSu">Còn @(Model.Count - 3) đơn nữa, xem Lịch sử đặt tour</a>
+    }
+</aside>
+<script>
+    (function () {
+        var khung = document.getElementById("tvNhac");
+        if (!khung) return;
+        var khoa = "tv-nhac-da-dong";
+        var daDong = null;
+        try { daDong = sessionStorage.getItem(khoa); } catch (e) { }
+        if (daDong === khung.dataset.khoa) return;
+        khung.hidden = false;
+        khung.querySelector(".tv-nhac-dong").addEventListener("click", function () {
+            khung.hidden = true;
+            try { sessionStorage.setItem(khoa, khung.dataset.khoa); } catch (e) { }
+        });
+    })();
+</script>

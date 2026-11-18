@@ -7,6 +7,10 @@ using webdulich.Models;
 
 namespace webdulich.Services
 {
+    // Một dòng nhắc trên web cho người đang đăng nhập. DuongDan là đường dẫn tương đối, không có dấu / ở đầu.
+    public record NhacTrenWeb(bool LaTruongNhom, string MaChuyenDi, string TenTour, DateTime HanGiuCho, int SoGheChuaTra,
+        string NoiDung, string DuongDan);
+
     // RB-47: nhắc qua email khi đơn nhóm còn giữ chỗ, hạn còn dưới DonNhom:SoGioNhacTruocHan giờ, và còn ghế chưa trả
     // (chưa có người nhận, đã nhận, đã điền; ghế đang chờ admin xác nhận coi như đã chuyển tiền nên không nhắc).
     //   - Thành viên có ghế chưa trả: một thư riêng cho ghế của mình.
@@ -99,6 +103,62 @@ namespace webdulich.Services
         }
 
         private record GheCanNhac(HanhKhachDatTour Ghe, int ThuTu, string TrangThai);
+
+        // ---------- Nhắc trên web (khung báo khi khách đăng nhập) ----------
+
+        // Cùng luật với thư nhắc: đơn nhóm còn giữ chỗ, hạn còn dưới soGioNhac giờ, còn ghế chưa trả.
+        // Thành viên: ghế chưa trả của mình (trừ khi mình là trưởng nhóm). Trưởng nhóm: số ghế chưa trả của cả đơn.
+        // Chỉ đọc, không ghi gì; không phụ thuộc email nên người chưa khai email vẫn thấy.
+        public static List<NhacTrenWeb> LayNhacTrenWeb(DuLichDbContext db, int taiKhoanId, int soGioNhac)
+        {
+            var bayGio = GioVN.BayGio;
+            var mocNhac = bayGio.AddHours(Math.Max(1, soGioNhac));
+
+            var dsDon = db.DatTours.AsNoTracking()
+                .Include(x => x.LichKhoiHanhTour).ThenInclude(l => l!.Tour)
+                .Where(x => x.LoaiDon == "Nhom" && x.TrangThai == "GiuCho"
+                    && x.HanGiuCho > bayGio && x.HanGiuCho <= mocNhac
+                    && (x.TaiKhoanId == taiKhoanId
+                        || x.HanhKhachDatTours.Any(h => h.TaiKhoanId == taiKhoanId && h.NgayNha == null)))
+                .OrderBy(x => x.HanGiuCho)
+                .ToList();
+            if (dsDon.Count == 0)
+            {
+                return new List<NhacTrenWeb>();
+            }
+
+            var dsDonId = dsDon.Select(d => d.Id).ToList();
+            var tatCaGhe = db.HanhKhachDatTours.AsNoTracking()
+                .Where(h => dsDonId.Contains(h.DatTourId)).OrderBy(h => h.Id).ToList();
+            var tatCaGheId = tatCaGhe.Select(h => h.Id).ToList();
+            var dsGiaoDich = db.GiaoDichThanhToans.AsNoTracking()
+                .Where(g => g.HanhKhachDatTourId != null && tatCaGheId.Contains(g.HanhKhachDatTourId.Value)).ToList();
+
+            var ketQua = new List<NhacTrenWeb>();
+            foreach (var don in dsDon)
+            {
+                var dsChuaTra = tatCaGhe.Where(h => h.DatTourId == don.Id)
+                    .Select((h, i) => new GheCanNhac(h, i + 1, TrangThaiGhe.Tinh(h, dsGiaoDich)))
+                    .Where(g => g.TrangThai is TrangThaiGhe.ChuaNhan or TrangThaiGhe.DaNhan or TrangThaiGhe.DaDien)
+                    .ToList();
+                if (dsChuaTra.Count == 0)
+                {
+                    continue;
+                }
+
+                if (don.TaiKhoanId == taiKhoanId)
+                {
+                    ketQua.Add(new NhacTrenWeb(true, don.MaChuyenDi, TenTour(don), don.HanGiuCho!.Value, dsChuaTra.Count,
+                        "Đơn nhóm còn " + dsChuaTra.Count + " ghế chưa trả", "DonNhom/ChiTiet/" + don.Id));
+                }
+                else if (dsChuaTra.FirstOrDefault(g => g.Ghe.TaiKhoanId == taiKhoanId) is GheCanNhac cuaToi)
+                {
+                    ketQua.Add(new NhacTrenWeb(false, don.MaChuyenDi, TenTour(don), don.HanGiuCho!.Value, 1,
+                        $"Ghế {cuaToi.ThuTu} của bạn: còn {ViecConThieu(cuaToi)}", "DonNhom/GheCuaToi/" + cuaToi.Ghe.Id));
+                }
+            }
+            return ketQua;
+        }
 
         // Giành lượt nhắc của một người cho mốc hạn này rồi gửi. Trả về true nếu gửi được.
         private static bool GuiMotNguoi(DuLichDbContext db, IGuiEmail guiEmail, DatTours don, TaiKhoan tk, DateTime han,
