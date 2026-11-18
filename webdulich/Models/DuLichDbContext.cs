@@ -40,6 +40,7 @@ namespace webdulich.Models
         public DbSet<MucLuongNhanVien> MucLuongNhanViens { get; set; }
         public DbSet<KhoanLuong> KhoanLuongs { get; set; }
         public DbSet<BangLuong> BangLuongs { get; set; }
+        public DbSet<NhacThanhToan> NhacThanhToans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -179,6 +180,23 @@ namespace webdulich.Models
                     t.HasCheckConstraint("CK_DonNghi_Duyet",
                         "([TrangThai] IN ('ChoDuyet','DaRut') AND [NguoiDuyetId] IS NULL AND [NgayDuyet] IS NULL) " +
                         "OR ([TrangThai] IN ('DaDuyet','TuChoi') AND [NguoiDuyetId] IS NOT NULL AND [NgayDuyet] IS NOT NULL)");
+                });
+            });
+            // Nhắc thanh toán đơn nhóm qua email (RB-47): mỗi người một lần cho mỗi mốc hạn; giữ lịch sử nhắc
+            // nên chặn xóa đơn và tài khoản (Restrict) giống dữ liệu đơn đặt
+            modelBuilder.Entity<NhacThanhToan>(e =>
+            {
+                e.HasIndex(x => new { x.DatTourId, x.TaiKhoanId, x.HanDuocNhac }).IsUnique();
+                e.HasIndex(x => x.TaiKhoanId);
+                e.HasIndex(x => x.TrangThai);
+                e.HasOne(x => x.DatTour).WithMany().HasForeignKey(x => x.DatTourId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.TaiKhoan).WithMany().HasForeignKey(x => x.TaiKhoanId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Nhac_TrangThai", "[TrangThai] IN ('ChoGui','DaGui','Loi')");
+                    t.HasCheckConstraint("CK_Nhac_NgayGui",
+                        "([TrangThai] = 'DaGui' AND [NgayGui] IS NOT NULL) OR ([TrangThai] <> 'DaGui' AND [NgayGui] IS NULL)");
+                    t.HasCheckConstraint("CK_Nhac_SoLanThu", "[SoLanThu] BETWEEN 1 AND 3");
                 });
             });
             // Đánh giá chuyến đi (RB-43): một tài khoản một đánh giá cho một lịch; giữ đánh giá khi đã có,
