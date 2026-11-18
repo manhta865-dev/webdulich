@@ -1436,7 +1436,9 @@ namespace webdulich.Controllers
                 || _context.KhoanLuongs.Any(x => x.NguoiTaoId == id)
                 || _context.BangLuongs.Any(x => x.NguoiChotId == id || x.NguoiTraId == id)
                 // Đã được nhắc thanh toán (RB-47): giữ lịch sử nhắc, kể cả khi người đó đã trả lại ghế
-                || _context.NhacThanhToans.Any(x => x.TaiKhoanId == id);
+                || _context.NhacThanhToans.Any(x => x.TaiKhoanId == id)
+                // Đã xử lý tay một khoản tiền vào (RB-48)
+                || _context.GiaoDichNganHangs.Any(x => x.NguoiXuLyId == id);
             // Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
             if (coDonDatTour)
             {

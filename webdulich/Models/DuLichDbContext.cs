@@ -41,6 +41,7 @@ namespace webdulich.Models
         public DbSet<KhoanLuong> KhoanLuongs { get; set; }
         public DbSet<BangLuong> BangLuongs { get; set; }
         public DbSet<NhacThanhToan> NhacThanhToans { get; set; }
+        public DbSet<GiaoDichNganHang> GiaoDichNganHangs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -180,6 +181,27 @@ namespace webdulich.Models
                     t.HasCheckConstraint("CK_DonNghi_Duyet",
                         "([TrangThai] IN ('ChoDuyet','DaRut') AND [NguoiDuyetId] IS NULL AND [NgayDuyet] IS NULL) " +
                         "OR ([TrangThai] IN ('DaDuyet','TuChoi') AND [NguoiDuyetId] IS NOT NULL AND [NgayDuyet] IS NOT NULL)");
+                });
+            });
+            // Tiền vào do SePay báo về (RB-48): mỗi giao dịch nhận một lần; một giao dịch thanh toán khớp với tối đa một khoản tiền vào
+            modelBuilder.Entity<GiaoDichNganHang>(e =>
+            {
+                e.Property(x => x.SoTien).HasPrecision(18, 2);
+                e.HasIndex(x => new { x.Nguon, x.MaGiaoDichNguon }).IsUnique();
+                e.HasIndex(x => x.GiaoDichThanhToanId).IsUnique().HasFilter("[GiaoDichThanhToanId] IS NOT NULL");
+                e.HasIndex(x => new { x.KetQua, x.NgayNhan });
+                e.HasOne(x => x.GiaoDichThanhToan).WithMany().HasForeignKey(x => x.GiaoDichThanhToanId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.NguoiXuLy).WithMany().HasForeignKey(x => x.NguoiXuLyId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_TienVao_Nguon", "[Nguon] IN ('SePay','GiaLap')");
+                    t.HasCheckConstraint("CK_TienVao_SoTien", "[SoTien] > 0");
+                    t.HasCheckConstraint("CK_TienVao_KetQua",
+                        "[KetQua] IN ('DaKhop','KhongTimThayMa','SaiSoTien','DaTraRoi','GheDaNha','DonDaHuy')");
+                    t.HasCheckConstraint("CK_TienVao_Khop",
+                        "([KetQua] = 'DaKhop' AND [GiaoDichThanhToanId] IS NOT NULL) OR ([KetQua] <> 'DaKhop' AND [GiaoDichThanhToanId] IS NULL)");
+                    t.HasCheckConstraint("CK_TienVao_XuLy",
+                        "([NguoiXuLyId] IS NULL AND [NgayXuLy] IS NULL) OR ([NguoiXuLyId] IS NOT NULL AND [NgayXuLy] IS NOT NULL)");
                 });
             });
             // Nhắc thanh toán đơn nhóm qua email (RB-47): mỗi người một lần cho mỗi mốc hạn; giữ lịch sử nhắc
