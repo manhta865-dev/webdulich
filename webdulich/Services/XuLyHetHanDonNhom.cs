@@ -10,12 +10,14 @@ namespace webdulich.Services
         private readonly IServiceScopeFactory _taoPhamVi;
         private readonly IConfiguration _cauHinh;
         private readonly ILogger<XuLyHetHanDonNhom> _nhatKy;
+        private readonly IGuiEmail _guiEmail;
 
-        public XuLyHetHanDonNhom(IServiceScopeFactory taoPhamVi, IConfiguration cauHinh, ILogger<XuLyHetHanDonNhom> nhatKy)
+        public XuLyHetHanDonNhom(IServiceScopeFactory taoPhamVi, IConfiguration cauHinh, ILogger<XuLyHetHanDonNhom> nhatKy, IGuiEmail guiEmail)
         {
             _taoPhamVi = taoPhamVi;
             _cauHinh = cauHinh;
             _nhatKy = nhatKy;
+            _guiEmail = guiEmail;
         }
 
         protected override async Task ExecuteAsync(CancellationToken dungLai)
@@ -78,6 +80,22 @@ namespace webdulich.Services
                     {
                         _nhatKy.LogError(loi, "Lỗi khi hủy đơn cá nhân quá hạn {DonId}", donId);
                     }
+                }
+
+                // Nhắc qua email đơn nhóm sắp hết hạn mà còn ghế chưa trả (RB-47). Chạy sau bước hết hạn ở trên
+                // nên đơn vừa được gia hạn cũng được nhắc ngay. Lỗi ở phần nhắc không làm dừng các bước khác.
+                try
+                {
+                    int soThu = NhacHanGiuCho.ChayMotLan(db, _guiEmail, _cauHinh, _nhatKy);
+                    if (soThu > 0)
+                    {
+                        _nhatKy.LogInformation("Đã gửi {SoThu} thư nhắc thanh toán đơn nhóm", soThu);
+                    }
+                }
+                catch (Exception loi)
+                {
+                    db.ChangeTracker.Clear();
+                    _nhatKy.LogError(loi, "Lỗi khi nhắc thanh toán đơn nhóm");
                 }
 
                 // Lịch sắp đi còn ghế đang giữ mà chưa có chỗ trên xe (dữ liệu cũ, hoặc lần xếp trước bị trùng): xếp bù (RB-36)

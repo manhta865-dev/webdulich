@@ -851,6 +851,9 @@ namespace webdulich.Controllers
                 model.HanGiuCho = dt.TrangThai == "GiuCho" ? dt.HanGiuCho : null;
                 model.DaGiaHan = dt.DaGiaHan;
                 model.TrangThaiTheoGhe = model.DsGhe.ToDictionary(h => h.Id, h => TrangThaiGhe.Tinh(h, model.DsGiaoDich));
+                model.TruongNhomId = dt.TaiKhoanId;
+                model.DsNhac = _context.NhacThanhToans.AsNoTracking().Include(x => x.TaiKhoan)
+                    .Where(x => x.DatTourId == id).OrderBy(x => x.Id).ToList();
             }
 
             return View(model);
@@ -1431,7 +1434,9 @@ namespace webdulich.Controllers
                 || _context.DanhGiaTours.Any(x => x.TaiKhoanId == id)
                 || _context.DonXinNghis.Any(x => x.NguoiDuyetId == id)
                 || _context.KhoanLuongs.Any(x => x.NguoiTaoId == id)
-                || _context.BangLuongs.Any(x => x.NguoiChotId == id || x.NguoiTraId == id);
+                || _context.BangLuongs.Any(x => x.NguoiChotId == id || x.NguoiTraId == id)
+                // Đã được nhắc thanh toán (RB-47): giữ lịch sử nhắc, kể cả khi người đó đã trả lại ghế
+                || _context.NhacThanhToans.Any(x => x.TaiKhoanId == id);
             // Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.
             if (coDonDatTour)
             {

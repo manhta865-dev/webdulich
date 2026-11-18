@@ -212,6 +212,53 @@
         }
     </section>
 
+    @* ---------- Lịch sử nhắc qua email (đơn nhóm, RB-47) ---------- *@
+    @if (laNhom)
+    {
+        <section class="ad-form-block">
+            <h2>Lịch sử nhắc</h2>
+            @if (Model.DsNhac.Any())
+            {
+                <div class="ad-table-wrap">
+                    <table class="ad-table">
+                        <thead>
+                            <tr>
+                                <th>Lúc nhắc</th>
+                                <th>Người nhận</th>
+                                <th>Email</th>
+                                <th>Hạn được nhắc</th>
+                                <th>Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var nhac in Model.DsNhac)
+                            {
+                                <tr>
+                                    <td>@nhac.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(nhac.TaiKhoan?.HoTen ?? "")@(nhac.TaiKhoanId == Model.TruongNhomId ? " (trưởng nhóm)" : "")</td>
+                                    <td>@nhac.EmailNhan</td>
+                                    <td>@nhac.HanDuocNhac.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @(nhac.TrangThai switch
+                                        {
+                                            TrangThaiNhac.DaGui => $"Đã gửi lúc {nhac.NgayGui:HH:mm dd/MM}",
+                                            TrangThaiNhac.Loi => $"Lỗi (thử {nhac.SoLanThu}/{TrangThaiNhac.SoLanThuToiDa} lần): {nhac.Loi}",
+                                            _ => "Đang gửi"
+                                        })
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="ad-note">Chưa nhắc lần nào. Hệ thống tự gửi email khi hạn giữ chỗ còn dưới @(Context.RequestServices.GetRequiredService<IConfiguration>().GetValue("DonNhom:SoGioNhacTruocHan", 6)) giờ mà còn ghế chưa trả.</p>
+            }
+        </section>
+    }
+
     @* ---------- Hành khách ---------- *@
     <section class="ad-form-block">
         <h2>Hành khách</h2>

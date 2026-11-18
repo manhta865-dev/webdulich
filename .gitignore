@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Thư nhắc lưu thành file khi thử trên máy (Email:CheDo = File), có email người dùng nên không commit
+**/ThuDaGui/
+
 # User-specific files
 *.rsuser
 *.suo

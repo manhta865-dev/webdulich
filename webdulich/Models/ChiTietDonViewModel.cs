@@ -20,6 +20,10 @@ namespace webdulich.Models
         public DateTime? HanGiuCho { get; set; }
         public bool DaGiaHan { get; set; }
         public Dictionary<int, string> TrangThaiTheoGhe { get; set; } = new Dictionary<int, string>();
+
+        // Đơn nhóm (RB-47): các lần nhắc thanh toán qua email, cũ trước; kèm tên người nhận
+        public List<NhacThanhToan> DsNhac { get; set; } = new List<NhacThanhToan>();
+        public int? TruongNhomId { get; set; }
     }
 
     // Phần admin được sửa trực tiếp trên đơn: thông tin liên hệ

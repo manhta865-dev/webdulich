@@ -31,4 +31,31 @@ note over DV, DB
   Mọi bước đổi trạng thái đều có điều kiện (GiuCho, DaGiaHan = 0),
   nên dịch vụ nền và lúc mở trang chạy cùng lúc thì chỉ một nơi làm được.
 end note
+
+== Nhắc trước hạn qua email (RB-47, chỉ dịch vụ nền, sau bước trên) ==
+participant "NhacHanGiuCho" as NH
+participant "GuiEmail\n(File trên máy,\nSMTP relay trên host)" as GM
+DV -> NH : ChayMotLan()
+NH -> DB : Đơn Nhom, GiuCho, bây giờ < HanGiuCho <= bây giờ + 6h
+loop Mỗi đơn có ghế chưa trả (chưa nhận, đã nhận, đã điền)
+  loop Mỗi thành viên có ghế chưa trả, rồi trưởng nhóm (thư tóm tắt, không có giấy tờ)
+    alt Chưa có lần nhắc cho (đơn, người, mốc hạn)
+      NH -> DB : INSERT NhacThanhToans (ChoGui)\nUNIQUE chặn hai lần quét cùng giành
+    else Lần trước Loi và SoLanThu < 3
+      NH -> DB : UPDATE SET ChoGui, SoLanThu + 1 WHERE Loi
+    else Đã gửi hoặc hết lượt thử
+      NH -> NH : bỏ qua
+    end
+    NH -> GM : Gui(thư)
+    alt Gửi được
+      NH -> DB : UPDATE SET DaGui, NgayGui
+    else Lỗi
+      NH -> DB : UPDATE SET Loi, lý do (thử lại ở lần quét sau)
+    end
+  end
+end
+note over NH, DB
+  Gia hạn đổi HanGiuCho nên mốc hạn mới được nhắc thêm một lần (tối đa 2 lần mỗi đơn).
+  Tài khoản không có email thì bỏ qua.
+end note
 @enduml

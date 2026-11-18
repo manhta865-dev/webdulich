@@ -71,7 +71,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<DuLichDbContext>()
     .AddDefaultTokenProviders();
 
-// N5: quét đơn nhóm hết hạn giữ chỗ theo chu kỳ (gia hạn, nhả ghế chưa trả, chốt hoặc hủy)
+// Gửi email nhắc thanh toán (RB-47): trên máy lưu thành file .eml, trên host gửi qua SMTP relay (cấu hình mục Email)
+builder.Services.AddSingleton<webdulich.Services.IGuiEmail, webdulich.Services.GuiEmail>();
+
+// N5: quét đơn nhóm hết hạn giữ chỗ theo chu kỳ (gia hạn, nhả ghế chưa trả, chốt hoặc hủy), kèm nhắc trước hạn qua email
 builder.Services.AddHostedService<webdulich.Services.XuLyHetHanDonNhom>();
 
 var app = builder.Build();
