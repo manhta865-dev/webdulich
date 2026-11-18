@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration CauHinh
 @{
     ViewData["Title"] = "Thanh toán";
     var tour = ViewBag.Tour as webdulich.Models.Tour;
@@ -18,12 +19,10 @@
 
 
 
-    string tenKhach = ViewBag.TenKhach != null ? ViewBag.TenKhach.ToString() : "KHACH";
-    string tenTour = tour != null ? tour.TenTour : "TOUR";
-    string ngayDiText = ViewBag.NgayDi != null ? ((DateTime)ViewBag.NgayDi).ToString("ddMMyyyy") : GioVN.BayGio.ToString("ddMMyyyy");
-
-    string noiDungCK = $"{tenKhach}-{tenTour}-{ngayDiText}";
-    noiDungCK = noiDungCK.Replace(" ", "").ToUpper();
+    // Nội dung chuyển khoản là mã chuyến đi (TV-XXXXXX), giữ nguyên tới bước xác nhận, để hệ thống tự đối chiếu (RB-48).
+    // Tài khoản nhận lấy từ cấu hình "ThanhToan" như đơn nhóm; QR điền sẵn số tiền và nội dung.
+    string noiDungCK = ViewBag.MaChuyenDi?.ToString() ?? string.Empty;
+    var ck = webdulich.Models.ThongTinChuyenKhoan.Tao(CauHinh, tongTien, noiDungCK);
 }
 
 @section Styles {
@@ -109,14 +108,14 @@
                     <div id="bankBox" class="pay-box active">
                         <div class="pay-grid">
                             <div class="qr-wrap">
-                                <img src="https://img.vietqr.io/image/acb-26877677-compact2.png?addInfo=@noiDungCK&accountName=TA%20THANH%20MANH"
-                                     alt="QR Chuyển khoản ACB" />
+                                <img id="qrChuyenKhoan" src="@ck.LinkQr" data-qr-goc="@ck.LinkQr"
+                                     alt="QR chuyển khoản @(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)" />
                             </div>
 
                             <div class="pay-info">
-                                <p><strong>Ngân hàng:</strong> ACB</p>
-                                <p><strong>Số tài khoản:</strong> 26877677</p>
-                                <p><strong>Chủ tài khoản:</strong> TA THANH MANH</p>
+                                <p><strong>Ngân hàng:</strong> @(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)</p>
+                                <p><strong>Số tài khoản:</strong> @ck.SoTaiKhoan</p>
+                                <p><strong>Chủ tài khoản:</strong> @ck.TenTaiKhoan</p>
                                 <p><strong>Số tiền:</strong> <span class="js-final-total pay-amount">@tongTien.ToString("N0") VNĐ</span></p>
                                 <p><strong>Nội dung chuyển khoản:</strong></p>
                                 <div class="copy-box">@noiDungCK</div>
@@ -125,7 +124,7 @@
 
                         <div class="note-box">
                             Vui lòng chuyển đúng số tiền <strong><span class="js-final-total">@tongTien.ToString("N0") VNĐ</span></strong> và ghi đúng nội dung:
-                            <strong>@noiDungCK</strong>
+                            <strong>@noiDungCK</strong>. Đúng mã và đúng số tiền thì TravelVN tự xác nhận khi nhận được tiền.
                         </div>
                     </div>
 
@@ -137,8 +136,8 @@
 
                             <div class="pay-info">
                                 <p><strong>Ví điện tử:</strong> MoMo</p>
-                                <p><strong>Số điện thoại ví:</strong> 0342500619</p>
-                                <p><strong>Chủ ví:</strong> TA THANH MANH</p>
+                                <p><strong>Số điện thoại ví:</strong> @ck.SoMomo</p>
+                                <p><strong>Chủ ví:</strong> @ck.TenTaiKhoan</p>
                                 <p><strong>Số tiền:</strong> <span class="js-final-total pay-amount">@tongTien.ToString("N0") VNĐ</span></p>
                                 <p><strong>Nội dung chuyển khoản:</strong></p>
                                 <div class="copy-box">@noiDungCK</div>
@@ -146,7 +145,7 @@
                         </div>
 
                         <div class="note-box">
-                            Bạn quét QR MoMo bên trên hoặc chuyển đến số <strong>0342500619</strong> số tiền
+                            Bạn quét QR MoMo bên trên hoặc chuyển đến số <strong>@ck.SoMomo</strong> số tiền
                             <strong><span class="js-final-total">@tongTien.ToString("N0") VNĐ</span></strong> và ghi đúng nội dung:
                             <strong>@noiDungCK</strong>
                         </div>
@@ -234,6 +233,14 @@
         if (discountText) discountText.textContent = "-" + data.soTienGiam;
         if (finalTotalText) finalTotalText.textContent = data.tongTien;
         if (promoCodeSummary) promoCodeSummary.textContent = data.maKhuyenMai ? data.maKhuyenMai : "Chưa áp dụng";
+
+        // QR phải điền đúng số tiền sau giảm, nếu không khách chuyển sai số và hệ thống không tự xác nhận được
+        const qr = document.getElementById("qrChuyenKhoan");
+        if (qr && typeof data.tongTienSo === "number") {
+            const url = new URL(qr.dataset.qrGoc);
+            url.searchParams.set("amount", String(Math.round(data.tongTienSo)));
+            qr.src = url.toString();
+        }
     }
 
     function applyPromoCode() {

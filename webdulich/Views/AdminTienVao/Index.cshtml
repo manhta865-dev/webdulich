@@ -1,0 +1,136 @@
+@model List<webdulich.Models.GiaoDichNganHang>
+@using webdulich.Models
+
+@{
+    ViewData["Title"] = "Giao dịch ngân hàng";
+    bool canXuLy = ViewBag.CanXuLy == true;
+    int soCanXuLy = ViewBag.SoCanXuLy ?? 0;
+    bool dangBat = ViewBag.DangBat == true;
+    bool choPhepGiaLap = ViewBag.ChoPhepGiaLap == true;
+    var maDon = ViewBag.MaDon as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <div class="ad-pagehead">
+        <div>
+            <h1>Giao dịch ngân hàng</h1>
+            <p>
+                Tiền vào tài khoản nhận tiền do SePay báo về. Khoản có đúng mã ghế hoặc mã đơn và đúng số tiền được tự xác nhận;
+                khoản khác nằm ở "Cần xử lý" để bạn đối chiếu và xác nhận tay ở trang đơn.
+            </p>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="ad-alert ok" role="status">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+        <div class="ad-alert loi" role="alert">@TempData["error"]</div>
+    }
+    @if (!dangBat)
+    {
+        <div class="ad-alert" role="status">Chưa bật nhận tin từ SePay (chưa có khóa ThanhToanTuDong:SePayApiKey trong cấu hình). Admin vẫn xác nhận tay như bình thường.</div>
+    }
+
+    <div class="ad-bv-nut ad-tv-loc">
+        <a asp-action="Index" class="tv-btn @(canXuLy ? "tv-btn-vien" : "tv-btn-chinh") ad-btn-nho">Tất cả</a>
+        <a asp-action="Index" asp-route-canXuLy="true" class="tv-btn @(canXuLy ? "tv-btn-chinh" : "tv-btn-vien") ad-btn-nho">Cần xử lý (@soCanXuLy)</a>
+    </div>
+
+    @if (choPhepGiaLap)
+    {
+        <section class="ad-form-block">
+            <h2>Gửi tiền vào giả</h2>
+            <p class="ad-note">Chỉ dùng khi thử. Tạo một khoản tiền vào như SePay báo về rồi đối chiếu ngay. Tắt bằng ThanhToanTuDong:ChoPhepGiaLap = false.</p>
+            <form asp-action="GiaLap" method="post" class="ad-tv-gia-lap">
+                <label>
+                    <span>Nội dung chuyển khoản</span>
+                    <input type="text" name="noiDung" class="form-control" maxlength="200" placeholder="Ví dụ TV-E3R448-3 hoặc NGUYEN VAN A CK TVE3R4483" required />
+                </label>
+                <label>
+                    <span>Số tiền (VNĐ)</span>
+                    <input type="number" name="soTien" class="form-control" min="1000" step="1000" required />
+                </label>
+                <button type="submit" class="tv-btn tv-btn-chinh">Gửi tiền vào giả</button>
+            </form>
+        </section>
+    }
+
+    <div class="ad-table-card">
+        <div class="ad-table-wrap">
+            <table class="ad-table ad-table-gd-ghe">
+                <thead>
+                    <tr>
+                        <th>Lúc nhận</th>
+                        <th>Số tiền</th>
+                        <th>Nội dung</th>
+                        <th>Kết quả</th>
+                        <th>Xử lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tv in Model)
+                    {
+                        var gd = tv.GiaoDichThanhToan;
+                        int? donId = gd?.DatTourId ?? gd?.HanhKhachDatTour?.DatTourId;
+                        <tr>
+                            <td>
+                                @tv.NgayNhan.ToString("dd/MM/yyyy HH:mm")<br />
+                                <small class="ad-note">@(tv.Nguon == NguonTienVao.GiaLap ? "Giả lập" : tv.NganHang ?? tv.Nguon)@(tv.MaThamChieu != null ? " · " + tv.MaThamChieu : "")</small>
+                            </td>
+                            <td class="ad-price">@tv.SoTien.ToString("N0") VNĐ</td>
+                            <td>@tv.NoiDung</td>
+                            <td>
+                                <span class="ad-badge@(tv.KetQua == KetQuaTienVao.DaKhop ? "" : " canh-bao")">@KetQuaTienVao.Ten(tv.KetQua)</span>
+                                @if (donId.HasValue)
+                                {
+                                    <br />
+                                    <a asp-controller="Admin" asp-action="SuaDonDatTour" asp-route-id="@donId" class="tv-link">
+                                        @(maDon.TryGetValue(donId.Value, out var ma) ? ma : "Xem đơn")@(gd?.HanhKhachDatTour?.MaThanhToan != null ? " · ghế " + gd.HanhKhachDatTour.MaThanhToan : "")
+                                    </a>
+                                }
+                            </td>
+                            <td>
+                                @if (tv.KetQua == KetQuaTienVao.DaKhop)
+                                {
+                                    <span class="ad-note">Không cần</span>
+                                }
+                                else if (tv.NguoiXuLyId.HasValue)
+                                {
+                                    <span>Đã xử lý @tv.NgayXuLy?.ToString("dd/MM HH:mm") bởi @(tv.NguoiXuLy?.HoTen ?? "")</span>
+                                    @if (!string.IsNullOrEmpty(tv.GhiChuXuLy))
+                                    {
+                                        <br /><small class="ad-note">@tv.GhiChuXuLy</small>
+                                    }
+                                }
+                                else
+                                {
+                                    <form asp-action="DaXuLy" asp-route-id="@tv.Id" method="post" class="ad-tv-xu-ly"
+                                          data-xac-nhan-tieu-de="Đánh dấu đã xử lý?"
+                                          data-xac-nhan="Chỉ bấm khi bạn đã xác nhận tay ở trang đơn hoặc đã hoàn tiền cho khách. Hệ thống không đổi gì ở đơn."
+                                          data-xac-nhan-nut="Đã xử lý">
+                                        <input type="text" name="ghiChu" class="form-control" maxlength="300" placeholder="Ghi chú, ví dụ đã hoàn tiền" aria-label="Ghi chú xử lý" />
+                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Đã xử lý</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="ad-empty-cell">@(canXuLy ? "Không có khoản nào cần xử lý." : "Chưa có khoản tiền vào nào.")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

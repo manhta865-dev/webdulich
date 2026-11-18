@@ -1261,3 +1261,11 @@ div.ad-kpi:hover { border-color: var(--tv-vien); }
 /* Nhãn "Cần đổi người" ở bảng phân công (RB-45) */
 .pc-can-doi { display: inline-block; margin-top: 4px; white-space: normal; text-decoration: none; }
 .pc-can-doi:hover { text-decoration: underline; }
+
+/* ---------- Giao dịch ngân hàng (RB-48) ---------- */
+.ad-tv-loc { margin-bottom: var(--tv-k4); }
+.ad-tv-gia-lap { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--tv-k3); }
+.ad-tv-gia-lap label { display: flex; flex-direction: column; gap: var(--tv-k1); flex: 1 1 220px; }
+.ad-tv-gia-lap label span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.ad-tv-xu-ly { display: flex; gap: var(--tv-k2); align-items: center; min-width: 260px; }
+.ad-tv-xu-ly .form-control { min-width: 0; }

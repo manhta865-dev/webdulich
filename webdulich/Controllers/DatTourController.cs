@@ -342,7 +342,9 @@ namespace webdulich.Controllers
                     maKhuyenMai = "",
                     soTienGiam = FormatTien(0),
                     tongTienTruocGiam = FormatTien(tongTienTruocGiam),
-                    tongTien = FormatTien(tongTienTruocGiam)
+                    tongTien = FormatTien(tongTienTruocGiam),
+                    // Số thô để trang thanh toán cập nhật số tiền trong mã QR
+                    tongTienSo = tongTienTruocGiam
                 });
             }
             // Kiểm tra tính hợp lệ của mã khuyến mãi bằng cách truy vấn cơ sở dữ liệu để tìm khuyến mãi phù hợp với mã đã nhập và đáp ứng các điều kiện về trạng thái, ngày bắt đầu, ngày kết thúc, và số lượt dùng. Nếu không tìm thấy khuyến mãi hợp lệ, xóa session liên quan đến khuyến mãi và trả về JSON với thông báo lỗi. Nếu tìm thấy khuyến mãi hợp lệ, tiếp tục tính toán số tiền giảm và tổng tiền sau khi áp dụng khuyến mãi.
@@ -366,7 +368,8 @@ namespace webdulich.Controllers
                 maKhuyenMai = khuyenMai.MaKhuyenMai,
                 soTienGiam = FormatTien(soTienGiam),
                 tongTienTruocGiam = FormatTien(tongTienTruocGiam),
-                tongTien = FormatTien(tongTienSauGiam)
+                tongTien = FormatTien(tongTienSauGiam),
+                tongTienSo = tongTienSauGiam
             });
         }
         // ---------- Chọn chỗ ngồi (bước 2 của luồng đặt tour) ----------
@@ -881,6 +884,9 @@ namespace webdulich.Controllers
 
                 giaoDichCsdl.Commit();
             }
+
+            // Khách có thể đã chuyển khoản trước khi bấm xác nhận (lúc đó chưa có đơn): đối chiếu lại tiền vào có mã đơn này (RB-48)
+            webdulich.Services.DoiChieuTienVao.DoiChieuLaiChoMa(_context, model.MaChuyenDi);
 
             HttpContext.Session.Remove("DatTour_TourId");
             HttpContext.Session.Remove("DatTour_LichKhoiHanhTourId");

@@ -1,0 +1,44 @@
+@startuml seq-tu-xac-nhan
+' Sequence: tự xác nhận chuyển khoản qua SePay (RB-48, khớp code Mo22)
+autonumber
+actor "Thành viên" as TV
+participant "Ngân hàng ACB" as NH
+participant "SePay" as SP
+participant "SePayController\nPOST /api/sepay/tien-vao" as API
+participant "DoiChieuTienVao" as DC
+database "SQL Server" as DB
+actor "Admin" as AD
+
+TV -> NH : Chuyển khoản, nội dung TV-XXXXXX-n,\nđúng số tiền của ghế
+NH -> SP : Biến động số dư
+SP -> API : Gói tin tiền vào\n(Authorization: Apikey ...)
+alt Sai khóa
+  API --> SP : 401
+else Tiền ra
+  API --> SP : 200, bỏ qua
+else Tiền vào
+  API -> DC : Nhan(tiền vào)
+  DC -> DB : BEGIN; INSERT GiaoDichNganHangs\nUNIQUE (Nguon, MaGiaoDichNguon)
+  alt Đã có (báo trùng)
+    DC -> DB : ROLLBACK, không làm gì thêm
+  else Mới
+    DC -> DC : Chuẩn hóa nội dung, tìm mã ghế rồi mã đơn
+    alt Đúng mã, đúng số tiền, ghế/đơn còn hiệu lực, chưa trả
+      DC -> DB : Giao dịch chờ -> ThanhCong (chưa có thì tạo mới),\n"Chuyển khoản (tự động)"; đơn cá nhân -> DaXacNhan
+      DC -> DB : KetQua = DaKhop, gắn GiaoDichThanhToanId
+    else Không tìm thấy mã / sai số tiền / đã trả / ghế đã nhả / đơn đã hủy
+      DC -> DB : KetQua = lý do, không đổi đơn
+    end
+    DC -> DB : COMMIT
+  end
+  API --> SP : 200 {"success": true}
+end
+
+AD -> DB : Xem "Giao dịch ngân hàng", lọc Cần xử lý
+AD -> DB : Xác nhận tay ở trang đơn hoặc hoàn tiền,\nrồi đánh dấu đã xử lý (người, lúc, ghi chú)
+
+note over DC, DB
+  Đơn cá nhân vừa tạo: đối chiếu lại các khoản "không tìm thấy mã"
+  có chứa mã đơn (khách chuyển trước khi bấm xác nhận).
+end note
+@enduml

@@ -44,11 +44,13 @@
     string[] mucNhanSu = { "NhanSu", "ThemNhanVien" };
 
     bool moTour = LaAdminCo(mucTour) || LaAdminCo(mucLichDi) || LaAdminCo(mucLichTrinh) || LaAdminCo(mucPhanCong);
-    bool moKinhDoanh = LaAdminCo(mucDon) || LaAdminCo(mucKhuyenMai) || LaAdminCo(mucDoanhThu);
+    bool moKinhDoanh = LaAdminCo(mucDon) || LaAdminCo(mucKhuyenMai) || LaAdminCo(mucDoanhThu) || controllerName == "AdminTienVao";
     bool moNoiDung = controllerName is "AdminBaiViet" or "AdminVideo" or "AdminDanhGia";
     bool moConNguoi = LaAdminCo(mucTinNhan) || LaAdminCo(mucTaiKhoan) || LaAdminCo(mucNhanSu) || controllerName is "AdminDonXinNghi" or "AdminLuong";
     // Số đơn xin nghỉ đang chờ duyệt, hiện cạnh mục menu của admin (RB-45)
     int soDonNghiCho = currentRole == "admin" ? ChatDb.DonXinNghis.Count(d => d.TrangThai == TrangThaiDonNghi.ChoDuyet) : 0;
+    // Số khoản tiền vào chưa tự khớp và chưa ai xử lý tay (RB-48)
+    int soTienVaoCanXuLy = currentRole == "admin" ? ChatDb.GiaoDichNganHangs.Count(x => x.KetQua != KetQuaTienVao.DaKhop && x.NguoiXuLyId == null) : 0;
     string? nhomHienTai = moTour ? "Tour và lịch" : moKinhDoanh ? "Đơn và doanh thu" : moNoiDung ? "Nội dung" : moConNguoi ? "Khách và nhân sự" : null;
 }
 
@@ -121,6 +123,7 @@
                     <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg><span>Đơn đặt tour</span></a>
                     <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)"><svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg><span>Khuyến mãi</span></a>
                     <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chart" /></svg><span>Doanh thu</span></a>
+                    <a asp-controller="AdminTienVao" asp-action="Index" class="@Active("AdminTienVao")"><svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg><span>Giao dịch ngân hàng</span>@if (soTienVaoCanXuLy > 0) {<b class="tv-side-dem" aria-label="@soTienVaoCanXuLy khoản tiền vào cần xử lý">@soTienVaoCanXuLy</b>}</a>
                 </details>
                 <details class="tv-side-nhom" name="menuAdmin" open="@moNoiDung">
                     <summary>
