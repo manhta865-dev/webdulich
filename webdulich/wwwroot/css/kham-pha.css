@@ -127,7 +127,8 @@
     70% { box-shadow: 0 0 0 12px rgba(228, 87, 46, 0); }
     100% { box-shadow: 0 0 0 0 rgba(228, 87, 46, 0); }
 }
-.kp-dao { color: #0A6E8A; font: 700 0.75rem var(--tv-font); text-shadow: 0 0 3px #FFFFFF; pointer-events: none; }
+/* Nền trắng để đọc rõ trên cả nền bản đồ lẫn ảnh vệ tinh (biển xanh đậm) */
+.kp-dao { padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: #0A6E8A; font: 700 0.75rem var(--tv-font); box-shadow: 0 1px 3px rgba(23, 38, 46, 0.25); pointer-events: none; }
 
 /* Thẻ tour khi bấm vào điểm */
 .kp-popup .maplibregl-popup-content { padding: var(--tv-k3); border-radius: var(--tv-bo-khoi); font-family: var(--tv-font); }

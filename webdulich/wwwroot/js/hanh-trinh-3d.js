@@ -1,6 +1,7 @@
 // Hành trình ở trang chi tiết tour, có hai cách vẽ dùng chung một bộ nút:
 // - Tour có đủ điểm xuất phát và điểm mọi ngày: xe chạy trên bản đồ thật (MapLibre), đã bỏ chữ và ranh giới của bản đồ gốc,
 //   khóa vùng xem và góc nhìn. Đường đi lấy từ CSDL; ngày chưa có đường thì nối bằng nét đứt thẳng.
+//   Có nút chuyển nền sang ảnh vệ tinh (js/nen-ve-tinh.js).
 // - Tour chưa đủ tọa độ, hoặc bản đồ lỗi: phong cảnh tự vẽ (three), là hình minh họa, không có hình đất nước.
 // Khung này ẩn sẵn; lỗi ở đây không ảnh hưởng danh sách lịch trình bên dưới.
 const goc = document.getElementById("hanhTrinh3D");
@@ -269,6 +270,13 @@ async function taoBanDo(duLieu) {
         source: "diaHinh",
         paint: { "hillshade-exaggeration": 0.3, "hillshade-shadow-color": "#5F6F5A", "hillshade-highlight-color": "#FFFFFF" }
     }, map.getLayer("water") ? "water" : undefined);
+
+    // Nút "Bản đồ | Vệ tinh": thêm trước đường đi để ảnh vệ tinh nằm dưới đường và điểm dừng. Lỗi thì bỏ qua, bản đồ vẫn chạy.
+    try {
+        (await import("./nen-ve-tinh.js?v=3")).themNenVeTinh(map);
+    } catch (loi) {
+        // Không có nút vệ tinh, giữ nền bản đồ
+    }
 
     const coDuongThat = dsDoan.some((d) => !d.thang), coDuongThang = dsDoan.some((d) => d.thang);
     map.addSource("hanhTrinh", {

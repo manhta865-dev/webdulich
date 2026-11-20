@@ -304,3 +304,25 @@
 @media (max-width: 576px) {
     .tv-photo-card { aspect-ratio: 4 / 3; }
 }
+
+/* ---------- Nút "Bản đồ | Vệ tinh" trên bản đồ MapLibre (js/nen-ve-tinh.js) ----------
+   Nằm trên bản đồ như các nút phóng to của MapLibre: nền trắng chữ tối ở cả hai chế độ sáng, tối */
+.maplibregl-ctrl-group.tv-nen { display: flex; overflow: hidden; }
+.maplibregl-ctrl-group.tv-nen button {
+    width: auto;
+    height: 30px;
+    padding: 0 var(--tv-k3);
+    border: 0;
+    background: #FFFFFF;
+    color: var(--tv-chu-tren-sang);
+    font-family: var(--tv-font);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.maplibregl-ctrl-group.tv-nen button + button { border-top: 0; border-left: 1px solid #DCE3E6; }
+.maplibregl-ctrl-group.tv-nen button:not(:disabled):not([aria-pressed="true"]):hover { background: #EEF1F2; }
+/* Thêm .maplibregl-ctrl để thắng kiểu rê chuột của MapLibre (nạp sau, cùng độ ưu tiên) */
+.maplibregl-ctrl.maplibregl-ctrl-group.tv-nen button[aria-pressed="true"] { background: #0A6E8A; color: #FFFFFF; }
+.maplibregl-ctrl-group.tv-nen button:disabled { color: #9AA6AC; cursor: not-allowed; }
+.maplibregl-ctrl-group.tv-nen button:focus-visible { outline: 2px solid #0A6E8A; outline-offset: -2px; }

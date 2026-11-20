@@ -1,5 +1,5 @@
 // Bản đồ tour (DiaDiem/BanDo): chấm các điểm đến đang bán tour, mở ở Việt Nam, thu nhỏ ra thấy cả tour nước ngoài.
-// Nền bản đồ OpenFreeMap, bỏ chữ và đường ranh giới của bản đồ gốc (cùng cách với hanh-trinh-3d.js),
+// Nền bản đồ OpenFreeMap (có nút chuyển sang ảnh vệ tinh), bỏ chữ và đường ranh giới của bản đồ gốc (cùng cách với hanh-trinh-3d.js),
 // tên điểm và nhãn Hoàng Sa, Trường Sa do TravelVN tự ghi. Lỗi thì giữ danh sách bên cạnh, không mất thông tin.
 const KIEU_BAN_DO = "https://tiles.openfreemap.org/styles/liberty";
 const khung = document.getElementById("banDoTour");
@@ -57,6 +57,16 @@ async function batDau() {
     });
     map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    // Nút "Bản đồ | Vệ tinh" (js/nen-ve-tinh.js); các chấm tour là phần tử HTML nên luôn nằm trên ảnh. Lỗi thì bỏ qua.
+    // Đặt dưới nút phóng to: góc trên trái là Sapa, Hà Giang, sẽ bị che.
+    map.once("load", async () => {
+        try {
+            (await import("./nen-ve-tinh.js?v=3")).themNenVeTinh(map, { viTri: "top-right" });
+        } catch (loi) {
+            // Không có nút vệ tinh, giữ nền bản đồ
+        }
+    });
 
     // Hoàng Sa, Trường Sa: nhãn tự ghi, không bấm được
     [["Hoàng Sa", 112.0, 16.5], ["Trường Sa", 114.2, 10.0]].forEach(([chu, kinh, vi]) => {
