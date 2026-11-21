@@ -97,7 +97,8 @@
             </div>
         </form>
 
-        <aside class="dt-block dt-summary">
+        @* Tóm tắt như một tấm vé: phần trên là tour, đường xé, phần dưới là số ghế và tổng tiền (id giữ nguyên cho script) *@
+        <aside class="dt-block dt-summary dn-co-xe dn-tom-tat-ve">
             <h2>Tóm tắt</h2>
             <div class="dt-summary-tour">
                 @if (!string.IsNullOrEmpty(Model.HinhAnh))
@@ -106,10 +107,11 @@
                 }
                 <div>
                     <h3>@Model.TenTour</h3>
-                    <div class="dt-meta">Khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")</div>
+                    <div class="dt-meta">Khởi hành <span class="tv-ma">@Model.NgayDi.ToString("dd/MM/yyyy")</span>@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "")</div>
                 </div>
             </div>
-            <div class="dt-line"><span>Số ghế</span><span id="tomTatSoGhe">@(Model.SoNguoiLon + Model.SoTreNho)</span></div>
+            <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+            <div class="dt-line"><span>Số ghế</span><span id="tomTatSoGhe" class="tv-ma">@(Model.SoNguoiLon + Model.SoTreNho)</span></div>
             <div class="dt-line total"><span>Tổng cả nhóm</span><span id="tomTatTong">@((Model.SoNguoiLon * Model.GiaNguoiLon + Model.SoTreNho * Model.GiaTreEm).ToString("N0")) VNĐ</span></div>
             <p class="dn-hint">Mỗi ghế có mã thanh toán và QR riêng. Không ai phải ứng tiền cho cả nhóm.</p>
         </aside>

@@ -17,10 +17,11 @@ Phát triển tiếp ý "ô ghế": **mỗi ghế là một tấm vé có chủ 
 | `.tv-ve` | khung vé, bo 14px, viền mảnh |
 | `.tv-ve-duc-lo` / `.tv-ve-duc-lo-doc` | đường đục lỗ ngang / dọc, hai đầu có vết khuyết tròn (`--nen-sau-ve` = màu phía sau vé) |
 | `.tv-ma`, `.tv-ma-vach` | chữ máy in vé (JetBrains Mono, chỉ cho mã vé, mã ghế, mã giảm giá) và mã vạch trang trí |
-| `.tv-moc` (+ `-xanh`, `-vang`, `-xam`) | dấu mộc nghiêng: "Đã trả", "Chờ xác nhận", "Chưa trả" |
+| `.tv-moc` (+ `-xanh`, `-vang`, `-xam`, `-do`) | dấu mộc nghiêng: "Đã trả", "Chờ xác nhận", "Chưa trả", "Hết hiệu lực" |
 | `.tv-moc-dong` | khoảnh khắc chuyển động duy nhất: mộc được đóng xuống (tắt khi người dùng chọn giảm chuyển động) |
+| `[data-moc-dong]` + `js/moc-dong.js` | khối có mộc: mộc đóng lần lượt khi khối cuộn tới, một lần |
 
-Đã áp dụng: thẻ tour (`_TheTour.cshtml`, trang chủ và danh sách tour), tấm vé lớn đầu trang chủ (vết khuyết khoét thủng bằng mask), hai tấm vé so sánh, mã giảm giá (phiếu xé), bảng vé ghế ở trang chủ (mộc đóng lần lượt khi cuộn tới). Quả địa cầu nằm ở khối "Nhóm bạn muốn đi đâu?" cạnh lưới điểm đến, hiện cả trên điện thoại. Ảnh trước và sau ở `docs/anh_giao_dien/`.
+Đã áp dụng: các trang đơn nhóm (xem mục "Đơn nhóm" ở phần 3), thẻ tour (`_TheTour.cshtml`, trang chủ và danh sách tour), tấm vé lớn đầu trang chủ (vết khuyết khoét thủng bằng mask), hai tấm vé so sánh, mã giảm giá (phiếu xé), bảng vé ghế ở trang chủ (mộc đóng lần lượt khi cuộn tới). Quả địa cầu nằm ở khối "Nhóm bạn muốn đi đâu?" cạnh lưới điểm đến, hiện cả trên điện thoại. Ảnh trước và sau ở `docs/anh_giao_dien/`.
 
 ## 2. Token
 
@@ -125,6 +126,17 @@ Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch s�
 Thành công: dấu tích, mã chuyến đi, tóm tắt, nút xem lịch sử. Lịch sử: danh sách đơn dạng thẻ, mỗi thẻ có nhãn trạng thái (chữ kèm màu), nút Hủy ở đúng chỗ.
 
 **Vé của đơn (21/11/2026):** đơn đặt riêng đã thanh toán, chưa hủy có nút "Xem vé" ở Lịch sử, mở `DatTour/Ve/{id}`. Mỗi hành khách một tấm vé cùng kiểu vé ghế ở trang Ghế của tôi (lật xem mặt sau, nghiêng theo chuột, lưu ảnh PNG): tên tour, ngày, giờ, họ tên, chỗ ngồi (lịch không có sơ đồ thì in thứ tự hành khách); mặt sau có mã chuyến đi và "Hành khách 1/3". Không in số giấy tờ, ghi rõ không dùng để soát vé. Chỉ chủ đơn (theo `taiKhoanId`) xem được; đơn nhóm, đơn chưa trả hoặc đã hủy thì quay về Lịch sử kèm thông báo. Script dùng chung `wwwroot/js/ve-lat.js`: mỗi vé `[data-ve]` nằm trong khối `[data-ve-khoi]` có nút lật, nút lưu riêng.
+
+### Đơn nhóm (21/11/2026)
+Mỗi ghế là một tấm vé có chủ riêng. Chỉ đổi giao diện, controller, model, form, route và script giữ nguyên.
+
+- **Trang tiến độ** (`DonNhom/ChiTiet`): đầu trang là vé tập thể (mã đơn, tour, ngày giờ, số ghế, số ghế đã trả); cuống vé là đồng hồ giữ chỗ, hoặc mộc "Đơn đã chốt" / "Đơn đã hủy" / "Chờ chốt". Danh sách ghế là lưới vé ghế: thân vé có số ghế, chỗ ngồi, người giữ ghế, mộc tiền ("Đã trả", "Chờ xác nhận", "Chưa trả", "Đã nhả"); cuống vé có số tiền và nút (Ghế của tôi, Điền hộ, Trả hộ, Xem, Thêm). Ghế trống viền nét đứt, ghế đã nhả mờ. Giữ thanh xe buýt tiến độ và sơ đồ xe 3D. Khối "Mời cả nhóm" có đường xé như phiếu mời.
+- **Trang mời** (`DonNhom/Moi`): thư mời dạng vé, cuống là hạn nhận ghế; ghế còn nhận được viền màu nhấn, có nút "Nhận ghế này" ở cuống; ghế đã có người nhận mờ, mộc xám. Không hiện tên ai.
+- **Link hết hạn**: tấm vé mộc đỏ "Hết hiệu lực".
+- **Đặt tour cho nhóm**: khối Tóm tắt có đường xé giữa tour và tiền.
+- **Trả hộ**: đầu trang là vé của đúng ghế (cuống ghi số ghế).
+- **Khối "Phần phải trả"** (`_TraTienGhe`, dùng ở Ghế của tôi và Trả hộ): đường xé giữa số tiền và phần QR; ghế đã trả hoặc chờ xác nhận có mộc tương ứng; nội dung chuyển khoản, số tài khoản, số tiền in chữ máy in vé.
+- Ảnh trước và sau: `docs/anh_giao_dien/truoc_don_nhom_*`, `sau_don_nhom_*`.
 
 ### Gợi ý tour
 Đã làm: khung ảnh đầu trang, khối chọn tiêu chí (giữ nguyên form và các trường TieuChi), khối "Cách gợi ý hoạt động", kết quả dạng thẻ có thanh mức phù hợp, lý do đề xuất, nút xem chi tiết và đặt tour. Đã gỡ dải số liệu khảo sát viết cứng (xem docs/KHAO_SAT.md) và nhãn "Hot".

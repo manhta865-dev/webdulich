@@ -2,7 +2,8 @@
 @using webdulich.Models
 @* Khung "Phần phải trả" của một ghế: QR riêng, thông tin chuyển khoản, nút báo đã chuyển (N4) *@
 
-<section class="dt-block dn-tra-tien">
+@* Khung như một tấm vé dọc: phần trên là số tiền, đường xé, phần dưới là QR và thông tin chuyển khoản hoặc dấu mộc *@
+<section class="dt-block dn-tra-tien dn-co-xe">
     <h2>@(Model.TraHo ? "Trả hộ ghế này" : "Phần phải trả")</h2>
     <div class="dt-line"><span>@Model.LoaiHanhKhach</span><span>@Model.GiaLucDat.ToString("N0") VNĐ</span></div>
     @if (Model.TienGiam > 0)
@@ -10,13 +11,16 @@
         <div class="dt-line"><span>Khuyến mãi của nhóm</span><span>-@Model.TienGiam.ToString("N0") VNĐ</span></div>
         <div class="dt-line"><strong>Phải trả</strong><strong>@Model.PhaiTra.ToString("N0") VNĐ</strong></div>
     }
+    <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
     @if (Model.TrangThai == TrangThaiGhe.DaTra)
     {
+        <div class="dn-tra-moc"><span class="tv-moc tv-moc-xanh">Đã trả</span></div>
         <p class="dn-tra-ket-qua da-tra">TravelVN đã nhận tiền của ghế này.</p>
     }
     else if (Model.TrangThai == TrangThaiGhe.ChoXacNhan)
     {
+        <div class="dn-tra-moc"><span class="tv-moc tv-moc-vang">Chờ xác nhận</span></div>
         <p class="dn-tra-ket-qua cho">Đã báo chuyển khoản. TravelVN đang đối chiếu sao kê, xác nhận xong ghế sẽ chuyển sang "Đã trả".</p>
     }
     else if (Model.DuocTra && Model.ChuyenKhoan != null)
@@ -53,9 +57,9 @@
                 <p class="dn-hint dn-qr-huong-dan">Mở app ngân hàng, chọn quét QR. Số tiền và nội dung đã điền sẵn.</p>
                 <dl class="dn-ck">
                     <div><dt>Ngân hàng</dt><dd>@(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)</dd></div>
-                    <div><dt>Số tài khoản</dt><dd>@ck.SoTaiKhoan</dd></div>
+                    <div><dt>Số tài khoản</dt><dd class="tv-ma">@ck.SoTaiKhoan</dd></div>
                     <div><dt>Chủ tài khoản</dt><dd>@ck.TenTaiKhoan</dd></div>
-                    <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
+                    <div><dt>Số tiền</dt><dd><span class="tv-ma">@ck.SoTien.ToString("N0")</span> VNĐ</dd></div>
                     <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
                 </dl>
             </div>
@@ -68,8 +72,8 @@
                     </div>
                     <p class="dn-canh-bao">Mã MoMo không tự điền số tiền và nội dung. Bạn gõ đúng hai thông tin dưới đây để TravelVN biết tiền của ghế nào.</p>
                     <dl class="dn-ck">
-                        <div><dt>Số ví MoMo</dt><dd>@ck.SoMomo</dd></div>
-                        <div><dt>Số tiền</dt><dd>@ck.SoTien.ToString("N0") VNĐ</dd></div>
+                        <div><dt>Số ví MoMo</dt><dd class="tv-ma">@ck.SoMomo</dd></div>
+                        <div><dt>Số tiền</dt><dd><span class="tv-ma">@ck.SoTien.ToString("N0")</span> VNĐ</dd></div>
                         <div><dt>Nội dung</dt><dd class="dn-ma-tt">@ck.NoiDung</dd></div>
                     </dl>
                 </div>

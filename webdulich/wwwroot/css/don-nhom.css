@@ -269,6 +269,17 @@
 .dn-vg-ghi-chu { font-size: var(--tv-cs-nho); font-weight: 600; color: var(--tv-nhan-dam); }
 .dn-vg .dn-nhan-form .tv-btn { min-height: 36px; padding: 0 var(--tv-k3); font-size: var(--tv-cs-nho); white-space: nowrap; }
 
+/* Trang trả hộ: cuống vé ghi số ghế */
+.dn-ve-dau-mo-ta { margin: 0; color: var(--tv-chu-phu); }
+.dn-ve-dau-ghe { font-size: 1.5rem; font-weight: 600; color: var(--tv-nhan-dam); }
+
+/* Khối "Phần phải trả": dấu mộc ngay dưới đường xé khi ghế đã trả hoặc đang chờ xác nhận */
+.dn-tra-moc { display: flex; justify-content: center; padding: var(--tv-k1) 0 var(--tv-k2); }
+.dn-tra-moc .tv-moc { font-size: 1rem; }
+
+/* Tóm tắt ở trang đặt nhóm: đường xé thay cho đường kẻ dưới khối tour */
+.dn-tom-tat-ve .dt-summary-tour { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+
 /* Khối có đường xé tràn hai mép (vết khuyết nằm đúng mép khối). --dem bằng padding của .dt-block */
 .dn-co-xe { --dem: var(--tv-k5); --khuyet: 10px; --nen-sau-ve: var(--tv-nen); overflow: hidden; }
 .dn-co-xe > .tv-ve-duc-lo { margin: var(--tv-k4) calc(var(--khuyet) + 6px - var(--dem)); }
@@ -500,7 +511,7 @@
 .dn-xem dt { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .dn-xem dd { margin: 0; font-weight: 600; }
 
-.dn-ma-tt { font-family: ui-monospace, Consolas, monospace; font-weight: 700; }
+.dn-ma-tt { font-family: var(--tv-font-ve), ui-monospace, Consolas, monospace; font-weight: 700; letter-spacing: 0.02em; }
 .dn-lien-ket { margin-top: var(--tv-k4); }
 
 /* ---------- Trả tiền theo ghế (N4) ---------- */

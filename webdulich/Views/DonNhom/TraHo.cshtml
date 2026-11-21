@@ -12,11 +12,17 @@
     <a asp-action="ChiTiet" asp-route-id="@Model.DonId" class="dn-quay-lai">
         <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>Trang tiến độ của nhóm
     </a>
-    <div class="dn-head">
-        <div>
-            <span class="dn-ma">Đơn nhóm @Model.MaChuyenDi, ghế @Model.ThuTu</span>
+    @* Đầu trang là vé của đúng ghế đang trả hộ: thân vé là tour và người giữ ghế, cuống vé là số ghế *@
+    <div class="tv-ve tv-ve-ngang dn-ve-dau">
+        <div class="dn-ve-dau-than">
+            <span class="dn-ve-dau-nhan">Đơn nhóm <span class="tv-ma">@Model.MaChuyenDi</span></span>
             <h1>Trả hộ @(Model.TenChu ?? "ghế " + Model.ThuTu)</h1>
-            <p>@Model.TenTour. Bạn chuyển khoản phần của ghế này thay cho thành viên, rồi tự thu lại với họ.</p>
+            <p class="dn-ve-dau-mo-ta">@Model.TenTour. Bạn chuyển khoản phần của ghế này thay cho thành viên, rồi tự thu lại với họ.</p>
+        </div>
+        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+        <div class="dn-ve-dau-cuong">
+            <span class="dn-ve-dau-ghe tv-ma">GHẾ @Model.ThuTu.ToString("00")</span>
+            <span class="tv-ma-vach" aria-hidden="true"></span>
         </div>
     </div>
 
