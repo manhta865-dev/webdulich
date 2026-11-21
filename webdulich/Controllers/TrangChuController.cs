@@ -28,7 +28,7 @@ namespace webdulich.Controllers
                     .ThenInclude(x => x.PhongCach);
         }
         //Đây là action mở trang chủ.
-        public IActionResult Index()
+        public IActionResult Index([FromServices] IConfiguration cauHinh)
         {
 
             //Nếu người đăng nhập là admin thì tự chuyển về trang quản trị.
@@ -114,6 +114,9 @@ namespace webdulich.Controllers
                         : Url.Action("DanhSach", "DiaDiem", new { keyword = g.First().DiemDen })
                 })
                 .ToList();
+
+            // Cùng khóa cấu hình với DatTourController, DonNhomController để câu chữ khớp luật đang chạy
+            ViewBag.SoGioGiuCho = cauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
 
             return View(tours);
         }

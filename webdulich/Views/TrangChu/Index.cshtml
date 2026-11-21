@@ -7,19 +7,31 @@
     // Tour trong nước và nước ngoài do TrangChuController đã chuẩn bị sẵn (tối đa 6 tour mỗi nhóm).
     var tourTrongNuoc = ViewBag.TourTrongNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
     var tourNgoaiNuoc = ViewBag.TourNgoaiNuoc as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
-    var coNhomTour = tourTrongNuoc.Any() || tourNgoaiNuoc.Any();
     var dsVideo = ViewBag.Videos as List<webdulich.Models.Video> ?? new List<webdulich.Models.Video>();
     var dsBaiViet = ViewBag.BaiViets as List<webdulich.Models.BaiViet> ?? new List<webdulich.Models.BaiViet>();
+    int soGio = ViewBag.SoGioGiuCho ?? 24;
 
-    // Điểm đến ở phần đầu trang. Ảnh lấy trong wwwroot/images/dulich, chỉ dùng ảnh đủ nét để phủ kín màn hình.
-    var diemDens = new[]
+    // Mọi tour hiện ở trang chủ, kèm nhóm để lọc (trong nước / nước ngoài). Chưa phân nhóm thì dùng 3 tour mặc định.
+    var dsTour = tourTrongNuoc.Select(t => (Tour: t, Nhom: "trong"))
+        .Concat(tourNgoaiNuoc.Select(t => (Tour: t, Nhom: "ngoai")))
+        .ToList();
+    if (!dsTour.Any() && Model != null)
     {
-        new { Ten = "Hạ Long", Vung = "Miền Bắc", Anh = "halong.jpg", MoTa = "Vịnh có hàng nghìn đảo đá vôi nhô lên từ mặt nước xanh, nổi tiếng với các chuyến du thuyền." },
-        new { Ten = "Đà Lạt", Vung = "Tây Nguyên", Anh = "dalat1.jpg", MoTa = "Thành phố cao nguyên mát mẻ quanh năm, có đồi thông, hồ nước và những vườn hoa." },
-        new { Ten = "Đà Nẵng", Vung = "Miền Trung", Anh = "danang.jpg", MoTa = "Thành phố biển có bãi cát dài, cầu Vàng ở Bà Nà và nhiều món ăn địa phương." },
-        new { Ten = "Phú Quốc", Vung = "Miền Nam", Anh = "phuquoc.jpg", MoTa = "Hòn đảo lớn nhất Việt Nam, có biển trong, bãi cát trắng và các điểm lặn ngắm san hô." },
-        new { Ten = "Nha Trang", Vung = "Miền Trung", Anh = "nhatrang.jpg", MoTa = "Thành phố biển có vịnh nước xanh, các đảo gần bờ và nhiều khu vui chơi ven biển." }
-    };
+        dsTour = Model.Select(t => (Tour: t, Nhom: "")).ToList();
+    }
+
+    // Tour xếp quạt ở đầu trang (tối đa 6), tour đầu tiên in lên cuống vé
+    var tourXap = dsTour.Select(x => x.Tour).Take(6).ToList();
+    var tourCuong = tourXap.FirstOrDefault();
+
+    // Điểm đến lấy từ chính các tour đang bán: tên, ảnh của tour đầu tiên, số tour
+    var diemDen = dsTour.Select(x => x.Tour)
+        .Where(t => !string.IsNullOrWhiteSpace(t.TenDiaDiemHienThi) && t.TenDiaDiemHienThi != "Chưa cập nhật")
+        .GroupBy(t => t.TenDiaDiemHienThi.Trim().ToLower())
+        .Select(g => (Ten: g.First().TenDiaDiemHienThi.Trim(), Anh: g.First().HinhAnh, SoTour: g.Count()))
+        .ToList();
+
+    string GiaTu(webdulich.Models.Tour t) => t.Gia.ToString("N0") + " VNĐ";
 }
 
 @section TimKiemMenu {
@@ -44,161 +56,254 @@
     <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
 }
 
-<section class="hero" id="hero" aria-roledescription="carousel" aria-label="Điểm đến nổi tiếng">
-    <h1 class="visually-hidden">Tìm chuyến đi tiếp theo của bạn</h1>
+@* ===== 1. Đầu trang: tấm vé lớn, quả địa cầu, tour xếp quạt, hàng điểm đến ===== *@
+<section class="tc-dau">
+    <div class="tc-trong">
+        <div class="tv-ve tv-ve-ngang tc-ve">
+            <div class="tc-ve-than">
+                <div class="tc-ve-dau tv-ma">
+                    <span><svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg> TRAVELVN</span>
+                    <span>VÉ ĐI NHÓM</span>
+                </div>
+                <div class="tc-ve-tuyen tv-ma" aria-hidden="true">
+                    <span>NHÓM CỦA BẠN</span>
+                    <span class="tc-ve-tuyen-giua"><svg class="tv-icon"><use href="#i-plane" /></svg></span>
+                    <span>CHUYẾN ĐI TIẾP THEO</span>
+                </div>
 
-    @for (var i = 0; i < diemDens.Length; i++)
-    {
-        var d = diemDens[i];
-        <div class="hero-slide@(i == 0 ? " is-active" : "")">
-            <img src="~/images/dulich/@d.Anh" alt="Ảnh @d.Ten"
-                 loading="@(i == 0 ? "eager" : "lazy")" fetchpriority="@(i == 0 ? "high" : "auto")" />
-            <div class="hero-text">
-                <span class="hero-place">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
-                    @d.Vung, Việt Nam
-                </span>
-                <h2 class="hero-title">@d.Ten</h2>
-                <p class="hero-desc">@d.MoTa</p>
-                <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten" class="tv-btn tv-btn-sang">Xem tour @d.Ten</a>
+                <h1 class="tc-ve-tieu-de">Đi cùng nhóm, mỗi người tự trả phần mình</h1>
+                <p class="tc-ve-mo-ta">Một người giữ chỗ và gửi link mời. Mỗi thành viên tự nhận ghế, tự điền thông tin và chuyển khoản phần của mình. Ai đã trả, còn bao lâu, cả nhóm cùng thấy.</p>
+
+                <ul class="tc-ve-nhan">
+                    <li><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>Giữ chỗ @soGio giờ</li>
+                    <li><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg>Link mời vào nhóm chat</li>
+                    <li><svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg>Chuyển khoản bằng mã QR</li>
+                    <li><svg class="tv-icon" aria-hidden="true"><use href="#i-check" /></svg>Biết ngay ai đã trả</li>
+                </ul>
+
+                @* Màn hình rộng có ô tìm kiếm trên thanh menu (section TimKiemMenu) nên ô này ẩn đi *@
+                <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="tc-tim" role="search">
+                    <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt" aria-label="Điểm đến" />
+                    <button type="submit" class="tv-btn tv-btn-chinh">Tìm tour</button>
+                </form>
+
+                <div class="tc-ve-nut">
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-chinh">Chọn tour</a>
+                    <a href="#dat-nhom" class="tv-btn tv-btn-vien">Xem cách đặt nhóm</a>
+                </div>
             </div>
+
+            <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+
+            @* Cuống vé: tour đang ở giữa dải xếp quạt bên dưới (script cuối trang đổi theo) *@
+            @if (tourCuong != null)
+            {
+                <a class="tc-ve-cuong" id="tcCuong" href="@Url.Action("ChiTiet", "DiaDiem", new { id = tourCuong.Id })">
+                    <span class="tc-ve-cuong-anh">
+                        <img src="~/images/dulich/@tourCuong.HinhAnh" alt="" data-cuong="anh" />
+                        <span class="tv-pill-tren" data-cuong="ngay" @(tourCuong.SoNgay.HasValue ? "" : "hidden")>@(tourCuong.SoNgay) ngày</span>
+                    </span>
+                    <span class="tc-ve-cuong-ten" data-cuong="ten">@tourCuong.TenTour</span>
+                    <span class="tc-ve-cuong-gia">Từ <strong data-cuong="gia">@GiaTu(tourCuong)</strong></span>
+                    <span class="tv-ma-vach" aria-hidden="true"></span>
+                </a>
+            }
         </div>
-    }
 
-    <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")"
-         data-diem="@System.Text.Json.JsonSerializer.Serialize(ViewBag.DiemQuaDiaCau)">
-        <canvas aria-hidden="true"></canvas>
-        <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
-    </div>
+        <div class="tc-kham-pha">
+            @* Quả địa cầu 3D (wwwroot/js/hero-3d.js): mỗi điểm đến có tour là một chấm, bấm vào để xem tour *@
+            <figure class="tc-dia-cau">
+                <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")"
+                     data-diem="@System.Text.Json.JsonSerializer.Serialize(ViewBag.DiemQuaDiaCau)">
+                    <canvas aria-hidden="true"></canvas>
+                    <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
+                </div>
+                <figcaption>Xoay quả địa cầu, bấm vào một điểm đến để xem tour ở đó.</figcaption>
+            </figure>
 
-    @* Màn hình nhỏ: ô tìm kiếm nằm trong ảnh lớn. Màn hình rộng: ô tìm kiếm nằm trên thanh menu (section TimKiemMenu) *@
-    <form method="get" asp-controller="DiaDiem" asp-action="DanhSach" class="hero-search home-search">
-        <input type="text" name="keyword" placeholder="Bạn muốn đi đâu? Ví dụ Đà Lạt, Phú Quốc" aria-label="Điểm đến" />
-        <button type="submit" class="tv-btn tv-btn-chinh">Tìm tour</button>
-    </form>
+            @if (tourXap.Any())
+            {
+                <div class="tc-xap" id="tcXap" aria-roledescription="carousel" aria-label="Một số tour đang bán">
+                    <div class="tc-xap-khung">
+                        @for (var i = 0; i < tourXap.Count; i++)
+                        {
+                            var t = tourXap[i];
+                            <a class="tc-xap-the" href="@Url.Action("ChiTiet", "DiaDiem", new { id = t.Id })"
+                               data-ten="@t.TenTour" data-gia="@GiaTu(t)" data-ngay="@t.SoNgay"
+                               data-anh="@Url.Content("~/images/dulich/" + t.HinhAnh)"
+                               aria-label="@t.TenTour">
+                                <img src="~/images/dulich/@t.HinhAnh" alt="" loading="@(i < 3 ? "eager" : "lazy")" />
+                                <span>@t.TenTour</span>
+                            </a>
+                        }
+                    </div>
+                    @if (tourXap.Count > 1)
+                    {
+                        <div class="tc-xap-nut">
+                            <button type="button" data-xap="-1" aria-label="Tour trước"><svg class="tv-icon tc-lat" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+                            <button type="button" data-xap="1" aria-label="Tour sau"><svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
 
-    <div class="hero-thumbs">
-        @for (var i = 0; i < diemDens.Length; i++)
+        @if (diemDen.Any())
         {
-            var d = diemDens[i];
-            <button type="button" class="hero-thumb@(i == 0 ? " is-active" : "")" aria-label="Xem @d.Ten" aria-current="@(i == 0 ? "true" : "false")">
-                <img src="~/images/dulich/@d.Anh" alt="" loading="lazy" />
-                <span><small>@d.Vung</small>@d.Ten</span>
-            </button>
+            <nav class="tc-diem" aria-label="Điểm đến">
+                @foreach (var d in diemDen)
+                {
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>@d.Ten
+                    </a>
+                }
+            </nav>
         }
     </div>
 </section>
 
 <div class="home-wrap">
-    @if (khuyenMais.Any())
-    {
-        <section class="tv-section">
-            <div class="tv-section-head">
-                <div>
-                    <h2>Mã giảm giá đang áp dụng</h2>
-                    <p>Sao chép mã và nhập ở bước thanh toán.</p>
-                </div>
-            </div>
+    @* ===== 2. Đặt nhóm trên TravelVN: 6 việc web làm thay trưởng nhóm (đều là tính năng đã chạy) ===== *@
+    <section class="tv-section" id="dat-nhom">
+        <div class="tc-tieu-de">
+            <h2>Đặt nhóm trên TravelVN</h2>
+            <p>Những việc trước đây một người phải ôm hết, giờ chia đều cho cả nhóm.</p>
+        </div>
+        <div class="tc-tinh-nang">
+            <article>
+                <div class="tc-mini"><span class="tc-mini-dong-ho tv-ma">@(soGio.ToString("00")):00:00</span><small>còn lại để cả nhóm trả</small></div>
+                <h3>Giữ chỗ có hạn</h3>
+                <p>Ghế được giữ tối đa @soGio giờ. Hết hạn mà chưa trả thì ghế đó được nhả cho người khác.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-link tv-ma"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg>Link mời nhóm</span><small>dán vào Zalo, Messenger</small></div>
+                <h3>Một link cho cả nhóm</h3>
+                <p>Trưởng nhóm gửi một link vào nhóm chat, mỗi người tự bấm vào và nhận một ghế.</p>
+            </article>
+            <article>
+                <div class="tc-mini tc-mini-form" aria-hidden="true"><span></span><span></span><span class="ngan"></span></div>
+                <h3>Ai nấy tự điền</h3>
+                <p>Mỗi người tự điền họ tên, ngày sinh và giấy tờ của mình. Không phải chụp gửi cho trưởng nhóm.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-qr" aria-hidden="true"></span><span class="tv-ma">TV-K7Q2PX-3</span></div>
+                <h3>Mỗi người một mã QR</h3>
+                <p>Mỗi ghế có mã QR và nội dung chuyển khoản riêng, nên tiền của ai vào ghế người đó.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-nhac"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>Ghế 03 sắp hết hạn giữ chỗ</span></div>
+                <h3>Nhắc trước khi hết hạn</h3>
+                <p>Ai đăng nhập mà còn ghế chưa trả sẽ thấy lời nhắc ngay trên web, kèm thời gian còn lại.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-an tv-ma">079 ••• •• 312</span><small>trưởng nhóm thấy</small></div>
+                <h3>Giấy tờ giữ riêng</h3>
+                <p>Trưởng nhóm thấy ai đã trả nhưng không thấy số giấy tờ của người khác.</p>
+            </article>
+        </div>
+    </section>
 
-            <div class="promo-list">
-                @foreach (var km in khuyenMais)
+    @* ===== 3. So sánh hai tấm vé: cách đặt cũ và cách của TravelVN ===== *@
+    <section class="tv-section">
+        <div class="tc-tieu-de">
+            <h2>Hai cách đặt tour cho một nhóm</h2>
+        </div>
+        <div class="tc-so-sanh">
+            <div class="tv-ve tc-so-ve tc-so-cu">
+                <div class="tc-so-dau"><h3>Kiểu cũ</h3><span class="tv-ma">MỘT NGƯỜI LO HẾT</span></div>
+                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+                <ul>
+                    <li>Một người đứng ra đặt và ứng tiền cho cả nhóm</li>
+                    <li>Gom ảnh giấy tờ của từng người qua tin nhắn</li>
+                    <li>Đi đòi lại tiền từng người, có khi sau chuyến đi</li>
+                    <li>Không biết ai đã trả, ai chưa</li>
+                    <li>Không có hạn chốt, cả nhóm chờ người chậm nhất</li>
+                </ul>
+            </div>
+            <span class="tc-so-vs" aria-hidden="true">VS</span>
+            <div class="tv-ve tc-so-ve tc-so-moi">
+                <div class="tc-so-dau"><h3>Trên TravelVN</h3><span class="tv-ma">MỖI NGƯỜI MỘT GHẾ</span></div>
+                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+                <ul>
+                    <li>Trưởng nhóm chỉ giữ chỗ và trả phần ghế của mình</li>
+                    <li>Mỗi người tự điền thông tin của mình</li>
+                    <li>Mỗi người tự chuyển khoản phần mình bằng mã QR</li>
+                    <li>Bảng ghế cho thấy ngay ai đã trả</li>
+                    <li>Có hạn giữ chỗ, quá hạn ghế chưa trả tự nhả</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    @* ===== 4. Tất cả tour, lọc nhanh trong nước / nước ngoài ===== *@
+    <section class="tv-section">
+        <div class="tv-section-head">
+            <div>
+                <h2>Chọn tour</h2>
+                <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
+            </div>
+            <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
+        </div>
+
+        @if (dsTour.Any())
+        {
+            if (tourTrongNuoc.Any() && tourNgoaiNuoc.Any())
+            {
+                <div class="tc-loc" role="group" aria-label="Lọc tour">
+                    <button type="button" class="tv-chip active" data-loc="" aria-pressed="true">Tất cả</button>
+                    <button type="button" class="tv-chip" data-loc="trong" aria-pressed="false">Trong nước</button>
+                    <button type="button" class="tv-chip" data-loc="ngoai" aria-pressed="false">Nước ngoài</button>
+                </div>
+            }
+            <div class="tv-grid-photo" id="tcLuoiTour">
+                @foreach (var x in dsTour)
                 {
-                    <div class="tv-ve tv-ve-ngang promo-card" style="--mau-km: @km.MauNen">
-                        <div class="promo-than">
-                            <h3>@km.TenKhuyenMai</h3>
-                            <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
-                        </div>
-                        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
-                        <div class="promo-cuong">
-                            <span class="promo-code tv-ma">@km.MaKhuyenMai</span>
-                            <button type="button" class="tv-btn tv-btn-vien" onclick="copyPromoCode('@km.MaKhuyenMai')">Sao chép mã</button>
-                        </div>
+                    <div class="tc-o-tour" data-nhom="@x.Nhom">
+                        <partial name="_TheTour" model="x.Tour" />
                     </div>
                 }
             </div>
-        </section>
-
-        <div id="promoToast" class="promo-toast" role="status">Đã sao chép mã khuyến mãi</div>
-    }
-
-    @if (coNhomTour)
-    {
-        if (tourTrongNuoc.Any())
-        {
-            <section class="tv-section">
-                <div class="tv-section-head">
-                    <div>
-                        <h2>Tour trong nước</h2>
-                        <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
-                    </div>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
-                </div>
-                <div class="tv-grid-photo">
-                    @foreach (var item in tourTrongNuoc)
-                    {
-                        <partial name="_TheTour" model="item" />
-                    }
-                </div>
-            </section>
         }
-
-        if (tourNgoaiNuoc.Any())
+        else
         {
-            <section class="tv-section">
-                <div class="tv-section-head">
-                    <div>
-                        <h2>Tour nước ngoài</h2>
-                    </div>
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
-                </div>
-                <div class="tv-grid-photo">
-                    @foreach (var item in tourNgoaiNuoc)
-                    {
-                        <partial name="_TheTour" model="item" />
-                    }
-                </div>
-            </section>
-        }
-    }
-    else
-    {
-        <section class="tv-section">
-            <div class="tv-section-head">
-                <div>
-                    <h2>Một số tour để bắt đầu</h2>
-                    <p>Chọn một tour để xem lịch trình và các ngày khởi hành.</p>
-                </div>
-                <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-link tv-link-di">Xem tất cả tour</a>
+            <div class="tv-empty">
+                <h3>Chưa có tour để hiển thị</h3>
+                <p>Vui lòng quay lại sau.</p>
             </div>
+        }
+    </section>
 
-            @if (Model != null && Model.Any())
-            {
-                <div class="tv-grid-photo">
-                    @foreach (var item in Model)
-                    {
-                        <partial name="_TheTour" model="item" />
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="tv-empty">
-                    <h3>Chưa có tour để hiển thị</h3>
-                    <p>Vui lòng quay lại sau.</p>
-                </div>
-            }
+    @* ===== 5. Đi đâu: lưới điểm đến từ tour đang bán, viền kiểu phong bì thư máy bay ===== *@
+    @if (diemDen.Count >= 3)
+    {
+        <section class="tv-section tc-di-dau">
+            <div class="tc-tieu-de">
+                <h2>Nhóm bạn muốn đi đâu?</h2>
+            </div>
+            <div class="tc-luoi-diem">
+                @foreach (var d in diemDen.Take(5))
+                {
+                    <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten" class="tc-o-diem">
+                        <img src="~/images/dulich/@d.Anh" alt="" loading="lazy" />
+                        <span class="tc-o-diem-chu">
+                            <strong>@d.Ten</strong>
+                            <small>@d.SoTour tour</small>
+                        </span>
+                    </a>
+                }
+            </div>
         </section>
     }
 
-    @* Tính năng chính của web: đặt theo nhóm. Hình xe là minh họa, không phải số liệu thật *@
+    @* ===== 6. Bảng ghế của một đơn nhóm (minh họa) và mã giảm giá ===== *@
     <section class="tv-section home-nhom">
         <div class="home-nhom-chu">
-            <h2>Đi cùng nhóm, mỗi người tự trả phần mình</h2>
-            <p>Không phải đứng ra thu tiền và gom giấy tờ của cả nhóm nữa.</p>
+            <h2>Mỗi ghế là một tấm vé có chủ</h2>
+            <p>Trưởng nhóm và cả nhóm cùng nhìn một bảng ghế. Ghế nào đã trả được đóng mộc, ghế nào còn trống thấy ngay.</p>
             <ol class="home-nhom-buoc">
                 <li>Một người giữ chỗ và gửi link mời vào nhóm chat.</li>
                 <li>Mỗi thành viên nhận một ghế, tự điền thông tin và chuyển khoản phần của mình.</li>
-                <li>Cả nhóm trả đủ trước hạn là xong. Trưởng nhóm thấy ai đã trả, không thấy giấy tờ của người khác.</li>
+                <li>Cả nhóm trả đủ trước hạn là xong.</li>
             </ol>
             <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-chinh">Chọn tour để đặt cho nhóm</a>
         </div>
@@ -253,6 +358,55 @@
         </figure>
     </section>
 
+    @if (khuyenMais.Any())
+    {
+        <section class="tv-section">
+            <div class="tv-section-head">
+                <div>
+                    <h2>Mã giảm giá đang áp dụng</h2>
+                    <p>Sao chép mã và nhập ở bước thanh toán.</p>
+                </div>
+            </div>
+
+            <div class="promo-list">
+                @foreach (var km in khuyenMais)
+                {
+                    <div class="tv-ve tv-ve-ngang promo-card" style="--mau-km: @km.MauNen">
+                        <div class="promo-than">
+                            <h3>@km.TenKhuyenMai</h3>
+                            <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
+                        </div>
+                        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+                        <div class="promo-cuong">
+                            <span class="promo-code tv-ma">@km.MaKhuyenMai</span>
+                            <button type="button" class="tv-btn tv-btn-vien" onclick="copyPromoCode('@km.MaKhuyenMai')">Sao chép mã</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div id="promoToast" class="promo-toast" role="status">Đã sao chép mã khuyến mãi</div>
+    }
+
+    @* ===== 7. Nhóm muốn đi ngày khác: dẫn tới lịch khởi hành và Zalo (thay khối "tour riêng" của trang tham khảo) ===== *@
+    <section class="tv-section">
+        <div class="tc-lien-he">
+            <div>
+                <h2>Nhóm muốn đi ngày khác?</h2>
+                <p>Xem lịch khởi hành theo tháng để chọn ngày cả nhóm rảnh. Chưa thấy ngày hợp, nhắn TravelVN qua Zalo.</p>
+            </div>
+            <div class="tc-lien-he-nut">
+                <a asp-controller="DiaDiem" asp-action="LichKhoiHanh" class="tv-btn tv-btn-sang">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>Xem lịch khởi hành
+                </a>
+                @* Cùng link với nút Zalo nổi (_Layout.cshtml) và chân trang (_Footer.cshtml) *@
+                <a href="https://zalo.me/0342500619" target="_blank" rel="noopener" class="tv-btn tc-nut-kinh">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-zalo" /></svg>Nhắn Zalo
+                </a>
+            </div>
+        </div>
+    </section>
 </div>
 
 @if (dsVideo.Count > 0)
@@ -313,28 +467,35 @@
             </div>
         </section>
     }
-</div>
 
-<section class="home-band">
-    <div class="home-band-inner">
-        <h2>Đặt tour qua ba bước</h2>
-        <ol class="band-steps">
-            <li>
-                <strong>Chọn tour</strong>
-                <span>Tìm theo điểm đến hoặc để web gợi ý theo sở thích của bạn.</span>
-            </li>
-            <li>
-                <strong>Chọn ngày khởi hành</strong>
-                <span>Xem ngày còn chỗ, nhập số người và thông tin hành khách.</span>
-            </li>
-            <li>
-                <strong>Thanh toán</strong>
-                <span>Kiểm tra giá, nhập mã giảm giá nếu có và hoàn tất đơn.</span>
-            </li>
-        </ol>
-        <a asp-controller="DiaDiem" asp-action="DanhSach" class="tv-btn tv-btn-sang">Bắt đầu chọn tour</a>
-    </div>
-</section>
+    @* ===== 8. Hỏi đáp nhanh: cùng nội dung với trang Giới thiệu ===== *@
+    <section class="tv-section">
+        <div class="tv-section-head">
+            <div>
+                <h2>Hỏi nhanh về đặt nhóm</h2>
+            </div>
+            <a asp-controller="TrangChu" asp-action="GioiThieu" class="tv-link tv-link-di">Xem thêm câu hỏi</a>
+        </div>
+        <div class="tc-hoi">
+            <details>
+                <summary>Trưởng nhóm có phải trả tiền cho cả nhóm không?</summary>
+                <p>Không. Trưởng nhóm chỉ giữ chỗ và trả phần ghế của mình. Mỗi thành viên trả phần ghế họ nhận bằng mã QR riêng.</p>
+            </details>
+            <details>
+                <summary>Nếu một người trong nhóm không trả thì sao?</summary>
+                <p>Khi hết hạn giữ chỗ, chỉ ghế chưa trả bị nhả để người khác đặt. Những ghế đã trả hoặc đang chờ xác nhận chuyển khoản vẫn được giữ.</p>
+            </details>
+            <details>
+                <summary>Trưởng nhóm có xem được giấy tờ của thành viên không?</summary>
+                <p>Không. Trưởng nhóm chỉ thấy tên và tình trạng thanh toán của từng ghế. Số giấy tờ chỉ người đó và TravelVN xem được.</p>
+            </details>
+            <details>
+                <summary>Tôi chuyển khoản rồi, bao lâu thì ghế được xác nhận?</summary>
+                <p>Nhân viên đối chiếu sao kê rồi xác nhận. Trong lúc chờ, ghế của bạn ở trạng thái chờ xác nhận và không bị nhả.</p>
+            </details>
+        </div>
+    </section>
+</div>
 
 <script type="module" src="~/js/hero-3d.js" asp-append-version="true"></script>
 @if (dsVideo.Count > 0)
@@ -344,51 +505,80 @@
 }
 
 <script>
+    // Dải tour xếp quạt: thẻ giữa nằm thẳng, hai thẻ bên nghiêng ra sau; cuống vé ở tấm vé lớn đổi theo thẻ giữa
     (function () {
-        var hero = document.getElementById("hero");
-        if (!hero) return;
+        var xap = document.getElementById("tcXap");
+        if (!xap) return;
+        var the = xap.querySelectorAll(".tc-xap-the");
+        var cuong = document.getElementById("tcCuong");
+        var hienTai = 0, timer = null, daBamTay = false;
 
-        var slides = hero.querySelectorAll(".hero-slide");
-        var thumbs = hero.querySelectorAll(".hero-thumb");
-        var hienTai = 0;
-        var timer = null;
-        var daBamTay = false;
+        function doiCuong(a) {
+            if (!cuong) return;
+            cuong.href = a.href;
+            cuong.querySelector('[data-cuong="anh"]').src = a.dataset.anh;
+            cuong.querySelector('[data-cuong="ten"]').textContent = a.dataset.ten;
+            cuong.querySelector('[data-cuong="gia"]').textContent = a.dataset.gia;
+            var ngay = cuong.querySelector('[data-cuong="ngay"]');
+            ngay.hidden = !a.dataset.ngay;
+            ngay.textContent = a.dataset.ngay + " ngày";
+        }
 
         function hien(n) {
-            hienTai = (n + slides.length) % slides.length;
-            slides.forEach(function (s, k) { s.classList.toggle("is-active", k === hienTai); });
-            thumbs.forEach(function (t, k) {
-                t.classList.toggle("is-active", k === hienTai);
-                t.setAttribute("aria-current", k === hienTai ? "true" : "false");
+            var dem = the.length;
+            hienTai = (n + dem) % dem;
+            the.forEach(function (a, k) {
+                var lech = (k - hienTai + dem) % dem;
+                if (lech > dem / 2) lech -= dem;
+                a.dataset.vt = Math.abs(lech) <= 1 ? String(lech) : "an";
+                a.tabIndex = lech === 0 ? 0 : -1;
             });
+            doiCuong(the[hienTai]);
         }
 
         function chay() {
-            if (timer || daBamTay || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-            timer = setInterval(function () { hien(hienTai + 1); }, 6000);
+            if (timer || daBamTay || the.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            timer = setInterval(function () { hien(hienTai + 1); }, 5000);
         }
+        function dung() { clearInterval(timer); timer = null; }
 
-        function dung() {
-            clearInterval(timer);
-            timer = null;
-        }
-
-        thumbs.forEach(function (t, k) {
-            t.addEventListener("click", function () {
-                daBamTay = true;
-                dung();
-                hien(k);
+        xap.querySelectorAll("[data-xap]").forEach(function (nut) {
+            nut.addEventListener("click", function () {
+                daBamTay = true; dung();
+                hien(hienTai + Number(nut.dataset.xap));
             });
         });
-
-        hero.addEventListener("mouseenter", dung);
-        hero.addEventListener("mouseleave", chay);
-        hero.addEventListener("focusin", dung);
-        hero.addEventListener("focusout", chay);
+        // Bấm thẻ nghiêng bên cạnh thì đưa nó ra giữa thay vì mở trang tour
+        the.forEach(function (a, k) {
+            a.addEventListener("click", function (e) {
+                if (k !== hienTai) { e.preventDefault(); daBamTay = true; dung(); hien(k); }
+            });
+        });
+        xap.addEventListener("mouseenter", dung);
+        xap.addEventListener("mouseleave", chay);
+        xap.addEventListener("focusin", dung);
+        hien(0);
         chay();
     })();
 
-    // Khối "đi cùng nhóm": khi cuộn tới thì đóng mộc lên từng vé ghế, lần lượt từ trên xuống (một lần)
+    // Lọc tour trong nước / nước ngoài
+    (function () {
+        var nut = document.querySelectorAll(".tc-loc [data-loc]");
+        var o = document.querySelectorAll("#tcLuoiTour .tc-o-tour");
+        nut.forEach(function (b) {
+            b.addEventListener("click", function () {
+                nut.forEach(function (x) {
+                    x.classList.toggle("active", x === b);
+                    x.setAttribute("aria-pressed", x === b ? "true" : "false");
+                });
+                o.forEach(function (the) {
+                    the.hidden = !!b.dataset.loc && the.dataset.nhom !== b.dataset.loc;
+                });
+            });
+        });
+    })();
+
+    // Khối bảng ghế: khi cuộn tới thì đóng mộc lên từng vé ghế, lần lượt từ trên xuống (một lần)
     (function () {
         var hinh = document.querySelector(".home-nhom-hinh");
         if (!hinh || !("IntersectionObserver" in window)

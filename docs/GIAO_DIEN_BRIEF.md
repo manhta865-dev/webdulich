@@ -20,7 +20,7 @@ Phát triển tiếp ý "ô ghế": **mỗi ghế là một tấm vé có chủ 
 | `.tv-moc` (+ `-xanh`, `-vang`, `-xam`) | dấu mộc nghiêng: "Đã trả", "Chờ xác nhận", "Chưa trả" |
 | `.tv-moc-dong` | khoảnh khắc chuyển động duy nhất: mộc được đóng xuống (tắt khi người dùng chọn giảm chuyển động) |
 
-Đã áp dụng: thẻ tour (`_TheTour.cshtml`, trang chủ và danh sách tour), dải điểm đến ở ảnh lớn trang chủ (cuống vé, vết khuyết khoét thủng bằng mask), mã giảm giá (phiếu xé), khối "đi cùng nhóm" ở trang chủ (5 vé ghế, mộc đóng lần lượt khi cuộn tới). Quả địa cầu giữ nguyên ở ảnh lớn trang chủ. Ảnh trước và sau ở `docs/anh_giao_dien/`.
+Đã áp dụng: thẻ tour (`_TheTour.cshtml`, trang chủ và danh sách tour), tấm vé lớn đầu trang chủ (vết khuyết khoét thủng bằng mask), hai tấm vé so sánh, mã giảm giá (phiếu xé), bảng vé ghế ở trang chủ (mộc đóng lần lượt khi cuộn tới). Quả địa cầu nằm cạnh dải tour xếp quạt ở đầu trang chủ, hiện cả trên điện thoại. Ảnh trước và sau ở `docs/anh_giao_dien/`.
 
 ## 2. Token
 
@@ -78,7 +78,17 @@ Ký hiệu: `[ ]` là nút hoặc ô nhập, `( )` là nhãn nhỏ.
 Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng bộ.
 
 ### Trang chủ
-Đầu trang là ảnh điểm đến phủ kín màn hình, menu trong suốt nằm trên ảnh (đổi nền trắng khi cuộn xuống). Thanh tìm kiếm nổi ở giữa phía trên; góc trái dưới có tên điểm đến lớn, mô tả ngắn và nút "Xem tour"; góc phải dưới là dải thẻ điểm đến, bấm để đổi ảnh (tự chuyển sau 6 giây, dừng khi rê chuột, tắt khi người dùng chọn giảm chuyển động). Ảnh chỉ dùng loại đủ nét trong `wwwroot/images/dulich`. Bên dưới là mã giảm giá (nếu có trong dữ liệu), tour trong nước và nước ngoài dạng thẻ ảnh dọc (tên, số ngày, giá chồng lên ảnh), rồi một dải ảnh phủ kín với ba bước đặt tour. Chân trang nền tối có địa chỉ, bản đồ Google, liên hệ và các loại thanh toán (chỉ để minh họa trong đồ án, chưa kết nối cổng thanh toán). Bỏ số liệu "100+ tour, 500+ khách", ba lời khen viết cứng, băng chữ ưu đãi và nhãn "Nổi bật". Khối "Đi theo nhóm" sẽ thêm khi chức năng đơn nhóm có thật.
+**Bản làm lại (21/11/2026)**, sắp khối theo cách của travelhappytrip.com nhưng chữ, ảnh, màu là của TravelVN và mọi câu chữ chỉ nói tính năng đã chạy thật:
+1. Đầu trang nền xanh: tấm vé lớn (dải "TRAVELVN, VÉ ĐI NHÓM", tiêu đề, 4 nhãn: giữ chỗ N giờ theo cấu hình `DonNhom:SoGioGiuCho`, link mời, QR, biết ai đã trả; ô tìm kiếm khi màn hình dưới 1200px; nút "Chọn tour", "Xem cách đặt nhóm"). Cuống vé hiện tour đang ở giữa dải xếp quạt. Bên dưới: quả địa cầu 3D bên trái, tour xếp quạt bên phải (tự chuyển 5 giây, bấm thẻ bên để đưa ra giữa), hàng nút điểm đến lấy từ tour.
+2. "Đặt nhóm trên TravelVN": 6 thẻ, mỗi thẻ có một mẩu giao diện thu nhỏ (đồng hồ giữ chỗ, link mời, ô điền, mã QR, lời nhắc trên web, số giấy tờ bị che).
+3. Hai tấm vé so sánh: kiểu cũ và trên TravelVN.
+4. Chọn tour: thẻ vé, lọc Tất cả / Trong nước / Nước ngoài.
+5. "Nhóm bạn muốn đi đâu?": lưới điểm đến (một ô lớn, bốn ô nhỏ) viền sọc kiểu phong bì thư máy bay.
+6. Bảng 5 vé ghế đóng mộc (minh họa), mã giảm giá dạng phiếu xé.
+7. "Nhóm muốn đi ngày khác?": nút Lịch khởi hành và Zalo (thay khối tour riêng, visa của trang tham khảo vì TravelVN không có dịch vụ đó).
+8. Video, bài viết mới, hỏi đáp nhanh (cùng câu trả lời với trang Giới thiệu).
+
+Bản trước (đến 20/11/2026): đầu trang là ảnh điểm đến phủ kín màn hình, menu trong suốt nằm trên ảnh (đổi nền trắng khi cuộn xuống). Thanh tìm kiếm nổi ở giữa phía trên; góc trái dưới có tên điểm đến lớn, mô tả ngắn và nút "Xem tour"; góc phải dưới là dải thẻ điểm đến, bấm để đổi ảnh (tự chuyển sau 6 giây, dừng khi rê chuột, tắt khi người dùng chọn giảm chuyển động). Ảnh chỉ dùng loại đủ nét trong `wwwroot/images/dulich`. Bên dưới là mã giảm giá (nếu có trong dữ liệu), tour trong nước và nước ngoài dạng thẻ ảnh dọc (tên, số ngày, giá chồng lên ảnh), rồi một dải ảnh phủ kín với ba bước đặt tour. Chân trang nền tối có địa chỉ, bản đồ Google, liên hệ và các loại thanh toán (chỉ để minh họa trong đồ án, chưa kết nối cổng thanh toán). Bỏ số liệu "100+ tour, 500+ khách", ba lời khen viết cứng, băng chữ ưu đãi và nhãn "Nổi bật". Khối "Đi theo nhóm" sẽ thêm khi chức năng đơn nhóm có thật.
 
 ### Danh sách tour
 Đã làm: khung ảnh bo góc có tiêu đề và thanh tìm kiếm, hàng chip lọc theo địa hình (Tất cả, Biển, Núi, Đồng bằng, Thành phố), lưới thẻ tour ảnh dọc dùng chung `Views/Shared/_TheTour.cshtml` với trang chủ. Bản vẽ dưới đây là ý tưởng ban đầu.
