@@ -9,20 +9,34 @@
 }
 
 <div class="dt-page">
-    <div class="dn-moi-dau">
-        @if (!string.IsNullOrEmpty(Model.HinhAnh))
-        {
-            <img src="~/images/dulich/@Model.HinhAnh" alt="" class="dn-moi-anh" />
-        }
-        <div class="dn-moi-chu">
-            <span class="dn-ma">@Model.TenTruongNhom mời bạn đi cùng</span>
-            <h1>@Model.TenTour</h1>
-            <p>Khởi hành @Model.NgayDi.ToString("dd/MM/yyyy")@(Model.GioKhoiHanh.HasValue ? " lúc " + Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : ""). Mã đơn @Model.MaChuyenDi.</p>
+    @* Thư mời dạng vé: thân vé là chuyến đi, cuống vé là hạn nhận ghế và trả tiền *@
+    <div class="tv-ve tv-ve-ngang dn-ve-dau">
+        <div class="dn-ve-dau-than dn-ve-moi-than">
+            @if (!string.IsNullOrEmpty(Model.HinhAnh))
+            {
+                <img src="~/images/dulich/@Model.HinhAnh" alt="" class="dn-ve-moi-anh" />
+            }
+            <div class="dn-ve-moi-chu">
+                <span class="dn-ve-dau-nhan">@Model.TenTruongNhom mời bạn đi cùng</span>
+                <h1>@Model.TenTour</h1>
+                <dl class="dn-ve-dau-ds">
+                    <div><dt>Khởi hành</dt><dd class="tv-ma">@Model.NgayDi.ToString("dd/MM/yyyy")</dd></div>
+                    @if (Model.GioKhoiHanh.HasValue)
+                    {
+                        <div><dt>Giờ đi</dt><dd class="tv-ma">@Model.GioKhoiHanh.Value.ToString(@"hh\:mm")</dd></div>
+                    }
+                    <div><dt>Mã đơn</dt><dd class="tv-ma">@Model.MaChuyenDi</dd></div>
+                </dl>
+            </div>
         </div>
-        <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho)">
-            <span>Nhận ghế và trả trước</span>
-            <strong data-dem>--:--:--</strong>
-            <small>@Model.HanGiuCho.ToString("HH:mm dd/MM/yyyy")</small>
+        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+        <div class="dn-ve-dau-cuong dem@(Model.DaGiaHan ? " gia-han" : "")">
+            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho)">
+                <span>Nhận ghế và trả trước</span>
+                <strong data-dem>--:--:--</strong>
+                <small>@Model.HanGiuCho.ToString("HH:mm dd/MM/yyyy")</small>
+            </div>
+            <span class="tv-ma-vach" aria-hidden="true"></span>
         </div>
     </div>
 
@@ -53,27 +67,47 @@
                 @(Model.DaDangNhap ? "" : "Bạn cần đăng nhập để nhận ghế, xong sẽ quay lại trang này.")
             </p>
 
-            <ol class="dn-ghe-ds">
+            @* Mỗi ghế là một tấm vé; không hiện tên ai vì ai có link cũng xem được *@
+            <ol class="dn-vg-ds" data-moc-dong>
                 @foreach (var g in Model.DsGhe)
                 {
-                    <li class="dn-ghe @(g.ConTrong ? "trong" : "da-nhan")">
-                        <span class="dn-ghe-so">@g.ThuTu</span>
-                        <div class="dn-ghe-ten">
-                            <strong>@g.LoaiHanhKhach, @g.PhaiTra.ToString("N0") VNĐ</strong>
-                            <small>@(g.MaCho != null ? "Chỗ " + g.MaCho + " đã chọn sẵn" : "Chọn chỗ ngồi sau khi nhận ghế")</small>
+                    <li class="tv-ve tv-ve-ngang dn-vg @(g.NhanDuoc ? "con-nhan" : "da-co-nguoi")">
+                        <div class="dn-vg-than">
+                            <div class="dn-vg-dau">
+                                <span class="tv-ma">GHẾ @g.ThuTu.ToString("00")</span>
+                                @if (g.MaCho != null)
+                                {
+                                    <span class="tv-ma dn-vg-cho">CHỖ @g.MaCho</span>
+                                }
+                            </div>
+                            <strong class="dn-vg-ten">@g.LoaiHanhKhach</strong>
+                            <span class="dn-vg-phu">@(g.MaCho != null ? "Chỗ " + g.MaCho + " đã chọn sẵn" : "Chọn chỗ ngồi sau khi nhận ghế")</span>
+                            @if (!g.NhanDuoc)
+                            {
+                                <div class="dn-vg-moc">
+                                    @if (g.ConTrong)
+                                    {
+                                        <span class="dn-vg-ghi-chu">Trưởng nhóm điền hộ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="tv-moc tv-moc-xam">Đã có người nhận</span>
+                                    }
+                                </div>
+                            }
                         </div>
-                        @if (g.NhanDuoc)
-                        {
-                            <form asp-action="NhanGhe" method="post" class="dn-nhan-form">
-                                <input type="hidden" name="ma" value="@Model.Ma" />
-                                <input type="hidden" name="gheId" value="@g.Id" />
-                                <button type="submit" class="tv-btn tv-btn-chinh">@(Model.DaDangNhap ? "Nhận ghế này" : "Đăng nhập để nhận")</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <span class="dn-nhan">@(g.ConTrong ? "Trưởng nhóm điền hộ" : "Đã có người nhận")</span>
-                        }
+                        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+                        <div class="dn-vg-cuong">
+                            <span class="dn-vg-tien"><span class="tv-ma">@g.PhaiTra.ToString("N0")</span> VNĐ</span>
+                            @if (g.NhanDuoc)
+                            {
+                                <form asp-action="NhanGhe" method="post" class="dn-nhan-form">
+                                    <input type="hidden" name="ma" value="@Model.Ma" />
+                                    <input type="hidden" name="gheId" value="@g.Id" />
+                                    <button type="submit" class="tv-btn tv-btn-chinh">@(Model.DaDangNhap ? "Nhận ghế này" : "Đăng nhập để nhận")</button>
+                                </form>
+                            }
+                        </div>
                     </li>
                 }
             </ol>
@@ -107,3 +141,4 @@
         setInterval(chay, 1000);
     })();
 </script>
+<script src="~/js/moc-dong.js" asp-append-version="true"></script>
