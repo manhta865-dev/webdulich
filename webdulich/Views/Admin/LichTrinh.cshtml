@@ -4,6 +4,8 @@
     ViewData["Title"] = "Lịch trình tour";
 
     var tour = ViewBag.Tour as webdulich.Models.Tour;
+    var dsDiemCoSan = ViewBag.DsDiemCoSan as List<webdulich.Models.DiemThamQuan> ?? new List<webdulich.Models.DiemThamQuan>();
+    string ToaDo(decimal vi, decimal kinh) => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{vi:0.######}, {kinh:0.######}");
 }
 
 @section Styles {
@@ -153,6 +155,71 @@
                                     <small class="ad-toa-do-tt">@(string.IsNullOrEmpty(item.DuongDi) ? "Chưa có đường xe chạy, bản đồ nối tạm bằng nét đứt" : "Đã có đường xe chạy")</small>
                                 }
                             </form>
+
+                            @* Điểm tham quan trong ngày (Mo23): chip địa điểm và Street View ở trang Khám phá 3D *@
+                            @{
+                                var dsDiem = item.DsDiemThamQuan.OrderBy(x => x.ThuTu).ToList();
+                                var dsChon = dsDiemCoSan.Where(d => dsDiem.All(x => x.DiemThamQuanId != d.Id)).ToList();
+                            }
+                            <details class="ad-diem" @(dsDiem.Any() ? "open" : "")>
+                                <summary>Điểm tham quan trong ngày (@dsDiem.Count)</summary>
+                                @if (dsDiem.Any())
+                                {
+                                    <ol class="ad-diem-ds">
+                                        @for (int k = 0; k < dsDiem.Count; k++)
+                                        {
+                                            var d = dsDiem[k].DiemThamQuan!;
+                                            <li>
+                                                <form asp-controller="AdminDiemThamQuan" asp-action="Sua" asp-route-id="@d.Id" method="post" class="ad-diem-sua">
+                                                    <input type="hidden" name="tourId" value="@item.TourId" />
+                                                    <input type="text" name="ten" value="@d.Ten" class="form-control" maxlength="150" aria-label="Tên điểm" required />
+                                                    <input type="text" name="toaDo" value="@ToaDo(d.ViDo, d.KinhDo)" class="form-control" inputmode="decimal" aria-label="Tọa độ điểm" required />
+                                                    <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Lưu</button>
+                                                </form>
+                                                <div class="ad-diem-nut">
+                                                    <form asp-controller="AdminDiemThamQuan" asp-action="DoiThuTu" method="post">
+                                                        <input type="hidden" name="lichTrinhId" value="@item.Id" />
+                                                        <input type="hidden" name="diemId" value="@d.Id" />
+                                                        <input type="hidden" name="huong" value="-1" />
+                                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Đưa @d.Ten lên trước" @(k == 0 ? "disabled" : "")>Lên</button>
+                                                    </form>
+                                                    <form asp-controller="AdminDiemThamQuan" asp-action="DoiThuTu" method="post">
+                                                        <input type="hidden" name="lichTrinhId" value="@item.Id" />
+                                                        <input type="hidden" name="diemId" value="@d.Id" />
+                                                        <input type="hidden" name="huong" value="1" />
+                                                        <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho" aria-label="Đưa @d.Ten ra sau" @(k == dsDiem.Count - 1 ? "disabled" : "")>Xuống</button>
+                                                    </form>
+                                                    <form asp-controller="AdminDiemThamQuan" asp-action="Go" method="post"
+                                                          data-xac-nhan-tieu-de="Gỡ @d.Ten khỏi ngày @item.NgayThu?"
+                                                          data-xac-nhan="Điểm vẫn được giữ để thêm lại vào ngày khác."
+                                                          data-xac-nhan-nut="Gỡ điểm">
+                                                        <input type="hidden" name="lichTrinhId" value="@item.Id" />
+                                                        <input type="hidden" name="diemId" value="@d.Id" />
+                                                        <button type="submit" class="tv-btn tv-btn-huy ad-btn-nho">Gỡ</button>
+                                                    </form>
+                                                </div>
+                                            </li>
+                                        }
+                                    </ol>
+                                }
+                                <form asp-controller="AdminDiemThamQuan" asp-action="Them" method="post" class="ad-diem-them">
+                                    <input type="hidden" name="lichTrinhId" value="@item.Id" />
+                                    @if (dsChon.Any())
+                                    {
+                                        <select name="diemCoSanId" class="form-select" aria-label="Chọn điểm có sẵn">
+                                            <option value="">Điểm mới</option>
+                                            @foreach (var d in dsChon)
+                                            {
+                                                <option value="@d.Id">@d.Ten</option>
+                                            }
+                                        </select>
+                                    }
+                                    <input type="text" name="ten" class="form-control" maxlength="150" placeholder="Tên điểm, ví dụ: Thác Datanla" aria-label="Tên điểm mới" />
+                                    <input type="text" name="toaDo" class="form-control" inputmode="decimal" autocomplete="off" placeholder="11.9001, 108.4497" aria-label="Tọa độ điểm mới" />
+                                    <button type="submit" class="tv-btn tv-btn-chinh ad-btn-nho">Thêm điểm</button>
+                                </form>
+                                <small class="ad-toa-do-nhac">Tọa độ lấy từ Google Maps: nhấp chuột phải đúng chỗ, bấm dòng số đầu tiên rồi dán vào. Street View hiện ảnh 360 gần tọa độ nhất.</small>
+                            </details>
                         </div>
                     }
                 </div>

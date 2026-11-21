@@ -556,6 +556,19 @@
 .ad-timeline-item .ad-toa-do .ad-btn-nho { grid-column: auto; grid-row: auto; align-self: center; margin-top: 0; }
 .ad-toa-do-nhac { display: block; margin-top: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .ad-toa-do-tt { flex-basis: 100%; }
+/* Điểm tham quan trong một ngày lịch trình (Mo23) */
+.ad-diem { grid-column: 2 / -1; margin-top: var(--tv-k3); padding-top: var(--tv-k3); border-top: 1px dashed var(--tv-vien); }
+.ad-diem > summary { font-size: var(--tv-cs-nho); font-weight: 600; color: var(--tv-nhan-dam); cursor: pointer; }
+.ad-diem-ds { display: grid; gap: var(--tv-k2); margin: var(--tv-k3) 0; padding-left: var(--tv-k5); }
+.ad-diem-ds li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k2); }
+.ad-diem-sua, .ad-diem-them, .ad-diem-nut { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k2); margin: 0; }
+.ad-diem-sua { flex: 1 1 320px; }
+.ad-diem-nut form { margin: 0; }
+.ad-diem .form-control, .ad-diem .form-select { flex: 1 1 150px; min-width: 0; min-height: 34px; padding: 0 var(--tv-k2); font-size: var(--tv-cs-nho); }
+.ad-diem-them { margin-top: var(--tv-k3); }
+/* Nút nhỏ trong khối điểm nằm theo hàng, không theo lưới của dòng lịch trình */
+.ad-timeline-item .ad-diem .ad-btn-nho { grid-column: auto; grid-row: auto; align-self: center; justify-self: auto; margin-top: 0; min-height: 34px; }
+
 .ad-xuat-phat { margin-bottom: var(--tv-k4); }
 .ad-xuat-phat .ad-toa-do { max-width: 520px; }
 .ad-xuat-phat .ad-btn-nho { min-height: 34px; }

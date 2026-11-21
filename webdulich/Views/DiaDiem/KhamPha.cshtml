@@ -61,6 +61,7 @@
                 <div class="k3-the-dau">
                     <span class="k3-the-ngay tv-ma" data-the="ngay">NGÀY @dau.Ngay</span>
                     <h2 data-the="tieu-de">@dau.TieuDe</h2>
+                    <p class="k3-the-phu" data-the="phu" hidden></p>
                     <p class="k3-the-bua" data-the="bua-an" @(string.IsNullOrWhiteSpace(dau.BuaAn) ? "hidden" : "")>Bữa ăn: @dau.BuaAn</p>
                 </div>
                 <div class="k3-chi-duong" id="k3ChiDuong" hidden>
@@ -90,30 +91,38 @@
             <iframe class="k3-google-khung" data-gg="khung" title="Bản đồ Google tại điểm đang chọn" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </section>
 
-        <section class="k3-khung k3-360" id="k3Di360" role="tabpanel" aria-labelledby="tab360" hidden>
-            <div class="tv-ve k3-360-ve">
-                <div class="k3-360-than">
-                    <span class="tv-moc tv-moc-xam">Đang chuẩn bị</span>
-                    <h2>Chưa có ảnh 360° cho điểm này</h2>
-                    <p>TravelVN đang chuẩn bị ảnh toàn cảnh 360° cho các điểm tham quan. Trong lúc chờ, bạn có thể xem ảnh đường phố quanh điểm này trên Google Street View.</p>
+        @* Đi dạo 360°: Street View của Google nhúng tại điểm đang chọn (kéo để xoay, bấm mũi tên trên đường để đi tới).
+           Ảnh do Google cung cấp; nơi không có ảnh thì Google tự báo. Gán src khi mở tab lần đầu. *@
+        <section class="k3-khung k3-google k3-360" id="k3Di360" role="tabpanel" aria-labelledby="tab360" hidden>
+            <div class="k3-google-dau">
+                <div>
+                    <strong data-gg="ten">Ngày @dau.Ngay: @dau.TieuDe</strong>
+                    <span class="k3-360-nhac">Kéo để nhìn quanh 360°, bấm mũi tên trên đường để đi tới. Ảnh từ Google Street View.</span>
                 </div>
-                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
-                <div class="k3-360-cuong">
-                    <a class="k3-nut k3-nut-chinh" data-gg="street-view" href="@dau.LinkStreetView" target="_blank" rel="noopener">Xem Street View</a>
+                <div class="k3-google-nut">
+                    <a class="k3-nut" data-gg="street-view" href="@dau.LinkStreetView" target="_blank" rel="noopener">Mở trên Google Maps</a>
                 </div>
             </div>
+            <iframe class="k3-google-khung" data-gg="khung-360" title="Street View 360 độ tại điểm đang chọn" allowfullscreen></iframe>
         </section>
     </main>
 
     @* Thanh điểm dừng và thao tác bản đồ ở đáy màn hình *@
     <nav class="k3-thanh" aria-label="Điểm dừng và thao tác bản đồ">
         <div class="k3-diem" role="group" aria-label="Chọn điểm dừng" id="k3Diem">
+            @* Mỗi ngày một nút (bấm để xe chạy đoạn đường của ngày), theo sau là các điểm tham quan của ngày đó *@
             @for (int i = 0; i < Model.DsNgay.Count; i++)
             {
                 var n = Model.DsNgay[i];
-                <button type="button" class="k3-chip" data-diem="@i" aria-pressed="@(i == 0 ? "true" : "false")">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>Ngày @n.Ngay
+                <button type="button" class="k3-chip k3-chip-ngay" data-diem="@i" aria-pressed="@(i == 0 ? "true" : "false")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Ngày @n.Ngay
                 </button>
+                @for (int k = 0; k < n.DsDiem.Count; k++)
+                {
+                    <button type="button" class="k3-chip k3-chip-diem" data-ngay="@i" data-diem-tq="@k" aria-pressed="false">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>@n.DsDiem[k].Ten
+                    </button>
+                }
             }
         </div>
         <div class="k3-thao-tac">
@@ -133,7 +142,11 @@
     {
         Model.TourId,
         XuatPhat = new[] { Model.KinhXuatPhat, Model.ViXuatPhat },
-        DsNgay = Model.DsNgay.Select(n => new { n.Ngay, n.TieuDe, n.BuaAn, n.Vi, n.Kinh, n.DuongDi, n.LinkChiDuong, n.LinkStreetView, n.LinkNhung }),
+        DsNgay = Model.DsNgay.Select(n => new
+        {
+            n.Ngay, n.TieuDe, n.BuaAn, n.Vi, n.Kinh, n.DuongDi, n.LinkChiDuong, n.LinkStreetView, n.LinkNhung, n.Link360,
+            DsDiem = n.DsDiem.Select(d => new { d.Ten, d.Vi, d.Kinh, d.LinkStreetView, d.LinkNhung, d.Link360 })
+        }),
         UrlChiDuong = Url.Action("ChiDuong", "DiaDiem")
     }))</script>
     <script type="module" src="~/js/kham-pha-3d.js" asp-append-version="true"></script>

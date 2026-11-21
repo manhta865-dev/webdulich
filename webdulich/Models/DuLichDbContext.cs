@@ -19,6 +19,8 @@ namespace webdulich.Models
         public DbSet<TaiKhoan> TaiKhoans { get; set; }
         public DbSet<LichKhoiHanhTour> LichKhoiHanhTours { get; set; }
         public DbSet<LichTrinhTour> LichTrinhTours { get; set; }
+        public DbSet<DiemThamQuan> DiemThamQuans { get; set; }
+        public DbSet<LichTrinhDiemThamQuan> LichTrinhDiemThamQuans { get; set; }
         public DbSet<TourHinhAnh> TourHinhAnhs { get; set; }
         public DbSet<LoaiDiaHinh> LoaiDiaHinhs { get; set; }
         public DbSet<PhongCach> PhongCachs { get; set; }
@@ -257,6 +259,28 @@ namespace webdulich.Models
                 e.ToTable(t => t.HasCheckConstraint("CK_LichTrinh_ToaDo",
                     // Phải ghi rõ IS NOT NULL: so sánh với NULL cho kết quả "không xác định" và CHECK sẽ cho qua
                     "([ViDo] IS NULL AND [KinhDo] IS NULL) OR ([ViDo] IS NOT NULL AND [KinhDo] IS NOT NULL AND [ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110)"));
+            });
+            // Điểm tham quan (Mo23, RB-49): tên không trùng trong một điểm đến; tọa độ bắt buộc, trong khung Việt Nam như lịch trình.
+            // Điểm đến có điểm tham quan thì không xóa được (Restrict).
+            modelBuilder.Entity<DiemThamQuan>(e =>
+            {
+                e.Property(x => x.ViDo).HasPrecision(9, 6);
+                e.Property(x => x.KinhDo).HasPrecision(9, 6);
+                e.HasIndex(x => new { x.DiaDiemId, x.Ten }).IsUnique();
+                e.HasOne(x => x.DiaDiem).WithMany().HasForeignKey(x => x.DiaDiemId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t => t.HasCheckConstraint("CK_DiemThamQuan_ToaDo",
+                    "[ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110"));
+            });
+            // Ngày ghé điểm nào, thứ tự ra sao (Mo23, RB-50). Xóa ngày lịch trình thì dòng nối đi theo (Cascade);
+            // điểm đang được một ngày nào đó dùng thì không xóa được (Restrict).
+            modelBuilder.Entity<LichTrinhDiemThamQuan>(e =>
+            {
+                e.HasKey(x => new { x.LichTrinhTourId, x.DiemThamQuanId });
+                e.HasIndex(x => new { x.LichTrinhTourId, x.ThuTu }).IsUnique();
+                e.HasIndex(x => x.DiemThamQuanId);
+                e.HasOne(x => x.LichTrinhTour).WithMany(x => x.DsDiemThamQuan).HasForeignKey(x => x.LichTrinhTourId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.DiemThamQuan).WithMany(x => x.DsLichTrinh).HasForeignKey(x => x.DiemThamQuanId).OnDelete(DeleteBehavior.Restrict);
+                e.ToTable(t => t.HasCheckConstraint("CK_LichTrinhDiem_ThuTu", "[ThuTu] >= 1"));
             });
 
             modelBuilder.Entity<LichKhoiHanhTour>()

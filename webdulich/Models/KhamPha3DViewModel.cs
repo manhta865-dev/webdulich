@@ -25,5 +25,19 @@ namespace webdulich.Models
         public string LinkChiDuong { get; set; } = string.Empty;
         public string LinkStreetView { get; set; } = string.Empty;
         public string LinkNhung { get; set; } = string.Empty;
+        // Street View nhúng tại điểm cuối ngày (dùng khi ngày chưa có điểm tham quan)
+        public string Link360 { get; set; } = string.Empty;
+        // Các điểm tham quan của ngày theo thứ tự ghé (Mo23)
+        public List<DiemThamQuan3D> DsDiem { get; set; } = new();
+    }
+
+    public class DiemThamQuan3D
+    {
+        public string Ten { get; set; } = string.Empty;
+        public decimal Vi { get; set; }
+        public decimal Kinh { get; set; }
+        public string LinkStreetView { get; set; } = string.Empty;
+        public string LinkNhung { get; set; } = string.Empty;
+        public string Link360 { get; set; } = string.Empty;
     }
 }

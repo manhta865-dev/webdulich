@@ -32,6 +32,9 @@ namespace webdulich.Models
         [ForeignKey("TourId")]
         public Tour? Tour { get; set; }
 
+        // Các điểm tham quan của ngày này theo thứ tự ghé (Mo23)
+        public ICollection<LichTrinhDiemThamQuan> DsDiemThamQuan { get; set; } = new List<LichTrinhDiemThamQuan>();
+
         // Khung kiểm tra thô quanh Việt Nam để bắt lỗi nhập nhầm, đảo vĩ độ với kinh độ. Trùng với CK_LichTrinh_ToaDo.
         public const decimal ViDoNhoNhat = 8m, ViDoLonNhat = 24m, KinhDoNhoNhat = 102m, KinhDoLonNhat = 110m;
 

@@ -6,10 +6,14 @@ const duLieu = JSON.parse(document.getElementById("k3DuLieu").textContent);
 const dsNgay = duLieu.DsNgay;
 const giamChuyenDong = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// MapLibre 4.7: mỗi lần bay camera thư viện bật cờ giữ độ cao và chỉ tắt lại khi có freezeElevation: true.
+// Không có thì độ cao camera kẹt ở 0 m, bay sát xuống vùng núi (Đà Lạt cao khoảng 1.500 m) là camera chui vào trong địa hình.
+const CO_DINH_DO_CAO = true;
 const KIEU_BAN_DO = "https://tiles.openfreemap.org/styles/liberty";
 const DIA_HINH = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
 
 let chiSo = 0;          // ngày đang chọn
+let diemChon = null;    // điểm tham quan đang chọn trong ngày (chỉ số), null là đang xem cả ngày
 let banDo = null;       // đối tượng điều khiển bản đồ, null nếu bản đồ lỗi
 let moChiDuong = false; // panel chỉ đường đang mở
 const nhoChiDuong = new Map();
@@ -25,45 +29,85 @@ function moTab(ten) {
         document.getElementById(tab.getAttribute("aria-controls")).hidden = !dung;
     });
     document.body.dataset.tab = ten;
-    if (ten === "google") capNhatGoogle(true);
+    if (ten === "google" || ten === "di-360") capNhatGoogle(ten);
     // Bản đồ bị ẩn rồi hiện lại thì phải đo lại kích thước khung
     if (ten === "ban-do" && banDo) banDo.map.resize();
 }
 
-// ---------- Chọn điểm ----------
-const dsChip = document.querySelectorAll("[data-diem]");
-dsChip.forEach((chip) => chip.addEventListener("click", () => chon(Number(chip.dataset.diem), true)));
+// ---------- Chọn ngày, chọn điểm tham quan ----------
+const dsChipNgay = document.querySelectorAll("[data-diem]");
+const dsChipDiem = document.querySelectorAll("[data-diem-tq]");
+dsChipNgay.forEach((chip) => chip.addEventListener("click", () => chon(Number(chip.dataset.diem), true)));
+dsChipDiem.forEach((chip) => chip.addEventListener("click", () => chonDiem(Number(chip.dataset.ngay), Number(chip.dataset.diemTq))));
+
+// Nơi đang xem: điểm tham quan nếu có chọn, không thì điểm cuối của ngày
+function muc() {
+    const n = dsNgay[chiSo];
+    const d = diemChon !== null ? n.DsDiem[diemChon] : null;
+    return d
+        ? { ten: d.Ten, Vi: d.Vi, Kinh: d.Kinh, LinkStreetView: d.LinkStreetView, LinkNhung: d.LinkNhung, Link360: d.Link360 }
+        : { ten: "Ngày " + n.Ngay + ": " + n.TieuDe, Vi: n.Vi, Kinh: n.Kinh, LinkStreetView: n.LinkStreetView, LinkNhung: n.LinkNhung, Link360: n.Link360 };
+}
+
+function capNhatChip() {
+    dsChipNgay.forEach((chip, j) => chip.setAttribute("aria-pressed", String(j === chiSo && diemChon === null)));
+    dsChipDiem.forEach((chip) => {
+        const dung = Number(chip.dataset.ngay) === chiSo && Number(chip.dataset.diemTq) === diemChon;
+        chip.setAttribute("aria-pressed", String(dung));
+        if (dung) chip.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+}
+
+function capNhatThe() {
+    const n = dsNgay[chiSo];
+    const d = diemChon !== null ? n.DsDiem[diemChon] : null;
+    const the = document.getElementById("k3The");
+    the.querySelector('[data-the="ngay"]').textContent = "NGÀY " + n.Ngay + (d ? ", ĐIỂM " + (diemChon + 1) : "");
+    the.querySelector('[data-the="tieu-de"]').textContent = d ? d.Ten : n.TieuDe;
+    const phu = the.querySelector('[data-the="phu"]');
+    phu.textContent = d ? n.TieuDe : "";
+    phu.hidden = !d;
+    const bua = the.querySelector('[data-the="bua-an"]');
+    bua.textContent = !d && n.BuaAn ? "Bữa ăn: " + n.BuaAn : "";
+    bua.hidden = !!d || !n.BuaAn;
+    the.querySelector('[data-the="google"]').href = n.LinkChiDuong;
+}
 
 function chon(i, tuNguoiXem) {
+    const doiNgay = i !== chiSo;
     chiSo = i;
-    const n = dsNgay[i];
-    dsChip.forEach((chip, j) => chip.setAttribute("aria-pressed", String(j === i)));
-
-    const the = document.getElementById("k3The");
-    the.querySelector('[data-the="ngay"]').textContent = "NGÀY " + n.Ngay;
-    the.querySelector('[data-the="tieu-de"]').textContent = n.TieuDe;
-    const bua = the.querySelector('[data-the="bua-an"]');
-    bua.textContent = n.BuaAn ? "Bữa ăn: " + n.BuaAn : "";
-    bua.hidden = !n.BuaAn;
-    the.querySelector('[data-the="google"]').href = n.LinkChiDuong;
-
-    capNhatGoogle(false);
-    if (moChiDuong) taiChiDuong();
+    diemChon = null;
+    capNhatChip();
+    capNhatThe();
+    capNhatGoogle(null);
+    if (moChiDuong && (doiNgay || tuNguoiXem === null)) taiChiDuong();
     if (banDo && tuNguoiXem !== null) banDo.bayToi(i);
 }
 
-// ---------- Google Maps ----------
-function capNhatGoogle(moKhung) {
-    const n = dsNgay[chiSo];
-    document.querySelectorAll('[data-gg="ten"]').forEach((el) => { el.textContent = "Ngày " + n.Ngay + ": " + n.TieuDe; });
-    document.querySelectorAll('[data-gg="toa-do"]').forEach((el) => { el.textContent = n.Vi.toFixed(4) + ", " + n.Kinh.toFixed(4); });
-    document.querySelectorAll('[data-gg="chi-duong"]').forEach((el) => { el.href = n.LinkChiDuong; });
-    document.querySelectorAll('[data-gg="street-view"]').forEach((el) => { el.href = n.LinkStreetView; });
-    const khung = document.querySelector('[data-gg="khung"]');
-    // Chỉ tải bản đồ Google khi tab đang mở (hoặc đã mở trước đó)
-    if (moKhung || khung.getAttribute("src")) {
-        if (khung.getAttribute("src") !== n.LinkNhung) khung.src = n.LinkNhung;
-    }
+function chonDiem(i, k) {
+    const doiNgay = i !== chiSo;
+    chiSo = i;
+    diemChon = k;
+    capNhatChip();
+    capNhatThe();
+    capNhatGoogle(null);
+    if (moChiDuong && doiNgay) taiChiDuong();
+    if (banDo) banDo.bayToiDiem(i, k);
+}
+
+// ---------- Google Maps, Street View ----------
+// tabMo: tab vừa mở ("google", "di-360") hoặc null. Khung chỉ được tải khi tab của nó mở (hoặc đã mở trước đó).
+function capNhatGoogle(tabMo) {
+    const m = muc();
+    document.querySelectorAll('[data-gg="ten"]').forEach((el) => { el.textContent = m.ten; });
+    document.querySelectorAll('[data-gg="toa-do"]').forEach((el) => { el.textContent = m.Vi.toFixed(4) + ", " + m.Kinh.toFixed(4); });
+    document.querySelectorAll('[data-gg="chi-duong"]').forEach((el) => { el.href = dsNgay[chiSo].LinkChiDuong; });
+    document.querySelectorAll('[data-gg="street-view"]').forEach((el) => { el.href = m.LinkStreetView; });
+    [["khung", "google", m.LinkNhung], ["khung-360", "di-360", m.Link360]].forEach(([ten, tab, link]) => {
+        const khung = document.querySelector('[data-gg="' + ten + '"]');
+        if (!khung) return;
+        if ((tabMo === tab || khung.getAttribute("src")) && khung.getAttribute("src") !== link) khung.src = link;
+    });
 }
 
 // ---------- Chỉ đường từng bước ----------
@@ -290,6 +334,17 @@ async function taoBanDo() {
     }
     themMoc("Xuất phát", duLieu.XuatPhat).classList.add("xuat-phat");
     const dsMoc = dsNgay.map((n, k) => themMoc("Ngày " + n.Ngay, dsDoan[k].den));
+    // Ghim điểm tham quan: nhỏ hơn nhãn ngày, bấm vào là chọn điểm đó
+    const dsMocDiem = dsNgay.map((n, k) => n.DsDiem.map((d, j) => {
+        const el = themMoc(d.Ten, [d.Kinh, d.Vi]);
+        el.classList.add("diem");
+        el.setAttribute("role", "button");
+        el.addEventListener("click", () => chonDiem(k, j));
+        return el;
+    }));
+    function danhDauDiem(k, j) {
+        dsMocDiem.forEach((ds, a) => ds.forEach((el, b) => el.classList.toggle("chon", a === k && b === j)));
+    }
 
     const elXe = document.createElement("div");
     elXe.className = "k3-xe";
@@ -312,7 +367,8 @@ async function taoBanDo() {
             zoom: Math.min(13.5, cam.zoom - nghieng / 110),
             bearing: huong,
             pitch: nghieng,
-            duration: giamChuyenDong ? 0 : thoiGian
+            duration: giamChuyenDong ? 0 : thoiGian,
+            freezeElevation: CO_DINH_DO_CAO
         });
     }
 
@@ -358,20 +414,40 @@ async function taoBanDo() {
             const luotNay = ++luot;
             map.setFilter("htChon", ["==", ["get", "ngay"], k]);
             dsMoc.forEach((m, j) => m.classList.toggle("chon", j === k));
+            danhDauDiem(-1, -1);
             const doan = dsDoan[k];
             xe.setLngLat(doan.diem[0]);
             // Đăng ký trước khi bay: bay tức thì (giảm chuyển động) thì moveend đến ngay trong lúc gọi
             map.once("moveend", () => { if (luotNay === luot) chayXe(k, luotNay); });
             nhinKhung(khungCua(doan.diem), 55, doan.km > 0.05 ? tinhHuong(doan.diem[0], doan.den) * 0.35 : map.getBearing(), 2200);
         },
+        // Bay sát xuống một điểm tham quan, giữ hướng nhìn hiện tại; xe đứng yên.
+        // Hai chặng: chặng 1 tới trên điểm ở độ cao an toàn, cuối chặng thư viện nhận đúng độ cao mặt đất tại điểm;
+        // chặng 2 mới hạ xuống. Bay thẳng một lần từ vùng thấp xuống sát núi thì camera tính theo độ cao cũ và rơi xuống đất.
+        bayToiDiem(k, j) {
+            dungBayVong();
+            const luotNay = ++luot;
+            map.setFilter("htChon", ["==", ["get", "ngay"], k]);
+            dsMoc.forEach((m, a) => m.classList.toggle("chon", a === k));
+            danhDauDiem(k, j);
+            const d = dsNgay[k].DsDiem[j];
+            const tam = [d.Kinh, d.Vi];
+            const ha = () => {
+                if (luotNay !== luot) return;
+                map.easeTo({ center: tam, zoom: 15.3, pitch: 60, duration: giamChuyenDong ? 0 : 1200, freezeElevation: CO_DINH_DO_CAO });
+            };
+            map.once("moveend", ha);
+            map.flyTo({ center: tam, zoom: Math.min(12.8, map.getZoom()), pitch: 50, bearing: map.getBearing(), duration: giamChuyenDong ? 0 : 1600, freezeElevation: CO_DINH_DO_CAO });
+        },
         toanCanh() {
             dungBayVong();
             nhinKhung(khungTatCa, 45, 0, 2000);
         },
         bayVong() {
-            const tam = dsDoan[chiSo].den;
+            const m = muc();
+            const tam = [m.Kinh, m.Vi];
             baoBayVong(true);
-            map.easeTo({ center: tam, zoom: Math.max(map.getZoom(), 12.5), pitch: 62, duration: giamChuyenDong ? 0 : 1500 });
+            map.easeTo({ center: tam, zoom: Math.max(map.getZoom(), 12.5), pitch: 62, duration: giamChuyenDong ? 0 : 1500, freezeElevation: CO_DINH_DO_CAO });
             if (giamChuyenDong) return;
             let truoc = null;
             const quay = (t) => {

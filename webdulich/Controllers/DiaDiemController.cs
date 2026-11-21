@@ -138,9 +138,14 @@ namespace webdulich.Controllers
         }
 
         // Tour kèm lịch trình đã xếp theo ngày, chỉ khi tour có điểm xuất phát và mọi ngày đều có tọa độ (đủ để vẽ bản đồ, chỉ đường)
-        private (Tour Tour, List<LichTrinhTour> DsNgay)? LayTourDuToaDo(int id)
+        private (Tour Tour, List<LichTrinhTour> DsNgay)? LayTourDuToaDo(int id, bool kemDiemThamQuan = false)
         {
-            var tour = _context.Tours.AsNoTracking().Include(x => x.LichTrinhTours).FirstOrDefault(x => x.Id == id);
+            var q = _context.Tours.AsNoTracking().Include(x => x.LichTrinhTours).AsQueryable();
+            if (kemDiemThamQuan)
+            {
+                q = q.Include(x => x.LichTrinhTours).ThenInclude(x => x.DsDiemThamQuan).ThenInclude(x => x.DiemThamQuan);
+            }
+            var tour = q.FirstOrDefault(x => x.Id == id);
             if (tour == null || !tour.ViDoXuatPhat.HasValue || !tour.KinhDoXuatPhat.HasValue)
             {
                 return null;
@@ -154,9 +159,11 @@ namespace webdulich.Controllers
         }
 
         // Khám phá 3D: trang toàn màn hình gồm bản đồ 3D (vệ tinh, địa hình), chỉ đường từng bước, Google Maps. Chỉ đọc.
-        public IActionResult KhamPha(int id)
+        public IActionResult KhamPha(int id, [FromServices] IConfiguration cauHinh)
         {
-            var duLieu = LayTourDuToaDo(id);
+            var duLieu = LayTourDuToaDo(id, kemDiemThamQuan: true);
+            // Khóa Maps Embed API (không bắt buộc): có thì Street View nhúng theo cách chính thức. Không bao giờ ghi khóa vào mã nguồn.
+            var khoa = cauHinh["GoogleMaps:KhoaNhung"];
             if (duLieu == null)
             {
                 if (!_context.Tours.Any(x => x.Id == id))
@@ -188,7 +195,17 @@ namespace webdulich.Controllers
                     DuongDi = x.DuongDi,
                     LinkChiDuong = Services.LienKetBanDo.ChiDuong(i == 0 ? xuatPhat : dsDiem[i - 1], dsDiem[i]),
                     LinkStreetView = Services.LienKetBanDo.StreetView(dsDiem[i].Vi, dsDiem[i].Kinh),
-                    LinkNhung = Services.LienKetBanDo.Nhung(dsDiem[i].Vi, dsDiem[i].Kinh)
+                    LinkNhung = Services.LienKetBanDo.Nhung(dsDiem[i].Vi, dsDiem[i].Kinh),
+                    Link360 = Services.LienKetBanDo.NhungStreetView(dsDiem[i].Vi, dsDiem[i].Kinh, khoa),
+                    DsDiem = x.DsDiemThamQuan.OrderBy(d => d.ThuTu).Where(d => d.DiemThamQuan != null).Select(d => new DiemThamQuan3D
+                    {
+                        Ten = d.DiemThamQuan!.Ten,
+                        Vi = d.DiemThamQuan.ViDo,
+                        Kinh = d.DiemThamQuan.KinhDo,
+                        LinkStreetView = Services.LienKetBanDo.StreetView(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo),
+                        LinkNhung = Services.LienKetBanDo.Nhung(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo, 16),
+                        Link360 = Services.LienKetBanDo.NhungStreetView(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo, khoa)
+                    }).ToList()
                 }).ToList()
             };
             return View(m);

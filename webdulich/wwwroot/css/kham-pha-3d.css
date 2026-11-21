@@ -187,6 +187,9 @@
 }
 
 .k3-moc.xuat-phat { background: #5B6B73; }
+/* Ghim điểm tham quan: nền trắng chữ đậm, nhỏ hơn nhãn ngày */
+.k3-moc.diem { padding: 2px 7px; background: #FFFFFF; color: #17262E; font-size: 0.6875rem; cursor: pointer; }
+.k3-moc.diem.chon { background: #E4572E; color: #FFFFFF; }
 .k3-moc.chon { z-index: 2; background: #E4572E; }
 .k3-xe { z-index: 3; line-height: 0; filter: drop-shadow(0 2px 3px rgba(23, 38, 46, 0.45)); }
 
@@ -209,13 +212,9 @@
 .k3-google-nut { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
 .k3-google-khung { flex: 1 1 auto; width: 100%; border: 0; background: var(--tv-nen); }
 
-/* ---------- Tab Đi dạo 360° ---------- */
-.k3-360 { display: flex; align-items: center; justify-content: center; padding: var(--tv-k5) var(--tv-k4) 96px; background: var(--tv-nen); }
-.k3-360-ve { --khuyet: 12px; width: min(100%, 520px); }
-.k3-360-than { padding: var(--tv-k5); }
-.k3-360-than h2 { margin: var(--tv-k3) 0 var(--tv-k2); font-size: var(--tv-cs-vua); }
-.k3-360-than p { margin: 0; color: var(--tv-chu-phu); line-height: 1.6; }
-.k3-360-cuong { display: flex; justify-content: flex-end; padding: var(--tv-k4) var(--tv-k5); }
+/* ---------- Tab Đi dạo 360° (dùng chung khung với tab Google Maps) ---------- */
+.k3-360-nhac { display: block; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.k3-the-phu { margin: 2px 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 
 /* ---------- Thanh đáy ---------- */
 .k3-thanh {
@@ -261,6 +260,10 @@
 .k3-chip:hover { border-color: var(--tv-nhan); }
 .k3-chip[aria-pressed="true"] { border-color: var(--tv-nhan); background: var(--tv-nhan); color: #fff; }
 .k3-chip-tac { color: var(--tv-nhan-dam); }
+/* Nút ngày nổi hơn, điểm tham quan của ngày đứng sau nó */
+.k3-chip-ngay { font-weight: 700; }
+.k3-chip-ngay:not(:first-child) { margin-left: var(--tv-k2); }
+.k3-chip-diem { font-weight: 500; }
 .k3-chip:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Thanh đáy chỉ dùng cho bản đồ và Google Maps; tab 360 vẫn đổi điểm được */
@@ -301,7 +304,6 @@
     .k3-thao-tac .k3-chip { flex: 1 1 0; justify-content: center; padding: 0 var(--tv-k2); }
     .k3-google-dau { padding: var(--tv-k3); }
     .k3-google { padding-bottom: 124px; }
-    .k3-360 { padding-bottom: 96px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

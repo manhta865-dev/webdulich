@@ -1838,10 +1838,15 @@ namespace webdulich.Controllers
 
             ViewBag.Tour = tour;
 
+            // Kèm điểm tham quan của từng ngày (Mo23) và các điểm đã có ở điểm đến của tour để chọn lại
             var ds = _context.LichTrinhTours
                 .Where(x => x.TourId == id)
+                .Include(x => x.DsDiemThamQuan).ThenInclude(x => x.DiemThamQuan)
                 .OrderBy(x => x.NgayThu)
                 .ToList();
+            ViewBag.DsDiemCoSan = tour.DiaDiemId.HasValue
+                ? _context.DiemThamQuans.AsNoTracking().Where(x => x.DiaDiemId == tour.DiaDiemId).OrderBy(x => x.Ten).ToList()
+                : new List<DiemThamQuan>();
 
             return View(ds);
         }

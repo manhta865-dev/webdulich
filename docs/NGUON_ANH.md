@@ -20,7 +20,8 @@ Tải ngày 21/11/2026, khổ 1200 × 525 (Unsplash cắt sẵn), dùng ở kh�
 ## Dịch vụ bản đồ dùng ở trang Khám phá 3D
 
 - Chỉ đường từng bước: máy chủ OSRM công khai (router.project-osrm.org), dữ liệu OpenStreetMap. Máy chủ này dành cho thử nghiệm, không cam kết ổn định; khi chạy thật nhiều người nên tự dựng OSRM hoặc dùng dịch vụ trả phí. Ghi nguồn ngay dưới danh sách chỉ đường.
-- Google Maps: chỉ dùng đường link (Maps URLs) và khung nhúng bản đồ theo kiểu "nhúng bản đồ" của Google, không tải ảnh Google về lưu, không dùng ảnh Street View trong trang. Điều khoản Google Maps chưa được đọc kỹ cho việc nhúng không khóa, cần xem lại trước khi chạy thương mại (cách chính thức là Maps Embed API, miễn phí nhưng cần khóa).
+- Google Maps: chỉ dùng đường link (Maps URLs) và khung nhúng của Google (bản đồ ở tab Google Maps, Street View ở tab Đi dạo 360°). Không tải ảnh Google về lưu; ảnh 360 hiện trong khung của Google, đúng như khi nhúng từ nút "Chia sẻ, nhúng" của Google Maps.
+- Khung nhúng hiện dùng **không cần khóa** (địa chỉ `maps.google.com/maps?...&output=embed` và `output=svembed`, Google tự chuyển sang trang `/maps/embed`). Đây là cách Google không công bố tài liệu, có thể đổi bất cứ lúc nào. Cách chính thức là **Maps Embed API** (miễn phí, không giới hạn, nhưng cần khóa và tài khoản thanh toán Google Cloud): code đã hỗ trợ sẵn, chỉ cần đặt khóa vào cấu hình `GoogleMaps:KhoaNhung` thì tab 360 tự chuyển sang cách chính thức. Khóa phải giới hạn theo trang web (localhost và travelvn.runasp.net) và chỉ cho Maps Embed API, vì khóa nhúng luôn lộ trong mã trang. Điều khoản Google Maps chưa được đọc kỹ, cần xem lại trước khi chạy thương mại.
 
 ## Ảnh nền vệ tinh trên bản đồ
 

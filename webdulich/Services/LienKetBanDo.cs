@@ -38,6 +38,18 @@ namespace webdulich.Services
         public static string Nhung(decimal vi, decimal kinh, int zoom = 14) =>
             string.Create(CultureInfo.InvariantCulture, $"https://maps.google.com/maps?q={Diem(vi, kinh)}&z={zoom}&hl=vi&output=embed");
 
+        // Street View nhúng vào trang (tab Đi dạo 360°). Có khóa Maps Embed API thì dùng cách chính thức;
+        // chưa có khóa thì dùng kiểu "Chia sẻ, nhúng" của Google Maps (không cần khóa, nhưng Google không công bố tài liệu nên có thể đổi).
+        public static string NhungStreetView(decimal vi, decimal kinh, string? khoa)
+        {
+            if (!string.IsNullOrWhiteSpace(khoa))
+            {
+                return "https://www.google.com/maps/embed/v1/streetview?key=" + Uri.EscapeDataString(khoa.Trim())
+                    + "&location=" + Diem(vi, kinh) + "&fov=90&language=vi";
+            }
+            return "https://maps.google.com/maps?layer=c&cbll=" + Diem(vi, kinh) + "&cbp=11,0,0,0,0&hl=vi&output=svembed";
+        }
+
         // Giữ tối đa SoDiemDungToiDa điểm, rải đều trên hành trình
         private static IEnumerable<(decimal Vi, decimal Kinh)> ChonDiemDung(IReadOnlyList<(decimal Vi, decimal Kinh)> ds)
         {
