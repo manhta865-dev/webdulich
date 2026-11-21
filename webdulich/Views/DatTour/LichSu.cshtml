@@ -234,7 +234,7 @@
                             </a>
                         </footer>
                     }
-                    else if (item.DuocDoiCho || item.KhachTuHuyDuoc || (item.TrangThaiThanhToan == "Đang kiểm tra" && !item.DaHuy))
+                    else if (item.DuocDoiCho || item.KhachTuHuyDuoc || (item.TrangThaiThanhToan == "Đang kiểm tra" && !item.DaHuy) || (item.DaThanhToan && !item.DaHuy))
                     {
                         @if (item.KhachTuHuyDuoc && item.HanGiuCho.HasValue)
                         {
@@ -246,6 +246,11 @@
                             <p class="ls-han">TravelVN đang kiểm tra chuyển khoản của bạn. Muốn hủy đơn, bạn liên hệ TravelVN để được hoàn tiền.</p>
                         }
                         <footer class="ls-card-foot">
+                            @if (item.DaThanhToan && !item.DaHuy)
+                            {
+                                @* Đơn đặt riêng đã trả: mỗi hành khách một tấm vé lật được (DatTour/Ve) *@
+                                <a asp-controller="DatTour" asp-action="Ve" asp-route-id="@item.Id" class="tv-btn tv-btn-chinh">Xem vé</a>
+                            }
                             @if (item.DuocDoiCho)
                             {
                                 var daCoCho = choTheoDon.ContainsKey(item.Id);

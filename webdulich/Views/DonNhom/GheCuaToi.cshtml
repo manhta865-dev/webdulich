@@ -75,7 +75,7 @@
                 string nhanCho = Model.MaCho != null || Model.CoSoDo ? "Chỗ ngồi" : "Ghế";
                 string choVe = Model.MaCho ?? (Model.CoSoDo ? "Chưa chọn" : "Số " + Model.ThuTu);
                 @* Vé chỉ là thông tin chuyến đi để gửi vào nhóm chat: không in số giấy tờ, không có mã soát vé *@
-                <section class="dt-block">
+                <section class="dt-block" data-ve-khoi>
                     <div class="dn-tien-do-head">
                         <h2>Vé của bạn</h2>
                         <button type="button" class="ve-nut-lat" data-ve-lat>Xem mặt sau</button>

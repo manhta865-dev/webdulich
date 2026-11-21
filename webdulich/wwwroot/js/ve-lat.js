@@ -1,47 +1,14 @@
-// Vé lật 3D ở trang ghế đã trả: bấm để lật, rê chuột để nghiêng, lưu thành ảnh PNG gửi vào nhóm chat.
+// Vé lật 3D: bấm để lật, rê chuột để nghiêng, lưu thành ảnh PNG gửi vào nhóm chat.
+// Dùng ở trang ghế đã trả (DonNhom/GheCuaToi, một vé) và trang vé của đơn đặt riêng (DatTour/Ve, mỗi hành khách một vé).
+// Mỗi vé [data-ve] nằm trong một khối [data-ve-khoi] chứa nút lật, nút lưu và dòng báo của riêng vé đó.
 // Ảnh vẽ bằng canvas ngay trên trình duyệt, không gửi dữ liệu đi đâu. Dữ liệu vé không có số giấy tờ.
 (function () {
-    var ve = document.querySelector("[data-ve]");
-    if (!ve) return;
+    var dsVe = document.querySelectorAll("[data-ve]");
+    if (!dsVe.length) return;
 
-    var nutLat = document.querySelector("[data-ve-lat]");
-    var nutLuu = document.querySelector("[data-ve-luu]");
-    var thongBao = document.querySelector("[data-ve-bao]");
-    var matTruoc = ve.querySelector(".ve-truoc");
-    var matSau = ve.querySelector(".ve-sau");
-    var nghieng = ve.querySelector(".ve-nghieng");
-
-    function lat() {
-        var daLat = ve.classList.toggle("da-lat");
-        nutLat.textContent = daLat ? "Xem mặt trước" : "Xem mặt sau";
-        // Trình đọc màn hình chỉ đọc mặt đang hiện
-        matTruoc.setAttribute("aria-hidden", daLat ? "true" : "false");
-        matSau.setAttribute("aria-hidden", daLat ? "false" : "true");
-    }
-
-    nutLat.addEventListener("click", lat);
-    ve.addEventListener("click", function () {
-        // Đang bôi đen để sao chép mã thì không lật
-        if (String(window.getSelection())) return;
-        lat();
-    });
-
-    // Rê chuột thì vé nghiêng theo; điện thoại và người chọn giảm chuyển động thì bỏ qua
-    if (window.matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) {
-        ve.addEventListener("pointermove", function (e) {
-            var khung = ve.getBoundingClientRect();
-            var x = (e.clientX - khung.left) / khung.width - 0.5;
-            var y = (e.clientY - khung.top) / khung.height - 0.5;
-            nghieng.style.transform = "rotateX(" + (-y * 8).toFixed(2) + "deg) rotateY(" + (x * 10).toFixed(2) + "deg)";
-        });
-        ve.addEventListener("pointerleave", function () {
-            nghieng.style.transform = "";
-        });
-    }
-
-    // ---------- Lưu ảnh ----------
     var FONT = '"Be Vietnam Pro", system-ui, "Segoe UI", Arial, sans-serif';
     var MAU = { nen: "#F5F7F6", beMat: "#FFFFFF", chu: "#17262E", phu: "#5B6B73", nhan: "#0A6E8A", dam: "#085A72", vien: "#DCE3E6" };
+    var nghiengDuoc = window.matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches;
 
     function hinhBoGoc(ctx, x, y, r, d, bo) {
         ctx.beginPath();
@@ -84,7 +51,7 @@
         ctx.fillText(ngatDong(ctx, giaTri, rong, 1)[0] || "", x, y + 40);
     }
 
-    function veAnh() {
+    function veAnh(ve) {
         var d = ve.dataset;
         var canvas = document.createElement("canvas");
         canvas.width = 1200;
@@ -145,10 +112,10 @@
             ctx.fill();
         });
 
-        // Cuống vé
+        // Cuống vé: vé ghế đơn nhóm in mã ghế, vé đơn đặt riêng in số thứ tự hành khách (data-nhan-ma)
         var xPhai = xCat + 40, rongPhai = x + r - xPhai - 40;
         truong(ctx, xPhai, y + 150, rongPhai, "Mã chuyến đi", d.maChuyen);
-        truong(ctx, xPhai, y + 240, rongPhai, "Mã ghế", d.maGhe);
+        truong(ctx, xPhai, y + 240, rongPhai, d.nhanMa || "Mã ghế", d.maGhe);
         ctx.fillStyle = MAU.phu;
         ctx.font = "400 21px " + FONT;
         ngatDong(ctx, "Mang theo giấy tờ gốc đúng với thông tin đã điền. Ảnh này không dùng để soát vé.", rongPhai, 4)
@@ -159,37 +126,79 @@
         return canvas;
     }
 
-    function bao(chu) {
-        thongBao.textContent = chu;
+    function ganVe(ve) {
+        var khoi = ve.closest("[data-ve-khoi]") || document;
+        var nutLat = khoi.querySelector("[data-ve-lat]");
+        var nutLuu = khoi.querySelector("[data-ve-luu]");
+        var thongBao = khoi.querySelector("[data-ve-bao]");
+        var matTruoc = ve.querySelector(".ve-truoc");
+        var matSau = ve.querySelector(".ve-sau");
+        var nghieng = ve.querySelector(".ve-nghieng");
+
+        function lat() {
+            var daLat = ve.classList.toggle("da-lat");
+            if (nutLat) nutLat.textContent = daLat ? "Xem mặt trước" : "Xem mặt sau";
+            // Trình đọc màn hình chỉ đọc mặt đang hiện
+            matTruoc.setAttribute("aria-hidden", daLat ? "true" : "false");
+            matSau.setAttribute("aria-hidden", daLat ? "false" : "true");
+        }
+
+        if (nutLat) nutLat.addEventListener("click", lat);
+        ve.addEventListener("click", function () {
+            // Đang bôi đen để sao chép mã thì không lật
+            if (String(window.getSelection())) return;
+            lat();
+        });
+
+        // Rê chuột thì vé nghiêng theo; điện thoại và người chọn giảm chuyển động thì bỏ qua
+        if (nghiengDuoc) {
+            ve.addEventListener("pointermove", function (e) {
+                var khung = ve.getBoundingClientRect();
+                var x = (e.clientX - khung.left) / khung.width - 0.5;
+                var y = (e.clientY - khung.top) / khung.height - 0.5;
+                nghieng.style.transform = "rotateX(" + (-y * 8).toFixed(2) + "deg) rotateY(" + (x * 10).toFixed(2) + "deg)";
+            });
+            ve.addEventListener("pointerleave", function () {
+                nghieng.style.transform = "";
+            });
+        }
+
+        function bao(chu) {
+            if (thongBao) thongBao.textContent = chu;
+        }
+
+        if (!nutLuu) return;
+        nutLuu.addEventListener("click", function () {
+            nutLuu.disabled = true;
+            bao("");
+            // Đợi phông chữ để tiếng Việt trên ảnh giống trên trang; lỗi phông thì vẫn vẽ bằng phông dự phòng
+            var phong = document.fonts
+                ? Promise.all([document.fonts.load('700 40px "Be Vietnam Pro"'), document.fonts.load('500 22px "Be Vietnam Pro"')])
+                : Promise.resolve();
+            phong.catch(function () { }).then(function () {
+                veAnh(ve).toBlob(function (tep) {
+                    nutLuu.disabled = false;
+                    if (!tep) {
+                        bao("Không tạo được ảnh trên trình duyệt này. Bạn có thể chụp màn hình vé.");
+                        return;
+                    }
+                    var duongDan = URL.createObjectURL(tep);
+                    var a = document.createElement("a");
+                    a.href = duongDan;
+                    // Tên tệp: vé ghế đơn nhóm "ghe-3", vé đơn đặt riêng "khach-1" (data-tep)
+                    a.download = "ve-" + ve.dataset.maChuyen + "-" + (ve.dataset.tep || "ghe-" + ve.dataset.thuTu) + ".png";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(function () { URL.revokeObjectURL(duongDan); }, 10000);
+                    bao("Đã lưu ảnh vé.");
+                }, "image/png");
+            }).catch(function () {
+                nutLuu.disabled = false;
+                bao("Không tạo được ảnh trên trình duyệt này. Bạn có thể chụp màn hình vé.");
+            });
+        });
     }
 
-    nutLuu.addEventListener("click", function () {
-        nutLuu.disabled = true;
-        bao("");
-        // Đợi phông chữ để tiếng Việt trên ảnh giống trên trang; lỗi phông thì vẫn vẽ bằng phông dự phòng
-        var phong = document.fonts
-            ? Promise.all([document.fonts.load('700 40px "Be Vietnam Pro"'), document.fonts.load('500 22px "Be Vietnam Pro"')])
-            : Promise.resolve();
-        phong.catch(function () { }).then(function () {
-            veAnh().toBlob(function (tep) {
-                nutLuu.disabled = false;
-                if (!tep) {
-                    bao("Không tạo được ảnh trên trình duyệt này. Bạn có thể chụp màn hình vé.");
-                    return;
-                }
-                var duongDan = URL.createObjectURL(tep);
-                var a = document.createElement("a");
-                a.href = duongDan;
-                a.download = "ve-" + ve.dataset.maChuyen + "-ghe-" + ve.dataset.thuTu + ".png";
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                setTimeout(function () { URL.revokeObjectURL(duongDan); }, 10000);
-                bao("Đã lưu ảnh vé.");
-            }, "image/png");
-        }).catch(function () {
-            nutLuu.disabled = false;
-            bao("Không tạo được ảnh trên trình duyệt này. Bạn có thể chụp màn hình vé.");
-        });
-    });
+    dsVe.forEach(ganVe);
 })();

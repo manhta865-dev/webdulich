@@ -1,0 +1,78 @@
+@model webdulich.Models.VeDonViewModel
+@{
+    ViewData["Title"] = "Vé của đơn " + Model.MaChuyenDi;
+    string ngayVe = Model.NgayDi.ToString("dd/MM/yyyy");
+    string gioVe = Model.GioKhoiHanh.HasValue ? Model.GioKhoiHanh.Value.ToString(@"hh\:mm") : "Chưa có";
+    int tongSo = Model.DanhSachVe.Count;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dat-tour.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/don-nhom.css" asp-append-version="true" />
+}
+
+<div class="dt-page">
+    <a asp-action="LichSu" class="dn-quay-lai">
+        <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg>Lịch sử đặt tour
+    </a>
+    <div class="dn-head">
+        <div>
+            <span class="dn-ma">Đơn @Model.MaChuyenDi</span>
+            <h1>Vé của đơn</h1>
+            <p>@Model.TenTour, khởi hành @ngayVe@(Model.GioKhoiHanh.HasValue ? " lúc " + gioVe : ""). Mỗi hành khách một vé: bấm vào vé để lật, lưu ảnh để gửi cho người đi cùng.</p>
+        </div>
+    </div>
+
+    <div class="ve-luoi">
+        @foreach (var v in Model.DanhSachVe)
+        {
+            // Lịch có sơ đồ thì in chỗ ngồi; không có sơ đồ thì in thứ tự hành khách trong đơn
+            string nhanCho = Model.CoSoDoChoNgoi || v.MaCho != null ? "Chỗ ngồi" : "Hành khách số";
+            string choVe = v.MaCho ?? (Model.CoSoDoChoNgoi ? "Chưa chọn" : v.ThuTu + "/" + tongSo);
+            @* Vé chỉ là thông tin chuyến đi: không in số giấy tờ, không có mã soát vé (giống vé ghế ở DonNhom/GheCuaToi) *@
+            <section class="dt-block" data-ve-khoi>
+                <div class="dn-tien-do-head">
+                    <h2>Hành khách @v.ThuTu</h2>
+                    <button type="button" class="ve-nut-lat" data-ve-lat>Xem mặt sau</button>
+                </div>
+                <div class="ve" data-ve
+                     data-tour="@Model.TenTour" data-ngay="@ngayVe" data-gio="@gioVe" data-ten="@v.HoTen"
+                     data-nhan-cho="@nhanCho" data-cho="@choVe" data-ma-chuyen="@Model.MaChuyenDi"
+                     data-nhan-ma="Hành khách" data-ma-ghe="@(v.ThuTu + "/" + tongSo)" data-tep="khach-@v.ThuTu">
+                    <div class="ve-nghieng">
+                        <div class="ve-khung">
+                            <div class="ve-mat ve-truoc">
+                                <div class="ve-dau"><strong>TravelVN</strong><span>Thông tin chuyến đi</span></div>
+                                <div class="ve-than">
+                                    <p class="ve-tour">@Model.TenTour</p>
+                                    <dl class="ve-ds">
+                                        <div><dt>Ngày đi</dt><dd>@ngayVe</dd></div>
+                                        <div><dt>Giờ đi</dt><dd>@gioVe</dd></div>
+                                        <div><dt>Hành khách</dt><dd>@v.HoTen</dd></div>
+                                        <div><dt>@nhanCho</dt><dd>@choVe</dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+                            <div class="ve-mat ve-sau" aria-hidden="true">
+                                <div class="ve-dau"><strong>TravelVN</strong><span>Đã thanh toán</span></div>
+                                <div class="ve-than">
+                                    <dl class="ve-ds">
+                                        <div><dt>Mã chuyến đi</dt><dd>@Model.MaChuyenDi</dd></div>
+                                        <div><dt>Hành khách</dt><dd>@v.ThuTu/@tongSo</dd></div>
+                                    </dl>
+                                    <p class="ve-nhac">Mang theo giấy tờ gốc đúng với thông tin đã điền. Đây là thông tin chuyến đi, không dùng để soát vé.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ve-duoi">
+                    <button type="button" class="tv-btn tv-btn-vien" data-ve-luu>Lưu ảnh vé</button>
+                    <span class="dn-hint ve-bao" data-ve-bao role="status"></span>
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+<script src="~/js/ve-lat.js" asp-append-version="true"></script>

@@ -124,6 +124,8 @@ Thành công đã làm (thẻ giữa trang có dấu tích, hai nút). Lịch s�
 
 Thành công: dấu tích, mã chuyến đi, tóm tắt, nút xem lịch sử. Lịch sử: danh sách đơn dạng thẻ, mỗi thẻ có nhãn trạng thái (chữ kèm màu), nút Hủy ở đúng chỗ.
 
+**Vé của đơn (21/11/2026):** đơn đặt riêng đã thanh toán, chưa hủy có nút "Xem vé" ở Lịch sử, mở `DatTour/Ve/{id}`. Mỗi hành khách một tấm vé cùng kiểu vé ghế ở trang Ghế của tôi (lật xem mặt sau, nghiêng theo chuột, lưu ảnh PNG): tên tour, ngày, giờ, họ tên, chỗ ngồi (lịch không có sơ đồ thì in thứ tự hành khách); mặt sau có mã chuyến đi và "Hành khách 1/3". Không in số giấy tờ, ghi rõ không dùng để soát vé. Chỉ chủ đơn (theo `taiKhoanId`) xem được; đơn nhóm, đơn chưa trả hoặc đã hủy thì quay về Lịch sử kèm thông báo. Script dùng chung `wwwroot/js/ve-lat.js`: mỗi vé `[data-ve]` nằm trong khối `[data-ve-khoi]` có nút lật, nút lưu riêng.
+
 ### Gợi ý tour
 Đã làm: khung ảnh đầu trang, khối chọn tiêu chí (giữ nguyên form và các trường TieuChi), khối "Cách gợi ý hoạt động", kết quả dạng thẻ có thanh mức phù hợp, lý do đề xuất, nút xem chi tiết và đặt tour. Đã gỡ dải số liệu khảo sát viết cứng (xem docs/KHAO_SAT.md) và nhãn "Hot".
 

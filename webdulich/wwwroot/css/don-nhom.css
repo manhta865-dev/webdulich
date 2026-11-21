@@ -641,6 +641,10 @@
 .ve-nut-lat:hover { color: var(--tv-nhan-dam); text-decoration: underline; }
 
 .ve-duoi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k3); margin-top: var(--tv-k4); }
+
+/* Trang vé của đơn đặt riêng (Views/DatTour/Ve.cshtml): mỗi hành khách một khối vé */
+.ve-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: var(--tv-k4); }
+.ve-luoi .dt-block { margin: 0; }
 .ve-bao { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {

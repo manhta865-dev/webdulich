@@ -1206,6 +1206,79 @@ namespace webdulich.Controllers
 
             return View(ds);
         }
+
+        // Vé của đơn đặt riêng đã thanh toán: mỗi hành khách một tấm vé lật được (cùng kiểu vé ghế ở DonNhom/GheCuaToi).
+        // Chỉ đọc. Chủ đơn xác định theo taiKhoanId trong Session (không theo họ tên, lỗi 7). Đơn nhóm xem vé theo từng ghế.
+        public IActionResult Ve(int id)
+        {
+            var user = HttpContext.Session.GetString("user");
+            if (string.IsNullOrEmpty(user))
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+            if (HttpContext.Session.GetString("role") == "admin")
+            {
+                return RedirectToAction("Index", "TrangChu");
+            }
+
+            var taiKhoanId = LayTaiKhoanIdDangNhap(user);
+            if (!taiKhoanId.HasValue)
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var don = _context.DatTours
+                .AsNoTracking()
+                .Where(x => x.Id == id && x.TaiKhoanId == taiKhoanId.Value)
+                .ChonDon(_context)
+                .FirstOrDefault();
+
+            if (don == null)
+            {
+                TempData["Loi"] = "Không tìm thấy đơn đặt tour của bạn.";
+                return RedirectToAction("LichSu");
+            }
+            if (don.LoaiDon == "Nhom")
+            {
+                TempData["Loi"] = "Đơn nhóm có vé riêng cho từng ghế ở trang Ghế của tôi.";
+                return RedirectToAction("LichSu");
+            }
+            if (don.DaHuy || !don.DaThanhToan)
+            {
+                TempData["Loi"] = "Vé chỉ có khi đơn đã thanh toán và chưa hủy.";
+                return RedirectToAction("LichSu");
+            }
+
+            // Ghế còn hiệu lực theo thứ tự đặt, kèm chỗ ngồi đã chọn (nếu lịch có sơ đồ)
+            var dsHanhKhach = _context.HanhKhachDatTours
+                .AsNoTracking()
+                .Where(h => h.DatTourId == id && h.NgayNha == null)
+                .OrderBy(h => h.Id)
+                .Select(h => new
+                {
+                    h.HoTen,
+                    MaCho = _context.ChoNgoiChuyenDis.Where(c => c.HanhKhachDatTourId == h.Id).Select(c => c.ViTriChoNgoi!.MaViTri).FirstOrDefault()
+                })
+                .ToList();
+
+            var model = new VeDonViewModel
+            {
+                DonId = don.Id,
+                MaChuyenDi = don.MaChuyenDi,
+                TenTour = don.TenTour.Trim(),
+                NgayDi = don.NgayDi,
+                GioKhoiHanh = don.GioKhoiHanh,
+                CoSoDoChoNgoi = don.CoSoDoChoNgoi,
+                DanhSachVe = dsHanhKhach.Select((h, i) => new VeHanhKhach
+                {
+                    ThuTu = i + 1,
+                    HoTen = string.IsNullOrWhiteSpace(h.HoTen) ? "Chưa điền" : h.HoTen.Trim(),
+                    MaCho = h.MaCho
+                }).ToList()
+            };
+            return View(model);
+        }
+
         // Hàm này sẽ xử lý yêu cầu POST khi người dùng muốn hủy đơn đặt tour, kiểm tra quyền truy cập của người dùng, xác minh rằng người dùng có quyền hủy đơn đặt tour này, cập nhật trạng thái thanh toán của đơn đặt tour thành "Đã hủy", và nếu có lịch khởi hành liên quan, tăng số chỗ còn lại của lịch khởi hành lên số người đã đặt. Sau khi cập nhật thông tin, lưu thay đổi vào cơ sở dữ liệu và chuyển hướng về trang lịch sử với thông báo kết quả.
         [HttpPost]
         [ValidateAntiForgeryToken]
