@@ -106,10 +106,13 @@
 .tv-moc-xanh { color: var(--tv-thanh-cong); }
 .tv-moc-vang { color: var(--tv-canh-bao); }
 .tv-moc-xam { color: var(--tv-chu-phu); }
+.tv-moc-do { color: var(--tv-loi); }
 
 /* Khoảnh khắc nổi bật duy nhất: mộc vừa đóng (thêm lớp .tv-moc-dong bằng JS hoặc khi trang vừa xác nhận) */
 @media (prefers-reduced-motion: no-preference) {
     .tv-moc-dong { animation: tv-dong-moc 420ms cubic-bezier(.2, .9, .3, 1.3) both; }
+    /* Khối [data-moc-dong] đang chờ cuộn tới (js/moc-dong.js): mộc ẩn để lát nữa đóng xuống */
+    [data-moc-dong].cho-dong .tv-moc { opacity: 0; }
 }
 
 @keyframes tv-dong-moc {

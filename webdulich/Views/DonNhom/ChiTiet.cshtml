@@ -14,6 +14,23 @@
         TrangThaiGhe.DaNha => "da-nha",
         _ => "trong"
     };
+    // Dấu mộc trên vé ghế: chỉ nói chuyện tiền; ghế trống không đóng mộc
+    (string Chu, string Lop)? MocGhe(string t) => t switch
+    {
+        TrangThaiGhe.DaTra => ("Đã trả", "tv-moc-xanh"),
+        TrangThaiGhe.ChoXacNhan => ("Chờ xác nhận", "tv-moc-vang"),
+        TrangThaiGhe.DaDien or TrangThaiGhe.DaNhan => ("Chưa trả", "tv-moc-xam"),
+        TrangThaiGhe.DaNha => ("Đã nhả", "tv-moc-xam"),
+        _ => null
+    };
+    // Tiến độ điền thông tin, đi kèm loại hành khách ở dòng phụ
+    string? ChiTietGhe(string t) => t switch
+    {
+        TrangThaiGhe.ChuaNhan => "chưa có người nhận",
+        TrangThaiGhe.DaNhan => "chưa điền thông tin",
+        TrangThaiGhe.DaDien => "đã điền thông tin",
+        _ => null
+    };
     // Cùng điều kiện với máy chủ: nút nào hiện ra là bấm được
     var conGiuCho = Model.ConNhanThayDoi;
     int soGheTrong = Model.DsGhe.Count(g => g.TrangThai == TrangThaiGhe.ChuaNhan);
@@ -31,23 +48,47 @@
 }
 
 <div class="dt-page">
-    <div class="dn-head">
-        <div>
-            <span class="dn-ma">Đơn nhóm @don.MaChuyenDi</span>
+    @* Đầu trang là "vé tập thể" của cả đơn: thân vé là chuyến đi, cuống vé là hạn giữ chỗ hoặc dấu mộc trạng thái đơn *@
+    <div class="tv-ve tv-ve-ngang dn-ve-dau">
+        <div class="dn-ve-dau-than">
+            <span class="dn-ve-dau-nhan">Đơn nhóm <span class="tv-ma">@don.MaChuyenDi</span></span>
             <h1>@don.TenTour</h1>
-            <p>Khởi hành @don.NgayDi.ToString("dd/MM/yyyy")@(don.GioKhoiHanh.HasValue ? " lúc " + don.GioKhoiHanh.Value.ToString(@"hh\:mm") : ""), @Model.DsGhe.Count ghế.</p>
+            <dl class="dn-ve-dau-ds">
+                <div><dt>Khởi hành</dt><dd class="tv-ma">@don.NgayDi.ToString("dd/MM/yyyy")</dd></div>
+                @if (don.GioKhoiHanh.HasValue)
+                {
+                    <div><dt>Giờ đi</dt><dd class="tv-ma">@don.GioKhoiHanh.Value.ToString(@"hh\:mm")</dd></div>
+                }
+                <div><dt>Số ghế</dt><dd class="tv-ma">@Model.DsGhe.Count</dd></div>
+                <div><dt>Đã trả</dt><dd class="tv-ma">@Model.SoGheDaTra/@tongGhe</dd></div>
+            </dl>
         </div>
+        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
         @if (conGiuCho)
         {
-            <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho!.Value)">
-                <span>@(Model.DaGiaHan ? "Đã gia hạn, còn" : "Giữ chỗ còn")</span>
-                <strong data-dem>--:--:--</strong>
-                <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
+            <div class="dn-ve-dau-cuong dem@(Model.DaGiaHan ? " gia-han" : "")">
+                <div class="dn-dong-ho@(Model.DaGiaHan ? " gia-han" : "")" data-han="@GioVN.Iso(Model.HanGiuCho!.Value)">
+                    <span>@(Model.DaGiaHan ? "Đã gia hạn, còn" : "Giữ chỗ còn")</span>
+                    <strong data-dem>--:--:--</strong>
+                    <small>đến @Model.HanGiuCho.Value.ToString("HH:mm dd/MM/yyyy")</small>
+                </div>
+                <span class="tv-ma-vach" aria-hidden="true"></span>
             </div>
         }
-        else if (don.TrangThai != "GiuCho")
+        else
         {
-            <span class="dn-trang-thai @(don.DaHuy ? "huy" : "chot")">@(don.DaHuy ? "Đơn đã hủy" : "Đơn đã chốt")</span>
+            <div class="dn-ve-dau-cuong">
+                @if (don.TrangThai != "GiuCho")
+                {
+                    <span class="tv-moc @(don.DaHuy ? "tv-moc-do" : "tv-moc-xanh")">@(don.DaHuy ? "Đơn đã hủy" : "Đơn đã chốt")</span>
+                }
+                else
+                {
+                    @* Hết hạn hoặc ngừng nhận thay đổi nhưng chưa chốt: lý do nằm ở dòng cảnh báo ngay dưới *@
+                    <span class="tv-moc tv-moc-vang">Chờ chốt</span>
+                }
+                <span class="tv-ma-vach" aria-hidden="true"></span>
+            </div>
         }
     </div>
 
@@ -118,30 +159,54 @@
                     </p>
                 }
 
-                <ol class="dn-ghe-ds">
+                @* Mỗi ghế là một tấm vé: thân vé là người giữ ghế và dấu mộc tiền, cuống vé là số tiền và thao tác *@
+                <ol class="dn-vg-ds" data-moc-dong>
                     @foreach (var g in Model.DsGhe)
                     {
-                        <li class="dn-ghe @CssTrangThai(g.TrangThai)">
-                            <span class="dn-ghe-so">@g.ThuTu</span>
-                            <div class="dn-ghe-ten">
-                                <strong>@(g.TenChu ?? "Ghế trống")@(g.LaCuaToi ? " (bạn)" : "")</strong>
-                                <small>@g.LoaiHanhKhach, @g.PhaiTra.ToString("N0") VNĐ@(g.TienGiam > 0 ? " (đã giảm " + g.TienGiam.ToString("N0") + ")" : "")@(g.MaCho != null ? ", chỗ " + g.MaCho : "")</small>
+                        var moc = MocGhe(g.TrangThai);
+                        var chiTiet = ChiTietGhe(g.TrangThai);
+                        <li class="tv-ve tv-ve-ngang dn-vg @CssTrangThai(g.TrangThai)@(g.LaCuaToi ? " cua-toi" : "")">
+                            <div class="dn-vg-than">
+                                <div class="dn-vg-dau">
+                                    <span class="tv-ma">GHẾ @g.ThuTu.ToString("00")</span>
+                                    @if (g.MaCho != null)
+                                    {
+                                        <span class="tv-ma dn-vg-cho">CHỖ @g.MaCho</span>
+                                    }
+                                </div>
+                                <strong class="dn-vg-ten">@(g.TenChu ?? "Ghế trống")@if (g.LaCuaToi) {<small> (bạn)</small>}</strong>
+                                <span class="dn-vg-phu">@g.LoaiHanhKhach@(chiTiet != null ? ", " + chiTiet : "")</span>
+                                @if (moc != null || (g.BiTuChoi && g.ChuaTra))
+                                {
+                                    <div class="dn-vg-moc">
+                                        @if (moc != null)
+                                        {
+                                            <span class="tv-moc @moc.Value.Lop">@moc.Value.Chu</span>
+                                        }
+                                        @if (g.BiTuChoi && g.ChuaTra)
+                                        {
+                                            <span class="dn-nhan dn-tu-choi">Bị từ chối, cần trả lại</span>
+                                        }
+                                    </div>
+                                }
                             </div>
-                            <span class="dn-nhan">@g.TrangThai</span>
-                            @if (g.BiTuChoi && g.ChuaTra)
-                            {
-                                <span class="dn-nhan dn-tu-choi">Bị từ chối, cần trả lại</span>
-                            }
+                            <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+                            <div class="dn-vg-cuong">
+                                <span class="dn-vg-tien"><span class="tv-ma">@g.PhaiTra.ToString("N0")</span> VNĐ</span>
+                                @if (g.TienGiam > 0)
+                                {
+                                    <small class="dn-vg-giam">đã giảm @g.TienGiam.ToString("N0")</small>
+                                }
                             @if (g.TruongNhomMoDuoc)
                             {
                                 @* Ghế của mình, hoặc ghế không có tài khoản để điền hộ (RB-20: không mở ghế người khác) *@
-                                <a asp-action="GheCuaToi" asp-route-id="@g.Id" class="dn-ghe-mo">
+                                <a asp-action="GheCuaToi" asp-route-id="@g.Id" class="dn-vg-nut">
                                     @(g.LaCuaToi ? "Ghế của tôi" : !conGiuCho || g.TrangThai is TrangThaiGhe.DaTra or TrangThaiGhe.ChoXacNhan ? "Xem" : g.DaCoChu ? "Sửa" : "Điền hộ")
                                 </a>
                             }
                             else if (g.TruongNhomTraHoDuoc && conGiuCho)
                             {
-                                <a asp-action="TraHo" asp-route-id="@g.Id" class="dn-ghe-mo">Trả hộ</a>
+                                <a asp-action="TraHo" asp-route-id="@g.Id" class="dn-vg-nut">Trả hộ</a>
                             }
                             @if (conGiuCho && (g.DuocMoiRa || (g.ChuaTra && tongGhe > 1)))
                             {
@@ -170,6 +235,7 @@
                                     </div>
                                 </details>
                             }
+                            </div>
                         </li>
                     }
                 </ol>
@@ -227,9 +293,10 @@
         <aside>
             @if (Model.LinkMoi != null && conGiuCho)
             {
-                <section class="dt-block dn-moi">
+                <section class="dt-block dn-moi dn-co-xe">
                     <h2>Mời cả nhóm</h2>
                     <p class="dt-note">Còn @soGheTrong ghế chưa có người nhận. Gửi lời mời dưới đây vào nhóm chat của cả đoàn.</p>
+                    <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
                     <blockquote class="dn-loi-moi" id="loiMoi">@loiMoi</blockquote>
 
@@ -371,4 +438,5 @@
         }
     })();
 </script>
+<script src="~/js/moc-dong.js" asp-append-version="true"></script>
 
