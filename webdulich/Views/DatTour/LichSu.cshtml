@@ -10,6 +10,14 @@
     var choTheoDon = ViewBag.ChoTheoDon as Dictionary<int, List<string>> ?? new Dictionary<int, List<string>>();
     var gheNhom = ViewBag.GheNhom as List<webdulich.Models.GheNhomTrongLichSu> ?? new List<webdulich.Models.GheNhomTrongLichSu>();
     var chuyenDaDi = ViewBag.ChuyenDaDi as List<webdulich.Models.ChuyenDaDi> ?? new List<webdulich.Models.ChuyenDaDi>();
+    // Trạng thái thanh toán hiện thành dấu mộc trên thẻ vé, màu theo nhóm trạng thái
+    string LopMoc(string css) => css switch
+    {
+        "status-paid" => "tv-moc-xanh",
+        "status-checking" => "tv-moc-vang",
+        "status-cancelled" => "tv-moc-do",
+        _ => "tv-moc-xam"
+    };
 }
 
 @section Styles {
@@ -97,15 +105,17 @@
                 @foreach (var g in gheNhom)
                 {
                     bool gheDaNha = g.TrangThai == webdulich.Models.TrangThaiGhe.DaNha;
-                    <article class="ls-card">
+                    string cssGhe = g.DonDaHuy || gheDaNha ? "status-cancelled" : g.TrangThai == "Đã trả" ? "status-paid" : g.TrangThai == "Chờ xác nhận thanh toán" ? "status-checking" : "status-unpaid";
+                    <article class="ls-card tv-ve">
                         <header class="ls-card-head">
                             <div>
                                 <h2>@g.TenTour</h2>
                                 <span class="ls-nhom">Nhóm của @g.TenTruongNhom</span>
-                                <div class="ls-code">Mã chuyến đi: @g.MaChuyenDi</div>
+                                <div class="ls-code">Mã chuyến đi <span class="tv-ma">@g.MaChuyenDi</span></div>
                             </div>
-                            <span class="badge-status @(g.DonDaHuy || gheDaNha ? "status-cancelled" : g.TrangThai == "Đã trả" ? "status-paid" : g.TrangThai == "Chờ xác nhận thanh toán" ? "status-checking" : "status-unpaid")">@(g.DonDaHuy ? "Đơn đã hủy" : gheDaNha ? "Ghế đã bị nhả" : g.TrangThai)</span>
+                            <span class="tv-moc @LopMoc(cssGhe)">@(g.DonDaHuy ? "Đơn đã hủy" : gheDaNha ? "Ghế đã bị nhả" : g.TrangThai)</span>
                         </header>
+                        <div class="tv-ve-duc-lo" aria-hidden="true"></div>
                         <dl class="ls-details">
                             <div>
                                 <dt>Ngày đi</dt>
@@ -170,7 +180,7 @@
 
                 var gioDi = item.GioKhoiHanh;
 
-                <article class="ls-card">
+                <article class="ls-card tv-ve">
                     <header class="ls-card-head">
                         <div>
                             <h2>@item.TenTour</h2>
@@ -178,11 +188,12 @@
                             {
                                 <span class="ls-nhom">Đơn nhóm</span>
                             }
-                            <div class="ls-code">Mã chuyến đi: @(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có" : item.MaChuyenDi)</div>
+                            <div class="ls-code">Mã chuyến đi <span class="tv-ma">@(string.IsNullOrEmpty(item.MaChuyenDi) ? "Chưa có" : item.MaChuyenDi)</span></div>
                         </div>
 
-                        <span class="badge-status @cssStatus">@item.TrangThaiThanhToan</span>
+                        <span class="tv-moc @LopMoc(cssStatus)">@item.TrangThaiThanhToan</span>
                     </header>
+                    <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
                     <dl class="ls-details">
                         <div>

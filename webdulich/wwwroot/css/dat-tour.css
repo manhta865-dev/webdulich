@@ -352,12 +352,11 @@
 
 .pay-box.active { display: block; }
 
-.pay-grid {
-    display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: var(--tv-k5);
-    align-items: start;
-}
+/* Phiếu chuyển khoản dạng vé nằm ngang: cuống trái là QR, thân phải là thông tin. Nền phía sau vé là nền .pay-box */
+.dt-ve-ck { align-items: center; }
+.dt-ve-ck > .tv-ve-duc-lo-doc { align-self: stretch; }
+.dt-ve-ck .qr-wrap { flex-shrink: 0; width: 230px; padding: var(--tv-k4); }
+.dt-ve-ck .pay-info { flex: 1 1 auto; min-width: 0; padding: var(--tv-k4) var(--tv-k5); }
 
 .qr-wrap img {
     display: block;
@@ -376,10 +375,14 @@
     border: 1px dashed var(--tv-chu-phu);
     border-radius: var(--tv-bo-nut);
     background: var(--tv-be-mat);
-    font-family: ui-monospace, Consolas, monospace;
+    font-family: var(--tv-font-ve), ui-monospace, Consolas, monospace;
     font-weight: 600;
+    letter-spacing: 0.02em;
     overflow-wrap: anywhere;
 }
+
+/* Tóm tắt có đường xé thay cho đường kẻ dưới khối tour */
+.tv-khoi-xe .dt-summary-tour { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 
 .note-box {
     margin-top: var(--tv-k4);
@@ -392,16 +395,22 @@
 
 .summary-line-discount > span:last-child { color: var(--tv-thanh-cong); }
 
-/* ---------- Trang Thành công ---------- */
-.dt-success {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: var(--tv-k6) var(--tv-k5);
-    text-align: center;
-    background: var(--tv-be-mat);
-    border: 1px solid var(--tv-vien);
-    border-radius: var(--tv-bo-anh);
-}
+/* ---------- Trang Thành công: một tấm vé dọc ---------- */
+.dt-ve-xong { --khuyet: 12px; max-width: 560px; margin: 0 auto; text-align: center; }
+.dt-ve-xong-than { padding: var(--tv-k6) var(--tv-k5) var(--tv-k5); }
+.dt-ve-xong-than h1 { margin: 0 0 var(--tv-k3); }
+.dt-ve-xong-than p { margin: 0 0 var(--tv-k4); color: var(--tv-chu-phu); }
+.dt-ve-xong-than strong { color: var(--tv-chu); }
+.dt-ve-xong-moc { font-size: 1rem; }
+.dt-ve-xong-cuong { padding: var(--tv-k5); }
+
+.dt-ve-xong-ds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k3) var(--tv-k4); margin: 0; text-align: left; }
+.dt-ve-xong-ds .rong { grid-column: 1 / -1; text-align: center; }
+.dt-ve-xong-ds dt { font-size: var(--tv-cs-nho); font-weight: 500; color: var(--tv-chu-phu); }
+.dt-ve-xong-ds dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.dt-ve-xong-ma { font-size: 1.75rem; color: var(--tv-nhan-dam); }
+
+.dt-ve-xong .dt-success-note { margin: var(--tv-k4) 0 0; font-size: var(--tv-cs-nho); line-height: 1.6; color: var(--tv-chu-phu); }
 
 .dt-success-icon {
     display: inline-flex;
@@ -417,15 +426,24 @@
 
 .dt-success-icon .tv-icon { width: 32px; height: 32px; stroke-width: 2.5; }
 
-.dt-success h1 { margin: 0 0 var(--tv-k4); }
-.dt-success p { margin: 0 0 var(--tv-k2); color: var(--tv-chu-phu); }
-.dt-success strong { color: var(--tv-chu); }
-.dt-success .dt-success-note { margin-top: var(--tv-k4); line-height: 1.6; }
 .dt-actions-giua { justify-content: center; }
 
 @media (max-width: 576px) {
-    .pay-grid { grid-template-columns: 1fr; }
-    .qr-wrap { max-width: 220px; }
+    /* Phiếu chuyển khoản dựng đứng: QR trên, đường đục lỗ nằm ngang, thông tin dưới */
+    .dt-ve-ck { flex-direction: column; align-items: stretch; }
+    .dt-ve-ck .qr-wrap { width: auto; max-width: 260px; margin: 0 auto; }
+    .dt-ve-ck .pay-info { padding: var(--tv-k4); }
+    .dt-ve-ck > .tv-ve-duc-lo-doc {
+        width: auto;
+        height: 0;
+        margin: 0 calc(var(--khuyet) + 6px);
+        border-left: 0;
+        border-top: 2px dashed var(--tv-vien);
+    }
+    .dt-ve-ck > .tv-ve-duc-lo-doc::before,
+    .dt-ve-ck > .tv-ve-duc-lo-doc::after { top: calc(-1 * var(--khuyet) - 1px); bottom: auto; }
+    .dt-ve-ck > .tv-ve-duc-lo-doc::before { left: calc(-2 * var(--khuyet) - 7px); }
+    .dt-ve-ck > .tv-ve-duc-lo-doc::after { left: auto; right: calc(-2 * var(--khuyet) - 7px); }
     .promo-pay-row { flex-direction: column; }
     .promo-pay-row .tv-btn { width: 100%; }
 }

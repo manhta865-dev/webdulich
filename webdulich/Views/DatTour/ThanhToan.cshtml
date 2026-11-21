@@ -106,15 +106,17 @@
                     </div>
 
                     <div id="bankBox" class="pay-box active">
-                        <div class="pay-grid">
+                        @* Phiếu chuyển khoản dạng vé: cuống vé là mã QR, thân vé là thông tin chuyển khoản *@
+                        <div class="tv-ve tv-ve-ngang dt-ve-ck">
                             <div class="qr-wrap">
                                 <img id="qrChuyenKhoan" src="@ck.LinkQr" data-qr-goc="@ck.LinkQr"
                                      alt="QR chuyển khoản @(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)" />
                             </div>
+                            <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
 
                             <div class="pay-info">
                                 <p><strong>Ngân hàng:</strong> @(string.IsNullOrEmpty(ck.TenNganHang) ? ck.MaNganHang : ck.TenNganHang)</p>
-                                <p><strong>Số tài khoản:</strong> @ck.SoTaiKhoan</p>
+                                <p><strong>Số tài khoản:</strong> <span class="tv-ma">@ck.SoTaiKhoan</span></p>
                                 <p><strong>Chủ tài khoản:</strong> @ck.TenTaiKhoan</p>
                                 <p><strong>Số tiền:</strong> <span class="js-final-total pay-amount">@tongTien.ToString("N0") VNĐ</span></p>
                                 <p><strong>Nội dung chuyển khoản:</strong></p>
@@ -129,14 +131,15 @@
                     </div>
 
                     <div id="momoBox" class="pay-box">
-                        <div class="pay-grid">
+                        <div class="tv-ve tv-ve-ngang dt-ve-ck">
                             <div class="qr-wrap">
                                 <img src="~/images/payment/momo-qr.jpg" alt="QR MoMo" />
                             </div>
+                            <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
 
                             <div class="pay-info">
                                 <p><strong>Ví điện tử:</strong> MoMo</p>
-                                <p><strong>Số điện thoại ví:</strong> @ck.SoMomo</p>
+                                <p><strong>Số điện thoại ví:</strong> <span class="tv-ma">@ck.SoMomo</span></p>
                                 <p><strong>Chủ ví:</strong> @ck.TenTaiKhoan</p>
                                 <p><strong>Số tiền:</strong> <span class="js-final-total pay-amount">@tongTien.ToString("N0") VNĐ</span></p>
                                 <p><strong>Nội dung chuyển khoản:</strong></p>
@@ -159,7 +162,7 @@
             </form>
         </div>
 
-        <aside class="dt-block dt-summary">
+        <aside class="dt-block dt-summary tv-khoi-xe">
             <h2>Tóm tắt chuyến đi</h2>
 
             @if (tour != null)
@@ -174,13 +177,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
                 <div class="dt-line"><span>Giá / người lớn</span><span>@giaNguoiLon.ToString("N0") VNĐ</span></div>
                 <div class="dt-line"><span>Giá trẻ nhỏ</span><span>@giaTreEm.ToString("N0") VNĐ</span></div>
                 <div class="dt-line"><span>Người lớn</span><span>@soNguoiLon</span></div>
                 <div class="dt-line"><span>Trẻ nhỏ</span><span>@soTreNho</span></div>
                 <div class="dt-line"><span>Tổng số người</span><span>@soNguoi</span></div>
-                <div class="dt-line"><span>Mã chuyến đi</span><span>@ViewBag.MaChuyenDi</span></div>
+                <div class="dt-line"><span>Mã chuyến đi</span><span class="tv-ma">@ViewBag.MaChuyenDi</span></div>
                 @if (ViewBag.DsMaCho is List<string> dsMaCho && dsMaCho.Any())
                 {
                     <div class="dt-line">

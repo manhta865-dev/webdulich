@@ -66,6 +66,15 @@
 .tv-ve-duc-lo-doc::before { top: calc(-2 * var(--khuyet) - 7px); }
 .tv-ve-duc-lo-doc::after { bottom: calc(-2 * var(--khuyet) - 7px); }
 
+/* Khối có padding (như .dt-block) chứa đường xé tràn hai mép, vết khuyết nằm đúng mép khối.
+   --dem bằng padding ngang của khối; --nen-sau-ve là màu phía sau khối */
+.tv-khoi-xe { --dem: var(--tv-k5); --khuyet: 10px; --nen-sau-ve: var(--tv-nen); overflow: hidden; }
+.tv-khoi-xe > .tv-ve-duc-lo { margin: var(--tv-k4) calc(var(--khuyet) + 6px - var(--dem)); }
+
+@media (max-width: 576px) {
+    .tv-khoi-xe { --dem: var(--tv-k4); }
+}
+
 /* Chữ máy in vé */
 .tv-ma {
     font-family: var(--tv-font-ve);

@@ -9,42 +9,45 @@
 <div class="dt-page">
     <partial name="_BuocDatTour" model="4" />
 
-    <div class="dt-success">
-        <div class="dt-success-icon" aria-hidden="true">
-            <svg class="tv-icon"><use href="#i-check" /></svg>
+    @* Kết quả đặt tour là một tấm vé: thân vé báo đã đặt, cuống vé là mã chuyến đi và cách thanh toán *@
+    <div class="tv-ve dt-ve-xong">
+        <div class="dt-ve-xong-than">
+            <div class="dt-success-icon" aria-hidden="true">
+                <svg class="tv-icon"><use href="#i-check" /></svg>
+            </div>
+
+            <h1>Đặt tour thành công</h1>
+
+            <p>
+                Bạn đã đặt tour <strong>@TempData["TenTour"]</strong>.
+            </p>
+
+            <span class="tv-moc tv-moc-xanh tv-moc-dong dt-ve-xong-moc">Đã giữ chỗ</span>
         </div>
 
-        <h1>Đặt tour thành công</h1>
+        <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
-        <p>
-            Bạn đã đặt tour <strong>@TempData["TenTour"]</strong>.
-        </p>
+        <div class="dt-ve-xong-cuong">
+            <dl class="dt-ve-xong-ds">
+                @if (TempData["MaChuyenDi"] != null)
+                {
+                    <div class="rong"><dt>Mã chuyến đi</dt><dd class="tv-ma dt-ve-xong-ma">@TempData["MaChuyenDi"]</dd></div>
+                }
+                @if (TempData["DsCho"] != null)
+                {
+                    <div><dt>Chỗ ngồi</dt><dd class="tv-ma">@TempData["DsCho"]</dd></div>
+                }
+                <div><dt>Thanh toán bằng</dt><dd>@TempData["PhuongThucThanhToan"]</dd></div>
+            </dl>
 
-        @if (TempData["DsCho"] != null)
-        {
-            <p>
-                Chỗ ngồi: <strong>@TempData["DsCho"]</strong>
+            <p class="dt-success-note">
+                TravelVN sẽ kiểm tra thông tin thanh toán và hỗ trợ bạn trong thời gian sớm nhất. Cảm ơn bạn đã sử dụng dịch vụ của TravelVN.
             </p>
-        }
 
-        @if (TempData["MaChuyenDi"] != null)
-        {
-            <p>
-                Mã chuyến đi: <strong>@TempData["MaChuyenDi"]</strong>
-            </p>
-        }
-
-        <p>
-            Phương thức thanh toán: <strong>@TempData["PhuongThucThanhToan"]</strong>
-        </p>
-
-        <p class="dt-success-note">
-            TravelVN sẽ kiểm tra thông tin thanh toán và hỗ trợ bạn trong thời gian sớm nhất. Cảm ơn bạn đã sử dụng dịch vụ của TravelVN.
-        </p>
-
-        <div class="dt-actions dt-actions-giua">
-            <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-chinh">Xem lịch sử đặt tour</a>
-            <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Về trang chủ</a>
+            <div class="dt-actions dt-actions-giua">
+                <a asp-controller="DatTour" asp-action="LichSu" class="tv-btn tv-btn-chinh">Xem lịch sử đặt tour</a>
+                <a asp-controller="TrangChu" asp-action="Index" class="tv-btn tv-btn-vien">Về trang chủ</a>
+            </div>
         </div>
     </div>
 </div>
