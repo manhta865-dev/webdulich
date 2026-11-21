@@ -22,6 +22,11 @@ namespace webdulich.Models
 
         public decimal KinhDo { get; set; }
 
+        // Địa chỉ nhúng đúng tấm ảnh 360 của điểm (Mo24), tách từ mã "Nhúng bản đồ" của Google Maps; luôn bắt đầu bằng
+        // https://www.google.com/maps/embed? (CK_DiemThamQuan_LinkNhung360). Rỗng: Street View tự chọn ảnh đường phố gần tọa độ nhất.
+        [StringLength(1000)]
+        public string? LinkNhung360 { get; set; }
+
         [ForeignKey("DiaDiemId")]
         public DiaDiem? DiaDiem { get; set; }
 

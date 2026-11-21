@@ -204,7 +204,9 @@ namespace webdulich.Controllers
                         Kinh = d.DiemThamQuan.KinhDo,
                         LinkStreetView = Services.LienKetBanDo.StreetView(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo),
                         LinkNhung = Services.LienKetBanDo.Nhung(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo, 16),
-                        Link360 = Services.LienKetBanDo.NhungStreetView(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo, khoa)
+                        // Có mã nhúng đúng tấm ảnh 360 (Mo24) thì dùng, không thì Street View đường phố gần tọa độ nhất
+                        Link360 = d.DiemThamQuan.LinkNhung360
+                            ?? Services.LienKetBanDo.NhungStreetView(d.DiemThamQuan.ViDo, d.DiemThamQuan.KinhDo, khoa)
                     }).ToList()
                 }).ToList()
             };

@@ -50,6 +50,31 @@ namespace webdulich.Services
             return "https://maps.google.com/maps?layer=c&cbll=" + Diem(vi, kinh) + "&cbp=11,0,0,0,0&hl=vi&output=svembed";
         }
 
+        // Đọc mã admin dán vào ô "Ảnh 360": cả đoạn HTML <iframe src="..."> từ nút "Nhúng bản đồ" của Google Maps, hoặc chỉ địa chỉ trong đó.
+        // Chỉ nhận https://www.google.com/maps/embed?... (trùng CK_DiemThamQuan_LinkNhung360), tối đa 1000 ký tự. Ô trống: link = null, hợp lệ.
+        public static bool DocMaNhung360(string? chu, out string? link)
+        {
+            link = null;
+            if (string.IsNullOrWhiteSpace(chu))
+            {
+                return true;
+            }
+
+            var m = System.Text.RegularExpressions.Regex.Match(chu, "src\\s*=\\s*[\"']([^\"']+)[\"']", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            var diaChi = System.Net.WebUtility.HtmlDecode(m.Success ? m.Groups[1].Value : chu).Trim();
+            if (diaChi.Length > 1000
+                || !Uri.TryCreate(diaChi, UriKind.Absolute, out var uri)
+                || uri.Scheme != Uri.UriSchemeHttps
+                || !string.Equals(uri.Host, "www.google.com", StringComparison.OrdinalIgnoreCase)
+                || !uri.AbsolutePath.StartsWith("/maps/embed", StringComparison.Ordinal)
+                || !diaChi.StartsWith("https://www.google.com/maps/embed?", StringComparison.Ordinal))
+            {
+                return false;
+            }
+            link = diaChi;
+            return true;
+        }
+
         // Giữ tối đa SoDiemDungToiDa điểm, rải đều trên hành trình
         private static IEnumerable<(decimal Vi, decimal Kinh)> ChonDiemDung(IReadOnlyList<(decimal Vi, decimal Kinh)> ds)
         {

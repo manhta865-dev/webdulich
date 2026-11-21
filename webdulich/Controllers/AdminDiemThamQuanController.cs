@@ -146,7 +146,7 @@ namespace webdulich.Controllers
         // Sửa tên hoặc tọa độ của một điểm; mọi ngày đang dùng điểm này đều thấy thay đổi
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Sua(int id, int tourId, string? ten, string? toaDo)
+        public IActionResult Sua(int id, int tourId, string? ten, string? toaDo, string? maNhung360)
         {
             if (!LaAdmin())
             {
@@ -175,10 +175,16 @@ namespace webdulich.Controllers
                 TempData["error"] = $"Điểm đến này đã có điểm tên \"{ten}\".";
                 return VeLichTrinh(tourId);
             }
+            if (!webdulich.Services.LienKetBanDo.DocMaNhung360(maNhung360, out var linkNhung))
+            {
+                TempData["error"] = "Mã ảnh 360 chưa đúng. Trên Google Maps, mở ảnh 360 của điểm, bấm Chia sẻ, chọn \"Nhúng bản đồ\", bấm \"Sao chép HTML\" rồi dán cả đoạn vào ô.";
+                return VeLichTrinh(tourId);
+            }
 
             diem.Ten = ten;
             diem.ViDo = vi.Value;
             diem.KinhDo = kinh.Value;
+            diem.LinkNhung360 = linkNhung;
             _context.SaveChanges();
 
             TempData["success"] = $"Đã lưu điểm \"{ten}\".";

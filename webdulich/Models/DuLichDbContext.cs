@@ -268,8 +268,14 @@ namespace webdulich.Models
                 e.Property(x => x.KinhDo).HasPrecision(9, 6);
                 e.HasIndex(x => new { x.DiaDiemId, x.Ten }).IsUnique();
                 e.HasOne(x => x.DiaDiem).WithMany().HasForeignKey(x => x.DiaDiemId).OnDelete(DeleteBehavior.Restrict);
-                e.ToTable(t => t.HasCheckConstraint("CK_DiemThamQuan_ToaDo",
-                    "[ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110"));
+                e.Property(x => x.LinkNhung360).IsUnicode(false);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_DiemThamQuan_ToaDo", "[ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110");
+                    // Chỉ nhận khung nhúng của Google Maps (Mo24): chặn chèn trang lạ vào khung 360
+                    t.HasCheckConstraint("CK_DiemThamQuan_LinkNhung360",
+                        "[LinkNhung360] IS NULL OR [LinkNhung360] LIKE 'https://www.google.com/maps/embed?%'");
+                });
             });
             // Ngày ghé điểm nào, thứ tự ra sao (Mo23, RB-50). Xóa ngày lịch trình thì dòng nối đi theo (Cascade);
             // điểm đang được một ngày nào đó dùng thì không xóa được (Restrict).

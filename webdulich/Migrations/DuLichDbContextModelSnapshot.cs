@@ -611,6 +611,11 @@ namespace webdulich.Migrations
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");
 
+                    b.Property<string>("LinkNhung360")
+                        .HasMaxLength(1000)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(1000)");
+
                     b.Property<string>("Ten")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -627,6 +632,8 @@ namespace webdulich.Migrations
 
                     b.ToTable("DiemThamQuans", t =>
                         {
+                            t.HasCheckConstraint("CK_DiemThamQuan_LinkNhung360", "[LinkNhung360] IS NULL OR [LinkNhung360] LIKE 'https://www.google.com/maps/embed?%'");
+
                             t.HasCheckConstraint("CK_DiemThamQuan_ToaDo", "[ViDo] BETWEEN 8 AND 24 AND [KinhDo] BETWEEN 102 AND 110");
                         });
                 });

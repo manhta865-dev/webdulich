@@ -175,6 +175,11 @@
                                                     <input type="text" name="ten" value="@d.Ten" class="form-control" maxlength="150" aria-label="Tên điểm" required />
                                                     <input type="text" name="toaDo" value="@ToaDo(d.ViDo, d.KinhDo)" class="form-control" inputmode="decimal" aria-label="Tọa độ điểm" required />
                                                     <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">Lưu</button>
+                                                    @* Mã nhúng đúng tấm ảnh 360 (Mo24); để trống thì Street View tự chọn ảnh đường phố gần tọa độ *@
+                                                    <textarea name="maNhung360" class="form-control ad-diem-360" rows="2" maxlength="3000"
+                                                              aria-label="Mã nhúng ảnh 360 của @d.Ten"
+                                                              placeholder="Ảnh 360: dán mã &quot;Nhúng bản đồ&quot; từ Google Maps (không bắt buộc)">@d.LinkNhung360</textarea>
+                                                    <small class="ad-diem-360-tt">@(string.IsNullOrEmpty(d.LinkNhung360) ? "Chưa có ảnh 360 riêng: đang dùng Street View đường phố gần tọa độ nhất." : "Đã có ảnh 360 riêng cho điểm này.")</small>
                                                 </form>
                                                 <div class="ad-diem-nut">
                                                     <form asp-controller="AdminDiemThamQuan" asp-action="DoiThuTu" method="post">
@@ -218,7 +223,8 @@
                                     <input type="text" name="toaDo" class="form-control" inputmode="decimal" autocomplete="off" placeholder="11.9001, 108.4497" aria-label="Tọa độ điểm mới" />
                                     <button type="submit" class="tv-btn tv-btn-chinh ad-btn-nho">Thêm điểm</button>
                                 </form>
-                                <small class="ad-toa-do-nhac">Tọa độ lấy từ Google Maps: nhấp chuột phải đúng chỗ, bấm dòng số đầu tiên rồi dán vào. Street View hiện ảnh 360 gần tọa độ nhất.</small>
+                                <small class="ad-toa-do-nhac">Tọa độ lấy từ Google Maps: nhấp chuột phải đúng chỗ, bấm dòng số đầu tiên rồi dán vào.</small>
+                                <small class="ad-toa-do-nhac">Ảnh 360 đúng chỗ: trên Google Maps mở ảnh 360 của điểm (ảnh người dùng đăng hoặc Street View), xoay tới hướng đẹp, bấm Chia sẻ, chọn "Nhúng bản đồ", bấm "Sao chép HTML", dán vào ô ảnh 360 của điểm rồi bấm Lưu.</small>
                             </details>
                         </div>
                     }
