@@ -56,10 +56,13 @@
     <link rel="stylesheet" href="~/css/trang-chu.css" asp-append-version="true" />
 }
 
-@* ===== 1. Đầu trang: tấm vé lớn, quả địa cầu, tour xếp quạt, hàng điểm đến ===== *@
+@* ===== 1. Đầu trang: vé chính, cuống vé tách được, tour xếp quạt và hàng điểm đến trên một hàng ===== *@
 <section class="tc-dau">
     <div class="tc-trong">
-        <div class="tv-ve tv-ve-ngang tc-ve">
+        <div class="tc-dau-hang">
+        @* Vé chính và cuống vé là hai mảnh liền nhau; rê chuột (hoặc dùng phím Tab) vào vé thì cuống tách ra như bị xé *@
+        <div class="tc-ve-bo">
+        <div class="tv-ve tc-ve">
             <div class="tc-ve-than">
                 <div class="tc-ve-dau tv-ma">
                     <span><svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg> TRAVELVN</span>
@@ -93,12 +96,13 @@
                 </div>
             </div>
 
-            <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+        </div>
 
-            @* Cuống vé: tour đang ở giữa dải xếp quạt bên dưới (script cuối trang đổi theo) *@
+            @* Cuống vé: tour đang ở giữa dải xếp quạt bên cạnh (script cuối trang đổi theo) *@
             @if (tourCuong != null)
             {
                 <a class="tc-ve-cuong" id="tcCuong" href="@Url.Action("ChiTiet", "DiaDiem", new { id = tourCuong.Id })">
+                    <span class="tc-ve-cuong-dau tv-ma"><svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg> CUỐNG VÉ</span>
                     <span class="tc-ve-cuong-anh">
                         <img src="~/images/dulich/@tourCuong.HinhAnh" alt="" data-cuong="anh" />
                         <span class="tv-pill-tren" data-cuong="ngay" @(tourCuong.SoNgay.HasValue ? "" : "hidden")>@(tourCuong.SoNgay) ngày</span>
@@ -110,17 +114,7 @@
             }
         </div>
 
-        <div class="tc-kham-pha">
-            @* Quả địa cầu 3D (wwwroot/js/hero-3d.js): mỗi điểm đến có tour là một chấm, bấm vào để xem tour *@
-            <figure class="tc-dia-cau">
-                <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")"
-                     data-diem="@System.Text.Json.JsonSerializer.Serialize(ViewBag.DiemQuaDiaCau)">
-                    <canvas aria-hidden="true"></canvas>
-                    <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
-                </div>
-                <figcaption>Xoay quả địa cầu, bấm vào một điểm đến để xem tour ở đó.</figcaption>
-            </figure>
-
+        <div class="tc-dau-phai">
             @if (tourXap.Any())
             {
                 <div class="tc-xap" id="tcXap" aria-roledescription="carousel" aria-label="Một số tour đang bán">
@@ -146,7 +140,6 @@
                     }
                 </div>
             }
-        </div>
 
         @if (diemDen.Any())
         {
@@ -159,47 +152,51 @@
                 }
             </nav>
         }
+        </div>
+        </div>
     </div>
 </section>
 
 <div class="home-wrap">
-    @* ===== 2. Đặt nhóm trên TravelVN: 6 việc web làm thay trưởng nhóm (đều là tính năng đã chạy) ===== *@
-    <section class="tv-section" id="dat-nhom">
+    @* ===== 2. Sáu lý do chọn TravelVN: thẻ ảnh có cuống vé, rê chuột thì thẻ nhấc lên, cuống đổi màu và nghiêng.
+         Mỗi câu là điều web đang làm thật (cùng nội dung mục Cam kết ở trang Giới thiệu); ảnh chỉ để minh họa ===== *@
+    @{
+        var lyDo = new[]
+        {
+            new { Anh = "dalat1.jpg", Icon = "i-receipt", Ten = "Giá rõ ràng theo từng lịch", MoTa = "Giá hiện theo đúng lịch khởi hành bạn chọn, mỗi ghế một phần.", GhiChu = "Khuyến mãi trừ thẳng vào phần của từng người", Moc = "" },
+            new { Anh = "halong.jpg", Icon = "i-users", Ten = "Giấy tờ riêng tư", MoTa = "Số giấy tờ chỉ bạn và TravelVN xem được.", GhiChu = "Trưởng nhóm không thấy, hướng dẫn viên chỉ thấy vài số cuối", Moc = "" },
+            new { Anh = "phuquoc.jpg", Icon = "i-bank", Ten = "Đối chiếu từng khoản", MoTa = "Mỗi ghế có nội dung chuyển khoản riêng nên tiền của ai vào đúng ghế người đó.", GhiChu = "Nhân viên đối chiếu sao kê rồi mới xác nhận ghế", Moc = "Đã trả" },
+            new { Anh = "nhatrang.jpg", Icon = "i-clock", Ten = "Hạn chốt minh bạch", MoTa = "Hạn giữ chỗ hiện ngay trên đơn, cả nhóm cùng thấy đồng hồ đếm ngược.", GhiChu = "Ghế đã trả luôn được giữ, chỉ ghế chưa trả bị nhả", Moc = "" },
+            new { Anh = "sapa.jpg", Icon = "i-route", Ten = "Xem trước hành trình trên bản đồ", MoTa = "Trang tour có bản đồ 3D vẽ các điểm dừng của lịch trình.", GhiChu = "Đường đi theo đường thật, có nền vệ tinh", Moc = "" },
+            new { Anh = "danang.jpg", Icon = "i-calendar", Ten = "Chọn ngày theo lịch tháng", MoTa = "Xem mọi lịch khởi hành trên một tấm lịch để chọn ngày cả nhóm rảnh.", GhiChu = "Thấy ngay ngày nào còn chỗ, ngày nào sắp hết", Moc = "" }
+        };
+    }
+    <section class="tv-section tc-ly-do-khoi">
         <div class="tc-tieu-de">
-            <h2>Đặt nhóm trên TravelVN</h2>
-            <p>Những việc trước đây một người phải ôm hết, giờ chia đều cho cả nhóm.</p>
+            <h2>6 lý do chọn TravelVN cho chuyến đi nhóm</h2>
         </div>
-        <div class="tc-tinh-nang">
-            <article>
-                <div class="tc-mini"><span class="tc-mini-dong-ho tv-ma">@(soGio.ToString("00")):00:00</span><small>còn lại để cả nhóm trả</small></div>
-                <h3>Giữ chỗ có hạn</h3>
-                <p>Ghế được giữ tối đa @soGio giờ. Hết hạn mà chưa trả thì ghế đó được nhả cho người khác.</p>
-            </article>
-            <article>
-                <div class="tc-mini"><span class="tc-mini-link tv-ma"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg>Link mời nhóm</span><small>dán vào Zalo, Messenger</small></div>
-                <h3>Một link cho cả nhóm</h3>
-                <p>Trưởng nhóm gửi một link vào nhóm chat, mỗi người tự bấm vào và nhận một ghế.</p>
-            </article>
-            <article>
-                <div class="tc-mini tc-mini-form" aria-hidden="true"><span></span><span></span><span class="ngan"></span></div>
-                <h3>Ai nấy tự điền</h3>
-                <p>Mỗi người tự điền họ tên, ngày sinh và giấy tờ của mình. Không phải chụp gửi cho trưởng nhóm.</p>
-            </article>
-            <article>
-                <div class="tc-mini"><span class="tc-mini-qr" aria-hidden="true"></span><span class="tv-ma">TV-K7Q2PX-3</span></div>
-                <h3>Mỗi người một mã QR</h3>
-                <p>Mỗi ghế có mã QR và nội dung chuyển khoản riêng, nên tiền của ai vào ghế người đó.</p>
-            </article>
-            <article>
-                <div class="tc-mini"><span class="tc-mini-nhac"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>Ghế 03 sắp hết hạn giữ chỗ</span></div>
-                <h3>Nhắc trước khi hết hạn</h3>
-                <p>Ai đăng nhập mà còn ghế chưa trả sẽ thấy lời nhắc ngay trên web, kèm thời gian còn lại.</p>
-            </article>
-            <article>
-                <div class="tc-mini"><span class="tc-mini-an tv-ma">079 ••• •• 312</span><small>trưởng nhóm thấy</small></div>
-                <h3>Giấy tờ giữ riêng</h3>
-                <p>Trưởng nhóm thấy ai đã trả nhưng không thấy số giấy tờ của người khác.</p>
-            </article>
+        <div class="tc-ly-do-luoi">
+            @foreach (var l in lyDo)
+            {
+                <article class="tc-ly-do">
+                    <div class="tc-ly-do-the">
+                        <div class="tc-ly-do-anh">
+                            <img src="~/images/dulich/@l.Anh" alt="" loading="lazy" />
+                            <span class="tc-ly-do-icon"><svg class="tv-icon" aria-hidden="true"><use href="#@l.Icon" /></svg></span>
+                            @if (!string.IsNullOrEmpty(l.Moc))
+                            {
+                                <span class="tv-moc tv-moc-xanh tc-ly-do-moc" aria-hidden="true">@l.Moc</span>
+                            }
+                        </div>
+                        <h3>@l.Ten</h3>
+                        <p>@l.MoTa</p>
+                    </div>
+                    <div class="tc-ly-do-cuong">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg>
+                        <span>@l.GhiChu</span>
+                    </div>
+                </article>
+            }
         </div>
     </section>
 
@@ -273,29 +270,83 @@
         }
     </section>
 
-    @* ===== 5. Đi đâu: lưới điểm đến từ tour đang bán, viền kiểu phong bì thư máy bay ===== *@
-    @if (diemDen.Count >= 3)
-    {
-        <section class="tv-section tc-di-dau">
-            <div class="tc-tieu-de">
-                <h2>Nhóm bạn muốn đi đâu?</h2>
-            </div>
-            <div class="tc-luoi-diem">
-                @foreach (var d in diemDen.Take(5))
-                {
-                    <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten" class="tc-o-diem">
-                        <img src="~/images/dulich/@d.Anh" alt="" loading="lazy" />
-                        <span class="tc-o-diem-chu">
-                            <strong>@d.Ten</strong>
-                            <small>@d.SoTour tour</small>
-                        </span>
-                    </a>
-                }
-            </div>
-        </section>
-    }
+    @* ===== 5. Đi đâu: quả địa cầu bên trái, lưới điểm đến lấy từ tour đang bán bên phải, viền kiểu phong bì thư máy bay ===== *@
+    <section class="tv-section tc-di-dau">
+        <div class="tc-tieu-de">
+            <h2>Nhóm bạn muốn đi đâu?</h2>
+        </div>
+        <div class="tc-di-dau-hang">
+            @* Quả địa cầu 3D (wwwroot/js/hero-3d.js): mỗi điểm đến có tour là một chấm, bấm vào để xem tour.
+               Giữ id hero-globe và các lớp hero-globe-* vì script tìm theo tên này *@
+            <figure class="tc-dia-cau">
+                <div id="hero-globe" class="hero-globe" data-tour="@Url.Action("DanhSach", "DiaDiem")"
+                     data-diem="@System.Text.Json.JsonSerializer.Serialize(ViewBag.DiemQuaDiaCau)">
+                    <canvas aria-hidden="true"></canvas>
+                    <a class="hero-globe-label" href="#" tabindex="-1">Việt Nam</a>
+                </div>
+                <figcaption>Xoay quả địa cầu, bấm vào một điểm đến để xem tour ở đó.</figcaption>
+            </figure>
 
-    @* ===== 6. Bảng ghế của một đơn nhóm (minh họa) và mã giảm giá ===== *@
+            @if (diemDen.Count >= 3)
+            {
+                <div class="tc-luoi-diem">
+                    @foreach (var d in diemDen.Take(5))
+                    {
+                        <a asp-controller="DiaDiem" asp-action="DanhSach" asp-route-keyword="@d.Ten" class="tc-o-diem">
+                            <img src="~/images/dulich/@d.Anh" alt="" loading="lazy" />
+                            <span class="tc-o-diem-chu">
+                                <strong>@d.Ten</strong>
+                                <small>@d.SoTour tour</small>
+                                <span class="tc-o-diem-xem" aria-hidden="true">Xem tour <svg class="tv-icon"><use href="#i-arrow" /></svg></span>
+                            </span>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    @* ===== 6. Đặt nhóm trên TravelVN: 6 việc web làm thay trưởng nhóm (đều là tính năng đã chạy) ===== *@
+    <section class="tv-section" id="dat-nhom">
+        <div class="tc-tieu-de">
+            <h2>Đặt nhóm trên TravelVN</h2>
+            <p>Những việc trước đây một người phải ôm hết, giờ chia đều cho cả nhóm.</p>
+        </div>
+        <div class="tc-tinh-nang">
+            <article>
+                <div class="tc-mini"><span class="tc-mini-dong-ho tv-ma">@(soGio.ToString("00")):00:00</span><small>còn lại để cả nhóm trả</small></div>
+                <h3>Giữ chỗ có hạn</h3>
+                <p>Ghế được giữ tối đa @soGio giờ. Hết hạn mà chưa trả thì ghế đó được nhả cho người khác.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-link tv-ma"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg>Link mời nhóm</span><small>dán vào Zalo, Messenger</small></div>
+                <h3>Một link cho cả nhóm</h3>
+                <p>Trưởng nhóm gửi một link vào nhóm chat, mỗi người tự bấm vào và nhận một ghế.</p>
+            </article>
+            <article>
+                <div class="tc-mini tc-mini-form" aria-hidden="true"><span></span><span></span><span class="ngan"></span></div>
+                <h3>Ai nấy tự điền</h3>
+                <p>Mỗi người tự điền họ tên, ngày sinh và giấy tờ của mình. Không phải chụp gửi cho trưởng nhóm.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-qr" aria-hidden="true"></span><span class="tv-ma">TV-K7Q2PX-3</span></div>
+                <h3>Mỗi người một mã QR</h3>
+                <p>Mỗi ghế có mã QR và nội dung chuyển khoản riêng, nên tiền của ai vào ghế người đó.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-nhac"><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>Ghế 03 sắp hết hạn giữ chỗ</span></div>
+                <h3>Nhắc trước khi hết hạn</h3>
+                <p>Ai đăng nhập mà còn ghế chưa trả sẽ thấy lời nhắc ngay trên web, kèm thời gian còn lại.</p>
+            </article>
+            <article>
+                <div class="tc-mini"><span class="tc-mini-an tv-ma">079 ••• •• 312</span><small>trưởng nhóm thấy</small></div>
+                <h3>Giấy tờ giữ riêng</h3>
+                <p>Trưởng nhóm thấy ai đã trả nhưng không thấy số giấy tờ của người khác.</p>
+            </article>
+        </div>
+    </section>
+
+    @* ===== 7. Bảng ghế của một đơn nhóm (minh họa) và mã giảm giá ===== *@
     <section class="tv-section home-nhom">
         <div class="home-nhom-chu">
             <h2>Mỗi ghế là một tấm vé có chủ</h2>
@@ -389,7 +440,7 @@
         <div id="promoToast" class="promo-toast" role="status">Đã sao chép mã khuyến mãi</div>
     }
 
-    @* ===== 7. Nhóm muốn đi ngày khác: dẫn tới lịch khởi hành và Zalo (thay khối "tour riêng" của trang tham khảo) ===== *@
+    @* ===== 8. Nhóm muốn đi ngày khác: dẫn tới lịch khởi hành và Zalo (thay khối "tour riêng" của trang tham khảo) ===== *@
     <section class="tv-section">
         <div class="tc-lien-he">
             <div>
@@ -468,7 +519,7 @@
         </section>
     }
 
-    @* ===== 8. Hỏi đáp nhanh: cùng nội dung với trang Giới thiệu ===== *@
+    @* ===== 9. Hỏi đáp nhanh: cùng nội dung với trang Giới thiệu ===== *@
     <section class="tv-section">
         <div class="tv-section-head">
             <div>
