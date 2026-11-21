@@ -239,12 +239,28 @@
     object-fit: cover;
 }
 
+/* Thẻ điểm đến là một cuống vé: phần dưới ngăn bằng đường đục lỗ, hai vết khuyết khoét thủng thật bằng mask
+   (nhìn xuyên xuống ảnh phía sau) */
+.hero-thumb {
+    --cuong: 42px;
+    -webkit-mask:
+        radial-gradient(circle 7px at 0 calc(100% - var(--cuong)), #0000 98%, #000) left / 51% 100% no-repeat,
+        radial-gradient(circle 7px at 100% calc(100% - var(--cuong)), #0000 98%, #000) right / 51% 100% no-repeat;
+    mask:
+        radial-gradient(circle 7px at 0 calc(100% - var(--cuong)), #0000 98%, #000) left / 51% 100% no-repeat,
+        radial-gradient(circle 7px at 100% calc(100% - var(--cuong)), #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
 .hero-thumb span {
     position: absolute;
     inset: auto 0 0 0;
-    display: block;
-    padding: var(--tv-k5) var(--tv-k2) var(--tv-k2);
-    background: linear-gradient(0deg, rgba(8, 20, 26, 0.8), transparent);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: var(--cuong);
+    padding: 0 var(--tv-k2);
+    border-top: 2px dashed rgba(255, 255, 255, 0.55);
+    background: rgba(8, 20, 26, 0.82);
     font-size: var(--tv-cs-nho);
     font-weight: 600;
     line-height: 1.25;
@@ -264,37 +280,39 @@
     gap: var(--tv-k4);
 }
 
-.promo-card {
+/* Mã giảm giá là một phiếu xé: thân phiếu bên trái, cuống có mã bên phải.
+   --mau-km là màu admin chọn cho từng mã (KhuyenMai.MauNen), tô thành dải mỏng bên trái */
+.promo-card { border-left: 4px solid var(--mau-km, var(--tv-nhan)); }
+
+.promo-than {
     display: flex;
+    flex: 1;
     flex-direction: column;
-    gap: var(--tv-k3);
+    gap: var(--tv-k2);
+    min-width: 0;
     padding: var(--tv-k4);
-    background: var(--tv-be-mat);
-    border: 1px solid var(--tv-vien);
-    border-left: 4px solid var(--tv-nhan);
-    border-radius: var(--tv-bo-khoi);
 }
 
 .promo-card h3 { margin: 0; font-size: var(--tv-cs-vua); font-weight: 600; }
 .promo-card p { margin: 0; font-size: var(--tv-cs-thuong); color: var(--tv-chu-phu); }
 
-.promo-foot {
+.promo-cuong {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--tv-k3);
-    margin-top: auto;
+    justify-content: center;
+    gap: var(--tv-k2);
+    flex-shrink: 0;
+    padding: var(--tv-k4) var(--tv-k3);
 }
 
 .promo-code {
-    padding: var(--tv-k1) var(--tv-k3);
-    border: 1px dashed var(--tv-chu-phu);
-    border-radius: var(--tv-bo-nut);
-    font-family: ui-monospace, Consolas, monospace;
-    font-size: var(--tv-cs-thuong);
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: var(--tv-cs-vua);
+    font-weight: 700;
+    letter-spacing: 0.06em;
 }
+
+.promo-cuong .tv-btn { padding-inline: var(--tv-k3); font-size: var(--tv-cs-nho); }
 
 .promo-toast {
     position: fixed;
@@ -420,22 +438,41 @@
 }
 .home-nhom-hinh figcaption { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .home-nhom-hinh .dn-duong-nen { background: var(--tv-be-mat); }
-.home-nhom-ghe { display: grid; gap: var(--tv-k1); margin: 0; padding: 0; list-style: none; }
-.home-nhom-ghe li {
+/* Mỗi ghế là một tấm vé nằm ngang: số ghế và tên bên trái, mộc trạng thái trên cuống vé bên phải */
+.home-nhom-ghe { display: grid; gap: var(--tv-k2); margin: 0; padding: 0; list-style: none; }
+.home-nhom-ghe .tv-ve { --nen-sau-ve: var(--tv-nhan-nhat); --khuyet: 8px; }
+.home-nhom-ghe-than {
     display: flex;
-    justify-content: space-between;
+    flex: 1;
+    align-items: center;
     gap: var(--tv-k3);
+    min-width: 0;
     padding: var(--tv-k2) var(--tv-k3);
-    border-left: 4px solid var(--tv-vien);
-    border-radius: var(--tv-bo-nut);
-    background: var(--tv-be-mat);
-    font-weight: 600;
 }
-.home-nhom-ghe span { font-weight: 500; color: var(--tv-chu-phu); }
-.home-nhom-ghe .da-tra { border-left-color: var(--tv-thanh-cong); }
-.home-nhom-ghe .da-tra span { color: var(--tv-thanh-cong); }
-.home-nhom-ghe .cho { border-left-color: var(--tv-canh-bao); }
-.home-nhom-ghe .cho span { color: var(--tv-canh-bao); }
+.home-nhom-ghe-so { flex-shrink: 0; color: var(--tv-chu-phu); font-size: var(--tv-cs-nho); white-space: nowrap; }
+.home-nhom-ghe-ten { min-width: 0; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.home-nhom-ghe-cuong {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 132px;
+    padding: var(--tv-k2);
+}
+.home-nhom-ghe .tv-moc { font-size: 0.6875rem; }
+
+@media (max-width: 480px) {
+    .home-nhom-hinh { padding: var(--tv-k4) var(--tv-k3); }
+    .home-nhom-ghe-than { gap: var(--tv-k2); padding-inline: var(--tv-k2); }
+    .home-nhom-ghe-cuong { width: 104px; padding-inline: var(--tv-k1); }
+    .home-nhom-ghe .tv-moc { padding: 2px 6px; font-size: 0.625rem; letter-spacing: 0.04em; }
+}
+
+/* Mộc được đóng lần lượt khi khối này cuộn tới (script cuối Views/TrangChu/Index.cshtml).
+   Lớp .cho-dong chỉ được thêm bằng JS, nên không có JS thì mộc vẫn hiện sẵn */
+@media (prefers-reduced-motion: no-preference) {
+    .home-nhom-hinh.cho-dong .tv-moc { opacity: 0; }
+}
 
 /* Dải video tối tràn bề ngang, video lớn tự chạy ở giữa */
 .home-dai-video {

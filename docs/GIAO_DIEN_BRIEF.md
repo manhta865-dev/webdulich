@@ -8,6 +8,20 @@ Phạm vi: chỉ đổi cách hiển thị (markup, CSS, chữ). Không đổi c
 - Điểm nhớ duy nhất: **ô ghế**. Mỗi chỗ trong đơn nhóm là một ô nhỏ có trạng thái (trống, đã điền, đã trả, quá hạn). Bộ ô này dùng cho trang đơn nhóm sau này, và dùng luôn cho chỗ còn trống ở thẻ tour và trang chi tiết. Các trang còn lại để yên tĩnh.
 - Người dùng chính dùng điện thoại, nên thiết kế từ 360px lên.
 
+### Bộ nhận diện "tấm vé" (đợt làm lại tháng 11/2026)
+
+Phát triển tiếp ý "ô ghế": **mỗi ghế là một tấm vé có chủ riêng**. Thành phần dùng chung ở `wwwroot/css/ve.css`:
+
+| Lớp | Ý nghĩa |
+|---|---|
+| `.tv-ve` | khung vé, bo 14px, viền mảnh |
+| `.tv-ve-duc-lo` / `.tv-ve-duc-lo-doc` | đường đục lỗ ngang / dọc, hai đầu có vết khuyết tròn (`--nen-sau-ve` = màu phía sau vé) |
+| `.tv-ma`, `.tv-ma-vach` | chữ máy in vé (JetBrains Mono, chỉ cho mã vé, mã ghế, mã giảm giá) và mã vạch trang trí |
+| `.tv-moc` (+ `-xanh`, `-vang`, `-xam`) | dấu mộc nghiêng: "Đã trả", "Chờ xác nhận", "Chưa trả" |
+| `.tv-moc-dong` | khoảnh khắc chuyển động duy nhất: mộc được đóng xuống (tắt khi người dùng chọn giảm chuyển động) |
+
+Đã áp dụng: thẻ tour (`_TheTour.cshtml`, trang chủ và danh sách tour), dải điểm đến ở ảnh lớn trang chủ (cuống vé, vết khuyết khoét thủng bằng mask), mã giảm giá (phiếu xé), khối "đi cùng nhóm" ở trang chủ (5 vé ghế, mộc đóng lần lượt khi cuộn tới). Quả địa cầu giữ nguyên ở ảnh lớn trang chủ. Ảnh trước và sau ở `docs/anh_giao_dien/`.
+
 ## 2. Token
 
 ### Màu
@@ -29,7 +43,8 @@ Quy tắc: nền xanh nhấn chỉ dùng cho nút chính và liên kết; cam ch
 
 ### Chữ
 
-- Một họ duy nhất: **Be Vietnam Pro** (Google Fonts, thiết kế cho tiếng Việt, đủ dấu), các độ đậm 400, 500, 600, 700. Tải qua CSS, khai báo dự phòng `system-ui`.
+- Họ chính: **Be Vietnam Pro** (Google Fonts, thiết kế cho tiếng Việt, đủ dấu), các độ đậm 400, 500, 600, 700. Tải qua CSS, khai báo dự phòng `system-ui`.
+- Chữ máy in vé: **JetBrains Mono** 500, 700 (`--tv-font-ve`), chỉ dùng cho mã vé, mã ghế, mã giảm giá, mã điểm đến trên cuống vé.
 - Thang cỡ chữ (rem): 0.8125, 0.9375 (chữ thường), 1.125, 1.375, 1.75, 2.25.
 - Độ dài dòng văn bản tối đa 70 ký tự. Tiêu đề không viết hoa toàn bộ, không giãn chữ.
 

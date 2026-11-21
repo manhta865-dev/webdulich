@@ -1,4 +1,5 @@
-@* Thẻ tour dạng ảnh dọc, dùng ở trang chủ và danh sách tour. Model: Tour *@
+@* Thẻ tour dạng tấm vé (bộ nhận diện "tấm vé", css/ve.css): ảnh, thân vé, đường đục lỗ, cuống vé có giá và mã điểm đến.
+   Dùng ở trang chủ và danh sách tour. Model: Tour *@
 @model webdulich.Models.Tour
 @using Microsoft.AspNetCore.Http
 @{
@@ -10,62 +11,57 @@
         .ToList();
     var diaDiem = item.TenDiaDiemHienThi;
     var coDiaDiem = !string.IsNullOrWhiteSpace(diaDiem) && diaDiem != "Chưa cập nhật";
+    // Mã in trên cuống vé: tên điểm đến viết hoa, như mã sân bay trên vé máy bay
+    var maDiem = coDiaDiem ? diaDiem.Trim().ToUpper() : "TRAVELVN";
+    var the = laAdmin ? "div" : "a";
 }
 
 @if (laAdmin)
 {
-    <div class="tv-photo-card">
-        <img src="~/images/dulich/@item.HinhAnh" alt="@item.TenTour" loading="lazy" />
-        <div class="tv-photo-top">
-            @if (item.SoNgay.HasValue)
-            {
-                <span class="tv-pill-tren">@item.SoNgay ngày</span>
-            }
-        </div>
-        <div class="tv-photo-body">
-            <h3 class="tv-photo-title">@item.TenTour</h3>
-            <div class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</div>
-        </div>
-    </div>
+    @:<div class="tv-ve tv-ve-tour">
 }
 else
 {
-    <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@item.Id" class="tv-photo-card" aria-label="Xem chi tiết @item.TenTour">
-        <img src="~/images/dulich/@item.HinhAnh" alt="" loading="lazy" />
-        <div class="tv-photo-top">
-            @if (item.SoNgay.HasValue)
-            {
-                <span class="tv-pill-tren">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
-                    @item.SoNgay ngày
-                </span>
-            }
-        </div>
-        <div class="tv-photo-body">
-            @if (tags.Any())
-            {
-                <div class="tv-photo-tags">
-                    @foreach (var tag in tags)
-                    {
-                        <span>@tag</span>
-                    }
-                </div>
-            }
-            <h3 class="tv-photo-title">@item.TenTour</h3>
-            @if (coDiaDiem)
-            {
-                <div class="tv-photo-place">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
-                    @diaDiem
-                </div>
-            }
-            <div class="tv-photo-foot">
-                <div>
-                    <span class="tv-photo-nho">Giá trọn gói từ</span>
-                    <span class="tv-photo-gia">@item.Gia.ToString("N0") VNĐ</span>
-                </div>
-                <span class="tv-photo-mui" aria-hidden="true"><svg class="tv-icon"><use href="#i-arrow" /></svg></span>
-            </div>
-        </div>
-    </a>
+    @:<a href="@Url.Action("ChiTiet", "DiaDiem", new { id = item.Id })" class="tv-ve tv-ve-tour" aria-label="Xem chi tiết @item.TenTour">
 }
+    <div class="tv-ve-tour-anh">
+        <img src="~/images/dulich/@item.HinhAnh" alt="" loading="lazy" />
+        @if (item.SoNgay.HasValue)
+        {
+            <span class="tv-pill-tren">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>
+                @item.SoNgay ngày
+            </span>
+        }
+    </div>
+    <div class="tv-ve-tour-than">
+        @if (tags.Any())
+        {
+            <div class="tv-ve-tour-tags">
+                @foreach (var tag in tags)
+                {
+                    <span>@tag</span>
+                }
+            </div>
+        }
+        <h3 class="tv-ve-tour-ten">@item.TenTour</h3>
+        @if (coDiaDiem)
+        {
+            <div class="tv-ve-tour-noi">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                @diaDiem
+            </div>
+        }
+    </div>
+    <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+    <div class="tv-ve-tour-cuong">
+        <div>
+            <span class="tv-ve-tour-nho">Giá trọn gói từ</span>
+            <span class="tv-ve-tour-gia">@item.Gia.ToString("N0") VNĐ</span>
+        </div>
+        <div class="tv-ve-tour-ma" aria-hidden="true">
+            <span class="tv-ma">@maDiem</span>
+            <span class="tv-ma-vach"></span>
+        </div>
+    </div>
+@Html.Raw($"</{the}>")

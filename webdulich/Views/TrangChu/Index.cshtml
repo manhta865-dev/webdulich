@@ -103,11 +103,14 @@
             <div class="promo-list">
                 @foreach (var km in khuyenMais)
                 {
-                    <div class="promo-card" style="border-left-color: @km.MauNen">
-                        <h3>@km.TenKhuyenMai</h3>
-                        <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
-                        <div class="promo-foot">
-                            <span class="promo-code">@km.MaKhuyenMai</span>
+                    <div class="tv-ve tv-ve-ngang promo-card" style="--mau-km: @km.MauNen">
+                        <div class="promo-than">
+                            <h3>@km.TenKhuyenMai</h3>
+                            <p>@(string.IsNullOrWhiteSpace(km.MoTa) ? $"Giảm {km.GiaTriHienThi} khi đặt tour." : km.MoTa)</p>
+                        </div>
+                        <div class="tv-ve-duc-lo-doc" aria-hidden="true"></div>
+                        <div class="promo-cuong">
+                            <span class="promo-code tv-ma">@km.MaKhuyenMai</span>
                             <button type="button" class="tv-btn tv-btn-vien" onclick="copyPromoCode('@km.MaKhuyenMai')">Sao chép mã</button>
                         </div>
                     </div>
@@ -223,12 +226,29 @@
                     <circle cx="41" cy="28" r="2" fill="#FFFFFF" />
                 </svg>
             </div>
+            @{
+                // Tên là ví dụ minh họa, không phải dữ liệu thật
+                var gheMinhHoa = new[]
+                {
+                    new { So = "01", Ten = "Minh (trưởng nhóm)", Moc = "Đã trả", Lop = "tv-moc-xanh" },
+                    new { So = "02", Ten = "Lan", Moc = "Đã trả", Lop = "tv-moc-xanh" },
+                    new { So = "03", Ten = "Huy", Moc = "Đã trả", Lop = "tv-moc-xanh" },
+                    new { So = "04", Ten = "Thảo", Moc = "Chờ xác nhận", Lop = "tv-moc-vang" },
+                    new { So = "05", Ten = "Còn trống", Moc = "Chưa trả", Lop = "tv-moc-xam" }
+                };
+            }
             <ul class="home-nhom-ghe">
-                <li class="da-tra">Ghế 1<span>Đã trả</span></li>
-                <li class="da-tra">Ghế 2<span>Đã trả</span></li>
-                <li class="da-tra">Ghế 3<span>Đã trả</span></li>
-                <li class="cho">Ghế 4<span>Chờ xác nhận</span></li>
-                <li>Ghế 5<span>Chưa trả</span></li>
+                @foreach (var g in gheMinhHoa)
+                {
+                    <li class="tv-ve tv-ve-ngang">
+                        <div class="home-nhom-ghe-than">
+                            <span class="home-nhom-ghe-so tv-ma">GHẾ @g.So</span>
+                            <span class="home-nhom-ghe-ten">@g.Ten</span>
+                        </div>
+                        <div class="tv-ve-duc-lo-doc"></div>
+                        <div class="home-nhom-ghe-cuong"><span class="tv-moc @g.Lop">@g.Moc</span></div>
+                    </li>
+                }
             </ul>
         </figure>
     </section>
@@ -366,6 +386,24 @@
         hero.addEventListener("focusin", dung);
         hero.addEventListener("focusout", chay);
         chay();
+    })();
+
+    // Khối "đi cùng nhóm": khi cuộn tới thì đóng mộc lên từng vé ghế, lần lượt từ trên xuống (một lần)
+    (function () {
+        var hinh = document.querySelector(".home-nhom-hinh");
+        if (!hinh || !("IntersectionObserver" in window)
+            || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        hinh.classList.add("cho-dong");
+        var quanSat = new IntersectionObserver(function (muc) {
+            if (!muc[0].isIntersecting) return;
+            quanSat.disconnect();
+            hinh.querySelectorAll(".tv-moc").forEach(function (moc, k) {
+                moc.style.animationDelay = (k * 180) + "ms";
+                moc.classList.add("tv-moc-dong");
+            });
+        }, { threshold: 0.5 });
+        quanSat.observe(hinh);
     })();
 </script>
 

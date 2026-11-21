@@ -174,49 +174,40 @@
 
 .tv-btn-sang:hover { background: var(--tv-nhan-nhat); color: var(--tv-nhan-dam); }
 
-/* ---------- Thẻ tour dạng ảnh dọc ---------- */
+/* ---------- Thẻ tour dạng tấm vé (Views/Shared/_TheTour.cshtml, khung vé ở css/ve.css) ---------- */
 .tv-grid-photo {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: var(--tv-k5);
 }
 
-.tv-photo-card {
-    position: relative;
-    display: block;
-    aspect-ratio: 4 / 5;
-    overflow: hidden;
-    border-radius: var(--tv-bo-anh);
-    background: #10242C;
-    color: #fff;
+.tv-ve-tour {
+    height: 100%;
     text-decoration: none;
 }
 
-.tv-photo-card:hover { color: #fff; }
+a.tv-ve-tour:hover { color: var(--tv-chu); border-color: var(--tv-nhan); }
 
-.tv-photo-card > img {
-    position: absolute;
-    inset: 0;
+.tv-ve-tour-anh {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--tv-xam-nhat);
+}
+
+.tv-ve-tour-anh img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 400ms ease;
 }
 
-.tv-photo-card:hover > img { transform: scale(1.05); }
+a.tv-ve-tour:hover .tv-ve-tour-anh img { transform: scale(1.04); }
 
-.tv-photo-card::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(0deg, rgba(8, 20, 26, 0.88) 0%, rgba(8, 20, 26, 0.45) 38%, rgba(8, 20, 26, 0) 65%);
-}
-
-.tv-photo-top {
+.tv-ve-tour-anh .tv-pill-tren {
     position: absolute;
     top: var(--tv-k3);
     left: var(--tv-k3);
-    z-index: 2;
 }
 
 .tv-pill-tren {
@@ -231,60 +222,74 @@
     font-weight: 600;
 }
 
-.tv-photo-body {
-    position: absolute;
-    inset: auto 0 0 0;
-    z-index: 2;
+.tv-ve-tour-than {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: var(--tv-k2);
-    padding: var(--tv-k4);
+    padding: var(--tv-k4) var(--tv-k4) var(--tv-k3);
 }
 
-.tv-photo-tags { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
+.tv-ve-tour-tags { display: flex; flex-wrap: wrap; gap: var(--tv-k2); }
 
-.tv-photo-tags span {
+.tv-ve-tour-tags span {
     padding: 2px var(--tv-k3);
     border-radius: var(--tv-bo-nhan);
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
     font-size: var(--tv-cs-nho);
     font-weight: 500;
 }
 
-.tv-photo-title {
+.tv-ve-tour-ten {
     margin: 0;
-    font-size: var(--tv-cs-lon);
+    font-size: var(--tv-cs-vua);
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.35;
     text-wrap: balance;
 }
 
-.tv-photo-foot {
+.tv-ve-tour-noi {
+    display: flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    margin-top: auto;
+    color: var(--tv-chu-phu);
+    font-size: var(--tv-cs-nho);
+}
+
+/* Cuống vé: giá bên trái, mã điểm đến và mã vạch bên phải */
+.tv-ve-tour-cuong {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--tv-k3);
+    padding: var(--tv-k3) var(--tv-k4) var(--tv-k4);
 }
 
-.tv-photo-nho { display: block; font-size: var(--tv-cs-nho); opacity: 0.85; }
-.tv-photo-gia { display: block; font-size: var(--tv-cs-vua); font-weight: 700; }
+.tv-ve-tour-nho { display: block; color: var(--tv-chu-phu); font-size: var(--tv-cs-nho); }
+.tv-ve-tour-gia { display: block; color: var(--tv-gia); font-size: var(--tv-cs-vua); font-weight: 700; }
 
-.tv-photo-mui {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #fff;
-    color: var(--tv-chu-tren-sang);
-    transition: transform var(--tv-nhanh);
+.tv-ve-tour-ma {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 0;
+    color: var(--tv-chu-phu);
 }
 
-.tv-photo-card:hover .tv-photo-mui { transform: translateX(4px); }
+.tv-ve-tour-ma .tv-ma {
+    max-width: 120px;
+    overflow: hidden;
+    font-size: 0.6875rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-/* Chip đang chọn và dòng địa điểm trên thẻ ảnh */
+.tv-ve-tour-ma .tv-ma-vach { width: 72px; height: 20px; }
+
+/* Chip đang chọn */
 .tv-chip.active {
     background: var(--tv-nhan);
     border-color: var(--tv-nhan);
@@ -292,18 +297,6 @@
 }
 
 .tv-chip.active:hover { background: var(--tv-nhan-nen-dam); color: #fff; }
-
-.tv-photo-place {
-    display: flex;
-    align-items: center;
-    gap: var(--tv-k1);
-    font-size: var(--tv-cs-nho);
-    opacity: 0.9;
-}
-
-@media (max-width: 576px) {
-    .tv-photo-card { aspect-ratio: 4 / 3; }
-}
 
 /* ---------- Nút "Bản đồ | Vệ tinh" trên bản đồ MapLibre (js/nen-ve-tinh.js) ----------
    Nằm trên bản đồ như các nút phóng to của MapLibre: nền trắng chữ tối ở cả hai chế độ sáng, tối */

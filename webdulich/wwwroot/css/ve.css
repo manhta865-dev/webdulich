@@ -1,0 +1,119 @@
+/* Bộ nhận diện "tấm vé" của TravelVN: mỗi ghế đơn nhóm là một tấm vé có chủ riêng.
+   Thành phần dùng chung: khung vé có vết khuyết hai bên, đường đục lỗ ngăn cuống vé, mã vạch, chữ máy in vé,
+   dấu mộc "ĐÃ TRẢ". Họa tiết dùng có chủ đích ở thẻ tour, vé ghế, khối đầu trang chủ; không rải khắp nơi. */
+
+/* Khung vé. --nen-sau-ve là màu phía sau vé (để vết khuyết trông như bị bấm lỗ); mặc định là nền trang */
+.tv-ve {
+    --nen-sau-ve: var(--tv-nen);
+    --khuyet: 11px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--tv-vien);
+    border-radius: 14px;
+    background: var(--tv-be-mat);
+    color: var(--tv-chu);
+}
+
+/* Đường đục lỗ ngang, hai đầu là vết khuyết tròn */
+.tv-ve-duc-lo {
+    position: relative;
+    flex-shrink: 0;
+    height: 0;
+    margin: 0 calc(var(--khuyet) + 6px);
+    border-top: 2px dashed var(--tv-vien);
+}
+
+.tv-ve-duc-lo::before,
+.tv-ve-duc-lo::after {
+    content: "";
+    position: absolute;
+    top: calc(-1 * var(--khuyet) - 1px);
+    width: calc(var(--khuyet) * 2);
+    height: calc(var(--khuyet) * 2);
+    border: 1px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--nen-sau-ve);
+}
+
+.tv-ve-duc-lo::before { left: calc(-2 * var(--khuyet) - 7px); }
+.tv-ve-duc-lo::after { right: calc(-2 * var(--khuyet) - 7px); }
+
+/* Đường đục lỗ dọc (vé nằm ngang: thân vé bên trái, cuống vé bên phải) */
+.tv-ve-ngang { flex-direction: row; }
+
+.tv-ve-duc-lo-doc {
+    position: relative;
+    flex-shrink: 0;
+    width: 0;
+    margin: calc(var(--khuyet) + 6px) 0;
+    border-left: 2px dashed var(--tv-vien);
+}
+
+.tv-ve-duc-lo-doc::before,
+.tv-ve-duc-lo-doc::after {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--khuyet) - 1px);
+    width: calc(var(--khuyet) * 2);
+    height: calc(var(--khuyet) * 2);
+    border: 1px solid var(--tv-vien);
+    border-radius: 50%;
+    background: var(--nen-sau-ve);
+}
+
+.tv-ve-duc-lo-doc::before { top: calc(-2 * var(--khuyet) - 7px); }
+.tv-ve-duc-lo-doc::after { bottom: calc(-2 * var(--khuyet) - 7px); }
+
+/* Chữ máy in vé */
+.tv-ma {
+    font-family: var(--tv-font-ve);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* Mã vạch trang trí (không mã hóa gì) */
+.tv-ma-vach {
+    display: block;
+    width: 84px;
+    height: 26px;
+    background: repeating-linear-gradient(90deg,
+        currentColor 0 2px, transparent 2px 4px,
+        currentColor 4px 5px, transparent 5px 8px,
+        currentColor 8px 11px, transparent 11px 12px,
+        currentColor 12px 13px, transparent 13px 16px);
+    opacity: 0.7;
+}
+
+/* Dấu mộc: "ĐÃ TRẢ", "CHỜ XÁC NHẬN"... đóng nghiêng lên vé */
+.tv-moc {
+    display: inline-block;
+    padding: 3px 10px;
+    border: 2px solid currentColor;
+    border-radius: 6px;
+    color: var(--tv-gia);
+    font-family: var(--tv-font-ve);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: rotate(-8deg);
+}
+
+.tv-moc-xanh { color: var(--tv-thanh-cong); }
+.tv-moc-vang { color: var(--tv-canh-bao); }
+.tv-moc-xam { color: var(--tv-chu-phu); }
+
+/* Khoảnh khắc nổi bật duy nhất: mộc vừa đóng (thêm lớp .tv-moc-dong bằng JS hoặc khi trang vừa xác nhận) */
+@media (prefers-reduced-motion: no-preference) {
+    .tv-moc-dong { animation: tv-dong-moc 420ms cubic-bezier(.2, .9, .3, 1.3) both; }
+}
+
+@keyframes tv-dong-moc {
+    from { opacity: 0; transform: rotate(-8deg) scale(1.8); }
+    60% { opacity: 1; }
+    to { opacity: 1; transform: rotate(-8deg) scale(1); }
+}

@@ -31,6 +31,8 @@
 
     /* Chữ */
     --tv-font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+    /* Chữ máy in vé: chỉ cho mã vé, mã ghế, giờ đi (bộ nhận diện "tấm vé", css/ve.css) */
+    --tv-font-ve: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
     --tv-cs-nho: 0.8125rem;
     --tv-cs-thuong: 0.9375rem;
     --tv-cs-vua: 1.125rem;

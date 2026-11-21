@@ -47,11 +47,11 @@ p a:not([class]):hover, li a:not([class]):hover, td a:not([class]):hover { text-
     .tv-page.tv-noi-dung > * > :nth-child(n+5),
     .page-full.tv-noi-dung > :nth-child(n+5) { animation-delay: 240ms; }
 
-    /* Thẻ tour, thẻ ảnh, thẻ lịch sử: rê chuột thì nhấc nhẹ lên */
-    .tv-tour-card, .tv-photo-card, .gy-card, .ls-card {
+    /* Thẻ tour, vé tour, thẻ lịch sử: rê chuột thì nhấc nhẹ lên */
+    .tv-tour-card, a.tv-ve-tour, .gy-card, .ls-card {
         transition: transform 220ms ease, box-shadow 220ms ease;
     }
-    .tv-tour-card:hover, .tv-photo-card:hover, .gy-card:hover, .ls-card:hover {
+    .tv-tour-card:hover, a.tv-ve-tour:hover, .gy-card:hover, .ls-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 14px 30px rgba(16, 48, 62, 0.14);
     }
