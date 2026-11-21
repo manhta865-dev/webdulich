@@ -159,16 +159,17 @@
 
 <div class="home-wrap">
     @* ===== 2. Sáu lý do chọn TravelVN: thẻ ảnh có cuống vé, rê chuột thì thẻ nhấc lên, cuống đổi màu và nghiêng.
-         Mỗi câu là điều web đang làm thật (cùng nội dung mục Cam kết ở trang Giới thiệu); ảnh chỉ để minh họa ===== *@
+         Mỗi câu là điều web đang làm thật (cùng nội dung mục Cam kết ở trang Giới thiệu); ảnh minh họa lấy từ Unsplash,
+         lưu ở wwwroot/images/ly-do, nguồn và giấy phép ghi ở docs/NGUON_ANH.md ===== *@
     @{
         var lyDo = new[]
         {
-            new { Anh = "f90f466f-bb5f-4aaa-ab96-a6d2107c7b56_vungtau.jpg", Icon = "i-receipt", Ten = "Giá rõ ràng theo từng lịch", MoTa = "Giá hiện theo đúng lịch khởi hành bạn chọn, mỗi ghế một phần.", GhiChu = "Khuyến mãi trừ thẳng vào phần của từng người", Moc = "" },
-            new { Anh = "halong.jpg", Icon = "i-users", Ten = "Giấy tờ riêng tư", MoTa = "Số giấy tờ chỉ bạn và TravelVN xem được.", GhiChu = "Trưởng nhóm không thấy, hướng dẫn viên chỉ thấy vài số cuối", Moc = "" },
-            new { Anh = "phuquoc.jpg", Icon = "i-bank", Ten = "Đối chiếu từng khoản", MoTa = "Mỗi ghế có nội dung chuyển khoản riêng nên tiền của ai vào đúng ghế người đó.", GhiChu = "Nhân viên đối chiếu sao kê rồi mới xác nhận ghế", Moc = "Đã trả" },
-            new { Anh = "nhatrang.jpg", Icon = "i-clock", Ten = "Hạn chốt minh bạch", MoTa = "Hạn giữ chỗ hiện ngay trên đơn, cả nhóm cùng thấy đồng hồ đếm ngược.", GhiChu = "Ghế đã trả luôn được giữ, chỉ ghế chưa trả bị nhả", Moc = "" },
-            new { Anh = "sapa.jpg", Icon = "i-route", Ten = "Xem trước hành trình trên bản đồ", MoTa = "Trang tour có bản đồ 3D vẽ các điểm dừng của lịch trình.", GhiChu = "Đường đi theo đường thật, có nền vệ tinh", Moc = "" },
-            new { Anh = "danang.jpg", Icon = "i-calendar", Ten = "Chọn ngày theo lịch tháng", MoTa = "Xem mọi lịch khởi hành trên một tấm lịch để chọn ngày cả nhóm rảnh.", GhiChu = "Thấy ngay ngày nào còn chỗ, ngày nào sắp hết", Moc = "" }
+            new { Anh = "ly-do-gia.jpg", Icon = "i-receipt", Ten = "Giá rõ ràng theo từng lịch", MoTa = "Giá hiện theo đúng lịch khởi hành bạn chọn, mỗi ghế một phần.", GhiChu = "Khuyến mãi trừ thẳng vào phần của từng người", Moc = "" },
+            new { Anh = "ly-do-giay-to.jpg", Icon = "i-users", Ten = "Giấy tờ riêng tư", MoTa = "Số giấy tờ chỉ bạn và TravelVN xem được.", GhiChu = "Trưởng nhóm không thấy, hướng dẫn viên chỉ thấy vài số cuối", Moc = "" },
+            new { Anh = "ly-do-doi-chieu.jpg", Icon = "i-bank", Ten = "Đối chiếu từng khoản", MoTa = "Mỗi ghế có nội dung chuyển khoản riêng nên tiền của ai vào đúng ghế người đó.", GhiChu = "Nhân viên đối chiếu sao kê rồi mới xác nhận ghế", Moc = "Đã trả" },
+            new { Anh = "ly-do-han-chot.jpg", Icon = "i-clock", Ten = "Hạn chốt minh bạch", MoTa = "Hạn giữ chỗ hiện ngay trên đơn, cả nhóm cùng thấy đồng hồ đếm ngược.", GhiChu = "Ghế đã trả luôn được giữ, chỉ ghế chưa trả bị nhả", Moc = "" },
+            new { Anh = "ly-do-ban-do.jpg", Icon = "i-route", Ten = "Xem trước hành trình trên bản đồ", MoTa = "Trang tour có bản đồ 3D vẽ các điểm dừng của lịch trình.", GhiChu = "Đường đi theo đường thật, có nền vệ tinh", Moc = "" },
+            new { Anh = "ly-do-lich.jpg", Icon = "i-calendar", Ten = "Chọn ngày theo lịch tháng", MoTa = "Xem mọi lịch khởi hành trên một tấm lịch để chọn ngày cả nhóm rảnh.", GhiChu = "Thấy ngay ngày nào còn chỗ, ngày nào sắp hết", Moc = "" }
         };
     }
     <section class="tv-section tc-ly-do-khoi">
@@ -181,7 +182,7 @@
                 <article class="tc-ly-do">
                     <div class="tc-ly-do-the">
                         <div class="tc-ly-do-anh">
-                            <img src="~/images/dulich/@l.Anh" alt="" loading="lazy" />
+                            <img src="~/images/ly-do/@l.Anh" alt="" loading="lazy" />
                             <span class="tc-ly-do-icon"><svg class="tv-icon" aria-hidden="true"><use href="#@l.Icon" /></svg></span>
                             @if (!string.IsNullOrEmpty(l.Moc))
                             {
