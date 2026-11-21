@@ -17,6 +17,11 @@ Tải ngày 21/11/2026, khổ 1200 × 525 (Unsplash cắt sẵn), dùng ở kh�
 | `ly-do-ban-do.jpg` | Xem trước hành trình trên bản đồ | Tamas Tuzes-Katai | https://unsplash.com/photos/hand-holding-smartphone-with-navigation-map-rEn-AdBr3Ig |
 | `ly-do-lich.jpg` | Chọn ngày theo lịch tháng | Towfiqu barbhuiya | https://unsplash.com/photos/a-calendar-with-red-push-buttons-pinned-to-it-bwOAixLG0uc |
 
+## Dịch vụ bản đồ dùng ở trang Khám phá 3D
+
+- Chỉ đường từng bước: máy chủ OSRM công khai (router.project-osrm.org), dữ liệu OpenStreetMap. Máy chủ này dành cho thử nghiệm, không cam kết ổn định; khi chạy thật nhiều người nên tự dựng OSRM hoặc dùng dịch vụ trả phí. Ghi nguồn ngay dưới danh sách chỉ đường.
+- Google Maps: chỉ dùng đường link (Maps URLs) và khung nhúng bản đồ theo kiểu "nhúng bản đồ" của Google, không tải ảnh Google về lưu, không dùng ảnh Street View trong trang. Điều khoản Google Maps chưa được đọc kỹ cho việc nhúng không khóa, cần xem lại trước khi chạy thương mại (cách chính thức là Maps Embed API, miễn phí nhưng cần khóa).
+
 ## Ảnh nền vệ tinh trên bản đồ
 
 Nền "Vệ tinh" của bản đồ hành trình lấy ảnh Esri World Imagery qua mạng (không lưu về máy), có dòng ghi nguồn hiển thị ngay trên bản đồ. Điều khoản sử dụng đầy đủ của Esri chưa được kiểm, cần xem lại trước khi chạy thương mại.

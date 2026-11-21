@@ -137,6 +137,95 @@ namespace webdulich.Controllers
             return View(m);
         }
 
+        // Tour kèm lịch trình đã xếp theo ngày, chỉ khi tour có điểm xuất phát và mọi ngày đều có tọa độ (đủ để vẽ bản đồ, chỉ đường)
+        private (Tour Tour, List<LichTrinhTour> DsNgay)? LayTourDuToaDo(int id)
+        {
+            var tour = _context.Tours.AsNoTracking().Include(x => x.LichTrinhTours).FirstOrDefault(x => x.Id == id);
+            if (tour == null || !tour.ViDoXuatPhat.HasValue || !tour.KinhDoXuatPhat.HasValue)
+            {
+                return null;
+            }
+            var dsNgay = tour.LichTrinhTours.OrderBy(x => x.NgayThu).ToList();
+            if (dsNgay.Count == 0 || dsNgay.Any(x => !x.ViDo.HasValue || !x.KinhDo.HasValue))
+            {
+                return null;
+            }
+            return (tour, dsNgay);
+        }
+
+        // Khám phá 3D: trang toàn màn hình gồm bản đồ 3D (vệ tinh, địa hình), chỉ đường từng bước, Google Maps. Chỉ đọc.
+        public IActionResult KhamPha(int id)
+        {
+            var duLieu = LayTourDuToaDo(id);
+            if (duLieu == null)
+            {
+                if (!_context.Tours.Any(x => x.Id == id))
+                {
+                    return NotFound();
+                }
+                TempData["Loi"] = "Tour này chưa có đủ tọa độ lịch trình nên chưa xem được bản đồ 3D.";
+                return RedirectToAction(nameof(ChiTiet), new { id });
+            }
+
+            var (tour, dsNgay) = duLieu.Value;
+            var xuatPhat = (Vi: tour.ViDoXuatPhat!.Value, Kinh: tour.KinhDoXuatPhat!.Value);
+            var dsDiem = dsNgay.Select(x => (Vi: x.ViDo!.Value, Kinh: x.KinhDo!.Value)).ToList();
+
+            var m = new KhamPha3DViewModel
+            {
+                TourId = tour.Id,
+                TenTour = tour.TenTour.Trim(),
+                ViXuatPhat = xuatPhat.Vi,
+                KinhXuatPhat = xuatPhat.Kinh,
+                LinkCaHanhTrinh = Services.LienKetBanDo.ChiDuong(xuatPhat, dsDiem[^1], dsDiem.Take(dsDiem.Count - 1).ToList()),
+                DsNgay = dsNgay.Select((x, i) => new DiemKhamPha3D
+                {
+                    Ngay = x.NgayThu,
+                    TieuDe = x.TieuDe,
+                    BuaAn = x.BuaAn,
+                    Vi = dsDiem[i].Vi,
+                    Kinh = dsDiem[i].Kinh,
+                    DuongDi = x.DuongDi,
+                    LinkChiDuong = Services.LienKetBanDo.ChiDuong(i == 0 ? xuatPhat : dsDiem[i - 1], dsDiem[i]),
+                    LinkStreetView = Services.LienKetBanDo.StreetView(dsDiem[i].Vi, dsDiem[i].Kinh),
+                    LinkNhung = Services.LienKetBanDo.Nhung(dsDiem[i].Vi, dsDiem[i].Kinh)
+                }).ToList()
+            };
+            return View(m);
+        }
+
+        // Chỉ đường từng bước của một ngày (từ điểm trước tới điểm của ngày đó), trang Khám phá 3D gọi khi bấm "Dẫn đường"
+        [HttpGet]
+        public async Task<IActionResult> ChiDuong(int id, int ngay)
+        {
+            var duLieu = LayTourDuToaDo(id);
+            if (duLieu == null)
+            {
+                return NotFound();
+            }
+            var (tour, dsNgay) = duLieu.Value;
+            int i = dsNgay.FindIndex(x => x.NgayThu == ngay);
+            if (i < 0)
+            {
+                return NotFound();
+            }
+
+            decimal kinhDau = i == 0 ? tour.KinhDoXuatPhat!.Value : dsNgay[i - 1].KinhDo!.Value;
+            decimal viDau = i == 0 ? tour.ViDoXuatPhat!.Value : dsNgay[i - 1].ViDo!.Value;
+            var kq = await Services.DuongXeChay.LayChiDanAsync(kinhDau, viDau, dsNgay[i].KinhDo!.Value, dsNgay[i].ViDo!.Value);
+            if (kq == null)
+            {
+                return StatusCode(503, new { loi = "Chưa lấy được chỉ đường từ máy chủ bản đồ. Bạn thử lại sau, hoặc mở Google Maps." });
+            }
+
+            return Json(new
+            {
+                km = Math.Round(kq.Km, 1),
+                phut = Math.Round(kq.Phut),
+                buoc = kq.DsBuoc.Select(b => new { chu = b.Chu, km = Math.Round(b.Km, 1) })
+            });
+        }
+
         // Phương thức này xử lý yêu cầu hiển thị trang chủ của địa điểm. Nó đơn giản chuyển hướng đến phương thức DanhSach để hiển thị danh sách tour.
         public IActionResult Index()
         {

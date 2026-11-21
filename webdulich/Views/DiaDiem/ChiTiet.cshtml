@@ -32,6 +32,25 @@
     int soDanhGia = ViewBag.SoDanhGia is int sl ? sl : 0;
     var demSao = ViewBag.DemSao as Dictionary<int, int> ?? new Dictionary<int, int>();
     var dsDanhGia = ViewBag.DanhGia as List<webdulich.Models.DanhGiaHienThi> ?? new List<webdulich.Models.DanhGiaHienThi>();
+
+    // Đủ điểm xuất phát và tọa độ mọi ngày: có trang Khám phá 3D và link Google Maps cả hành trình
+    bool duToaDo = Model.ViDoXuatPhat.HasValue && Model.KinhDoXuatPhat.HasValue
+        && lichTrinhTour.Count > 0 && lichTrinhTour.All(x => x.ViDo.HasValue && x.KinhDo.HasValue);
+    string? linkCaHanhTrinh = duToaDo
+        ? webdulich.Services.LienKetBanDo.ChiDuong((Model.ViDoXuatPhat!.Value, Model.KinhDoXuatPhat!.Value),
+            (lichTrinhTour[^1].ViDo!.Value, lichTrinhTour[^1].KinhDo!.Value),
+            lichTrinhTour.Take(lichTrinhTour.Count - 1).Select(x => (x.ViDo!.Value, x.KinhDo!.Value)).ToList())
+        : null;
+    // Link Google Maps chỉ đường của một ngày: từ điểm ngày trước (ngày đầu: điểm xuất phát) tới điểm ngày đó
+    string? LinkNgay(int i)
+    {
+        var den = lichTrinhTour[i];
+        if (!den.ViDo.HasValue || !den.KinhDo.HasValue) return null;
+        (decimal, decimal)? tu = i == 0
+            ? (Model.ViDoXuatPhat.HasValue && Model.KinhDoXuatPhat.HasValue ? (Model.ViDoXuatPhat.Value, Model.KinhDoXuatPhat.Value) : null)
+            : (lichTrinhTour[i - 1].ViDo.HasValue && lichTrinhTour[i - 1].KinhDo.HasValue ? (lichTrinhTour[i - 1].ViDo!.Value, lichTrinhTour[i - 1].KinhDo!.Value) : null);
+        return tu.HasValue ? webdulich.Services.LienKetBanDo.ChiDuong(tu.Value, (den.ViDo.Value, den.KinhDo.Value)) : null;
+    }
 }
 
 @section Styles {
@@ -166,11 +185,26 @@
             <script type="module" src="~/js/hanh-trinh-3d.js" asp-append-version="true"></script>
         }
 
+        @if (duToaDo)
+        {
+            @* Bản đồ to hơn, xoay nghiêng tự do, chỉ đường từng bước ở trang riêng; Google Maps chỉ là link, không cần khóa *@
+            <div class="ct-kham-pha">
+                <a asp-controller="DiaDiem" asp-action="KhamPha" asp-route-id="@Model.Id" class="tv-btn tv-btn-chinh">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>Khám phá 3D toàn màn hình
+                </a>
+                <a href="@linkCaHanhTrinh" class="tv-btn tv-btn-vien" target="_blank" rel="noopener">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Cả hành trình trên Google Maps
+                </a>
+            </div>
+        }
+
         @if (lichTrinhTour.Any())
         {
             <div class="ct-days">
-                @foreach (var item in lichTrinhTour)
+                @for (int iNgay = 0; iNgay < lichTrinhTour.Count; iNgay++)
                 {
+                    var item = lichTrinhTour[iNgay];
+                    var linkNgay = LinkNgay(iNgay);
                     <details class="ct-day" data-ngay="@item.NgayThu" @(item.NgayThu == 1 ? "open" : "")>
                         <summary>
                             <span class="ct-day-no">@item.NgayThu</span>
@@ -186,6 +220,12 @@
                         @if (!string.IsNullOrWhiteSpace(item.NoiDung))
                         {
                             <div class="ct-day-body">@item.NoiDung</div>
+                        }
+                        @if (linkNgay != null)
+                        {
+                            <a href="@linkNgay" class="ct-day-google" target="_blank" rel="noopener">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Chỉ đường ngày @item.NgayThu trên Google Maps
+                            </a>
                         }
                     </details>
                 }
@@ -285,15 +325,17 @@
                     var giaNguoiLon = lich.GiaNguoiLon ?? Model.Gia;
                     var giaTreEm = lich.GiaTreEm ?? giaNguoiLon * 0.5m;
 
-                    <div class="ct-dep">
+                    @* Mỗi lịch là một tấm vé nhỏ: phần trên là ngày giờ và số chỗ, đường xé, phần dưới là giá và nút đặt *@
+                    <div class="tv-ve tv-khoi-xe ct-dep">
                         <div class="ct-dep-head">
-                            <strong>@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</strong>
+                            <strong class="tv-ma">@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</strong>
                             @if (lich.GioKhoiHanh.HasValue)
                             {
-                                <span>Giờ đi @lich.GioKhoiHanh.Value.ToString(@"hh\:mm")</span>
+                                <span>Giờ đi <span class="tv-ma">@lich.GioKhoiHanh.Value.ToString(@"hh\:mm")</span></span>
                             }
                             <span class="ct-seats@(lich.SoChoCon <= 0 ? " het" : "")">@(lich.SoChoCon > 0 ? "Còn " + lich.SoChoCon + " chỗ" : "Hết chỗ")</span>
                         </div>
+                        <div class="tv-ve-duc-lo" aria-hidden="true"></div>
 
                         <div class="ct-dep-row">
                             <span>Giá người lớn</span>

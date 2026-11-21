@@ -1,0 +1,141 @@
+@model webdulich.Models.KhamPha3DViewModel
+@{
+    // Trang toàn màn hình, không dùng _Layout (không menu, không chân trang) để bản đồ chiếm trọn màn hình
+    Layout = null;
+    var dau = Model.DsNgay[0];
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Khám phá @Model.TenTour | TravelVN</title>
+    @* Cùng cách chọn sáng/tối như _Layout: theo lựa chọn đã lưu, chưa chọn thì theo máy *@
+    <script>
+        (function () {
+            var cheDo = null;
+            try { cheDo = localStorage.getItem("tv-giao-dien"); } catch (e) { }
+            if (cheDo !== "toi" && cheDo !== "sang") {
+                cheDo = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "toi" : "sang";
+            }
+            if (cheDo === "toi") document.documentElement.setAttribute("data-theme", "dark");
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ve.css" asp-append-version="true" />
+    @* Có kiểu nút "Bản đồ | Vệ tinh" dùng chung (js/nen-ve-tinh.js) *@
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/kham-pha-3d.css" asp-append-version="true" />
+</head>
+<body class="k3">
+    <partial name="_Icons" />
+
+    <header class="k3-dau">
+        <a asp-controller="DiaDiem" asp-action="ChiTiet" asp-route-id="@Model.TourId" class="k3-quay-lai">
+            <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg><span>Quay lại tour</span>
+        </a>
+
+        <div class="k3-tieu-de">
+            <h1>Khám phá @Model.TenTour</h1>
+            <p>Bản đồ 3D, chỉ đường từng ngày, Google Maps</p>
+        </div>
+
+        <nav class="k3-tab" role="tablist" aria-label="Cách xem">
+            <button type="button" role="tab" id="tabBanDo" aria-controls="k3BanDo" aria-selected="true" data-tab="ban-do">Bản đồ 3D</button>
+            <button type="button" role="tab" id="tabGoogle" aria-controls="k3Google" aria-selected="false" data-tab="google">Google Maps</button>
+            <button type="button" role="tab" id="tab360" aria-controls="k3Di360" aria-selected="false" data-tab="di-360">Đi dạo 360°</button>
+        </nav>
+    </header>
+
+    <main class="k3-than">
+        @* Bản đồ 3D: MapLibre, địa hình nổi, nền bản đồ hoặc vệ tinh; js/kham-pha-3d.js dựng khi trang mở *@
+        <section class="k3-khung" id="k3BanDo" role="tabpanel" aria-labelledby="tabBanDo">
+            <div class="k3-ban-do" id="k3BanDoVe" aria-label="Bản đồ 3D hành trình"></div>
+            <p class="k3-cho" id="k3Cho">Đang tải bản đồ 3D…</p>
+
+            @* Thẻ của điểm đang chọn và danh sách chỉ đường từng bước *@
+            <aside class="k3-the" id="k3The" aria-live="polite">
+                <div class="k3-the-dau">
+                    <span class="k3-the-ngay tv-ma" data-the="ngay">NGÀY @dau.Ngay</span>
+                    <h2 data-the="tieu-de">@dau.TieuDe</h2>
+                    <p class="k3-the-bua" data-the="bua-an" @(string.IsNullOrWhiteSpace(dau.BuaAn) ? "hidden" : "")>Bữa ăn: @dau.BuaAn</p>
+                </div>
+                <div class="k3-chi-duong" id="k3ChiDuong" hidden>
+                    <p class="k3-chi-duong-tong" data-cd="tong"></p>
+                    <ol class="k3-chi-duong-ds" data-cd="ds"></ol>
+                    <p class="k3-chi-duong-nguon">Chỉ dẫn từ OSRM, dữ liệu OpenStreetMap. Đường thực tế có thể khác, khi đi nên mở thêm Google Maps.</p>
+                </div>
+                <div class="k3-the-nut">
+                    <a class="k3-nut k3-nut-chinh" data-the="google" href="@dau.LinkChiDuong" target="_blank" rel="noopener">Chỉ đường Google Maps</a>
+                    <a class="k3-nut" href="@Model.LinkCaHanhTrinh" target="_blank" rel="noopener">Cả hành trình trên Google Maps</a>
+                </div>
+            </aside>
+        </section>
+
+        <section class="k3-khung k3-google" id="k3Google" role="tabpanel" aria-labelledby="tabGoogle" hidden>
+            <div class="k3-google-dau">
+                <div>
+                    <strong data-gg="ten">Ngày @dau.Ngay: @dau.TieuDe</strong>
+                    <span class="tv-ma" data-gg="toa-do">@dau.Vi.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture), @dau.Kinh.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture)</span>
+                </div>
+                <div class="k3-google-nut">
+                    <a class="k3-nut k3-nut-chinh" data-gg="chi-duong" href="@dau.LinkChiDuong" target="_blank" rel="noopener">Chỉ đường Google Maps</a>
+                    <a class="k3-nut" data-gg="street-view" href="@dau.LinkStreetView" target="_blank" rel="noopener">Xem Street View</a>
+                </div>
+            </div>
+            @* Gán src khi mở tab lần đầu để không tải Google khi người xem không cần *@
+            <iframe class="k3-google-khung" data-gg="khung" title="Bản đồ Google tại điểm đang chọn" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </section>
+
+        <section class="k3-khung k3-360" id="k3Di360" role="tabpanel" aria-labelledby="tab360" hidden>
+            <div class="tv-ve k3-360-ve">
+                <div class="k3-360-than">
+                    <span class="tv-moc tv-moc-xam">Đang chuẩn bị</span>
+                    <h2>Chưa có ảnh 360° cho điểm này</h2>
+                    <p>TravelVN đang chuẩn bị ảnh toàn cảnh 360° cho các điểm tham quan. Trong lúc chờ, bạn có thể xem ảnh đường phố quanh điểm này trên Google Street View.</p>
+                </div>
+                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+                <div class="k3-360-cuong">
+                    <a class="k3-nut k3-nut-chinh" data-gg="street-view" href="@dau.LinkStreetView" target="_blank" rel="noopener">Xem Street View</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    @* Thanh điểm dừng và thao tác bản đồ ở đáy màn hình *@
+    <nav class="k3-thanh" aria-label="Điểm dừng và thao tác bản đồ">
+        <div class="k3-diem" role="group" aria-label="Chọn điểm dừng" id="k3Diem">
+            @for (int i = 0; i < Model.DsNgay.Count; i++)
+            {
+                var n = Model.DsNgay[i];
+                <button type="button" class="k3-chip" data-diem="@i" aria-pressed="@(i == 0 ? "true" : "false")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>Ngày @n.Ngay
+                </button>
+            }
+        </div>
+        <div class="k3-thao-tac">
+            <button type="button" class="k3-chip k3-chip-tac" data-tac="dan-duong" aria-pressed="false">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Dẫn đường
+            </button>
+            <button type="button" class="k3-chip k3-chip-tac" data-tac="bay-vong" aria-pressed="false">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>Bay vòng
+            </button>
+            <button type="button" class="k3-chip k3-chip-tac" data-tac="toan-canh">
+                <svg class="tv-icon" aria-hidden="true"><use href="#i-grid" /></svg>Toàn cảnh
+            </button>
+        </div>
+    </nav>
+
+    <script type="application/json" id="k3DuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        Model.TourId,
+        XuatPhat = new[] { Model.KinhXuatPhat, Model.ViXuatPhat },
+        DsNgay = Model.DsNgay.Select(n => new { n.Ngay, n.TieuDe, n.BuaAn, n.Vi, n.Kinh, n.DuongDi, n.LinkChiDuong, n.LinkStreetView, n.LinkNhung }),
+        UrlChiDuong = Url.Action("ChiDuong", "DiaDiem")
+    }))</script>
+    <script type="module" src="~/js/kham-pha-3d.js" asp-append-version="true"></script>
+</body>
+</html>

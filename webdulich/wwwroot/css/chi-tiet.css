@@ -194,15 +194,18 @@
     border-radius: var(--tv-bo-khoi);
 }
 
+/* Lịch khởi hành dạng vé (.tv-ve, .tv-khoi-xe trong ve.css): --dem bằng padding của thẻ để đường xé tràn đúng hai mép */
+.ct-dep.tv-khoi-xe { --dem: var(--tv-k4); border-radius: 14px; }
+.ct-dep > .tv-ve-duc-lo { margin-top: var(--tv-k3); margin-bottom: var(--tv-k2); }
+
 .ct-dep-head {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--tv-k1) var(--tv-k3);
-    margin-bottom: var(--tv-k3);
 }
 
-.ct-dep-head strong { font-size: var(--tv-cs-vua); }
+.ct-dep-head strong { font-size: var(--tv-cs-vua); color: var(--tv-nhan-dam); }
 .ct-dep-head span { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
 .ct-dep-head .ct-seats { margin-left: auto; font-weight: 600; color: var(--tv-thanh-cong); }
 .ct-dep-head .ct-seats.het { color: var(--tv-loi); }
@@ -287,6 +290,28 @@
 
 /* Nút và nhóm nút có display riêng nên phải ghi rõ để thuộc tính hidden có tác dụng */
 .ct-ht [hidden] { display: none; }
+
+/* Nút mở trang Khám phá 3D và Google Maps cả hành trình, ngay dưới bản đồ */
+.ct-kham-pha { display: flex; flex-wrap: wrap; gap: var(--tv-k2); margin: calc(-1 * var(--tv-k2)) 0 var(--tv-k5); }
+.ct-kham-pha .tv-btn { display: inline-flex; align-items: center; gap: var(--tv-k2); }
+
+/* Link Google Maps chỉ đường của từng ngày, cuối phần nội dung ngày */
+.ct-day-google {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--tv-k1);
+    margin: 0 0 var(--tv-k4) calc(var(--tv-k4) + 36px + var(--tv-k3));
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    color: var(--tv-nhan-dam);
+}
+
+.ct-day-google .tv-icon { width: 16px; height: 16px; }
+
+@media (max-width: 576px) {
+    .ct-kham-pha .tv-btn { flex: 1 1 100%; justify-content: center; }
+    .ct-day-google { margin-left: var(--tv-k4); }
+}
 
 /* Xe chạy trên bản đồ, luôn nằm trên nhãn và đường */
 .ct-ht-xe { z-index: 3; line-height: 0; filter: drop-shadow(0 2px 3px rgba(23, 38, 46, 0.45)); }

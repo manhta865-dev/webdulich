@@ -1,10 +1,27 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
 namespace webdulich.Services
 {
-    // Lấy đường xe chạy giữa hai điểm từ máy chủ OSRM công khai. Chỉ gọi lúc admin lưu tọa độ, kết quả lưu vào CSDL.
+    // Chỉ đường từng bước của một đoạn (một ngày trong lịch trình), đã dịch sang tiếng Việt
+    public class ChiDuongDoan
+    {
+        public double Km { get; set; }
+        public double Phut { get; set; }
+        public List<BuocChiDuong> DsBuoc { get; set; } = new();
+    }
+
+    public class BuocChiDuong
+    {
+        public string Chu { get; set; } = string.Empty;
+        // Quãng đi tiếp sau thao tác này, tới thao tác kế tiếp
+        public double Km { get; set; }
+    }
+
+    // Lấy đường xe chạy giữa hai điểm từ máy chủ OSRM công khai. Đường vẽ (LayAsync) chỉ gọi lúc admin lưu tọa độ, kết quả lưu vào CSDL;
+    // chỉ đường từng bước (LayChiDanAsync) gọi khi người xem cần, nhớ tạm trong bộ nhớ.
     // Máy chủ này không cam kết ổn định nên mọi lỗi đều trả về null, nơi gọi tự báo admin và bản đồ dùng nét đứt thẳng.
     public static class DuongXeChay
     {
@@ -56,6 +73,134 @@ namespace webdulich.Services
             {
                 return null;
             }
+        }
+
+        // ---------- Chỉ đường từng bước (trang Khám phá 3D) ----------
+        // Gọi lúc người xem bấm "Dẫn đường", không lưu CSDL. Nhớ tạm trong bộ nhớ 1 ngày theo cặp tọa độ để không hỏi OSRM nhiều lần;
+        // lỗi thì nhớ 10 phút rồi mới thử lại. Khởi động lại web là mất, không sao.
+        private static readonly ConcurrentDictionary<string, (DateTime HetHan, ChiDuongDoan? KetQua)> _nhoChiDuong = new();
+        private const int SoMucNhoToiDa = 500;
+
+        public static async Task<ChiDuongDoan?> LayChiDanAsync(decimal kinhDau, decimal viDau, decimal kinhCuoi, decimal viCuoi)
+        {
+            var khoa = string.Create(CultureInfo.InvariantCulture, $"{kinhDau},{viDau};{kinhCuoi},{viCuoi}");
+            if (_nhoChiDuong.TryGetValue(khoa, out var daNho) && daNho.HetHan > DateTime.UtcNow)
+            {
+                return daNho.KetQua;
+            }
+
+            var ketQua = await GoiChiDanAsync(khoa);
+            if (_nhoChiDuong.Count >= SoMucNhoToiDa)
+            {
+                _nhoChiDuong.Clear();
+            }
+            _nhoChiDuong[khoa] = (DateTime.UtcNow.Add(ketQua == null ? TimeSpan.FromMinutes(10) : TimeSpan.FromDays(1)), ketQua);
+            return ketQua;
+        }
+
+        private static async Task<ChiDuongDoan?> GoiChiDanAsync(string toaDo)
+        {
+            try
+            {
+                using var phanHoi = await _http.GetAsync($"{MayChu}{toaDo}?overview=false&steps=true");
+                if (!phanHoi.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                using var tep = JsonDocument.Parse(await phanHoi.Content.ReadAsStringAsync());
+                var goc = tep.RootElement;
+                if (goc.GetProperty("code").GetString() != "Ok" || goc.GetProperty("routes").GetArrayLength() == 0)
+                {
+                    return null;
+                }
+
+                var tuyen = goc.GetProperty("routes")[0];
+                var ketQua = new ChiDuongDoan
+                {
+                    Km = tuyen.GetProperty("distance").GetDouble() / 1000,
+                    Phut = tuyen.GetProperty("duration").GetDouble() / 60
+                };
+
+                foreach (var chang in tuyen.GetProperty("legs").EnumerateArray())
+                {
+                    foreach (var buoc in chang.GetProperty("steps").EnumerateArray())
+                    {
+                        var chu = DichBuoc(buoc);
+                        if (chu == null)
+                        {
+                            continue;
+                        }
+                        double km = buoc.GetProperty("distance").GetDouble() / 1000;
+                        // Hai bước liền nhau cùng một câu (đường đổi tên nhưng vẫn đi thẳng): gộp lại cho gọn
+                        var truoc = ketQua.DsBuoc.LastOrDefault();
+                        if (truoc != null && truoc.Chu == chu)
+                        {
+                            truoc.Km += km;
+                            continue;
+                        }
+                        ketQua.DsBuoc.Add(new BuocChiDuong { Chu = chu, Km = km });
+                    }
+                }
+                return ketQua.DsBuoc.Count == 0 ? null : ketQua;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException
+                or KeyNotFoundException or InvalidOperationException or IndexOutOfRangeException)
+            {
+                return null;
+            }
+        }
+
+        // Một bước của OSRM (maneuver.type, modifier, exit, tên đường) thành một câu tiếng Việt. Trả null nếu bỏ qua bước đó.
+        private static string? DichBuoc(JsonElement buoc)
+        {
+            var thaoTac = buoc.GetProperty("maneuver");
+            string loai = thaoTac.GetProperty("type").GetString() ?? string.Empty;
+            string? huong = thaoTac.TryGetProperty("modifier", out var m) ? m.GetString() : null;
+            int? loiRa = thaoTac.TryGetProperty("exit", out var e) && e.ValueKind == JsonValueKind.Number ? e.GetInt32() : null;
+
+            string ten = buoc.TryGetProperty("name", out var n) ? n.GetString() ?? string.Empty : string.Empty;
+            string soHieu = buoc.TryGetProperty("ref", out var r) ? r.GetString() ?? string.Empty : string.Empty;
+            string duong = (ten, soHieu) switch
+            {
+                ("", "") => string.Empty,
+                ("", _) => soHieu,
+                (_, "") => ten,
+                _ when ten.Contains(soHieu, StringComparison.OrdinalIgnoreCase) => ten,
+                _ => $"{ten} ({soHieu})"
+            };
+            string vao = duong.Length > 0 ? " vào " + duong : string.Empty;
+            string theo = duong.Length > 0 ? " theo " + duong : string.Empty;
+
+            string HuongRe() => huong switch
+            {
+                "right" => "Rẽ phải",
+                "left" => "Rẽ trái",
+                "slight right" => "Chếch sang phải",
+                "slight left" => "Chếch sang trái",
+                "sharp right" => "Rẽ gắt sang phải",
+                "sharp left" => "Rẽ gắt sang trái",
+                "uturn" => "Quay đầu",
+                _ => "Đi thẳng"
+            };
+            string BenNao() => huong != null && huong.Contains("left") ? "bên trái" : huong != null && huong.Contains("right") ? "bên phải" : "giữa";
+
+            return loai switch
+            {
+                "depart" => "Xuất phát" + theo,
+                "arrive" => "Đến nơi" + (huong == "left" ? ", điểm đến ở bên trái" : huong == "right" ? ", điểm đến ở bên phải" : string.Empty),
+                "turn" or "end of road" => (loai == "end of road" ? "Hết đường, " + HuongRe().ToLowerInvariant() : HuongRe()) + vao,
+                "new name" or "continue" => huong is null or "straight" ? "Đi tiếp" + theo : HuongRe() + vao,
+                "merge" => "Nhập vào " + (duong.Length > 0 ? duong : "làn đường chính"),
+                "on ramp" => "Lên đường dẫn " + BenNao() + vao,
+                "off ramp" => "Ra lối " + BenNao() + vao,
+                "fork" => "Ở ngã rẽ, đi về phía " + BenNao() + vao,
+                "roundabout" or "rotary" => "Vào vòng xuyến" + (loiRa.HasValue ? $", ra ở lối thứ {loiRa}" : string.Empty) + vao,
+                "roundabout turn" => HuongRe() + " ở vòng xuyến" + vao,
+                "exit roundabout" or "exit rotary" => "Ra khỏi vòng xuyến" + vao,
+                "notification" => null,
+                _ => HuongRe() + vao
+            };
         }
 
         // Giải thuật Ramer-Douglas-Peucker: giữ hai đầu, giữ điểm lệch xa nhất rồi xử lý tiếp hai đoạn con

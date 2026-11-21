@@ -110,6 +110,19 @@ Bản trước (đến 20/11/2026): đầu trang là ảnh điểm đến phủ 
 ### Chi tiết tour
 Đã làm: ảnh lớn bo góc kèm dải ảnh nhỏ (bấm để đổi ảnh), cột thông tin (loại tour, tên, giá, mô tả, bảng địa điểm - thời gian - địa hình - phong cách). Bên dưới là lịch trình dạng mở/đóng từng ngày và khung "Chọn ngày khởi hành" nằm bên phải (dính khi cuộn, xếp dưới lịch trình ở điện thoại), có giờ đi và số chỗ còn lại lấy từ dữ liệu. Đã bỏ các câu viết cứng không có trong dữ liệu (khách sạn 3 sao, hướng dẫn viên, ưu đãi, nhãn nổi bật). Bản vẽ dưới đây là ý tưởng ban đầu.
 
+**Đợt tấm vé (21/11/2026):** mỗi lịch khởi hành là một tấm vé nhỏ (ngày giờ, số chỗ ở phần trên; đường xé; giá và nút đặt ở phần dưới). Tour có điểm xuất phát và tọa độ mọi ngày thì dưới bản đồ hành trình có nút "Khám phá 3D toàn màn hình" và "Cả hành trình trên Google Maps"; mỗi ngày trong lịch trình có link "Chỉ đường ngày N trên Google Maps" (từ điểm ngày trước tới điểm ngày đó). Link Google Maps chỉ là đường dẫn (Maps URLs), không cần khóa API, dựng ở `Services/LienKetBanDo.cs`.
+
+### Khám phá 3D (`DiaDiem/KhamPha/{id}`, 21/11/2026)
+Trang toàn màn hình, không dùng `_Layout`. Chỉ đọc, không đổi CSDL; chỉ mở được khi tour có điểm xuất phát và tọa độ mọi ngày, nếu không thì quay về trang tour kèm thông báo.
+
+- Đầu trang: nút quay lại tour, tên tour, ba tab **Bản đồ 3D**, **Google Maps**, **Đi dạo 360°**.
+- **Bản đồ 3D** (`js/kham-pha-3d.js`, MapLibre như trang tour): địa hình nổi, nhìn nghiêng, xoay và phóng to tự do, nút Bản đồ / Vệ tinh dùng chung (`js/nen-ve-tinh.js`). Chọn một ngày ở thanh đáy thì camera bay tới đoạn đường của ngày đó và xe chạy hết đoạn. Thẻ bên trái (điện thoại: phía trên thanh đáy) ghi ngày, tiêu đề, bữa ăn, nút Google Maps.
+- **Dẫn đường**: danh sách chỉ đường từng bước bằng tiếng Việt kèm tổng quãng đường và thời gian xe chạy ước tính. Máy chủ hỏi OSRM (`DiaDiem/ChiDuong?id=&ngay=`, `DuongXeChay.LayChiDanAsync`) rồi dịch các thao tác (rẽ, vòng xuyến, nhập làn...) sang tiếng Việt; kết quả nhớ tạm trong bộ nhớ 1 ngày, lỗi thì nhớ 10 phút. Ghi rõ nguồn OSRM, OpenStreetMap và khuyên mở thêm Google Maps.
+- **Bay vòng**: camera xoay vòng quanh điểm đang chọn, dừng khi bấm lại hoặc khi người xem kéo bản đồ. **Toàn cảnh**: thu về cả hành trình.
+- **Google Maps**: nhúng bản đồ Google ngay tại điểm đang chọn (kiểu "nhúng bản đồ" của Google, không cần khóa; chỉ tải khi mở tab), nút Chỉ đường Google Maps và Xem Street View (mở sang Google).
+- **Đi dạo 360°**: chưa có ảnh 360, hiện tấm vé "Đang chuẩn bị" kèm nút Street View. Làm thật cần bảng ảnh 360 và nguồn ảnh hợp lệ (giai đoạn sau).
+- Người dùng chọn giảm chuyển động thì không bay, không chạy xe, không xoay vòng.
+
 Ảnh lớn đầu trang, bên dưới là hai cột trên máy tính: trái là mô tả, lịch trình theo ngày; phải là hộp đặt tour dính (chọn lịch khởi hành, số người, giá, nút "Đặt tour"). Điện thoại: hộp đặt thành thanh cố định ở đáy màn hình.
 
 ### Đăng nhập và đăng ký
