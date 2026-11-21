@@ -163,7 +163,7 @@
     @{
         var lyDo = new[]
         {
-            new { Anh = "dalat1.jpg", Icon = "i-receipt", Ten = "Giá rõ ràng theo từng lịch", MoTa = "Giá hiện theo đúng lịch khởi hành bạn chọn, mỗi ghế một phần.", GhiChu = "Khuyến mãi trừ thẳng vào phần của từng người", Moc = "" },
+            new { Anh = "f90f466f-bb5f-4aaa-ab96-a6d2107c7b56_vungtau.jpg", Icon = "i-receipt", Ten = "Giá rõ ràng theo từng lịch", MoTa = "Giá hiện theo đúng lịch khởi hành bạn chọn, mỗi ghế một phần.", GhiChu = "Khuyến mãi trừ thẳng vào phần của từng người", Moc = "" },
             new { Anh = "halong.jpg", Icon = "i-users", Ten = "Giấy tờ riêng tư", MoTa = "Số giấy tờ chỉ bạn và TravelVN xem được.", GhiChu = "Trưởng nhóm không thấy, hướng dẫn viên chỉ thấy vài số cuối", Moc = "" },
             new { Anh = "phuquoc.jpg", Icon = "i-bank", Ten = "Đối chiếu từng khoản", MoTa = "Mỗi ghế có nội dung chuyển khoản riêng nên tiền của ai vào đúng ghế người đó.", GhiChu = "Nhân viên đối chiếu sao kê rồi mới xác nhận ghế", Moc = "Đã trả" },
             new { Anh = "nhatrang.jpg", Icon = "i-clock", Ten = "Hạn chốt minh bạch", MoTa = "Hạn giữ chỗ hiện ngay trên đơn, cả nhóm cùng thấy đồng hồ đếm ngược.", GhiChu = "Ghế đã trả luôn được giữ, chỉ ghế chưa trả bị nhả", Moc = "" },
@@ -608,6 +608,30 @@
         xap.addEventListener("mouseenter", dung);
         xap.addEventListener("mouseleave", chay);
         xap.addEventListener("focusin", dung);
+
+        // Rê chuột vào một ảnh (kể cả ảnh nghiêng phía sau) thì ảnh trồi lên, rồi nghiêng theo con trỏ
+        // và có vệt sáng chạy theo, giống tấm vé ở trang Ghế của tôi (ve-lat.js). Điện thoại và người chọn giảm chuyển động thì bỏ qua.
+        if (window.matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) {
+            the.forEach(function (a) {
+                a.addEventListener("pointerenter", function () { a.classList.add("dang-tro"); });
+                a.addEventListener("pointermove", function (e) {
+                    var k = a.getBoundingClientRect();
+                    var x = (e.clientX - k.left) / k.width - 0.5;
+                    var y = (e.clientY - k.top) / k.height - 0.5;
+                    a.classList.add("dang-nghieng");
+                    a.style.setProperty("--rx", (-y * 14).toFixed(2) + "deg");
+                    a.style.setProperty("--ry", (x * 16).toFixed(2) + "deg");
+                    a.style.setProperty("--mx", Math.round((x + 0.5) * 100) + "%");
+                    a.style.setProperty("--my", Math.round((y + 0.5) * 100) + "%");
+                });
+                a.addEventListener("pointerleave", function () {
+                    a.classList.remove("dang-tro", "dang-nghieng");
+                    a.style.removeProperty("--rx");
+                    a.style.removeProperty("--ry");
+                });
+            });
+        }
+
         hien(0);
         chay();
     })();
