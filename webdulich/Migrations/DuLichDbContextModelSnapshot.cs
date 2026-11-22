@@ -607,6 +607,10 @@ namespace webdulich.Migrations
                     b.Property<int>("DiaDiemId")
                         .HasColumnType("int");
 
+                    b.Property<string>("HinhAnh")
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
                     b.Property<decimal>("KinhDo")
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");

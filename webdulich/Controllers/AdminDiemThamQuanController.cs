@@ -9,10 +9,12 @@ namespace webdulich.Controllers
     public class AdminDiemThamQuanController : Controller
     {
         private readonly DuLichDbContext _context;
+        private readonly IWebHostEnvironment _moiTruong;
 
-        public AdminDiemThamQuanController(DuLichDbContext context)
+        public AdminDiemThamQuanController(DuLichDbContext context, IWebHostEnvironment moiTruong)
         {
             _context = context;
+            _moiTruong = moiTruong;
         }
 
         private bool LaAdmin() => HttpContext.Session.GetString("role") == "admin";
@@ -188,6 +190,67 @@ namespace webdulich.Controllers
             _context.SaveChanges();
 
             TempData["success"] = $"Đã lưu điểm \"{ten}\".";
+            return VeLichTrinh(tourId);
+        }
+
+        private const long AnhDiemToiDaMb = 5;
+
+        // Lấy đúng thư mục wwwroot của web (WebRootPath), không phụ thuộc thư mục đang chạy chương trình
+        private string ThuMucAnhDiem => Path.Combine(_moiTruong.WebRootPath, "images", "diem");
+
+        // Tải ảnh mới cho điểm (thay ảnh cũ) hoặc xóa ảnh (Mo25). Tên tệp chỉ gồm Guid và đuôi lấy từ nội dung thật (KiemTraTepAnh).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<IActionResult> DoiAnh(int id, int tourId, IFormFile? anh, bool xoaAnh)
+        {
+            if (!LaAdmin())
+            {
+                return RedirectToAction("DangNhap", "TaiKhoan");
+            }
+
+            var diem = _context.DiemThamQuans.FirstOrDefault(x => x.Id == id);
+            if (diem == null)
+            {
+                return NotFound();
+            }
+
+            string? tenMoi = null;
+            if (!xoaAnh)
+            {
+                if (anh == null || anh.Length == 0)
+                {
+                    TempData["error"] = "Chọn một tệp ảnh trước khi bấm Tải ảnh.";
+                    return VeLichTrinh(tourId);
+                }
+                if (!webdulich.Services.KiemTraTepAnh.HopLe(anh, AnhDiemToiDaMb, out var duoi, out var loi))
+                {
+                    TempData["error"] = loi;
+                    return VeLichTrinh(tourId);
+                }
+                Directory.CreateDirectory(ThuMucAnhDiem);
+                tenMoi = Guid.NewGuid().ToString("N") + duoi;
+                await using (var luong = new FileStream(Path.Combine(ThuMucAnhDiem, tenMoi), FileMode.CreateNew))
+                {
+                    await anh.CopyToAsync(luong);
+                }
+            }
+
+            var tenCu = diem.HinhAnh;
+            diem.HinhAnh = tenMoi;
+            _context.SaveChanges();
+
+            // Lưu CSDL xong mới xóa tệp cũ, để lỗi lưu không làm mất ảnh đang dùng. Path.GetFileName chặn tên chứa đường dẫn.
+            if (!string.IsNullOrEmpty(tenCu))
+            {
+                var duongCu = Path.Combine(ThuMucAnhDiem, Path.GetFileName(tenCu));
+                if (System.IO.File.Exists(duongCu))
+                {
+                    System.IO.File.Delete(duongCu);
+                }
+            }
+
+            TempData["success"] = xoaAnh ? $"Đã xóa ảnh của \"{diem.Ten}\"." : $"Đã lưu ảnh cho \"{diem.Ten}\".";
             return VeLichTrinh(tourId);
         }
 

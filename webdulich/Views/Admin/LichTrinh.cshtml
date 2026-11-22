@@ -181,6 +181,20 @@
                                                               placeholder="Ảnh 360: dán mã &quot;Nhúng bản đồ&quot; từ Google Maps (không bắt buộc)">@d.LinkNhung360</textarea>
                                                     <small class="ad-diem-360-tt">@(string.IsNullOrEmpty(d.LinkNhung360) ? "Chưa có ảnh 360 riêng: đang dùng Street View đường phố gần tọa độ nhất." : "Đã có ảnh 360 riêng cho điểm này.")</small>
                                                 </form>
+                                                @* Ảnh của điểm (Mo25): thẻ "Điểm nổi bật" và bản đồ minh họa ở trang tour *@
+                                                <form asp-controller="AdminDiemThamQuan" asp-action="DoiAnh" asp-route-id="@d.Id" method="post" enctype="multipart/form-data" class="ad-diem-anh">
+                                                    <input type="hidden" name="tourId" value="@item.TourId" />
+                                                    @if (!string.IsNullOrEmpty(d.HinhAnh))
+                                                    {
+                                                        <img src="~/images/diem/@d.HinhAnh" alt="Ảnh @d.Ten" loading="lazy" />
+                                                    }
+                                                    <input type="file" name="anh" accept="image/jpeg,image/png,image/webp" class="form-control" aria-label="Chọn ảnh cho @d.Ten" />
+                                                    <button type="submit" class="tv-btn tv-btn-vien ad-btn-nho">@(string.IsNullOrEmpty(d.HinhAnh) ? "Tải ảnh" : "Đổi ảnh")</button>
+                                                    @if (!string.IsNullOrEmpty(d.HinhAnh))
+                                                    {
+                                                        <button type="submit" name="xoaAnh" value="true" class="tv-btn tv-btn-huy ad-btn-nho">Xóa ảnh</button>
+                                                    }
+                                                </form>
                                                 <div class="ad-diem-nut">
                                                     <form asp-controller="AdminDiemThamQuan" asp-action="DoiThuTu" method="post">
                                                         <input type="hidden" name="lichTrinhId" value="@item.Id" />

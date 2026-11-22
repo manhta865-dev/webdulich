@@ -568,6 +568,9 @@
 .ad-diem-them { margin-top: var(--tv-k3); }
 .ad-diem .ad-diem-360 { flex: 1 1 100%; min-height: 52px; padding: var(--tv-k1) var(--tv-k2); font-family: var(--tv-font-ve); font-size: 0.75rem; resize: vertical; }
 .ad-diem-360-tt { flex-basis: 100%; font-size: 0.75rem; color: var(--tv-chu-phu); }
+.ad-diem-anh { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: center; gap: var(--tv-k2); margin: 0; }
+.ad-diem-anh img { width: 64px; height: 44px; object-fit: cover; border-radius: var(--tv-bo-nut); }
+.ad-diem .ad-diem-anh input[type="file"] { flex: 1 1 200px; padding: 4px var(--tv-k2); }
 /* Nút nhỏ trong khối điểm nằm theo hàng, không theo lưới của dòng lịch trình */
 .ad-timeline-item .ad-diem .ad-btn-nho { grid-column: auto; grid-row: auto; align-self: center; justify-self: auto; margin-top: 0; min-height: 34px; }
 

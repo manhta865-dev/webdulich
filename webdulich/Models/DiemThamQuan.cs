@@ -27,6 +27,11 @@ namespace webdulich.Models
         [StringLength(1000)]
         public string? LinkNhung360 { get; set; }
 
+        // Tên tệp ảnh của điểm (Mo25) trong wwwroot/images/diem, dạng Guid + đuôi lấy từ nội dung tệp. Rỗng: chưa có ảnh.
+        // Dùng cho thẻ "Điểm nổi bật" và thẻ trạm trên bản đồ minh họa ở trang chi tiết tour.
+        [StringLength(260)]
+        public string? HinhAnh { get; set; }
+
         [ForeignKey("DiaDiemId")]
         public DiaDiem? DiaDiem { get; set; }
 
