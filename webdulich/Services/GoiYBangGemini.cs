@@ -56,6 +56,7 @@ namespace webdulich.Services
         private readonly string? _khoa;
         private readonly string _model;
         private readonly ILogger? _nhatKy;
+        private readonly string _mucSuyNghi;
 
         // nhatKy: ghi lý do khi gọi AI lỗi (mã lỗi, câu báo của Google, lý do dừng), không ghi khóa
         public GoiYBangGemini(IConfiguration cauHinh, ILogger? nhatKy = null)
@@ -65,6 +66,9 @@ namespace webdulich.Services
             // Tên mô hình để trong cấu hình vì Google đổi tên theo thời gian (danh sách: ai.google.dev/gemini-api/docs/models).
             // gemini-2.5-flash đã ngừng cho người dùng mới từ 11/2026.
             _model = string.IsNullOrWhiteSpace(cauHinh["Gemini:Model"]) ? "gemini-4-hydrogen" : cauHinh["Gemini:Model"]!.Trim();
+            // Mức suy nghĩ: gemini-4-hydrogen mặc định "high", trả lời chat quá chậm; "low" là mức Google khuyên cho chat cần nhanh.
+            // Không có khóa cấu hình thì dùng "low"; đặt rỗng thì không gửi (để mô hình tự chọn).
+            _mucSuyNghi = cauHinh["Gemini:MucSuyNghi"]?.Trim() ?? "low";
         }
 
         public bool CoKhoa => !string.IsNullOrWhiteSpace(_khoa);
@@ -232,17 +236,23 @@ namespace webdulich.Services
                 return (null, "Tính năng AI chưa được bật trên máy chủ này.");
             }
 
+            var cauHinhSinh = new Dictionary<string, object>
+            {
+                ["temperature"] = 0.4,
+                ["maxOutputTokens"] = soTokenToiDa,
+                ["responseMimeType"] = "application/json",
+                ["responseSchema"] = schema
+            };
+            if (_mucSuyNghi.Length > 0)
+            {
+                cauHinhSinh["thinkingConfig"] = new { thinkingLevel = _mucSuyNghi };
+            }
+
             var noiDungGui = new
             {
                 systemInstruction = new { parts = new[] { new { text = huongDan } } },
                 contents = cacLuot.Select(l => new { role = l.LaKhach ? "user" : "model", parts = new[] { new { text = l.Chu } } }).ToArray(),
-                generationConfig = new
-                {
-                    temperature = 0.4,
-                    maxOutputTokens = soTokenToiDa,
-                    responseMimeType = "application/json",
-                    responseSchema = schema
-                }
+                generationConfig = cauHinhSinh
             };
 
             try
