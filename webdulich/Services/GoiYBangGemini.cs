@@ -62,8 +62,9 @@ namespace webdulich.Services
         {
             _nhatKy = nhatKy;
             _khoa = cauHinh["Gemini:KhoaApi"];
-            // Tên mô hình để trong cấu hình vì Google đổi tên theo thời gian
-            _model = string.IsNullOrWhiteSpace(cauHinh["Gemini:Model"]) ? "gemini-2.5-flash" : cauHinh["Gemini:Model"]!.Trim();
+            // Tên mô hình để trong cấu hình vì Google đổi tên theo thời gian (danh sách: ai.google.dev/gemini-api/docs/models).
+            // gemini-2.5-flash đã ngừng cho người dùng mới từ 11/2026.
+            _model = string.IsNullOrWhiteSpace(cauHinh["Gemini:Model"]) ? "gemini-4-hydrogen" : cauHinh["Gemini:Model"]!.Trim();
         }
 
         public bool CoKhoa => !string.IsNullOrWhiteSpace(_khoa);
