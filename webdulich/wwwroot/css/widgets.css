@@ -237,6 +237,30 @@ body:has(.chat-widget) .zalo-noi { bottom: 156px; }
     border-bottom-left-radius: var(--tv-k1);
 }
 
+/* Trợ lý dùng Gemini (TroLy/Hoi): giữ xuống dòng của câu trả lời, nút "Xem tour", dòng đang trả lời */
+.ai-help-row.bot .ai-help-bubble { white-space: pre-line; }
+.ai-help-tour { display: flex; flex-direction: column; gap: var(--tv-k1); margin-top: var(--tv-k2); white-space: normal; }
+.ai-help-tour a {
+    display: block;
+    padding: var(--tv-k1) var(--tv-k3);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+    text-decoration: none;
+}
+.ai-help-tour a:hover, .ai-help-tour a:focus-visible { background: var(--tv-nhan); color: #fff; }
+.ai-help-row.dang-tra-loi .ai-help-bubble { color: var(--tv-chu-phu); }
+.ai-help-row.dang-tra-loi .ai-help-bubble::after { content: "…"; display: inline-block; width: 1.2em; }
+
+@media (prefers-reduced-motion: no-preference) {
+    .ai-help-row.dang-tra-loi .ai-help-bubble { animation: ai-nhap-nhay 1.2s ease-in-out infinite; }
+}
+@keyframes ai-nhap-nhay { 50% { opacity: 0.45; } }
+
+.ai-help-chu-y { margin: 0; padding: 0 var(--tv-k3) var(--tv-k2); font-size: 0.75rem; color: var(--tv-chu-phu); }
+
 .chat-time {
     margin-top: var(--tv-k1);
     font-size: 0.75rem;

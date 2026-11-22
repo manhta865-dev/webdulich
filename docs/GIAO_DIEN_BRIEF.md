@@ -78,6 +78,12 @@ Ký hiệu: `[ ]` là nút hoặc ô nhập, `( )` là nhãn nhỏ.
 ```
 Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng bộ.
 
+Khung "Trợ lý TravelVN" (22/11/2026, không hiện với admin và nhân viên):
+- Có khóa Gemini: câu hỏi gửi `POST TroLy/Hoi` (chống giả mạo, tối đa 500 ký tự, 20 câu mỗi giờ mỗi phiên, gửi kèm 6 lượt gần nhất). Máy chủ ghép thông tin thật: liên hệ, cách đặt, số giờ giữ chỗ và gia hạn lấy từ cấu hình, cách thanh toán, đặt nhóm, quy định hủy, khuyến mãi đang hiện ở trang chủ, danh sách tour đang bán. Không gửi tài khoản hay đơn của khách. AI trả lời ngắn và tối đa 3 tour, hiện thành liên kết "Xem tour: …"; mã tour lạ bị bỏ.
+- Chưa có khóa, hết lượt, AI lỗi hoặc quá 25 giây: trình duyệt trả lời theo từ khóa như cũ (đã sửa lại câu mẫu cho đúng: đặt nhóm, QR tự xác nhận).
+- Dòng ghi chú dưới ô nhập đổi theo trường hợp: có khóa thì báo câu hỏi gửi tới Google Gemini và nhắc không nhập thông tin cá nhân; chưa có khóa thì báo trả lời theo câu mẫu.
+- Nút gợi ý: Tour núi, Ưu đãi, Đặt nhóm, Hủy tour, Hotline. Khung tin nhắn có `aria-live`.
+
 ### Trang chủ
 **Bản làm lại (21/11/2026)**, sắp khối theo cách của travelhappytrip.com nhưng chữ, ảnh, màu là của TravelVN và mọi câu chữ chỉ nói tính năng đã chạy thật:
 1. Đầu trang nền xanh, một hàng: vé chính (dải "TRAVELVN, VÉ ĐI NHÓM", tiêu đề, 4 nhãn: giữ chỗ N giờ theo cấu hình `DonNhom:SoGioGiuCho`, link mời, QR, biết ai đã trả; ô tìm kiếm khi màn hình dưới 1200px; nút "Chọn tour", "Xem cách đặt nhóm"), cuống vé đứng riêng hiện tour đang ở giữa dải xếp quạt (rê chuột hoặc Tab vào vé thì cuống tách ra, nghiêng nhẹ), rồi tour xếp quạt (tự chuyển 5 giây, bấm thẻ bên để đưa ra giữa; rê chuột vào ảnh nào, kể cả ảnh nghiêng phía sau, thì ảnh đó trồi lên, nghiêng theo con trỏ và có vệt sáng chạy theo, giống tấm vé ở trang Ghế của tôi) và hàng nút điểm đến.
@@ -166,6 +172,8 @@ Mỗi ghế là một tấm vé có chủ riêng. Chỉ đổi giao diện, cont
 Đã làm: khung ảnh đầu trang, khối chọn tiêu chí (giữ nguyên form và các trường TieuChi), khối "Cách gợi ý hoạt động", kết quả dạng thẻ có thanh mức phù hợp, lý do đề xuất, nút xem chi tiết và đặt tour. Đã gỡ dải số liệu khảo sát viết cứng (xem docs/KHAO_SAT.md) và nhãn "Hot".
 
 Biểu mẫu chọn sở thích ở trên, kết quả là lưới thẻ tour dùng chung với trang danh sách. Thay các emoji bằng icon SVG.
+
+Hỏi AI (22/11/2026): ô mô tả chuyến đi bằng lời, Gemini chọn tối đa 3 tour trong danh sách đang bán (dùng chung `TourChoAiDoc` với khung Trợ lý), 8 lượt mỗi giờ mỗi phiên. Khóa đặt ở `Gemini:KhoaApi` (user-secrets trên máy, appsettings.Production.json trên host, không commit), tên mô hình ở `Gemini:Model`.
 
 ### Nhân viên (hướng dẫn viên, tài xế)
 Danh sách lịch làm việc theo ngày, mỗi mục một dòng: tour, ngày, giờ, số khách.

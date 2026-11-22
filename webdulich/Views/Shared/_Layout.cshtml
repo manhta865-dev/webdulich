@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Http
 @using webdulich.Models
 @inject DuLichDbContext ChatDb
+@inject Microsoft.Extensions.Configuration.IConfiguration CauHinh
 
 @{
     var currentUser = Context.Session.GetString("user");
@@ -630,23 +631,36 @@
                     </div>
                 </div>
 
-                <div class="ai-help-messages" id="aiHelpMessages"></div>
+                <div class="ai-help-messages" id="aiHelpMessages" aria-live="polite"></div>
 
                 <div class="ai-help-suggest">
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn xem khuyến mãi')">Ưu đãi</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Gợi ý cho mình tour đi núi cho nhóm bạn')">Tour núi</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Hiện có mã khuyến mãi nào?')">Ưu đãi</button>
+                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Đặt tour cho nhóm như thế nào?')">Đặt nhóm</button>
                     <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn hủy tour')">Hủy tour</button>
-                    <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Tôi muốn thanh toán')">Thanh toán</button>
                     <button type="button" class="ai-help-chip" onclick="sendAiHelpMessage('Hotline là gì')">Hotline</button>
                 </div>
 
+                @* Mã chống giả mạo cho lời gọi TroLy/Hoi (gửi trong header RequestVerificationToken) *@
+                <span id="aiHelpToken" hidden>@Html.AntiForgeryToken()</span>
                 <div class="ai-help-compose">
                     <input id="aiHelpInput"
                            class="ai-help-input"
                            type="text"
+                           maxlength="500"
+                           aria-label="Câu hỏi cho trợ lý"
                            placeholder="Nhập câu hỏi..." />
 
                     <button type="button" class="ai-help-send" onclick="sendAiHelpMessage()" aria-label="Gửi"><svg class="tv-icon" aria-hidden="true"><use href="#i-send" /></svg></button>
                 </div>
+                @if (new webdulich.Services.GoiYBangGemini(CauHinh).CoKhoa)
+                {
+                    <p class="ai-help-chu-y">Câu hỏi được gửi tới Google Gemini để trả lời, đừng nhập thông tin cá nhân. AI có thể sai: giá, lịch, chỗ còn xem đúng ở trang tour.</p>
+                }
+                else
+                {
+                    <p class="ai-help-chu-y">Trợ lý trả lời theo câu mẫu. Giá, lịch, chỗ còn xem đúng ở trang tour.</p>
+                }
             </div>
 
             <button type="button" class="ai-help-toggle" onclick="toggleAiHelpBox()" aria-label="Hỏi nhanh trợ lý" data-nhan="Hỏi nhanh trợ lý">
@@ -676,9 +690,13 @@
                 }
             }
 
-            function addAiHelpMessage(text, sender) {
+            // Các lượt hỏi đáp trong khung, gửi kèm vài lượt gần nhất cho AI để hỏi tiếp được
+            const aiHelpLichSu = [];
+
+            // dsTour: [{ ten, url }] do máy chủ trả về, thành nút "Xem tour" dưới câu trả lời
+            function addAiHelpMessage(text, sender, dsTour) {
                 const box = document.getElementById("aiHelpMessages");
-                if (!box) return;
+                if (!box) return null;
 
                 const row = document.createElement("div");
                 row.className = "ai-help-row " + sender;
@@ -687,10 +705,29 @@
                 bubble.className = "ai-help-bubble";
                 bubble.textContent = text;
 
+                if (dsTour && dsTour.length) {
+                    const nhom = document.createElement("div");
+                    nhom.className = "ai-help-tour";
+                    dsTour.forEach(function (t) {
+                        const a = document.createElement("a");
+                        a.href = t.url;
+                        a.textContent = "Xem tour: " + t.ten;
+                        nhom.appendChild(a);
+                    });
+                    bubble.appendChild(nhom);
+                }
+
                 row.appendChild(bubble);
                 box.appendChild(row);
 
                 scrollAiHelpBottom();
+                return row;
+            }
+
+            function addAiHelpDangTraLoi() {
+                const row = addAiHelpMessage("Đang trả lời", "bot");
+                if (row) row.classList.add("dang-tra-loi");
+                return row;
             }
 
             function normalizeAiText(text) {
@@ -704,60 +741,85 @@
             function getAiHelpAnswer(question) {
                 const q = normalizeAiText(question);
 
+                // Câu trả lời dự phòng khi AI chưa bật hoặc lỗi: chỉ nói điều web thật sự có
                 if (q.includes("khuyen mai") || q.includes("ma giam") || q.includes("voucher") || q.includes("uu dai")) {
-                    return "Bạn có thể xem các khuyến mãi hiện hành ở trang chủ. Khi đặt tour, nhập mã khuyến mãi ở bước thanh toán để hệ thống tự giảm giá.";
+                    return "Các mã khuyến mãi đang chạy hiện ở trang chủ. Bạn nhập mã ở bước thanh toán (hoặc lúc tạo đơn nhóm) để được giảm.";
+                }
+
+                if (q.includes("nhom")) {
+                    return "Đặt cho nhóm: ở trang tour chọn lịch rồi bấm Đặt cho nhóm. Bạn giữ chỗ và gửi link mời, mỗi người tự nhận ghế, tự điền thông tin và tự trả phần mình bằng mã QR riêng.";
                 }
 
                 if (q.includes("huy") || q.includes("hoan tien") || q.includes("doi lich")) {
-                    return "Bạn vào mục Lịch sử đặt tour để xem đơn đã đặt. Nếu đơn chưa khởi hành hoặc chưa xử lý thanh toán, bạn có thể gửi yêu cầu hủy. Nếu đã thanh toán, bạn nên chat với admin để được kiểm tra nhanh hơn.";
+                    return "Bạn vào mục Lịch sử đặt tour. Đơn đặt riêng còn giữ chỗ, chưa thanh toán và chưa tới ngày đi thì tự hủy được. Đã thanh toán hoặc cần hoàn tiền thì bạn chat với admin hoặc gọi hotline 0342500619.";
                 }
 
-                if (q.includes("thanh toan") || q.includes("momo") || q.includes("chuyen khoan") || q.includes("vnpay")) {
-                    return "TravelVN hỗ trợ thanh toán qua chuyển khoản, ví điện tử và các phương thức đang hiển thị ở trang thanh toán. Sau khi thanh toán, admin sẽ kiểm tra và cập nhật trạng thái đơn.";
+                if (q.includes("thanh toan") || q.includes("momo") || q.includes("chuyen khoan") || q.includes("qr")) {
+                    return "TravelVN nhận chuyển khoản bằng mã QR (số tiền và nội dung điền sẵn), ví MoMo hoặc tiền mặt. Chuyển đúng tiền, đúng nội dung thì hệ thống tự xác nhận khi nhận được tiền.";
                 }
 
                 if (q.includes("dat tour") || q.includes("chon tour") || q.includes("chon ngay")) {
-                    return "Bạn chọn tour muốn đi, bấm Xem chi tiết, chọn ngày khởi hành còn chỗ, nhập thông tin hành khách rồi tiến hành thanh toán.";
+                    return "Bạn mở trang tour, bấm Chọn ngày khởi hành, chọn lịch còn chỗ, nhập thông tin hành khách rồi thanh toán.";
                 }
 
                 if (q.includes("lich trinh") || q.includes("lich khoi hanh") || q.includes("ngay di")) {
-                    return "Trong trang chi tiết tour có phần Lịch trình và Chọn ngày khởi hành. Bạn có thể xem từng ngày đi, giờ đi, số chỗ còn và giá theo lịch.";
+                    return "Trang tour có lịch trình từng ngày và các lịch khởi hành kèm giờ đi, giá, số chỗ còn. Bạn cũng xem được Lịch khởi hành theo tháng ở trang Danh sách tour.";
                 }
 
-                if (q.includes("bien")) {
-                    return "Bạn có thể bấm nút Du lịch biển ở trang chủ để lọc nhanh các tour biển như Phú Quốc, Vũng Tàu, Hạ Long hoặc Đà Nẵng.";
+                if (q.includes("bien") || q.includes("nui") || q.includes("goi y") || q.includes("kham pha")) {
+                    return "Bạn vào trang Gợi ý tour để chọn địa hình (biển, núi...), ngân sách, số ngày, hoặc lọc theo địa hình ở trang Danh sách tour.";
                 }
 
-                if (q.includes("nui") || q.includes("kham pha")) {
-                    return "Bạn có thể bấm Khám phá núi để xem các tour có địa hình núi như Đà Lạt, Hà Giang, Sapa hoặc Tây Ninh.";
-                }
-
-                if (q.includes("hotline") || q.includes("lien he") || q.includes("sdt") || q.includes("so dien thoai")) {
-                    return "Hotline TravelVN: 0342500619. Bạn cũng có thể dùng nút chat với admin để gửi yêu cầu hỗ trợ trực tiếp.";
+                if (q.includes("hotline") || q.includes("lien he") || q.includes("sdt") || q.includes("so dien thoai") || q.includes("zalo")) {
+                    return "Hotline và Zalo TravelVN: 0342500619. Bạn cũng có thể bấm nút chat với admin ở góc phải.";
                 }
 
                 if (q.includes("xin chao") || q.includes("hello") || q.includes("hi")) {
-                    return "Xin chào bạn, mình là trợ lý ảo TravelVN. Mình có thể hỗ trợ bạn về đặt tour, khuyến mãi, thanh toán, hủy tour và lịch trình.";
+                    return "Xin chào bạn, mình là trợ lý ảo TravelVN. Mình hỗ trợ về chọn tour, đặt nhóm, khuyến mãi, thanh toán và hủy tour.";
                 }
 
-                return "Mình chưa hiểu rõ câu hỏi này. Bạn có thể hỏi theo các mẫu như: cách đặt tour, mã khuyến mãi, hủy tour, thanh toán, lịch trình hoặc hotline.";
+                return "Mình chưa hiểu rõ câu hỏi này. Bạn có thể hỏi về cách đặt tour, đặt nhóm, mã khuyến mãi, hủy tour, thanh toán hoặc hotline.";
             }
 
-            function sendAiHelpMessage(text) {
-                const input = document.getElementById("aiHelpInput");
-                const question = text || (input ? input.value.trim() : "");
+            let aiHelpDangHoi = false;
 
-                if (!question) return;
+            // Hỏi máy chủ (TroLy/Hoi, dùng Gemini). Máy chủ báo duPhong hoặc lỗi mạng thì trả lời theo từ khóa như cũ.
+            async function sendAiHelpMessage(text) {
+                const input = document.getElementById("aiHelpInput");
+                const question = (text || (input ? input.value : "")).trim().slice(0, 500);
+
+                if (!question || aiHelpDangHoi) return;
+                aiHelpDangHoi = true;
 
                 addAiHelpMessage(question, "user");
-
                 if (input) {
                     input.value = "";
                 }
 
-                setTimeout(function () {
-                    addAiHelpMessage(getAiHelpAnswer(question), "bot");
-                }, 350);
+                const dangTraLoi = addAiHelpDangTraLoi();
+                let traLoi = null, dsTour = null;
+                try {
+                    const token = document.querySelector("#aiHelpToken input[name='__RequestVerificationToken']");
+                    const phanHoi = await fetch("@Url.Action("Hoi", "TroLy")", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "RequestVerificationToken": token ? token.value : "" },
+                        body: JSON.stringify({ cauHoi: question, lichSu: aiHelpLichSu.slice(-6) }),
+                        signal: AbortSignal.timeout(25000)
+                    });
+                    const kq = phanHoi.ok ? await phanHoi.json() : null;
+                    if (kq && kq.ok) {
+                        traLoi = kq.traLoi;
+                        dsTour = kq.tour;
+                    }
+                } catch (e) {
+                    traLoi = null;
+                }
+
+                if (dangTraLoi) dangTraLoi.remove();
+                if (!traLoi) traLoi = getAiHelpAnswer(question);
+                addAiHelpMessage(traLoi, "bot", dsTour);
+                aiHelpLichSu.push({ laKhach: true, chu: question }, { laKhach: false, chu: traLoi });
+                aiHelpDangHoi = false;
             }
 
             document.addEventListener("DOMContentLoaded", function () {

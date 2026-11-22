@@ -89,31 +89,14 @@ namespace webdulich.Controllers
             HttpContext.Session.SetString("aiTu", tu.Ticks.ToString());
             HttpContext.Session.SetInt32("aiLan", soLan + 1);
 
-            // Chỉ gửi thông tin công khai của tour đang bán, kèm số lịch khởi hành sắp tới còn chỗ
-            var homNay = GioVN.HomNay;
+            // Chỉ gửi thông tin công khai của tour đang bán, kèm số lịch khởi hành sắp tới còn chỗ (dùng chung với khung Trợ lý)
             var dsTour = LayQueryTourDayDu().AsNoTracking().ToList();
-            var soLich = _context.LichKhoiHanhTours.AsNoTracking()
-                .Where(l => l.TrangThai == TrangThaiLich.MoBan && l.NgayKhoiHanh > homNay && l.SoChoCon > 0)
-                .GroupBy(l => l.TourId).Select(g => new { g.Key, SoLuong = g.Count() })
-                .ToDictionary(x => x.Key, x => x.SoLuong);
-            var dsChoAi = dsTour.Select(t => new webdulich.Services.TourChoAi
-            {
-                Id = t.Id,
-                Ten = t.TenTour.Trim(),
-                DiemDen = t.TenDiaDiemHienThi,
-                SoNgay = t.SoNgay,
-                GiaTu = t.Gia,
-                DiaHinh = t.LoaiDiaHinhHienThi,
-                PhongCach = t.PhongCachHienThi,
-                PhuongTien = t.PhuongTienHienThi,
-                MoTa = (t.MoTa ?? string.Empty).Length > 200 ? t.MoTa![..200] : t.MoTa ?? string.Empty,
-                SoLichSapToi = soLich.TryGetValue(t.Id, out var n) ? n : 0
-            }).ToList();
+            var dsChoAi = TourChoAiDoc.LayDanhSach(_context);
 
             var (ketQua, loi) = await ai.GoiYAsync(model.MoTaAi, dsChoAi);
             if (ketQua == null)
             {
-                model.LoiAi = loi;
+                model.LoiAi = loi + " Bạn có thể dùng phần chọn tiêu chí bên dưới.";
                 return View("Index", model);
             }
 
