@@ -1,5 +1,5 @@
 // Bản đồ tour (DiaDiem/BanDo): chấm các điểm đến đang bán tour, mở ở Việt Nam, thu nhỏ ra thấy cả tour nước ngoài.
-// Nền bản đồ OpenFreeMap (có nút chuyển sang ảnh vệ tinh), bỏ chữ và đường ranh giới của bản đồ gốc (cùng cách với hanh-trinh-3d.js),
+// Nền bản đồ OpenFreeMap (có nút chuyển sang ảnh vệ tinh), bỏ chữ và đường ranh giới của bản đồ gốc (cùng cách với kham-pha-3d.js),
 // tên điểm và nhãn Hoàng Sa, Trường Sa do TravelVN tự ghi. Lỗi thì giữ danh sách bên cạnh, không mất thông tin.
 const KIEU_BAN_DO = "https://tiles.openfreemap.org/styles/liberty";
 const khung = document.getElementById("banDoTour");
