@@ -57,6 +57,7 @@ namespace webdulich.Services
         private readonly string _model;
         private readonly ILogger? _nhatKy;
         private readonly string _mucSuyNghi;
+        private readonly string _modelDuPhong;
 
         // nhatKy: ghi lý do khi gọi AI lỗi (mã lỗi, câu báo của Google, lý do dừng), không ghi khóa
         public GoiYBangGemini(IConfiguration cauHinh, ILogger? nhatKy = null)
@@ -69,6 +70,9 @@ namespace webdulich.Services
             // Mức suy nghĩ: gemini-4-hydrogen mặc định "high", trả lời chat quá chậm; "low" là mức Google khuyên cho chat cần nhanh.
             // Không có khóa cấu hình thì dùng "low"; đặt rỗng thì không gửi (để mô hình tự chọn).
             _mucSuyNghi = cauHinh["Gemini:MucSuyNghi"]?.Trim() ?? "low";
+            // Mô hình dự phòng khi mô hình chính quá tải: gemini-3.5-flash-lite nhanh, rẻ, cũng nhận mức suy nghĩ "low".
+            // Không có khóa cấu hình thì dùng mặc định; đặt rỗng thì không thử lại.
+            _modelDuPhong = cauHinh["Gemini:ModelDuPhong"]?.Trim() ?? "gemini-3.5-flash-lite";
         }
 
         public bool CoKhoa => !string.IsNullOrWhiteSpace(_khoa);
@@ -248,42 +252,56 @@ namespace webdulich.Services
                 cauHinhSinh["thinkingConfig"] = new { thinkingLevel = _mucSuyNghi };
             }
 
-            var noiDungGui = new
+            var noiDungGui = JsonSerializer.Serialize(new
             {
                 systemInstruction = new { parts = new[] { new { text = huongDan } } },
                 contents = cacLuot.Select(l => new { role = l.LaKhach ? "user" : "model", parts = new[] { new { text = l.Chu } } }).ToArray(),
                 generationConfig = cauHinhSinh
-            };
+            });
 
+            var (json, loi, maLoi) = await GoiMotLanAsync(_model, noiDungGui);
+            // Mô hình chính quá tải (503) hoặc hết lượt (429): hỏi lại một lần bằng mô hình dự phòng
+            if (json == null && (maLoi is 503 or 429) && _modelDuPhong.Length > 0 && _modelDuPhong != _model)
+            {
+                _nhatKy?.LogWarning("Gemini ({Model}) báo mã {MaLoi}, chuyển sang mô hình dự phòng {DuPhong}", _model, maLoi, _modelDuPhong);
+                (json, loi, _) = await GoiMotLanAsync(_modelDuPhong, noiDungGui);
+            }
+            return (json, loi);
+        }
+
+        // Gửi một yêu cầu tới một mô hình. MaLoi là mã HTTP khi Google báo lỗi, để nơi gọi quyết định có thử mô hình dự phòng không.
+        private async Task<(string? Json, string? Loi, int? MaLoi)> GoiMotLanAsync(string model, string noiDungGui)
+        {
             try
             {
-                using var yeuCau = new HttpRequestMessage(HttpMethod.Post, DiaChi + Uri.EscapeDataString(_model) + ":generateContent");
+                using var yeuCau = new HttpRequestMessage(HttpMethod.Post, DiaChi + Uri.EscapeDataString(model) + ":generateContent");
                 // Khóa gửi trong header, không đặt trên đường dẫn để không lọt vào nhật ký
                 yeuCau.Headers.Add("x-goog-api-key", _khoa!.Trim());
-                yeuCau.Content = new StringContent(JsonSerializer.Serialize(noiDungGui), Encoding.UTF8, "application/json");
+                yeuCau.Content = new StringContent(noiDungGui, Encoding.UTF8, "application/json");
 
                 using var phanHoi = await _http.SendAsync(yeuCau);
                 var chu = await phanHoi.Content.ReadAsStringAsync();
                 if (!phanHoi.IsSuccessStatusCode)
                 {
                     var maLoi = (int)phanHoi.StatusCode;
-                    _nhatKy?.LogWarning("Gemini ({Model}) trả mã {MaLoi}: {CauBao}", _model, maLoi, CauBaoCuaGoogle(chu));
+                    _nhatKy?.LogWarning("Gemini ({Model}) trả mã {MaLoi}: {CauBao}", model, maLoi, CauBaoCuaGoogle(chu));
                     return (null, maLoi switch
                     {
+                        503 => "AI đang quá tải. Bạn thử lại sau ít phút.",
                         429 => "AI đang quá tải hoặc đã hết lượt dùng miễn phí hôm nay. Bạn thử lại sau.",
                         404 => "Không tìm thấy mô hình AI (tên ở Gemini:Model có thể sai).",
                         401 or 403 => "Khóa AI không hợp lệ hoặc chưa được cấp quyền.",
                         400 => "AI từ chối yêu cầu (khóa hoặc cấu hình chưa đúng).",
                         _ => LoiChung
-                    });
+                    }, maLoi);
                 }
 
                 using var tep = JsonDocument.Parse(chu);
                 if (!tep.RootElement.TryGetProperty("candidates", out var dsCandidate) || dsCandidate.ValueKind != JsonValueKind.Array
                     || dsCandidate.GetArrayLength() == 0)
                 {
-                    _nhatKy?.LogWarning("Gemini ({Model}) không trả câu trả lời nào: {Chu}", _model, CatNgan(chu, 300));
-                    return (null, "AI không trả lời câu này. Bạn thử hỏi cách khác.");
+                    _nhatKy?.LogWarning("Gemini ({Model}) không trả câu trả lời nào: {Chu}", model, CatNgan(chu, 300));
+                    return (null, "AI không trả lời câu này. Bạn thử hỏi cách khác.", null);
                 }
 
                 var candidate = dsCandidate[0];
@@ -295,29 +313,29 @@ namespace webdulich.Services
                     : string.Empty;
                 if (lyDoDung is not ("STOP" or ""))
                 {
-                    _nhatKy?.LogWarning("Gemini ({Model}) dừng với lý do {LyDo}", _model, lyDoDung);
+                    _nhatKy?.LogWarning("Gemini ({Model}) dừng với lý do {LyDo}", model, lyDoDung);
                     if (lyDoDung == "MAX_TOKENS")
                     {
-                        return (null, "Câu trả lời của AI bị cắt giữa chừng. Bạn thử hỏi ngắn hơn.");
+                        return (null, "Câu trả lời của AI bị cắt giữa chừng. Bạn thử hỏi ngắn hơn.", null);
                     }
                 }
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    _nhatKy?.LogWarning("Gemini ({Model}) trả câu rỗng, lý do dừng {LyDo}", _model, lyDoDung);
-                    return (null, LoiChung);
+                    _nhatKy?.LogWarning("Gemini ({Model}) trả câu rỗng, lý do dừng {LyDo}", model, lyDoDung);
+                    return (null, LoiChung, null);
                 }
-                return (json, null);
+                return (json, null, null);
             }
             catch (TaskCanceledException)
             {
-                _nhatKy?.LogWarning("Gemini ({Model}) trả lời quá {Giay} giây", _model, _http.Timeout.TotalSeconds);
-                return (null, "AI trả lời quá lâu. Bạn thử lại sau.");
+                _nhatKy?.LogWarning("Gemini ({Model}) trả lời quá {Giay} giây", model, _http.Timeout.TotalSeconds);
+                return (null, "AI trả lời quá lâu. Bạn thử lại sau.", null);
             }
             catch (Exception ex) when (ex is HttpRequestException or JsonException
                 or KeyNotFoundException or InvalidOperationException or IndexOutOfRangeException)
             {
-                _nhatKy?.LogWarning(ex, "Gọi Gemini ({Model}) lỗi", _model);
-                return (null, LoiChung);
+                _nhatKy?.LogWarning(ex, "Gọi Gemini ({Model}) lỗi", model);
+                return (null, LoiChung, null);
             }
         }
 
