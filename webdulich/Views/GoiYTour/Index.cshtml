@@ -29,9 +29,65 @@
         </p>
     </section>
 
+    @* Gợi ý bằng AI (Gemini): mô tả bằng lời, AI chỉ chọn trong các tour đang bán của TravelVN *@
+    <section class="tv-ve gy-ai" id="goiYAi" aria-labelledby="tieuDeAi">
+        <div class="gy-ai-than">
+            <span class="gy-ai-nhan tv-ma">TRỢ LÝ AI</span>
+            <h2 id="tieuDeAi">Kể cho TravelVN chuyến đi bạn muốn</h2>
+            @if (Model.CoAi)
+            {
+                <form asp-controller="GoiYTour" asp-action="HoiAi" method="post" class="gy-ai-form">
+                    @Html.AntiForgeryToken()
+                    <label for="moTaAi" class="visually-hidden">Mô tả chuyến đi bạn muốn</label>
+                    <textarea id="moTaAi" name="moTaAi" rows="3" maxlength="500" class="form-control"
+                              placeholder="Ví dụ: nhóm 6 bạn sinh viên, đi 3 ngày cuối tháng, thích núi và cà phê, mỗi người dưới 5 triệu">@Model.MoTaAi</textarea>
+                    <div class="gy-ai-duoi">
+                        <small>Nội dung bạn nhập được gửi tới Google Gemini để tạo gợi ý. Đừng nhập tên, số điện thoại hay giấy tờ.</small>
+                        <button type="submit" class="tv-btn tv-btn-chinh">Hỏi AI</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <p class="gy-ai-tat">Tính năng AI chưa được bật trên máy chủ này. Bạn dùng phần chọn tiêu chí bên dưới nhé.</p>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.LoiAi) || !string.IsNullOrEmpty(Model.TomTatAi) || Model.KetQuaAi.Any())
+        {
+            <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+            <div class="gy-ai-ket" id="ketQuaAi" aria-live="polite">
+                @if (!string.IsNullOrEmpty(Model.LoiAi))
+                {
+                    <p class="gy-ai-loi" role="alert">@Model.LoiAi</p>
+                }
+                @if (!string.IsNullOrEmpty(Model.TomTatAi))
+                {
+                    <p class="gy-ai-tom-tat">@Model.TomTatAi</p>
+                }
+                @if (Model.KetQuaAi.Any())
+                {
+                    <div class="gy-ai-luoi">
+                        @foreach (var item in Model.KetQuaAi)
+                        {
+                            <article class="gy-ai-muc">
+                                <partial name="_TheTour" model="item.Tour" />
+                                @if (!string.IsNullOrWhiteSpace(item.LyDoGoiY))
+                                {
+                                    <p class="gy-ai-ly-do"><strong>Vì sao hợp:</strong> @item.LyDoGoiY</p>
+                                }
+                            </article>
+                        }
+                    </div>
+                    <p class="gy-ai-chu-y">Gợi ý do AI tạo, chỉ chọn trong các tour đang bán. Giá, lịch và chỗ còn lại xem đúng ở trang từng tour.</p>
+                }
+            </div>
+        }
+    </section>
+
     <div class="gy-layout">
         <div class="gy-block">
-            <h2>Chọn tiêu chí</h2>
+            <h2>Hoặc chọn theo tiêu chí</h2>
             <p class="gy-note">Càng chọn rõ tiêu chí, kết quả gợi ý càng sát với mong muốn của bạn. Bạn không cần chọn hết các mục.</p>
 
             <form id="formGoiY" asp-controller="GoiYTour" asp-action="Index" method="post">

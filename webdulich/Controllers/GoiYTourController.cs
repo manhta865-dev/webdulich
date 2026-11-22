@@ -15,14 +15,14 @@ namespace webdulich.Controllers
         }
         // Phương thức này xử lý yêu cầu hiển thị trang gợi ý tour. Nếu người dùng đã đăng nhập với vai trò admin, họ sẽ được chuyển hướng đến trang quản trị. Ngược lại, một model GoiYTourPageViewModel sẽ được tạo và dữ liệu lựa chọn sẽ được nạp vào model này. Sau đó, phương thức LayDanhSachGoiY sẽ được gọi để lấy danh sách các tour phù hợp dựa trên tiêu chí đã chọn, và kết quả sẽ được trả về để hiển thị trên trang.
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index([FromServices] IConfiguration cauHinh)
         {
             if (HttpContext.Session.GetString("role") == "admin")
             {
                 return RedirectToAction("Index", "Admin");
             }
             // Tạo một instance của view model để chứa dữ liệu lựa chọn và kết quả gợi ý
-            var model = new GoiYTourPageViewModel();
+            var model = new GoiYTourPageViewModel { CoAi = new webdulich.Services.GoiYBangGemini(cauHinh).CoKhoa };
             NapDuLieuLuaChon(model);
             model.KetQua = LayDanhSachGoiY(model.TieuChi);
 
@@ -30,7 +30,7 @@ namespace webdulich.Controllers
         }
         // Phương thức này xử lý yêu cầu khi người dùng gửi form với các tiêu chí đã chọn. Tương tự như phương thức GET, nếu người dùng là admin, họ sẽ được chuyển hướng đến trang quản trị. Nếu không, dữ liệu lựa chọn sẽ được nạp lại vào model và phương thức LayDanhSachGoiY sẽ được gọi để tính toán lại danh sách các tour phù hợp dựa trên tiêu chí mới. Kết quả sẽ được trả về để hiển thị trên trang.
         [HttpPost]
-        public IActionResult Index(GoiYTourPageViewModel model)
+        public IActionResult Index(GoiYTourPageViewModel model, [FromServices] IConfiguration cauHinh)
         {
             if (HttpContext.Session.GetString("role") == "admin")
             {
@@ -38,9 +38,92 @@ namespace webdulich.Controllers
             }
             // Nạp lại dữ liệu lựa chọn vào model để đảm bảo các dropdown vẫn có dữ liệu sau khi submit form
             NapDuLieuLuaChon(model);
+            model.CoAi = new webdulich.Services.GoiYBangGemini(cauHinh).CoKhoa;
             model.KetQua = LayDanhSachGoiY(model.TieuChi);
 
             return View(model);
+        }
+
+        private const int SoLanAiMoiGio = 8;
+        private const int DoDaiMoTaToiDa = 500;
+
+        // Gợi ý bằng AI: khách mô tả chuyến đi bằng lời, Gemini chọn tối đa 3 tour trong các tour đang bán.
+        // Giới hạn số lần mỗi phiên trong một giờ để không ai dùng hết hạn mức của khóa.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HoiAi(string? moTaAi, [FromServices] IConfiguration cauHinh)
+        {
+            if (HttpContext.Session.GetString("role") == "admin")
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
+            var ai = new webdulich.Services.GoiYBangGemini(cauHinh);
+            var model = new GoiYTourPageViewModel { CoAi = ai.CoKhoa, MoTaAi = moTaAi?.Trim() };
+            NapDuLieuLuaChon(model);
+            model.KetQua = LayDanhSachGoiY(model.TieuChi);
+
+            if (string.IsNullOrWhiteSpace(model.MoTaAi) || model.MoTaAi.Length < 5)
+            {
+                model.LoiAi = "Bạn mô tả chuyến đi muốn đi thêm một chút, ví dụ: nhóm 6 bạn, 3 ngày, thích núi, dưới 5 triệu mỗi người.";
+                return View("Index", model);
+            }
+            if (model.MoTaAi.Length > DoDaiMoTaToiDa)
+            {
+                model.MoTaAi = model.MoTaAi[..DoDaiMoTaToiDa];
+            }
+
+            // Đếm lượt trong phiên: quá SoLanAiMoiGio lượt trong 60 phút thì nhờ dùng phần chọn tiêu chí
+            var bayGio = DateTime.UtcNow;
+            var tu = long.TryParse(HttpContext.Session.GetString("aiTu"), out var ticks) ? new DateTime(ticks, DateTimeKind.Utc) : bayGio;
+            var soLan = bayGio - tu > TimeSpan.FromHours(1) ? 0 : HttpContext.Session.GetInt32("aiLan") ?? 0;
+            if (soLan == 0)
+            {
+                tu = bayGio;
+            }
+            if (soLan >= SoLanAiMoiGio)
+            {
+                model.LoiAi = $"Bạn đã hỏi AI {SoLanAiMoiGio} lần trong một giờ. Bạn thử lại sau, hoặc dùng phần chọn tiêu chí bên dưới.";
+                return View("Index", model);
+            }
+            HttpContext.Session.SetString("aiTu", tu.Ticks.ToString());
+            HttpContext.Session.SetInt32("aiLan", soLan + 1);
+
+            // Chỉ gửi thông tin công khai của tour đang bán, kèm số lịch khởi hành sắp tới còn chỗ
+            var homNay = GioVN.HomNay;
+            var dsTour = LayQueryTourDayDu().AsNoTracking().ToList();
+            var soLich = _context.LichKhoiHanhTours.AsNoTracking()
+                .Where(l => l.TrangThai == TrangThaiLich.MoBan && l.NgayKhoiHanh > homNay && l.SoChoCon > 0)
+                .GroupBy(l => l.TourId).Select(g => new { g.Key, SoLuong = g.Count() })
+                .ToDictionary(x => x.Key, x => x.SoLuong);
+            var dsChoAi = dsTour.Select(t => new webdulich.Services.TourChoAi
+            {
+                Id = t.Id,
+                Ten = t.TenTour.Trim(),
+                DiemDen = t.TenDiaDiemHienThi,
+                SoNgay = t.SoNgay,
+                GiaTu = t.Gia,
+                DiaHinh = t.LoaiDiaHinhHienThi,
+                PhongCach = t.PhongCachHienThi,
+                PhuongTien = t.PhuongTienHienThi,
+                MoTa = (t.MoTa ?? string.Empty).Length > 200 ? t.MoTa![..200] : t.MoTa ?? string.Empty,
+                SoLichSapToi = soLich.TryGetValue(t.Id, out var n) ? n : 0
+            }).ToList();
+
+            var (ketQua, loi) = await ai.GoiYAsync(model.MoTaAi, dsChoAi);
+            if (ketQua == null)
+            {
+                model.LoiAi = loi;
+                return View("Index", model);
+            }
+
+            model.TomTatAi = ketQua.TomTat;
+            model.KetQuaAi = ketQua.DsTour
+                .Select(c => (Chon: c, Tour: dsTour.FirstOrDefault(t => t.Id == c.Id)))
+                .Where(x => x.Tour != null)
+                .Select(x => new TourGoiYItemViewModel { Tour = x.Tour!, LyDoGoiY = x.Chon.LyDo, TenDiaDiemHienThi = x.Tour!.TenDiaDiemHienThi })
+                .ToList();
+            return View("Index", model);
         }
         // Phương thức này trả về một truy vấn IQueryable<Tour> đã bao gồm tất cả các quan hệ cần thiết để hiển thị thông tin chi tiết của tour, bao gồm địa điểm, danh mục, phương tiện, loại địa hình và phong cách. Đây là cơ sở để các phương thức khác có thể truy vấn và lọc dữ liệu tour một cách hiệu quả.
         private IQueryable<Tour> LayQueryTourDayDu()

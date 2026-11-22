@@ -25,6 +25,28 @@
     color: rgba(255, 255, 255, 0.92);
 }
 
+/* ---------- Gợi ý bằng AI: một tấm vé, phần trên là ô hỏi, đường xé, phần dưới là kết quả ---------- */
+.gy-ai { --khuyet: 12px; margin-top: var(--tv-k5); }
+.gy-ai-than { padding: var(--tv-k5); }
+.gy-ai-nhan { font-size: 0.75rem; color: var(--tv-nhan-dam); }
+.gy-ai h2 { margin: var(--tv-k1) 0 var(--tv-k3); font-size: var(--tv-cs-lon); font-weight: 700; }
+.gy-ai-form textarea { min-height: 88px; border-radius: var(--tv-bo-nut); resize: vertical; }
+.gy-ai-duoi { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--tv-k3); margin-top: var(--tv-k3); }
+.gy-ai-duoi small { max-width: 60ch; color: var(--tv-chu-phu); }
+.gy-ai-tat { margin: 0; color: var(--tv-chu-phu); }
+.gy-ai-ket { padding: var(--tv-k4) var(--tv-k5) var(--tv-k5); }
+.gy-ai-loi { margin: 0; padding: var(--tv-k3) var(--tv-k4); border-radius: var(--tv-bo-nut); background: var(--tv-canh-bao-nhat); color: var(--tv-canh-bao); font-weight: 600; }
+.gy-ai-tom-tat { margin: 0 0 var(--tv-k4); font-size: var(--tv-cs-vua); line-height: 1.55; }
+.gy-ai-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--tv-k4); }
+.gy-ai-muc { display: flex; flex-direction: column; gap: var(--tv-k2); }
+.gy-ai-ly-do { margin: 0; padding: var(--tv-k3); border-radius: var(--tv-bo-nut); background: var(--tv-nhan-nhat); font-size: var(--tv-cs-nho); line-height: 1.5; }
+.gy-ai-chu-y { margin: var(--tv-k4) 0 0; font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+@media (max-width: 576px) {
+    .gy-ai-than, .gy-ai-ket { padding: var(--tv-k4); }
+    .gy-ai-duoi .tv-btn { width: 100%; }
+}
+
 /* ---------- Bộ lọc và giải thích ---------- */
 .gy-layout {
     display: grid;

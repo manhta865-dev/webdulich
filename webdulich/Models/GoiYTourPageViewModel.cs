@@ -18,5 +18,11 @@ namespace webdulich.Models
         public List<SelectListItem> LoaiTourOptions { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> PhuongTienOptions { get; set; } = new List<SelectListItem>();
 
+        // Gợi ý bằng AI (Gemini): khách mô tả chuyến đi bằng lời, AI chọn trong các tour đang bán
+        public bool CoAi { get; set; }
+        public string? MoTaAi { get; set; }
+        public string? TomTatAi { get; set; }
+        public string? LoiAi { get; set; }
+        public List<TourGoiYItemViewModel> KetQuaAi { get; set; } = new List<TourGoiYItemViewModel>();
     }
 }
