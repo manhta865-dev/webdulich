@@ -20,6 +20,8 @@ namespace webdulich.Controllers
                 .Include(x => x.DanhMuc)
                 .Include(x => x.PhuongTienInfo)
                 .Include(x => x.LichTrinhTours)
+                    .ThenInclude(x => x.DsDiemThamQuan)
+                    .ThenInclude(x => x.DiemThamQuan)
                 .Include(x => x.TourHinhAnhs)
                 .Include(x => x.TourLoaiDiaHinhs)
                     .ThenInclude(x => x.LoaiDiaHinh)
@@ -298,6 +300,17 @@ namespace webdulich.Controllers
                     NgayDi = d.NgayKhoiHanh,
                     NgayViet = d.NgayViet
                 })
+                .ToList();
+
+            // Tour tương tự: đang bán, cùng điểm đến hoặc cùng loại địa hình; cùng điểm đến xếp trước. Chỉ đọc.
+            var dsDiaHinh = tour.TourLoaiDiaHinhs.Select(x => x.LoaiDiaHinhId).ToList();
+            ViewBag.TourTuongTu = LayQueryTourChoDanhSach()
+                .Where(x => x.Id != id
+                    && ((tour.DiaDiemId != null && x.DiaDiemId == tour.DiaDiemId)
+                        || x.TourLoaiDiaHinhs.Any(l => dsDiaHinh.Contains(l.LoaiDiaHinhId))))
+                .OrderByDescending(x => tour.DiaDiemId != null && x.DiaDiemId == tour.DiaDiemId)
+                .ThenBy(x => x.TenTour)
+                .Take(4)
                 .ToList();
 
             return View(tour);

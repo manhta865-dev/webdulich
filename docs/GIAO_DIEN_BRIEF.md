@@ -110,6 +110,16 @@ Bản trước (đến 20/11/2026): đầu trang là ảnh điểm đến phủ 
 ### Chi tiết tour
 Đã làm: ảnh lớn bo góc kèm dải ảnh nhỏ (bấm để đổi ảnh), cột thông tin (loại tour, tên, giá, mô tả, bảng địa điểm - thời gian - địa hình - phong cách). Bên dưới là lịch trình dạng mở/đóng từng ngày và khung "Chọn ngày khởi hành" nằm bên phải (dính khi cuộn, xếp dưới lịch trình ở điện thoại), có giờ đi và số chỗ còn lại lấy từ dữ liệu. Đã bỏ các câu viết cứng không có trong dữ liệu (khách sạn 3 sao, hướng dẫn viên, ưu đãi, nhãn nổi bật). Bản vẽ dưới đây là ý tưởng ban đầu.
 
+**Làm lại theo bố cục tham khảo (22/11/2026)**, chỉ dùng dữ liệu thật, các khối xếp dọc:
+1. Đầu trang: chữ bên trái (thẻ loại tour, tên, đánh giá, mô tả, 4 thẻ thông tin Thời gian, Điểm đến, Địa hình, Phong cách, giá và nút), ảnh ghép bên phải (từ 3 ảnh thì ảnh nhỏ thành cột).
+2. Điểm nổi bật: lưới thẻ các điểm tham quan của tour (Mo23) có ảnh (Mo25), nhãn ngày, nút "Xem 360°" (mở thẳng điểm đó ở tab 360 của trang Khám phá 3D: `?ngay=&diem=&tab=di-360`) và Google Maps.
+3. Bản đồ hành trình **minh họa** (`js/ban-do-minh-hoa.js`, SVG): các trạm xuất phát, điểm tham quan, điểm cuối ngày xếp đều theo thứ tự trên đường uốn lượn, nối nét đứt mỗi ngày một màu; nền đồi, hồ, mây, cây vẽ theo màu TravelVN (cố định theo tour); một chấm chạy dọc đường (tắt khi giảm chuyển động). Tab theo ngày làm mờ ngày khác. Bấm trạm thì thẻ vé bên phải hiện ảnh, tên, ngày, bữa ăn, nút 360° và Google Maps, hàng ảnh nhỏ các điểm cùng ngày. Màn hẹp: một cột dọc, trạm và chữ phóng to, nhãn đặt bên cạnh. Ghi rõ là sơ đồ, không đúng tỉ lệ. Thay cho khung bản đồ 3D nhỏ trước đây (`js/hanh-trinh-3d.js` nay không còn trang nào nạp); bản đồ thật vẫn ở nút "Bản đồ thật 3D, 360°".
+4. Lịch trình chi tiết: tab "Cả hành trình / Ngày N"; nội dung mỗi ngày được tách theo giờ (`LichTrinhDoc.TachTheoBuoi`, dòng như `* 06:00 – 07:00: ...`) rồi xếp vào Sáng (trước 11 giờ), Trưa (11–14), Chiều (14–18), Tối; dòng không có giờ là ghi chú; không có dòng nào có giờ thì hiện nguyên văn. Bên phải là ảnh các điểm của ngày (nếu có).
+5. Lịch khởi hành: hàng ô ngày (bấm để nhảy tới) và lưới vé.
+6. Quy định đặt tour (tab Giữ chỗ và thanh toán, Đặt cho nhóm, Hủy đơn): đúng luật đang chạy (RB-38, RB-39, đơn nhóm), số giờ đọc từ cấu hình `DonNhom:SoGioGiuCho`, `SoGioGiaHan`.
+7. Video, đánh giá như cũ; Tour tương tự: tối đa 4 thẻ vé cùng điểm đến hoặc cùng địa hình.
+Không làm các khối vé máy bay, khách sạn, cam kết, hạng giá vì TravelVN không có dữ liệu thật cho chúng.
+
 **Đợt tấm vé (21/11/2026):** mỗi lịch khởi hành là một tấm vé nhỏ (ngày giờ, số chỗ ở phần trên; đường xé; giá và nút đặt ở phần dưới). Tour có điểm xuất phát và tọa độ mọi ngày thì dưới bản đồ hành trình có nút "Khám phá 3D toàn màn hình" và "Cả hành trình trên Google Maps"; mỗi ngày trong lịch trình có link "Chỉ đường ngày N trên Google Maps" (từ điểm ngày trước tới điểm ngày đó). Link Google Maps chỉ là đường dẫn (Maps URLs), không cần khóa API, dựng ở `Services/LienKetBanDo.cs`.
 
 ### Khám phá 3D (`DiaDiem/KhamPha/{id}`, 21/11/2026)

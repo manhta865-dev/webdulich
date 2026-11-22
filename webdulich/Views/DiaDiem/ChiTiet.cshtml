@@ -1,39 +1,38 @@
 ﻿@model webdulich.Models.Tour
+@inject Microsoft.Extensions.Configuration.IConfiguration CauHinh
 
 @{
     ViewData["Title"] = Model.TenTour;
 
     var danhSachAnh = new List<string>();
-
     if (!string.IsNullOrEmpty(Model.HinhAnh))
     {
         danhSachAnh.Add(Model.HinhAnh);
     }
-
     if (Model.TourHinhAnhs != null && Model.TourHinhAnhs.Any())
     {
-        danhSachAnh.AddRange(Model.TourHinhAnhs
-            .OrderBy(x => x.ThuTu)
-            .Select(x => x.TenFile)
-            .Where(x => !string.IsNullOrWhiteSpace(x)));
+        danhSachAnh.AddRange(Model.TourHinhAnhs.OrderBy(x => x.ThuTu).Select(x => x.TenFile).Where(x => !string.IsNullOrWhiteSpace(x)));
     }
-
     danhSachAnh = danhSachAnh.Distinct().ToList();
 
-    var lichKhoiHanh = ViewBag.LichKhoiHanh as List<webdulich.Models.LichKhoiHanhTour>;
+    var lichKhoiHanh = ViewBag.LichKhoiHanh as List<webdulich.Models.LichKhoiHanhTour> ?? new List<webdulich.Models.LichKhoiHanhTour>();
     var lichTrinhTour = Model.LichTrinhTours != null
         ? Model.LichTrinhTours.OrderBy(x => x.NgayThu).ToList()
         : new List<webdulich.Models.LichTrinhTour>();
+    var tourTuongTu = ViewBag.TourTuongTu as List<webdulich.Models.Tour> ?? new List<webdulich.Models.Tour>();
 
     var loaiTourText = Model.DanhMuc?.TenDanhMuc ?? "Tour du lịch";
-    var phuongTienText = Model.PhuongTienHienThi;
+    string? CoGiaTri(string? s) => string.IsNullOrWhiteSpace(s) || s == "Chưa cập nhật" ? null : s;
 
     double diemTB = ViewBag.DiemTrungBinh is double tb ? tb : 0;
     int soDanhGia = ViewBag.SoDanhGia is int sl ? sl : 0;
     var demSao = ViewBag.DemSao as Dictionary<int, int> ?? new Dictionary<int, int>();
     var dsDanhGia = ViewBag.DanhGia as List<webdulich.Models.DanhGiaHienThi> ?? new List<webdulich.Models.DanhGiaHienThi>();
 
-    // Đủ điểm xuất phát và tọa độ mọi ngày: có trang Khám phá 3D và link Google Maps cả hành trình
+    int soGioGiuCho = CauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
+    int soGioGiaHan = CauHinh.GetValue("DonNhom:SoGioGiaHan", 6);
+
+    // Đủ điểm xuất phát và tọa độ mọi ngày: có trang Khám phá 3D (bản đồ thật, chỉ đường, 360°) và link Google Maps cả hành trình
     bool duToaDo = Model.ViDoXuatPhat.HasValue && Model.KinhDoXuatPhat.HasValue
         && lichTrinhTour.Count > 0 && lichTrinhTour.All(x => x.ViDo.HasValue && x.KinhDo.HasValue);
     string? linkCaHanhTrinh = duToaDo
@@ -41,7 +40,6 @@
             (lichTrinhTour[^1].ViDo!.Value, lichTrinhTour[^1].KinhDo!.Value),
             lichTrinhTour.Take(lichTrinhTour.Count - 1).Select(x => (x.ViDo!.Value, x.KinhDo!.Value)).ToList())
         : null;
-    // Link Google Maps chỉ đường của một ngày: từ điểm ngày trước (ngày đầu: điểm xuất phát) tới điểm ngày đó
     string? LinkNgay(int i)
     {
         var den = lichTrinhTour[i];
@@ -51,6 +49,12 @@
             : (lichTrinhTour[i - 1].ViDo.HasValue && lichTrinhTour[i - 1].KinhDo.HasValue ? (lichTrinhTour[i - 1].ViDo!.Value, lichTrinhTour[i - 1].KinhDo!.Value) : null);
         return tu.HasValue ? webdulich.Services.LienKetBanDo.ChiDuong(tu.Value, (den.ViDo.Value, den.KinhDo.Value)) : null;
     }
+
+    // Điểm tham quan theo từng ngày (Mo23), theo thứ tự ghé
+    var diemTheoNgay = lichTrinhTour
+        .Select(n => n.DsDiemThamQuan.OrderBy(d => d.ThuTu).Where(d => d.DiemThamQuan != null).Select(d => d.DiemThamQuan!).ToList())
+        .ToList();
+    string LinkKhamPha(int ngay, int diem) => Url.Action("KhamPha", "DiaDiem", new { id = Model.Id, ngay, diem, tab = "di-360" })!;
 }
 
 @section Styles {
@@ -72,36 +76,14 @@
     <div class="ct-alert" role="alert">@TempData["Loi"]</div>
 }
 
-<section class="ct-top">
-    <div class="ct-gallery">
-        @if (danhSachAnh.Any())
-        {
-            <img id="mainImage" src="~/images/dulich/@danhSachAnh.First()" class="ct-main-img" alt="@Model.TenTour" />
-        }
-        else
-        {
-            <div class="ct-main-img ct-no-img">Chưa có hình ảnh</div>
-        }
-
-        @if (danhSachAnh.Count > 1)
-        {
-            <div class="ct-thumbs">
-                @foreach (var anh in danhSachAnh)
-                {
-                    <button type="button" class="ct-thumb" onclick="changeImage(this)" aria-label="Xem ảnh tour">
-                        <img src="~/images/dulich/@anh" alt="" loading="lazy" />
-                    </button>
-                }
-            </div>
-        }
-    </div>
-
-    <div class="ct-summary">
+@* ---------- 1. Đầu trang: chữ bên trái, ảnh ghép bên phải ---------- *@
+<section class="ct-dau">
+    <div class="ct-dau-chu">
         <div class="tv-tags">
             <span class="tv-tag">@loaiTourText</span>
-            @if (!string.IsNullOrWhiteSpace(phuongTienText) && phuongTienText != "Chưa cập nhật")
+            @if (CoGiaTri(Model.PhuongTienHienThi) is string pt)
             {
-                <span class="tv-tag">@phuongTienText</span>
+                <span class="tv-tag">@pt</span>
             }
         </div>
 
@@ -121,105 +103,260 @@
             </a>
         }
 
-        <div class="ct-price">
-            <span class="tv-price-label">Giá trọn gói từ</span>
-            <span class="ct-price-value">@Model.Gia.ToString("N0") <small>VNĐ</small></span>
-        </div>
+        <p class="ct-desc">@(string.IsNullOrEmpty(Model.MoTa) ? "Thông tin mô tả của tour đang được cập nhật." : Model.MoTa)</p>
 
-        <p class="ct-desc">
-            @(string.IsNullOrEmpty(Model.MoTa) ? "Thông tin mô tả của tour đang được cập nhật." : Model.MoTa)
-        </p>
-
-        <dl class="ct-specs">
+        @* Bốn thẻ thông tin lấy từ dữ liệu tour; mục nào chưa có thì ghi "Đang cập nhật" *@
+        <dl class="ct-the-tt">
             <div>
-                <dt>Địa điểm</dt>
-                <dd>@Model.TenDiaDiemHienThi</dd>
+                <dt><svg class="tv-icon" aria-hidden="true"><use href="#i-clock" /></svg>Thời gian</dt>
+                <dd>@(Model.SoNgay.HasValue ? Model.SoNgay.Value + " ngày" : "Đang cập nhật")</dd>
             </div>
             <div>
-                <dt>Thời gian</dt>
-                <dd>@(Model.SoNgay.HasValue ? Model.SoNgay.Value + " ngày" : "Chưa cập nhật")</dd>
+                <dt><svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>Điểm đến</dt>
+                <dd>@(CoGiaTri(Model.TenDiaDiemHienThi) ?? "Đang cập nhật")</dd>
             </div>
             <div>
-                <dt>Địa hình</dt>
-                <dd>@Model.LoaiDiaHinhHienThi</dd>
+                <dt><svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>Địa hình</dt>
+                <dd>@(CoGiaTri(Model.LoaiDiaHinhHienThi) ?? "Đang cập nhật")</dd>
             </div>
             <div>
-                <dt>Phong cách</dt>
-                <dd>@Model.PhongCachHienThi</dd>
+                <dt><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>Phong cách</dt>
+                <dd>@(CoGiaTri(Model.PhongCachHienThi) ?? "Đang cập nhật")</dd>
             </div>
         </dl>
 
-        <div class="ct-actions">
-            <a href="#departureSection" class="tv-btn tv-btn-chinh">Chọn ngày khởi hành</a>
-            <a href="#itinerarySection" class="tv-btn tv-btn-vien">Xem lịch trình</a>
+        <div class="ct-dau-duoi">
+            <div class="ct-price">
+                <span class="tv-price-label">Giá trọn gói từ</span>
+                <span class="ct-price-value">@Model.Gia.ToString("N0") <small>VNĐ</small></span>
+            </div>
+            <div class="ct-actions">
+                <a href="#departureSection" class="tv-btn tv-btn-chinh">Chọn ngày khởi hành</a>
+                <a href="#itinerarySection" class="tv-btn tv-btn-vien">Xem lịch trình</a>
+            </div>
         </div>
+    </div>
+
+    <div class="ct-anh-ghep@(danhSachAnh.Count >= 3 ? " nhieu" : "")">
+        @if (danhSachAnh.Any())
+        {
+            <img id="mainImage" src="~/images/dulich/@danhSachAnh.First()" class="ct-main-img" alt="@Model.TenTour" />
+            @if (danhSachAnh.Count > 1)
+            {
+                <div class="ct-thumbs">
+                    @foreach (var anh in danhSachAnh.Take(6))
+                    {
+                        <button type="button" class="ct-thumb" onclick="changeImage(this)" aria-label="Xem ảnh tour">
+                            <img src="~/images/dulich/@anh" alt="" loading="lazy" />
+                        </button>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="ct-main-img ct-no-img">Chưa có hình ảnh</div>
+        }
     </div>
 </section>
 
-<div class="ct-body">
-    <section id="itinerarySection" class="ct-itinerary">
-        <h2>Lịch trình tour</h2>
-        <p class="ct-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
-
-        @* Đủ điểm xuất phát và điểm mọi ngày: xe chạy trên bản đồ. Chưa đủ mà từ 2 ngày: phong cảnh tự vẽ. Còn lại chỉ có danh sách *@
-        @if (lichTrinhTour.Count >= 2 || (lichTrinhTour.Count == 1 && lichTrinhTour[0].ViDo.HasValue && Model.ViDoXuatPhat.HasValue))
-        {
-            @* Hành trình 3D ẩn sẵn, js/hanh-trinh-3d.js chỉ hiện khi trình duyệt chạy được; danh sách bên dưới luôn còn *@
-            <div class="ct-ht" id="hanhTrinh3D" data-tour="@Model.Id" hidden>
-                <div class="ct-ht-khung" aria-hidden="true"><canvas></canvas></div>
-                <div class="ct-ht-the">
-                    <div class="ct-ht-ngay" role="group" aria-label="Chọn ngày trong hành trình"></div>
-                    <p class="ct-ht-tieu-de"></p>
-                    <p class="ct-ht-bua-an" hidden></p>
-                    <div class="ct-ht-duoi">
-                        <button type="button" class="tv-btn tv-btn-vien" data-ht-bay>Bay cả hành trình</button>
-                        <small></small>
-                    </div>
-                </div>
-            </div>
-            <script type="application/json" id="hanhTrinhDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+@* ---------- 2. Điểm nổi bật: các điểm tham quan của tour (Mo23, ảnh Mo25) ---------- *@
+@if (diemTheoNgay.Any(d => d.Any()))
+{
+    <section class="ct-khoi ct-noi-bat" aria-labelledby="tieuDeNoiBat">
+        <h2 id="tieuDeNoiBat">Điểm nổi bật của hành trình</h2>
+        <p class="ct-note">Những nơi đoàn sẽ ghé, theo thứ tự trong lịch trình.</p>
+        <div class="ct-nb-luoi">
+            @for (int i = 0; i < lichTrinhTour.Count; i++)
             {
-                XuatPhat = Model.ViDoXuatPhat.HasValue ? new[] { Model.KinhDoXuatPhat!.Value, Model.ViDoXuatPhat.Value } : null,
-                DsNgay = lichTrinhTour.Select(x => new { Ngay = x.NgayThu, x.TieuDe, x.BuaAn, x.ViDo, x.KinhDo, x.DuongDi })
-            }))</script>
-            <script type="module" src="~/js/hanh-trinh-3d.js" asp-append-version="true"></script>
-        }
-
-        @if (duToaDo)
-        {
-            @* Bản đồ to hơn, xoay nghiêng tự do, chỉ đường từng bước ở trang riêng; Google Maps chỉ là link, không cần khóa *@
-            <div class="ct-kham-pha">
-                <a asp-controller="DiaDiem" asp-action="KhamPha" asp-route-id="@Model.Id" class="tv-btn tv-btn-chinh">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>Khám phá 3D toàn màn hình
-                </a>
-                <a href="@linkCaHanhTrinh" class="tv-btn tv-btn-vien" target="_blank" rel="noopener">
-                    <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Cả hành trình trên Google Maps
-                </a>
-            </div>
-        }
-
-        @if (lichTrinhTour.Any())
-        {
-            <div class="ct-days">
-                @for (int iNgay = 0; iNgay < lichTrinhTour.Count; iNgay++)
+                for (int k = 0; k < diemTheoNgay[i].Count; k++)
                 {
-                    var item = lichTrinhTour[iNgay];
-                    var linkNgay = LinkNgay(iNgay);
-                    <details class="ct-day" data-ngay="@item.NgayThu" @(item.NgayThu == 1 ? "open" : "")>
-                        <summary>
-                            <span class="ct-day-no">@item.NgayThu</span>
-                            <span class="ct-day-title">
-                                Ngày @item.NgayThu: @item.TieuDe
-                                @if (!string.IsNullOrWhiteSpace(item.BuaAn))
+                    var d = diemTheoNgay[i][k];
+                    <article class="ct-nb">
+                        <div class="ct-nb-anh">
+                            @if (!string.IsNullOrEmpty(d.HinhAnh))
+                            {
+                                <img src="~/images/diem/@d.HinhAnh" alt="@d.Ten" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="ct-nb-anh-trong" aria-hidden="true"><svg class="tv-icon"><use href="#i-pin" /></svg></span>
+                            }
+                            <span class="ct-nb-ngay tv-ma">NGÀY @lichTrinhTour[i].NgayThu</span>
+                        </div>
+                        <div class="ct-nb-chu">
+                            <h3>@d.Ten</h3>
+                            <div class="ct-nb-nut">
+                                @if (duToaDo)
                                 {
-                                    <small>Bữa ăn: @item.BuaAn</small>
+                                    <a href="@LinkKhamPha(i, k)" class="ct-nb-link">Xem 360°</a>
                                 }
-                            </span>
-                        </summary>
+                                <a href="@webdulich.Services.LienKetBanDo.MoDiem(d.ViDo, d.KinhDo)" class="ct-nb-link" target="_blank" rel="noopener">Google Maps</a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            }
+        </div>
+    </section>
+}
 
-                        @if (!string.IsNullOrWhiteSpace(item.NoiDung))
+@* ---------- 3. Bản đồ hành trình minh họa (js/ban-do-minh-hoa.js) ---------- *@
+@if (lichTrinhTour.Any())
+{
+    <section class="ct-khoi ct-bd" aria-labelledby="tieuDeBanDo">
+        <div class="ct-khoi-dau">
+            <div>
+                <h2 id="tieuDeBanDo">Bản đồ hành trình</h2>
+                <p class="ct-note">Bấm vào từng trạm để xem điểm đến. Đây là sơ đồ minh họa thứ tự các điểm, không đúng tỉ lệ khoảng cách.</p>
+            </div>
+            @if (duToaDo)
+            {
+                <div class="ct-kham-pha">
+                    <a asp-controller="DiaDiem" asp-action="KhamPha" asp-route-id="@Model.Id" class="tv-btn tv-btn-chinh">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg>Bản đồ thật 3D, 360°
+                    </a>
+                    <a href="@linkCaHanhTrinh" class="tv-btn tv-btn-vien" target="_blank" rel="noopener">
+                        <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Google Maps
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="ct-bd-tab" role="tablist" aria-label="Chọn ngày trên bản đồ" id="bdTab">
+            <button type="button" role="tab" aria-selected="true" data-ngay="-1">Cả hành trình</button>
+            @for (int i = 0; i < lichTrinhTour.Count; i++)
+            {
+                <button type="button" role="tab" aria-selected="false" data-ngay="@i"><span class="tv-ma">NGÀY @lichTrinhTour[i].NgayThu.ToString("00")</span>@lichTrinhTour[i].TieuDe</button>
+            }
+        </div>
+
+        <div class="ct-bd-hang">
+            <div class="ct-bd-khung" id="bdKhung" aria-label="Sơ đồ hành trình minh họa">
+                @* Không có JavaScript thì vẫn có danh sách trạm theo thứ tự *@
+                <ol class="ct-bd-ds" id="bdDanhSach">
+                    @if (Model.ViDoXuatPhat.HasValue)
+                    {
+                        <li>Xuất phát</li>
+                    }
+                    @for (int i = 0; i < lichTrinhTour.Count; i++)
+                    {
+                        foreach (var d in diemTheoNgay[i])
+                        {
+                            <li>Ngày @lichTrinhTour[i].NgayThu: @d.Ten</li>
+                        }
+                        <li>Ngày @lichTrinhTour[i].NgayThu: @lichTrinhTour[i].TieuDe</li>
+                    }
+                </ol>
+            </div>
+
+            <aside class="tv-ve ct-bd-the" id="bdThe" aria-live="polite">
+                <div class="ct-bd-the-anh" data-bd="anh"></div>
+                <div class="ct-bd-the-chu">
+                    <span class="ct-bd-the-ngay tv-ma" data-bd="ngay"></span>
+                    <h3 data-bd="ten"></h3>
+                    <p data-bd="mo-ta"></p>
+                </div>
+                <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+                <div class="ct-bd-the-nut" data-bd="nut"></div>
+                <div class="ct-bd-the-nho" data-bd="nho"></div>
+            </aside>
+        </div>
+
+        <script type="application/json" id="bdDuLieu">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            CoXuatPhat = Model.ViDoXuatPhat.HasValue,
+            DsNgay = lichTrinhTour.Select((n, i) => new
+            {
+                Ngay = n.NgayThu,
+                n.TieuDe,
+                n.BuaAn,
+                LinkGoogle = LinkNgay(i),
+                DsDiem = diemTheoNgay[i].Select((d, k) => new
+                {
+                    d.Ten,
+                    Anh = string.IsNullOrEmpty(d.HinhAnh) ? null : Url.Content("~/images/diem/" + d.HinhAnh),
+                    LinkGoogle = webdulich.Services.LienKetBanDo.MoDiem(d.ViDo, d.KinhDo),
+                    Link360 = duToaDo ? LinkKhamPha(i, k) : null
+                })
+            })
+        }))</script>
+        <script src="~/js/ban-do-minh-hoa.js" asp-append-version="true"></script>
+    </section>
+}
+
+@* ---------- 4. Lịch trình chi tiết: tab theo ngày, mỗi ngày chia Sáng, Trưa, Chiều, Tối ---------- *@
+<section id="itinerarySection" class="ct-khoi ct-lt" aria-labelledby="tieuDeLichTrinh">
+    <h2 id="tieuDeLichTrinh">Lịch trình chi tiết</h2>
+    <p class="ct-note">Các hoạt động dự kiến theo từng ngày trong chuyến đi.</p>
+
+    @if (lichTrinhTour.Any())
+    {
+        <div class="ct-lt-tab" role="tablist" aria-label="Chọn ngày trong lịch trình" id="ltTab">
+            <button type="button" role="tab" aria-selected="true" data-ngay="-1">Cả hành trình</button>
+            @foreach (var n in lichTrinhTour)
+            {
+                <button type="button" role="tab" aria-selected="false" data-ngay="@n.NgayThu">Ngày @n.NgayThu</button>
+            }
+        </div>
+
+        <div class="ct-lt-ds">
+            @for (int i = 0; i < lichTrinhTour.Count; i++)
+            {
+                var item = lichTrinhTour[i];
+                var (dsBuoi, ghiChu) = webdulich.Models.LichTrinhDoc.TachTheoBuoi(item.NoiDung);
+                var linkNgay = LinkNgay(i);
+                var anhNgay = diemTheoNgay[i].Where(d => !string.IsNullOrEmpty(d.HinhAnh)).Take(2).ToList();
+                <article class="ct-lt-ngay@(anhNgay.Any() ? " co-anh" : "")" data-ngay="@item.NgayThu">
+                    <div class="ct-lt-chu">
+                        <header class="ct-lt-dau">
+                            <span class="ct-lt-so tv-ma">NGÀY @item.NgayThu.ToString("00")</span>
+                            <h3>@item.TieuDe</h3>
+                            @if (!string.IsNullOrWhiteSpace(item.BuaAn))
+                            {
+                                <p class="ct-lt-bua">Bữa ăn: @item.BuaAn</p>
+                            }
+                        </header>
+
+                        @if (dsBuoi.Any())
+                        {
+                            foreach (var buoi in dsBuoi)
+                            {
+                                <div class="ct-lt-buoi">
+                                    <span class="ct-lt-buoi-ten">@buoi.Ten</span>
+                                    <ul>
+                                        @foreach (var hd in buoi.DsHoatDong)
+                                        {
+                                            <li><span class="tv-ma">@hd.Gio</span>@hd.NoiDung</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            @if (ghiChu.Any())
+                            {
+                                <div class="ct-lt-ghi-chu">
+                                    @foreach (var g in ghiChu)
+                                    {
+                                        <p>@g</p>
+                                    }
+                                </div>
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(item.NoiDung))
                         {
                             <div class="ct-day-body">@item.NoiDung</div>
+                        }
+                        else
+                        {
+                            <p class="ct-lt-trong">Nội dung chi tiết của ngày này đang được cập nhật.</p>
+                        }
+
+                        @if (diemTheoNgay[i].Any())
+                        {
+                            <p class="ct-lt-diem">
+                                <svg class="tv-icon" aria-hidden="true"><use href="#i-pin" /></svg>
+                                @string.Join(", ", diemTheoNgay[i].Select(d => d.Ten))
+                            </p>
                         }
                         @if (linkNgay != null)
                         {
@@ -227,151 +364,222 @@
                                 <svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg>Chỉ đường ngày @item.NgayThu trên Google Maps
                             </a>
                         }
-                    </details>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="tv-empty">
-                <p>Lịch trình chi tiết của tour này đang được cập nhật.</p>
-            </div>
-        }
-
-        @if (ViewBag.Videos is List<webdulich.Models.Video> dsVideo && dsVideo.Count > 0)
-        {
-            <link rel="stylesheet" href="~/css/video.css" asp-append-version="true" />
-            <div class="vd-cua-tour">
-                <h2>Video về chuyến đi</h2>
-                <div class="vd-luoi">
-                    @foreach (var video in dsVideo)
-                    {
-                        <partial name="_TheVideo" model="video" />
-                    }
-                </div>
-            </div>
-            <script src="~/js/video-nhe.js" asp-append-version="true"></script>
-        }
-
-        @* Đánh giá của khách đã đi (RB-43). Chỉ khách có ghế đã trả của chuyến đã về mới viết được, từ trang Lịch sử. *@
-        <div class="dg-tour" id="danhGia">
-            <h2>Đánh giá của khách đã đi</h2>
-            @if (soDanhGia == 0)
-            {
-                <p class="dg-tour-rong">Tour này chưa có đánh giá. Khách đã đi xong chuyến có thể viết đánh giá ở trang Lịch sử đặt tour.</p>
-            }
-            else
-            {
-                <div class="dg-tong">
-                    <div class="dg-tong-diem">
-                        <strong>@diemTB.ToString("0.0")</strong>
-                        <span class="tv-sao" aria-hidden="true">
-                            @for (int s = 1; s <= 5; s++)
-                            {
-                                <i class="@(s <= Math.Round(diemTB) ? "co" : "")">★</i>
-                            }
-                        </span>
-                        <span>@soDanhGia đánh giá</span>
                     </div>
-                    <ul class="dg-tong-thanh" aria-label="Số lượt theo số sao">
-                        @for (int s = 5; s >= 1; s--)
-                        {
-                            int n = demSao.TryGetValue(s, out var x) ? x : 0;
-                            <li>
-                                <span>@s sao</span>
-                                <span class="dg-thanh" aria-hidden="true"><i style="width: @(n * 100 / soDanhGia)%"></i></span>
-                                <span>@n</span>
-                            </li>
-                        }
-                    </ul>
-                </div>
-                <ul class="dg-ds">
-                    @foreach (var d in dsDanhGia)
+
+                    @if (anhNgay.Any())
                     {
-                        <li>
-                            <div class="dg-dau">
-                                <span class="dg-ten-chu" aria-hidden="true">@d.TenNguoi.Split(' ').Last()[0]</span>
-                                <div>
-                                    <strong>@d.TenNguoi</strong>
-                                    <span>Đi ngày @d.NgayDi.ToString("dd/MM/yyyy")</span>
-                                </div>
-                                <span class="tv-sao" aria-label="@d.SoSao trên 5 sao">
-                                    @for (int s = 1; s <= 5; s++)
-                                    {
-                                        <i class="@(s <= d.SoSao ? "co" : "")" aria-hidden="true">★</i>
-                                    }
-                                </span>
-                            </div>
-                            @if (!string.IsNullOrEmpty(d.NoiDung))
+                        <div class="ct-lt-anh">
+                            @foreach (var d in anhNgay)
                             {
-                                <p>@d.NoiDung</p>
+                                <figure>
+                                    <img src="~/images/diem/@d.HinhAnh" alt="@d.Ten" loading="lazy" />
+                                    <figcaption>@d.Ten</figcaption>
+                                </figure>
                             }
-                        </li>
+                        </div>
                     }
-                </ul>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="tv-empty">
+            <p>Lịch trình chi tiết của tour này đang được cập nhật.</p>
+        </div>
+    }
+</section>
+
+@* ---------- 5. Lịch khởi hành: hàng ngày ở trên, mỗi lịch một tấm vé ---------- *@
+<section id="departureSection" class="ct-khoi ct-lich" aria-labelledby="tieuDeLich">
+    <h2 id="tieuDeLich">Chọn ngày khởi hành</h2>
+    <p class="ct-note">Giá và số chỗ theo từng lịch. Đặt riêng, hoặc đặt cho nhóm để mỗi người tự trả phần mình.</p>
+
+    @if (lichKhoiHanh.Any())
+    {
+        <div class="ct-lich-ngay" aria-label="Các ngày khởi hành">
+            @foreach (var lich in lichKhoiHanh)
+            {
+                <a href="#lich-@lich.Id" class="ct-lich-chip@(lich.SoChoCon <= 0 ? " het" : "")">
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+                    <span class="tv-ma">@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</span>
+                </a>
+            }
+        </div>
+
+        <div class="ct-dep-list">
+            @foreach (var lich in lichKhoiHanh)
+            {
+                var giaNguoiLon = lich.GiaNguoiLon ?? Model.Gia;
+                var giaTreEm = lich.GiaTreEm ?? giaNguoiLon * 0.5m;
+
+                @* Mỗi lịch là một tấm vé: phần trên là ngày giờ và số chỗ, đường xé, phần dưới là giá và nút đặt *@
+                <div class="tv-ve tv-khoi-xe ct-dep" id="lich-@lich.Id">
+                    <div class="ct-dep-head">
+                        <strong class="tv-ma">@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</strong>
+                        @if (lich.GioKhoiHanh.HasValue)
+                        {
+                            <span>Giờ đi <span class="tv-ma">@lich.GioKhoiHanh.Value.ToString(@"hh\:mm")</span></span>
+                        }
+                        <span class="ct-seats@(lich.SoChoCon <= 0 ? " het" : "")">@(lich.SoChoCon > 0 ? "Còn " + lich.SoChoCon + " chỗ" : "Hết chỗ")</span>
+                    </div>
+                    <div class="tv-ve-duc-lo" aria-hidden="true"></div>
+
+                    <div class="ct-dep-row">
+                        <span>Giá người lớn</span>
+                        <span class="ct-dep-price">@giaNguoiLon.ToString("N0") VNĐ</span>
+                    </div>
+                    <div class="ct-dep-row">
+                        <span>Giá trẻ em</span>
+                        <span class="ct-dep-price">@giaTreEm.ToString("N0") VNĐ</span>
+                    </div>
+
+                    <a asp-controller="DatTour"
+                       asp-action="DatTour"
+                       asp-route-id="@Model.Id"
+                       asp-route-lichId="@lich.Id"
+                       class="tv-btn tv-btn-chinh ct-dep-btn">Chọn ngày này</a>
+
+                    @if (lich.SoChoCon >= 2)
+                    {
+                        <a asp-controller="DonNhom"
+                           asp-action="TaoDon"
+                           asp-route-id="@Model.Id"
+                           asp-route-lichId="@lich.Id"
+                           class="tv-btn tv-btn-vien ct-dep-btn">Đặt cho nhóm, mỗi người tự trả</a>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="tv-empty">
+            <p>Tour này chưa có lịch khởi hành. Vui lòng quay lại sau hoặc liên hệ TravelVN để được tư vấn.</p>
+        </div>
+    }
+</section>
+
+@* ---------- 6. Quy định đặt tour: đúng luật đang chạy trong hệ thống (RB-38, RB-39, đơn nhóm) ---------- *@
+<section class="ct-khoi ct-qd" aria-labelledby="tieuDeQuyDinh">
+    <h2 id="tieuDeQuyDinh">Quy định đặt tour</h2>
+    <div class="ct-qd-tab" role="tablist" aria-label="Chọn nhóm quy định" id="qdTab">
+        <button type="button" role="tab" aria-selected="true" aria-controls="qdGiuCho" id="qdTabGiuCho">Giữ chỗ và thanh toán</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="qdNhom" id="qdTabNhom">Đặt cho nhóm</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="qdHuy" id="qdTabHuy">Hủy đơn</button>
+    </div>
+    <div class="ct-qd-noi">
+        <div role="tabpanel" id="qdGiuCho" aria-labelledby="qdTabGiuCho">
+            <ul>
+                <li>Đặt xong, chỗ được giữ <strong>@soGioGiuCho giờ</strong> để bạn thanh toán, muộn nhất đến cuối ngày trước ngày khởi hành.</li>
+                <li>Chuyển khoản bằng mã QR: số tiền và nội dung (mã chuyến đi) điền sẵn. Chuyển đúng tiền, đúng nội dung thì TravelVN xác nhận khi nhận được tiền.</li>
+                <li>Chọn trả tiền mặt mà quá hạn giữ chỗ chưa thanh toán thì đơn tự hủy và trả chỗ cho người khác. Đã báo chuyển khoản thì đơn không tự hủy trong lúc chờ đối chiếu.</li>
+            </ul>
+        </div>
+        <div role="tabpanel" id="qdNhom" aria-labelledby="qdTabNhom" hidden>
+            <ul>
+                <li>Một người đặt cho cả nhóm (từ 2 ghế) và gửi link mời. Mỗi người tự nhận một ghế, tự điền thông tin và tự trả phần của mình bằng mã QR riêng của ghế.</li>
+                <li>Cả nhóm có <strong>@soGioGiuCho giờ</strong>. Hết hạn lần đầu mà còn ghế chưa trả thì được gia hạn thêm <strong>@soGioGiaHan giờ</strong>, một lần. Sau đó ghế chưa trả sẽ được nhả.</li>
+                <li>Người đặt thấy ai đã nhận, ai đã trả, nhưng không thấy số giấy tờ của người khác. Có thể trả hộ một ghế, bớt ghế, hoặc chốt sớm với các ghế đã trả.</li>
+            </ul>
+        </div>
+        <div role="tabpanel" id="qdHuy" aria-labelledby="qdTabHuy" hidden>
+            <ul>
+                <li>Bạn tự hủy được đơn đặt riêng khi đơn còn đang giữ chỗ, chưa thanh toán, không có chuyển khoản đang chờ xác nhận và chưa tới ngày đi.</li>
+                <li>Đơn nhóm chỉ tự hủy được khi chưa ai trả tiền.</li>
+                <li>Các trường hợp khác (đã thanh toán, cần hoàn tiền), bạn liên hệ TravelVN để được hỗ trợ.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+@if (ViewBag.Videos is List<webdulich.Models.Video> dsVideo && dsVideo.Count > 0)
+{
+    <link rel="stylesheet" href="~/css/video.css" asp-append-version="true" />
+    <section class="ct-khoi vd-cua-tour">
+        <h2>Video về chuyến đi</h2>
+        <div class="vd-luoi">
+            @foreach (var video in dsVideo)
+            {
+                <partial name="_TheVideo" model="video" />
             }
         </div>
     </section>
+    <script src="~/js/video-nhe.js" asp-append-version="true"></script>
+}
 
-    <aside id="departureSection" class="ct-departures">
-        <h2>Chọn ngày khởi hành</h2>
-        <p class="ct-note">Chọn lịch đi phù hợp trước khi đặt tour.</p>
-
-        @if (lichKhoiHanh != null && lichKhoiHanh.Any())
-        {
-            <div class="ct-dep-list">
-                @foreach (var lich in lichKhoiHanh)
+@* Đánh giá của khách đã đi (RB-43). Chỉ khách có ghế đã trả của chuyến đã về mới viết được, từ trang Lịch sử. *@
+<section class="ct-khoi dg-tour" id="danhGia">
+    <h2>Đánh giá của khách đã đi</h2>
+    @if (soDanhGia == 0)
+    {
+        <p class="dg-tour-rong">Tour này chưa có đánh giá. Khách đã đi xong chuyến có thể viết đánh giá ở trang Lịch sử đặt tour.</p>
+    }
+    else
+    {
+        <div class="dg-tong">
+            <div class="dg-tong-diem">
+                <strong>@diemTB.ToString("0.0")</strong>
+                <span class="tv-sao" aria-hidden="true">
+                    @for (int s = 1; s <= 5; s++)
+                    {
+                        <i class="@(s <= Math.Round(diemTB) ? "co" : "")">★</i>
+                    }
+                </span>
+                <span>@soDanhGia đánh giá</span>
+            </div>
+            <ul class="dg-tong-thanh" aria-label="Số lượt theo số sao">
+                @for (int s = 5; s >= 1; s--)
                 {
-                    var giaNguoiLon = lich.GiaNguoiLon ?? Model.Gia;
-                    var giaTreEm = lich.GiaTreEm ?? giaNguoiLon * 0.5m;
-
-                    @* Mỗi lịch là một tấm vé nhỏ: phần trên là ngày giờ và số chỗ, đường xé, phần dưới là giá và nút đặt *@
-                    <div class="tv-ve tv-khoi-xe ct-dep">
-                        <div class="ct-dep-head">
-                            <strong class="tv-ma">@lich.NgayKhoiHanh.ToString("dd/MM/yyyy")</strong>
-                            @if (lich.GioKhoiHanh.HasValue)
-                            {
-                                <span>Giờ đi <span class="tv-ma">@lich.GioKhoiHanh.Value.ToString(@"hh\:mm")</span></span>
-                            }
-                            <span class="ct-seats@(lich.SoChoCon <= 0 ? " het" : "")">@(lich.SoChoCon > 0 ? "Còn " + lich.SoChoCon + " chỗ" : "Hết chỗ")</span>
-                        </div>
-                        <div class="tv-ve-duc-lo" aria-hidden="true"></div>
-
-                        <div class="ct-dep-row">
-                            <span>Giá người lớn</span>
-                            <span class="ct-dep-price">@giaNguoiLon.ToString("N0") VNĐ</span>
-                        </div>
-                        <div class="ct-dep-row">
-                            <span>Giá trẻ em</span>
-                            <span class="ct-dep-price">@giaTreEm.ToString("N0") VNĐ</span>
-                        </div>
-
-                        <a asp-controller="DatTour"
-                           asp-action="DatTour"
-                           asp-route-id="@Model.Id"
-                           asp-route-lichId="@lich.Id"
-                           class="tv-btn tv-btn-chinh ct-dep-btn">Chọn ngày này</a>
-
-                        @if (lich.SoChoCon >= 2)
-                        {
-                            <a asp-controller="DonNhom"
-                               asp-action="TaoDon"
-                               asp-route-id="@Model.Id"
-                               asp-route-lichId="@lich.Id"
-                               class="tv-btn tv-btn-vien ct-dep-btn">Đặt cho nhóm, mỗi người tự trả</a>
-                        }
-                    </div>
+                    int n = demSao.TryGetValue(s, out var x) ? x : 0;
+                    <li>
+                        <span>@s sao</span>
+                        <span class="dg-thanh" aria-hidden="true"><i style="width: @(n * 100 / soDanhGia)%"></i></span>
+                        <span>@n</span>
+                    </li>
                 }
-            </div>
-        }
-        else
-        {
-            <div class="tv-empty">
-                <p>Tour này chưa có lịch khởi hành. Vui lòng quay lại sau hoặc liên hệ TravelVN để được tư vấn.</p>
-            </div>
-        }
-    </aside>
-</div>
+            </ul>
+        </div>
+        <ul class="dg-ds">
+            @foreach (var d in dsDanhGia)
+            {
+                <li>
+                    <div class="dg-dau">
+                        <span class="dg-ten-chu" aria-hidden="true">@d.TenNguoi.Split(' ').Last()[0]</span>
+                        <div>
+                            <strong>@d.TenNguoi</strong>
+                            <span>Đi ngày @d.NgayDi.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <span class="tv-sao" aria-label="@d.SoSao trên 5 sao">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                <i class="@(s <= d.SoSao ? "co" : "")" aria-hidden="true">★</i>
+                            }
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(d.NoiDung))
+                    {
+                        <p>@d.NoiDung</p>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@if (tourTuongTu.Any())
+{
+    <section class="ct-khoi ct-tuong-tu" aria-labelledby="tieuDeTuongTu">
+        <h2 id="tieuDeTuongTu">Tour tương tự</h2>
+        <p class="ct-note">Cùng điểm đến hoặc cùng kiểu địa hình.</p>
+        <div class="tv-grid-photo">
+            @foreach (var t in tourTuongTu)
+            {
+                <partial name="_TheTour" model="t" />
+            }
+        </div>
+    </section>
+}
 
 <script>
     function changeImage(el) {
@@ -384,4 +592,31 @@
 
     var thumbDau = document.querySelector(".ct-thumb");
     if (thumbDau) thumbDau.classList.add("active");
+
+    // Tab lịch trình: "Cả hành trình" hiện mọi ngày, chọn một ngày thì chỉ hiện ngày đó. Không có JavaScript thì hiện tất cả.
+    (function () {
+        var tab = document.getElementById("ltTab");
+        if (!tab) return;
+        tab.addEventListener("click", function (e) {
+            var nut = e.target.closest("button[data-ngay]");
+            if (!nut) return;
+            var ngay = nut.dataset.ngay;
+            tab.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-selected", String(b === nut)); });
+            document.querySelectorAll(".ct-lt-ngay").forEach(function (a) { a.hidden = ngay !== "-1" && a.dataset.ngay !== ngay; });
+        });
+    })();
+
+    // Tab quy định
+    (function () {
+        var tab = document.getElementById("qdTab");
+        if (!tab) return;
+        tab.addEventListener("click", function (e) {
+            var nut = e.target.closest("button[aria-controls]");
+            if (!nut) return;
+            tab.querySelectorAll("button").forEach(function (b) {
+                b.setAttribute("aria-selected", String(b === nut));
+                document.getElementById(b.getAttribute("aria-controls")).hidden = b !== nut;
+            });
+        });
+    })();
 </script>

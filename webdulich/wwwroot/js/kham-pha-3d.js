@@ -463,13 +463,20 @@ async function taoBanDo() {
 }
 
 // ---------- Khởi động ----------
+// Trang tour có thể mở thẳng một điểm và một tab: ?ngay=chỉ số ngày&diem=chỉ số điểm&tab=di-360
+const thamSo = new URLSearchParams(location.search);
+const ngayMo = Number(thamSo.get("ngay")), diemMo = Number(thamSo.get("diem"));
+const coDiemMo = thamSo.has("ngay") && thamSo.has("diem") && dsNgay[ngayMo] && dsNgay[ngayMo].DsDiem[diemMo];
 chon(0, null);
+if (coDiemMo) chonDiem(ngayMo, diemMo);
+if (["google", "di-360"].includes(thamSo.get("tab"))) moTab(thamSo.get("tab"));
 (async () => {
     const cho = document.getElementById("k3Cho");
     try {
         banDo = await taoBanDo();
         cho.hidden = true;
-        banDo.bayToi(0);
+        if (coDiemMo) banDo.bayToiDiem(ngayMo, diemMo);
+        else banDo.bayToi(0);
     } catch (loi) {
         console.warn("Không dùng được bản đồ 3D:", loi && loi.message);
         cho.textContent = "Chưa tải được bản đồ 3D trên trình duyệt này. Bạn vẫn xem được chỉ đường và tab Google Maps.";
