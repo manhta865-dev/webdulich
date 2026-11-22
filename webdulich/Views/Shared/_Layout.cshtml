@@ -797,27 +797,42 @@
                 }
 
                 const dangTraLoi = addAiHelpDangTraLoi();
-                let traLoi = null, dsTour = null;
+                let traLoi = null, dsTour = null, lyDo = null;
                 try {
                     const token = document.querySelector("#aiHelpToken input[name='__RequestVerificationToken']");
                     const phanHoi = await fetch("@Url.Action("Hoi", "TroLy")", {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "RequestVerificationToken": token ? token.value : "" },
                         body: JSON.stringify({ cauHoi: question, lichSu: aiHelpLichSu.slice(-6) }),
-                        signal: AbortSignal.timeout(25000)
+                        signal: AbortSignal.timeout(40000)
                     });
                     const kq = phanHoi.ok ? await phanHoi.json() : null;
                     if (kq && kq.ok) {
                         traLoi = kq.traLoi;
                         dsTour = kq.tour;
+                    } else if (kq && kq.loi) {
+                        lyDo = kq.loi;
+                    } else if (!phanHoi.ok) {
+                        lyDo = "Trợ lý AI chưa trả lời được (mã " + phanHoi.status + "). Bạn tải lại trang rồi thử lại.";
                     }
                 } catch (e) {
                     traLoi = null;
+                    lyDo = e && e.name === "TimeoutError"
+                        ? "AI trả lời quá lâu. Bạn thử lại sau."
+                        : "Không kết nối được tới trợ lý AI.";
                 }
 
                 if (dangTraLoi) dangTraLoi.remove();
                 if (!traLoi) traLoi = getAiHelpAnswer(question);
-                addAiHelpMessage(traLoi, "bot", dsTour);
+                const dongTraLoi = addAiHelpMessage(traLoi, "bot", dsTour);
+                // Đang dùng câu mẫu vì AI lỗi: nói rõ lý do để khách và người quản trị biết
+                if (lyDo && dongTraLoi) {
+                    const ghiChu = document.createElement("p");
+                    ghiChu.className = "ai-help-ly-do";
+                    ghiChu.textContent = "Câu trả lời mẫu. " + lyDo;
+                    dongTraLoi.querySelector(".ai-help-bubble").appendChild(ghiChu);
+                    scrollAiHelpBottom();
+                }
                 aiHelpLichSu.push({ laKhach: true, chu: question }, { laKhach: false, chu: traLoi });
                 aiHelpDangHoi = false;
             }

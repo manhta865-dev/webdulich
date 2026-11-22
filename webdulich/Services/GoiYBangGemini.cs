@@ -49,14 +49,18 @@ namespace webdulich.Services
 
         private static readonly HttpClient _http = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) })
         {
-            Timeout = TimeSpan.FromSeconds(20)
+            // Mô hình có bước suy nghĩ có thể mất vài chục giây; khung trợ lý chờ 40 giây
+            Timeout = TimeSpan.FromSeconds(30)
         };
 
         private readonly string? _khoa;
         private readonly string _model;
+        private readonly ILogger? _nhatKy;
 
-        public GoiYBangGemini(IConfiguration cauHinh)
+        // nhatKy: ghi lý do khi gọi AI lỗi (mã lỗi, câu báo của Google, lý do dừng), không ghi khóa
+        public GoiYBangGemini(IConfiguration cauHinh, ILogger? nhatKy = null)
         {
+            _nhatKy = nhatKy;
             _khoa = cauHinh["Gemini:KhoaApi"];
             // Tên mô hình để trong cấu hình vì Google đổi tên theo thời gian
             _model = string.IsNullOrWhiteSpace(cauHinh["Gemini:Model"]) ? "gemini-2.5-flash" : cauHinh["Gemini:Model"]!.Trim();
@@ -112,7 +116,7 @@ namespace webdulich.Services
                 required = new[] { "tom_tat", "goi_y" }
             };
 
-            var (json, loi) = await GoiAsync(huongDan, new[] { (true, "Mong muốn của khách: " + moTa) }, schema, 800);
+            var (json, loi) = await GoiAsync(huongDan, new[] { (true, "Mong muốn của khách: " + moTa) }, schema, SoTokenToiDa);
             if (json == null)
             {
                 return (null, loi);
@@ -175,7 +179,7 @@ namespace webdulich.Services
             };
 
             var cacLuot = lichSu.Select(x => (x.LaKhach, CatNgan(x.Chu, 600))).Append((true, cauHoi)).ToList();
-            var (json, loi) = await GoiAsync(huongDan, cacLuot, schema, 600);
+            var (json, loi) = await GoiAsync(huongDan, cacLuot, schema, SoTokenToiDa);
             if (json == null)
             {
                 return (null, loi);
@@ -209,6 +213,10 @@ namespace webdulich.Services
 
         // ---------- Dùng chung ----------
         private const string LoiChung = "AI chưa trả lời được lúc này. Bạn thử lại sau.";
+
+        // Các mô hình Gemini mới có bước "suy nghĩ" tính chung vào giới hạn này; để thấp thì câu trả lời bị cắt hoặc rỗng.
+        // Độ dài câu trả lời đã được giới hạn trong hướng dẫn và khi đọc kết quả.
+        private const int SoTokenToiDa = 4096;
 
         private static string DocChu(JsonElement el, string ten) =>
             el.TryGetProperty(ten, out var g) && g.ValueKind == JsonValueKind.String ? (g.GetString() ?? string.Empty).Trim() : string.Empty;
@@ -247,22 +255,72 @@ namespace webdulich.Services
                 var chu = await phanHoi.Content.ReadAsStringAsync();
                 if (!phanHoi.IsSuccessStatusCode)
                 {
-                    return (null, (int)phanHoi.StatusCode switch
+                    var maLoi = (int)phanHoi.StatusCode;
+                    _nhatKy?.LogWarning("Gemini ({Model}) trả mã {MaLoi}: {CauBao}", _model, maLoi, CauBaoCuaGoogle(chu));
+                    return (null, maLoi switch
                     {
                         429 => "AI đang quá tải hoặc đã hết lượt dùng miễn phí hôm nay. Bạn thử lại sau.",
-                        400 or 401 or 403 or 404 => "Máy chủ chưa kết nối được tới AI (khóa hoặc tên mô hình chưa đúng).",
+                        404 => "Không tìm thấy mô hình AI (tên ở Gemini:Model có thể sai).",
+                        401 or 403 => "Khóa AI không hợp lệ hoặc chưa được cấp quyền.",
+                        400 => "AI từ chối yêu cầu (khóa hoặc cấu hình chưa đúng).",
                         _ => LoiChung
                     });
                 }
 
                 using var tep = JsonDocument.Parse(chu);
-                var json = tep.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
-                return string.IsNullOrWhiteSpace(json) ? (null, LoiChung) : (json, null);
+                if (!tep.RootElement.TryGetProperty("candidates", out var dsCandidate) || dsCandidate.ValueKind != JsonValueKind.Array
+                    || dsCandidate.GetArrayLength() == 0)
+                {
+                    _nhatKy?.LogWarning("Gemini ({Model}) không trả câu trả lời nào: {Chu}", _model, CatNgan(chu, 300));
+                    return (null, "AI không trả lời câu này. Bạn thử hỏi cách khác.");
+                }
+
+                var candidate = dsCandidate[0];
+                var lyDoDung = DocChu(candidate, "finishReason");
+                var json = candidate.TryGetProperty("content", out var noiDung) && noiDung.TryGetProperty("parts", out var dsPhan)
+                    ? string.Concat(dsPhan.EnumerateArray()
+                        .Where(p => !(p.TryGetProperty("thought", out var t) && t.ValueKind == JsonValueKind.True))
+                        .Select(p => DocChu(p, "text")))
+                    : string.Empty;
+                if (lyDoDung is not ("STOP" or ""))
+                {
+                    _nhatKy?.LogWarning("Gemini ({Model}) dừng với lý do {LyDo}", _model, lyDoDung);
+                    if (lyDoDung == "MAX_TOKENS")
+                    {
+                        return (null, "Câu trả lời của AI bị cắt giữa chừng. Bạn thử hỏi ngắn hơn.");
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    _nhatKy?.LogWarning("Gemini ({Model}) trả câu rỗng, lý do dừng {LyDo}", _model, lyDoDung);
+                    return (null, LoiChung);
+                }
+                return (json, null);
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException
+            catch (TaskCanceledException)
+            {
+                _nhatKy?.LogWarning("Gemini ({Model}) trả lời quá {Giay} giây", _model, _http.Timeout.TotalSeconds);
+                return (null, "AI trả lời quá lâu. Bạn thử lại sau.");
+            }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException
                 or KeyNotFoundException or InvalidOperationException or IndexOutOfRangeException)
             {
+                _nhatKy?.LogWarning(ex, "Gọi Gemini ({Model}) lỗi", _model);
                 return (null, LoiChung);
+            }
+        }
+
+        // Câu báo lỗi trong phần trả về của Google (error.message), cắt ngắn để ghi nhật ký
+        private static string CauBaoCuaGoogle(string chu)
+        {
+            try
+            {
+                using var tep = JsonDocument.Parse(chu);
+                return tep.RootElement.TryGetProperty("error", out var loi) ? CatNgan(DocChu(loi, "message"), 300) : CatNgan(chu, 300);
+            }
+            catch (JsonException)
+            {
+                return CatNgan(chu, 300);
             }
         }
     }

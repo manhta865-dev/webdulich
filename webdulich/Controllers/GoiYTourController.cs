@@ -51,14 +51,14 @@ namespace webdulich.Controllers
         // Giới hạn số lần mỗi phiên trong một giờ để không ai dùng hết hạn mức của khóa.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> HoiAi(string? moTaAi, [FromServices] IConfiguration cauHinh)
+        public async Task<IActionResult> HoiAi(string? moTaAi, [FromServices] IConfiguration cauHinh, [FromServices] ILogger<GoiYTourController> nhatKy)
         {
             if (HttpContext.Session.GetString("role") == "admin")
             {
                 return RedirectToAction("Index", "Admin");
             }
 
-            var ai = new webdulich.Services.GoiYBangGemini(cauHinh);
+            var ai = new webdulich.Services.GoiYBangGemini(cauHinh, nhatKy);
             var model = new GoiYTourPageViewModel { CoAi = ai.CoKhoa, MoTaAi = moTaAi?.Trim() };
             NapDuLieuLuaChon(model);
             model.KetQua = LayDanhSachGoiY(model.TieuChi);

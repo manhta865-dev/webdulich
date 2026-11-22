@@ -24,10 +24,12 @@ namespace webdulich.Controllers
     public class TroLyController : Controller
     {
         private readonly DuLichDbContext _context;
+        private readonly ILogger<TroLyController> _nhatKy;
 
-        public TroLyController(DuLichDbContext context)
+        public TroLyController(DuLichDbContext context, ILogger<TroLyController> nhatKy)
         {
             _context = context;
+            _nhatKy = nhatKy;
         }
 
         private const int SoCauMoiGio = 20;
@@ -48,7 +50,7 @@ namespace webdulich.Controllers
                 cauHoi = cauHoi[..DoDaiToiDa];
             }
 
-            var ai = new webdulich.Services.GoiYBangGemini(cauHinh);
+            var ai = new webdulich.Services.GoiYBangGemini(cauHinh, _nhatKy);
             if (!ai.CoKhoa)
             {
                 return Json(new { ok = false, duPhong = true });

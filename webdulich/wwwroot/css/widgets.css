@@ -259,6 +259,15 @@ body:has(.chat-widget) .zalo-noi { bottom: 156px; }
 }
 @keyframes ai-nhap-nhay { 50% { opacity: 0.45; } }
 
+.ai-help-ly-do {
+    margin: var(--tv-k2) 0 0;
+    padding-top: var(--tv-k1);
+    border-top: 1px dashed var(--tv-vien);
+    font-size: 0.75rem;
+    color: var(--tv-chu-phu);
+    white-space: normal;
+}
+
 .ai-help-chu-y { margin: 0; padding: 0 var(--tv-k3) var(--tv-k2); font-size: 0.75rem; color: var(--tv-chu-phu); }
 
 .chat-time {
