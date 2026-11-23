@@ -1,81 +1,96 @@
-// Màn hình chờ "rừng cây" (Views/Shared/_ManHinhCho.cshtml). File này được nạp ngay sau lớp phủ nên chạy trước khi
-// phần còn lại của trang hiện: vẽ lá vào bốn khung SVG, rồi khi trang dựng xong (không đợi ảnh) thì thêm lớp .mo để cây tách ra.
+// Màn hình chờ "lá dừa" (Views/Shared/_ManHinhCho.cshtml). Nạp ngay sau lớp phủ nên chạy trước khi phần còn lại của trang hiện:
+// vẽ một tàu lá dừa, đặt vài tàu thành hai hàng ở hai mép, rồi khi trang dựng xong thì thêm lớp .mo để lá tỏa ra.
 (function () {
     "use strict";
     var rung = document.getElementById("tvRung");
-    if (!rung) return;
+    var mau = document.getElementById("tvLaDua");
+    if (!rung || !mau) return;
     var NS = "http://www.w3.org/2000/svg";
 
-    // Một lá nhọn dài 64 đơn vị, gốc ở (0, 0), chĩa theo chiều x dương
-    var LA = "M0 0C18 -15 44 -15 64 0C44 15 18 15 0 0Z";
-    var GOC_LA = [-64, -34, -8, 18, 44, 70];
+    function so(v) { return Math.round(v * 10) / 10; }
 
-    function phanTu(ten, thuocTinh) {
-        var el = document.createElementNS(NS, ten);
-        for (var k in thuocTinh) el.setAttribute(k, thuocTinh[k]);
-        return el;
-    }
-
-    // Chùm lá xòe quanh hướng huong (độ); giữa có khối lá tròn che chỗ nối. lech cố định để lần nào cũng ra cùng một hình.
-    function chumLa(g, x, y, r, huong, lech) {
-        var s = r / 40;
-        for (var k = 0; k < GOC_LA.length; k++) {
-            var goc = huong + GOC_LA[k] + ((lech + k * 7) % 11) - 5;
-            var tiLe = s * (0.78 + ((lech + k * 3) % 5) * 0.09);
-            var la = phanTu("path", {
-                d: LA,
-                transform: "translate(" + x + " " + y + ") rotate(" + goc + ") scale(" + tiLe.toFixed(2) + ")"
-            });
-            // Vài lá bắt nắng sáng hơn cho có khối
-            if ((lech + k) % 4 === 1) la.setAttribute("class", "sang");
-            g.appendChild(la);
+    // Một tàu lá dừa dài khoảng 640 đơn vị, gốc ở (0, 0), cong vồng lên rồi rủ xuống về phía x dương.
+    // Gồm cuống thon dần và hai dãy lá chét hẹp rủ theo trọng lực; tất cả gộp trong một path.
+    function veTauLa() {
+        var x1 = 320, y1 = -120, x2 = 640, y2 = 50;
+        function diem(t) { return [2 * (1 - t) * t * x1 + t * t * x2, 2 * (1 - t) * t * y1 + t * t * y2]; }
+        function tiepTuyen(t) {
+            var dx = 2 * (1 - t) * x1 + 2 * t * (x2 - x1), dy = 2 * (1 - t) * y1 + 2 * t * (y2 - y1);
+            var l = Math.sqrt(dx * dx + dy * dy);
+            return [dx / l, dy / l];
         }
-        g.appendChild(phanTu("circle", { cx: x, cy: y, r: (r * 0.62).toFixed(1) }));
-    }
 
-    // Lớp cây dọc (bên trái; bên phải là bản lật ngang bằng CSS): khối đặc tới mep, dọc mép trong là chùm lá chĩa vào giữa
-    function lopDoc(svg, mep, buoc, dsR, dsLech, lop) {
-        var g = phanTu("g", { "class": lop });
-        g.appendChild(phanTu("rect", { x: -40, y: -60, width: mep + 40, height: 1120 }));
-        for (var i = 0, y = -30; y <= 1040; y += buoc, i++) {
-            chumLa(g, mep + dsLech[i % dsLech.length], y, dsR[i % dsR.length], 0, i * 5);
+        var d = "";
+        // Cuống lá: dải thon dần từ gốc tới ngọn
+        var trai = [], phai = [];
+        for (var i = 0; i <= 24; i++) {
+            var t = i / 24, p = diem(t), tg = tiepTuyen(t), w = 7 * (1 - t) + 1;
+            trai.push([p[0] - tg[1] * w, p[1] + tg[0] * w]);
+            phai.unshift([p[0] + tg[1] * w, p[1] - tg[0] * w]);
         }
-        svg.appendChild(g);
-    }
+        var vien = trai.concat(phai);
+        d += "M" + vien.map(function (q) { return so(q[0]) + " " + so(q[1]); }).join("L") + "Z";
 
-    // Lớp tán ngang (phía trên lá rủ xuống; phía dưới là bản lật dọc thành bụi cây mọc lên)
-    function lopNgang(svg, mep, buoc, dsR, dsLech, lop) {
-        var g = phanTu("g", { "class": lop });
-        g.appendChild(phanTu("rect", { x: -60, y: -40, width: 1120, height: mep + 40 }));
-        for (var i = 0, x = -30; x <= 1040; x += buoc, i++) {
-            chumLa(g, x, mep + dsLech[i % dsLech.length], dsR[i % dsR.length], 90, i * 3);
+        // Lá chét hai bên: dài nhất ở khoảng giữa tàu, ngắn dần về gốc và ngọn, nghiêng về phía ngọn và rủ xuống
+        for (var t2 = 0.07; t2 < 0.985; t2 += 0.03) {
+            var p2 = diem(t2), tg2 = tiepTuyen(t2), n = [-tg2[1], tg2[0]];
+            var dai = 28 + 165 * Math.pow(Math.sin(Math.PI * Math.min(1, t2 * 1.12)), 0.75) * (1 - t2 * 0.3);
+            var rong = 6.5 * (1 - t2 * 0.55);
+            for (var ben = -1; ben <= 1; ben += 2) {
+                var goc = 0.9;
+                var hx = tg2[0] * Math.cos(goc) + ben * n[0] * Math.sin(goc);
+                var hy = tg2[1] * Math.cos(goc) + ben * n[1] * Math.sin(goc) + 0.42;
+                var lh = Math.sqrt(hx * hx + hy * hy);
+                hx /= lh; hy /= lh;
+                var ngon = [p2[0] + hx * dai, p2[1] + hy * dai];
+                var giua = [p2[0] + hx * dai * 0.5, p2[1] + hy * dai * 0.5 + dai * 0.06];
+                d += "M" + so(p2[0] - tg2[0] * rong) + " " + so(p2[1] - tg2[1] * rong)
+                    + "Q" + so(giua[0] - tg2[0] * rong * 0.5) + " " + so(giua[1] - tg2[1] * rong * 0.5) + " " + so(ngon[0]) + " " + so(ngon[1])
+                    + "Q" + so(giua[0] + tg2[0] * rong * 1.1) + " " + so(giua[1] + tg2[1] * rong * 1.1) + " " + so(p2[0] + tg2[0] * rong) + " " + so(p2[1] + tg2[1] * rong) + "Z";
+            }
         }
-        svg.appendChild(g);
+        return d;
     }
 
-    var dsSvg = rung.querySelectorAll("svg[data-rung]");
-    for (var n = 0; n < dsSvg.length; n++) {
-        var svg = dsSvg[n];
-        if (svg.getAttribute("data-rung") === "doc") {
-            lopDoc(svg, 450, 70, [62, 48, 70, 54, 66, 44], [10, -14, 22, -6, 16, -20], "rung-xa");
-            lopDoc(svg, 360, 62, [54, 66, 46, 60, 72, 50], [-8, 18, -16, 12, -4, 20], "rung-giua");
-            lopDoc(svg, 260, 56, [56, 44, 64, 50, 60, 68], [14, -10, 6, -18, 20, -2], "rung-gan");
-        } else {
-            lopNgang(svg, 110, 64, [56, 68, 48, 62, 72, 52], [6, -12, 18, -4, 10, -16], "rung-xa");
-            lopNgang(svg, 56, 56, [48, 60, 42, 56, 64, 46], [-6, 14, -10, 8, -14, 12], "rung-gan");
+    mau.setAttribute("d", veTauLa());
+
+    // Vị trí các tàu trong khung 600 x 1000 của mỗi bên: [x gốc, y gốc, góc xoay, tỉ lệ].
+    // Bên phải là bản lật của bên trái (CSS) nhưng xếp khác để hai bên không giống soi gương.
+    var HANG = {
+        "trai-sau": [[-30, 60, 22, 0.86], [-40, 380, 4, 0.92], [-30, 700, -12, 0.9], [-40, 990, -26, 0.84]],
+        "trai-truoc": [[-50, 220, 12, 0.78], [-60, 540, -4, 0.82], [-50, 850, -18, 0.78]],
+        "phai-sau": [[-40, -10, 26, 0.84], [-30, 300, 8, 0.9], [-40, 620, -8, 0.92], [-30, 930, -22, 0.86]],
+        "phai-truoc": [[-60, 150, 16, 0.78], [-50, 460, 0, 0.82], [-60, 780, -14, 0.8]]
+    };
+    // Màn hình hẹp: khung mỗi bên bị co theo chiều cao nên tàu lá sẽ dài quá nửa màn hình; thu nhỏ lại
+    var heSo = window.innerWidth < 640 ? 0.62 : 1;
+
+    var dsSvg = rung.querySelectorAll("svg[data-hang]");
+    for (var k = 0; k < dsSvg.length; k++) {
+        var ds = HANG[dsSvg[k].getAttribute("data-hang")] || [];
+        for (var j = 0; j < ds.length; j++) {
+            var tau = document.createElementNS(NS, "use");
+            tau.setAttribute("href", "#tvLaDua");
+            tau.setAttribute("transform", "translate(" + ds[j][0] + " " + ds[j][1] + ") rotate(" + ds[j][2] + ") scale(" + so(ds[j][3] * heSo) + ")");
+            dsSvg[k].appendChild(tau);
         }
     }
 
-    // Trang dựng xong và rừng đã hiện ít nhất một chút thì mở; mở xong gỡ hẳn lớp phủ
+    // Trang dựng xong và lá đã che ít nhất một chút thì mở. Đợi trình duyệt vẽ xong một khung hình rồi mới thêm .mo
+    // để chuyển động bắt đầu trơn tru; mở xong gỡ hẳn lớp phủ.
     var batDau = Date.now();
     var daMo = false;
     function mo() {
         if (daMo) return;
         daMo = true;
         setTimeout(function () {
-            rung.classList.add("mo");
-            setTimeout(function () { if (rung.parentNode) rung.parentNode.removeChild(rung); }, 1300);
-        }, Math.max(0, 450 - (Date.now() - batDau)));
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    rung.classList.add("mo");
+                    setTimeout(function () { if (rung.parentNode) rung.parentNode.removeChild(rung); }, 1100);
+                });
+            });
+        }, Math.max(0, 400 - (Date.now() - batDau)));
     }
 
     if (document.readyState === "loading") {
@@ -84,7 +99,7 @@
         mo();
     }
 
-    // Quay lại bằng nút Back (trang lấy từ bộ nhớ đệm): không hiện lại rừng
+    // Quay lại bằng nút Back (trang lấy từ bộ nhớ đệm): không hiện lại lớp phủ
     window.addEventListener("pageshow", function (e) {
         if (e.persisted && rung.parentNode) rung.parentNode.removeChild(rung);
     });

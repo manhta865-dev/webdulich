@@ -1,52 +1,56 @@
-/* Màn hình chờ "rừng cây" (Views/Shared/_ManHinhCho.cshtml), chỉ trang của khách.
-   Lớp phủ che kín trang; khi script thêm lớp .mo: nền rừng tan, hai bên cây tách ra, tán trên kéo lên, bụi dưới hạ xuống.
-   Mỗi bên có ba lớp cây (xa, giữa, gần) chạy lệch nhau cho có chiều sâu.
-   An toàn: nếu script không chạy, lớp phủ tự mờ và không chặn bấm sau 3,5 giây. */
+/* Màn hình chờ "lá dừa" (Views/Shared/_ManHinhCho.cshtml), chỉ trang của khách.
+   Hai hàng tàu lá dừa ở hai mép (mỗi bên hai lớp: sau nhạt, trước đậm) che trang một chút; khi script thêm .mo
+   thì lá tỏa ra hai bên và nền mờ đi. Mọi chuyển động chỉ là transform và opacity của các tấm đã vẽ sẵn
+   (will-change), nên card đồ họa lo, không vẽ lại lá, trang có bận tải cũng không khựng.
+   An toàn: nếu script không chạy, lớp phủ tự ẩn và không chặn bấm sau 3,5 giây. */
 
 .tv-rung {
-    --rung-nen: #2F6B4A;
-    --rung-xa: #5FA374;
-    --rung-giua: #3E8258;
-    --rung-gan: #245A3E;
-    --rung-sang: #D9F2C4;
+    --rung-nen: #1F5A40;
+    --rung-sau: #4E9A68;
+    --rung-truoc: #2D7350;
     --rung-chu: #F2F8F3;
 
     position: fixed;
     inset: 0;
     z-index: 2147483000;
     overflow: hidden;
-    background: var(--rung-nen);
-    /* Có tên riêng để khi chuyển trang (View Transitions) rừng vẽ trên thanh menu, không bị menu đè */
+    /* Có tên riêng để khi chuyển trang (View Transitions) lớp lá vẽ trên thanh menu, không bị menu đè */
     view-transition-name: tv-rung;
     animation: tv-rung-tu-an 400ms ease 3.5s forwards;
 }
 
 :root[data-theme="dark"] .tv-rung {
-    --rung-nen: #1A3D2C;
-    --rung-xa: #2C5A40;
-    --rung-giua: #1F4532;
-    --rung-gan: #143224;
-    --rung-sang: #9CC89A;
+    --rung-nen: #12352A;
+    --rung-sau: #2F6B4A;
+    --rung-truoc: #1D4D36;
     --rung-chu: #DCEBE0;
 }
 
-.tv-rung-lop { position: absolute; display: block; overflow: visible; }
-.tv-rung-lop .rung-xa { fill: var(--rung-xa); }
-.tv-rung-lop .rung-giua { fill: var(--rung-giua); }
-.tv-rung-lop .rung-gan { fill: var(--rung-gan); }
-.tv-rung-lop .sang { fill: var(--rung-sang); fill-opacity: 0.22; }
+.tv-rung-nen {
+    position: absolute;
+    inset: 0;
+    background: var(--rung-nen);
+    will-change: opacity;
+}
 
-/* Bên phải và lớp dưới là bản lật của bên trái và lớp trên; đặt lệch một đoạn để hai bên không đối xứng như soi gương */
-.tv-rung-trai,
-.tv-rung-phai { top: 0; width: 60vw; height: 100%; }
+.tv-rung-mau { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* Mỗi bên một khung; bên phải lật ngang và đặt lệch lên một chút */
+.tv-rung-ben { position: absolute; top: 0; width: 58vw; height: 100%; }
 .tv-rung-trai { left: 0; }
-.tv-rung-phai { right: 0; top: -9vh; height: calc(100% + 18vh); transform: scaleX(-1); }
+.tv-rung-phai { right: 0; top: -7vh; height: calc(100% + 14vh); transform: scaleX(-1); }
 
-.tv-rung-tren,
-.tv-rung-duoi { left: 0; width: 100%; height: 28vh; }
-.tv-rung-duoi { left: -9vw; width: calc(100% + 18vw); }
-.tv-rung-tren { top: 0; }
-.tv-rung-duoi { bottom: 0; transform: scaleY(-1); }
+.tv-rung-ben svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform-origin: 0 50%;
+    will-change: transform;
+}
+.tv-rung-ben .la-sau { fill: var(--rung-sau); }
+.tv-rung-ben .la-truoc { fill: var(--rung-truoc); }
 
 .tv-rung-logo {
     position: absolute;
@@ -60,64 +64,49 @@
     color: var(--rung-chu);
     text-align: center;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    will-change: opacity, transform;
 }
 .tv-rung-logo .tv-icon { width: 34px; height: 34px; }
 .tv-rung-logo strong { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; }
 .tv-rung-logo small { font-size: 0.875rem; opacity: 0.85; }
 
-/* ---------- Mở rừng ---------- */
-.tv-rung.mo {
-    pointer-events: none;
-    background-color: transparent;
-    transition: background-color 260ms ease;
-    animation: none;
+/* ---------- Lá tỏa ra ---------- */
+.tv-rung.mo { pointer-events: none; animation: none; }
+
+.tv-rung.mo .tv-rung-nen { opacity: 0; transition: opacity 450ms ease 120ms; }
+
+/* Lớp trước đi trước, xoay ra ngoài như tàu lá bật lên; lớp sau chậm một nhịp */
+.tv-rung.mo .la-truoc {
+    transform: translateX(-100%) rotate(-14deg);
+    transition: transform 750ms cubic-bezier(.55, 0, .2, 1);
 }
-
-.tv-rung-lop { transition: transform 900ms cubic-bezier(.65, 0, .25, 1); }
-.tv-rung-lop g { transition: transform 900ms cubic-bezier(.65, 0, .25, 1); }
-
-.tv-rung.mo .tv-rung-trai { transform: translateX(-105%); }
-.tv-rung.mo .tv-rung-phai { transform: scaleX(-1) translateX(-105%); }
-.tv-rung.mo .tv-rung-tren { transform: translateY(-105%); transition-delay: 80ms; }
-.tv-rung.mo .tv-rung-duoi { transform: scaleY(-1) translateY(-105%); transition-delay: 80ms; }
-
-/* Chiều sâu: lớp gần rời đi trước và xa hơn, lớp xa chậm một nhịp */
-.tv-rung.mo .rung-gan { transform: translateX(-160px); transition-delay: 0ms; }
-.tv-rung.mo .rung-giua { transform: translateX(-80px); transition-delay: 60ms; }
-.tv-rung.mo .rung-xa { transition-delay: 140ms; }
-.tv-rung.mo .tv-rung-tren .rung-gan,
-.tv-rung.mo .tv-rung-duoi .rung-gan { transform: translateY(-90px); }
-.tv-rung.mo .tv-rung-tren .rung-giua,
-.tv-rung.mo .tv-rung-duoi .rung-giua { transform: translateY(-40px); }
+.tv-rung.mo .la-sau {
+    transform: translateX(-100%) rotate(-8deg);
+    transition: transform 820ms cubic-bezier(.55, 0, .2, 1) 70ms;
+}
 
 .tv-rung.mo .tv-rung-logo {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.92);
-    transition: opacity 220ms ease, transform 220ms ease;
+    transform: translate(-50%, -50%) scale(0.94);
+    transition: opacity 200ms ease, transform 200ms ease;
 }
 
-/* Khi chuyển trang: rừng hiện ngay, không mờ dần chồng lên trang cũ */
+/* Khi chuyển trang: lớp lá hiện ngay, không mờ dần chồng lên trang cũ */
 ::view-transition-old(tv-rung) { display: none; }
 ::view-transition-new(tv-rung) { animation: none; }
 
 @keyframes tv-rung-tu-an {
-    to { opacity: 0; visibility: hidden; pointer-events: none; }
+    to { opacity: 0; visibility: hidden; }
 }
 
-/* Máy bật giảm chuyển động: không tách cây, chỉ mờ đi nhanh */
+/* Máy bật giảm chuyển động: lá không bay, cả lớp phủ chỉ mờ đi nhanh */
 @media (prefers-reduced-motion: reduce) {
-    .tv-rung-lop, .tv-rung-lop g { transition: none; }
     .tv-rung.mo { opacity: 0; transition: opacity 200ms ease; }
-    .tv-rung.mo .tv-rung-trai,
-    .tv-rung.mo .tv-rung-phai,
-    .tv-rung.mo .tv-rung-tren,
-    .tv-rung.mo .tv-rung-duoi,
-    .tv-rung.mo .rung-gan,
-    .tv-rung.mo .rung-giua { transform: none; }
-    .tv-rung.mo .tv-rung-phai { transform: scaleX(-1); }
-    .tv-rung.mo .tv-rung-duoi { transform: scaleY(-1); }
+    .tv-rung.mo .la-truoc,
+    .tv-rung.mo .la-sau { transform: none; transition: none; }
 }
 
 @media (max-width: 640px) {
+    .tv-rung-ben { width: 62vw; }
     .tv-rung-logo strong { font-size: 1.5rem; }
 }

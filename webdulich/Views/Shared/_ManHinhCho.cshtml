@@ -1,16 +1,24 @@
 @*
-    Màn hình chờ "rừng cây" (trang của khách, mỗi lần tải trang): các lớp bụi cây che kín trang,
-    trang dựng xong thì cây tách sang hai bên, tán trên kéo lên, bụi dưới hạ xuống để lộ trang.
-    Lá cây do wwwroot/js/man-hinh-cho.js vẽ ngay khi đọc tới đây (trước khi trang hiện), file JS được trình duyệt lưu lại
-    nên mỗi trang chỉ thêm vài dòng HTML. CSS ở wwwroot/css/man-hinh-cho.css. Script lỗi thì lớp phủ tự ẩn sau vài giây.
+    Màn hình chờ "lá dừa" (trang của khách, mỗi lần tải trang): hai hàng tàu lá dừa từ hai mép che trang một chút,
+    trang dựng xong thì lá tỏa ra hai bên để vào trang.
+    Chỉ có một hình tàu lá (vẽ bằng wwwroot/js/man-hinh-cho.js) dùng lại nhiều lần; mỗi hàng lá là một tấm riêng
+    để trình duyệt chỉ việc trượt tấm (card đồ họa làm), không vẽ lại lá trong lúc chạy nên mượt.
+    CSS ở wwwroot/css/man-hinh-cho.css. Script lỗi thì lớp phủ tự ẩn sau vài giây.
 *@
 <div class="tv-rung" id="tvRung">
     <span class="visually-hidden" role="status">Đang tải trang</span>
+    <div class="tv-rung-nen"></div>
 
-    <svg class="tv-rung-lop tv-rung-trai" data-rung="doc" viewBox="0 0 600 1000" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false"></svg>
-    <svg class="tv-rung-lop tv-rung-phai" data-rung="doc" viewBox="0 0 600 1000" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false"></svg>
-    <svg class="tv-rung-lop tv-rung-tren" data-rung="ngang" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false"></svg>
-    <svg class="tv-rung-lop tv-rung-duoi" data-rung="ngang" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false"></svg>
+    <svg class="tv-rung-mau" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="tvLaDua" /></defs></svg>
+
+    <div class="tv-rung-ben tv-rung-trai" aria-hidden="true">
+        <svg class="la-sau" data-hang="trai-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+        <svg class="la-truoc" data-hang="trai-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+    </div>
+    <div class="tv-rung-ben tv-rung-phai" aria-hidden="true">
+        <svg class="la-sau" data-hang="phai-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+        <svg class="la-truoc" data-hang="phai-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+    </div>
 
     <div class="tv-rung-logo" aria-hidden="true">
         <svg class="tv-icon"><use href="#i-plane" /></svg>
