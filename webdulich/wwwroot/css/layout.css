@@ -584,6 +584,32 @@ p a:not([class]):hover, li a:not([class]):hover, td a:not([class]):hover { text-
 .tv-pay:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2); }
 .tv-pay-note { margin: var(--tv-k3) 0 0; font-size: var(--tv-cs-nho); line-height: 1.5; opacity: 0.8; }
 
+/* Chữ TravelVN cỡ lớn ở đáy chân trang: chỉ nét viền mờ; rê chuột thì vùng sáng theo con trỏ tô đầy chữ ở chỗ đó */
+.tv-footer-chu {
+    --x: 50%;
+    --y: 50%;
+    overflow: hidden;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: var(--tv-k4) var(--tv-k4) 0;
+    color: transparent;
+    font-size: clamp(2.75rem, 17.5vw, 16rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.82;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+    background: radial-gradient(circle 0 at var(--x) var(--y), transparent, transparent);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.tv-footer-chu.dang-ro {
+    -webkit-text-stroke-color: rgba(255, 255, 255, 0.32);
+    background-image: radial-gradient(circle 180px at var(--x) var(--y), rgba(127, 208, 230, 0.75), rgba(127, 208, 230, 0.2) 45%, transparent 70%);
+}
+
 .tv-footer-bottom {
     padding: var(--tv-k4);
     border-top: 1px solid rgba(255, 255, 255, 0.14);

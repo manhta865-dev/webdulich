@@ -72,5 +72,21 @@
         </div>
     </div>
 
+    @* Chữ TravelVN cỡ lớn chỉ có nét viền ở đáy chân trang (trang trí). Máy có chuột: rê lên thì một vùng sáng chạy theo con trỏ tô màu nét chữ. *@
+    <div class="tv-footer-chu" id="tvFooterChu" aria-hidden="true">TravelVN</div>
+
     <div class="tv-footer-bottom">© 2026 TravelVN</div>
 </footer>
+<script>
+    (function () {
+        var chu = document.getElementById("tvFooterChu");
+        if (!chu || !window.matchMedia || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+        chu.addEventListener("pointermove", function (e) {
+            var r = chu.getBoundingClientRect();
+            chu.style.setProperty("--x", (e.clientX - r.left) + "px");
+            chu.style.setProperty("--y", (e.clientY - r.top) + "px");
+            chu.classList.add("dang-ro");
+        });
+        chu.addEventListener("pointerleave", function () { chu.classList.remove("dang-ro"); });
+    })();
+</script>
