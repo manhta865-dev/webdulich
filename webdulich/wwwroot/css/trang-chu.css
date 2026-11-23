@@ -23,6 +23,14 @@
         linear-gradient(165deg, #0E3A48 0%, #0B2733 60%, #081C25 100%);
 }
 
+/* Chữ chạy theo nhịp cuộn (js/hien-chu.js gắn lớp; không có script hoặc giảm chuyển động thì không có lớp nào, chữ hiện bình thường).
+   Tiêu đề: từng chữ trượt lên khỏi một khe che; khối nội dung: hiện dần, trượt nhẹ lên. */
+.hc-tu { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.hc-tu > span { display: inline-block; transform: translateY(105%); transition: transform 620ms cubic-bezier(.2, .75, .2, 1); transition-delay: calc(var(--i, 0) * 55ms); }
+.hc-tieu-de.hc-hien .hc-tu > span { transform: none; }
+.hc-khoi { opacity: 0; transform: translateY(26px); transition: opacity 600ms ease, transform 700ms cubic-bezier(.2, .75, .2, 1); transition-delay: var(--tre, 0ms); }
+.hc-khoi.hc-hien { opacity: 1; transform: none; }
+
 /* Ảnh nền tràn đầu trang (thuyền trên vịnh lúc hoàng hôn) + lớp phủ tối dần để chữ và vé dễ đọc.
    Máy có chuột: canvas WebGL (js/gon-nuoc.js) vẽ đè lên ảnh để mặt nước gợn khi rê chuột; chưa sẵn sàng thì vẫn là ảnh. */
 .tc-dau { position: relative; isolation: isolate; }
