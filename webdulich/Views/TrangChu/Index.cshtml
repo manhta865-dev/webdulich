@@ -277,6 +277,69 @@
         }
     </section>
 
+    @* ===== 4b. Bảng giờ khởi hành kiểu sân bay: 6 lịch sắp đi thật (TrangChuDoc.LichSapDi), bấm một dòng để vào trang tour.
+         Giờ và ngày hiện trong từng ô chữ lật (cuộn tới thì các ô lật lần lượt). Không có lịch nào thì không hiện khối này. ===== *@
+    @{
+        var lichSapDi = ViewBag.LichSapDi as List<webdulich.Models.ChuyenSapDi> ?? new List<webdulich.Models.ChuyenSapDi>();
+    }
+    @if (lichSapDi.Any())
+    {
+        <section class="tv-section tc-bang-gio-khoi">
+            <div class="tc-tieu-de">
+                <h2>Sắp khởi hành</h2>
+                <p>Các lịch gần nhất còn mở bán. Bấm một dòng để xem tour và đặt chỗ.</p>
+            </div>
+            <div class="tc-bg">
+                <div class="tc-bg-dau tv-ma">
+                    <span><svg class="tv-icon" aria-hidden="true"><use href="#i-plane" /></svg> KHỞI HÀNH</span>
+                    <span>CẬP NHẬT @GioVN.BayGio.ToString("HH:mm dd/MM")</span>
+                </div>
+                <div class="tc-bg-cuon">
+                    <table class="tc-bg-bang">
+                        <thead>
+                            <tr>
+                                <th scope="col">Giờ</th>
+                                <th scope="col">Ngày</th>
+                                <th scope="col">Tour</th>
+                                <th scope="col" class="tc-bg-so">Còn chỗ</th>
+                                <th scope="col">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in lichSapDi)
+                            {
+                                var gioDi = c.GioKhoiHanh.HasValue ? c.GioKhoiHanh.Value.ToString(@"hh\:mm") : "--:--";
+                                var ngayDi = c.NgayKhoiHanh.ToString("dd/MM");
+                                var thuTu = 0;
+                                <tr class="tc-bg-dong @c.LopTrangThai">
+                                    <td class="tc-bg-lat" aria-label="@(c.GioKhoiHanh.HasValue ? gioDi : "Chưa có giờ")">
+                                        @foreach (var kt in gioDi)
+                                        {
+                                            <span class="tc-o-lat@(kt == ':' ? " cham" : "")" style="--o: @(thuTu++)" aria-hidden="true">@kt</span>
+                                        }
+                                    </td>
+                                    <td class="tc-bg-lat" aria-label="@c.NgayKhoiHanh.ToString("dd/MM/yyyy")">
+                                        @foreach (var kt in ngayDi)
+                                        {
+                                            <span class="tc-o-lat@(kt == '/' ? " cham" : "")" style="--o: @(thuTu++)" aria-hidden="true">@kt</span>
+                                        }
+                                    </td>
+                                    <td class="tc-bg-tour"><a href="@Url.Action("ChiTiet", "DiaDiem", new { id = c.TourId })">@c.TenTour</a></td>
+                                    <td class="tc-bg-so tv-ma">@(c.SoChoMoBan > 0 ? $"{c.SoChoCon}/{c.SoChoMoBan}" : c.SoChoCon.ToString())</td>
+                                    <td><span class="tc-bg-tt"><i aria-hidden="true"></i>@c.TrangThai</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tc-bg-cuoi">
+                    <span>Giá, giờ và chỗ còn xem đúng ở trang tour.</span>
+                    <a asp-controller="DiaDiem" asp-action="LichKhoiHanh" class="tv-link tv-link-di">Xem lịch theo tháng</a>
+                </div>
+            </div>
+        </section>
+    }
+
     @* ===== 5. Đi đâu: quả địa cầu bên trái, lưới điểm đến lấy từ tour đang bán bên phải, viền kiểu phong bì thư máy bay ===== *@
     <section class="tv-section tc-di-dau">
         <div class="tc-tieu-de">
@@ -498,6 +561,51 @@
 }
 
 <div class="home-wrap">
+    @* ===== 8b. Bưu thiếp đánh giá: 3 đánh giá thật mới nhất đang hiện (TrangChuDoc.DanhGiaMoi), tên rút gọn như trang tour.
+         Không có số trung bình hay số lượt viết tay. Chưa có đánh giá nào thì không hiện khối này. ===== *@
+    @{
+        var dsBuuThiep = ViewBag.BuuThiep as List<webdulich.Models.BuuThiepDanhGia> ?? new List<webdulich.Models.BuuThiepDanhGia>();
+    }
+    @if (dsBuuThiep.Any())
+    {
+        <section class="tv-section tc-buu-thiep-khoi">
+            <div class="tc-tieu-de">
+                <h2>Bưu thiếp từ những chuyến đã đi</h2>
+                <p>Khách viết sau khi đi xong chuyến đã thanh toán trên TravelVN.</p>
+            </div>
+            <div class="tc-bt-luoi">
+                @foreach (var b in dsBuuThiep)
+                {
+                    <article class="tc-bt">
+                        <div class="tc-bt-thu">
+                            <span class="tv-sao" role="img" aria-label="@b.SoSao trên 5 sao">
+                                @for (var s = 1; s <= 5; s++)
+                                {
+                                    <i class="@(s <= b.SoSao ? "co" : "")" aria-hidden="true">★</i>
+                                }
+                            </span>
+                            <p>@b.NoiDung</p>
+                            <span class="tc-bt-ky">@b.TenNguoi</span>
+                        </div>
+                        <div class="tc-bt-ben">
+                            <span class="tc-bt-tem" aria-hidden="true">
+                                <svg class="tv-icon"><use href="#i-plane" /></svg>
+                                <small>TRAVELVN</small>
+                            </span>
+                            <span class="tc-bt-dau tv-ma" aria-hidden="true">@b.NgayDi.ToString("MM.yyyy")</span>
+                            <dl class="tc-bt-dong">
+                                <dt>Chuyến</dt>
+                                <dd><a href="@Url.Action("ChiTiet", "DiaDiem", new { id = b.TourId })">@b.TenTour</a></dd>
+                                <dt>Ngày đi</dt>
+                                <dd>@b.NgayDi.ToString("dd/MM/yyyy")</dd>
+                            </dl>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+
     @if (dsBaiViet.Count > 0)
     {
         <section class="tv-section">

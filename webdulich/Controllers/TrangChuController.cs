@@ -118,6 +118,10 @@ namespace webdulich.Controllers
             // Cùng khóa cấu hình với DatTourController, DonNhomController để câu chữ khớp luật đang chạy
             ViewBag.SoGioGiuCho = cauHinh.GetValue("DonNhom:SoGioGiuCho", 24);
 
+            // Bảng giờ khởi hành (6 lịch sắp đi) và bưu thiếp (3 đánh giá mới nhất): dữ liệu thật, chỉ đọc
+            ViewBag.LichSapDi = TrangChuDoc.LichSapDi(_context, 6);
+            ViewBag.BuuThiep = TrangChuDoc.DanhGiaMoi(_context, 3);
+
             return View(tours);
         }
 
