@@ -1,23 +1,53 @@
 @*
     Màn hình chờ "lá dừa" (trang của khách, mỗi lần tải trang): hai hàng tàu lá dừa từ hai mép che trang một chút,
     trang dựng xong thì lá tỏa ra hai bên để vào trang.
-    Chỉ có một hình tàu lá (vẽ bằng wwwroot/js/man-hinh-cho.js) dùng lại nhiều lần; mỗi hàng lá là một tấm riêng
-    để trình duyệt chỉ việc trượt tấm (card đồ họa làm), không vẽ lại lá trong lúc chạy nên mượt.
-    CSS ở wwwroot/css/man-hinh-cho.css. Script lỗi thì lớp phủ tự ẩn sau vài giây.
+    Hình lá có sẵn trong HTML nên hiện cùng lúc với nền ngay khung hình đầu (không đợi script vẽ, tránh lá "nhảy" ra sau).
+    Chỉ một tàu lá (path tvLaDua, sinh sẵn bằng công thức cuống cong + hai dãy lá chét rủ) dùng lại bằng <use>.
+    Mỗi hàng lá là một tấm riêng để trình duyệt chỉ việc trượt tấm khi mở (card đồ họa làm), không vẽ lại lá.
+    CSS ở wwwroot/css/man-hinh-cho.css, việc mở ở wwwroot/js/man-hinh-cho.js. Script lỗi thì lớp phủ tự ẩn sau vài giây.
 *@
+@{
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+
+    // Vị trí các tàu trong khung 600 x 1000 của mỗi bên: (x gốc, y gốc, góc xoay, tỉ lệ).
+    // Bên phải là bản lật của bên trái (CSS) nhưng xếp khác để hai bên không giống soi gương.
+    var hang = new Dictionary<string, (double X, double Y, double Goc, double TiLe)[]>
+    {
+        ["trai-sau"] = new[] { (-30d, 60d, 22d, 0.86), (-40d, 380d, 4d, 0.92), (-30d, 700d, -12d, 0.9), (-40d, 990d, -26d, 0.84) },
+        ["trai-truoc"] = new[] { (-50d, 220d, 12d, 0.78), (-60d, 540d, -4d, 0.82), (-50d, 850d, -18d, 0.78) },
+        ["phai-sau"] = new[] { (-40d, -10d, 26d, 0.84), (-30d, 300d, 8d, 0.9), (-40d, 620d, -8d, 0.92), (-30d, 930d, -22d, 0.86) },
+        ["phai-truoc"] = new[] { (-60d, 150d, 16d, 0.78), (-50d, 460d, 0d, 0.82), (-60d, 780d, -14d, 0.8) }
+    };
+
+    // Hai bộ: màn rộng và màn hẹp (màn hẹp khung bị co theo chiều cao nên tàu lá thu nhỏ còn 62%); CSS chọn bộ hiện
+    Microsoft.AspNetCore.Html.IHtmlContent Hang(string ten)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var (lop, heSo) in new[] { ("lon", 1.0), ("nho", 0.62) })
+        {
+            sb.Append($"<g class=\"{lop}\">");
+            foreach (var t in hang[ten])
+            {
+                sb.Append(string.Create(inv, $"<use href=\"#tvLaDua\" transform=\"translate({t.X} {t.Y}) rotate({t.Goc}) scale({Math.Round(t.TiLe * heSo, 2)})\" />"));
+            }
+            sb.Append("</g>");
+        }
+        return new Microsoft.AspNetCore.Html.HtmlString(sb.ToString());
+    }
+}
 <div class="tv-rung" id="tvRung">
     <span class="visually-hidden" role="status">Đang tải trang</span>
     <div class="tv-rung-nen"></div>
 
-    <svg class="tv-rung-mau" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="tvLaDua" /></defs></svg>
+    <svg class="tv-rung-mau" width="0" height="0" aria-hidden="true" focusable="false"><defs><path id="tvLaDua" d="M2.8 7.5L29.1 -2.2L55.5 -10.9L81.8 -18.6L108.2 -25.3L134.5 -31L160.9 -35.7L187.3 -39.4L213.7 -42.1L240.2 -43.8L266.7 -44.6L293.1 -44.3L319.6 -43L346.2 -40.7L372.7 -37.4L399.3 -33.2L425.9 -27.9L452.5 -21.6L479.2 -14.2L505.9 -5.9L532.6 3.4L559.3 13.8L586 25.1L612.8 37.5L639.5 50.9L640.5 49.1L613.9 35.2L587.3 22.2L560.7 10.3L534.1 -0.6L507.5 -10.6L480.8 -19.5L454.1 -27.4L427.4 -34.4L400.7 -40.3L373.9 -45.2L347.2 -49.1L320.4 -52L293.5 -53.9L266.7 -54.7L239.8 -54.6L212.9 -53.4L186 -51.3L159.1 -48.1L132.1 -43.8L105.2 -38.6L78.2 -32.4L51.2 -25.1L24.2 -16.8L-2.8 -7.5ZM38.8 -13.5Q66 -43.8 93.1 -84.1Q75.5 -46.8 50.8 -17.2ZM38.8 -13.5Q68.9 22.8 98.9 49Q78.4 19.8 50.8 -17.2ZM58.1 -19.4Q91.3 -54 124.6 -100.6Q100.8 -56.7 69.9 -22.8ZM58.1 -19.4Q92.5 24.6 126.9 56.6Q102 21.9 69.9 -22.8ZM77.4 -24.8Q116.5 -62.7 155.7 -114.2Q125.9 -65.1 89 -27.8ZM77.4 -24.8Q115.3 26.2 153.2 63.6Q124.6 23.8 89 -27.8ZM96.6 -29.6Q141.5 -69.8 186.3 -125.1Q150.7 -71.9 108.2 -32.3ZM96.6 -29.6Q137.3 27.7 177.9 70Q146.5 25.6 108.2 -32.3ZM115.9 -34Q166.1 -75.6 216.4 -133.6Q175.3 -77.4 127.3 -36.3ZM115.9 -34Q158.6 29.1 201.4 75.9Q167.8 27.3 127.3 -36.3ZM135.2 -37.8Q190.5 -80.1 245.8 -139.9Q199.5 -81.7 146.4 -39.8ZM135.2 -37.8Q179.4 30.5 223.6 81.3Q188.4 28.9 146.4 -39.8ZM154.5 -41.1Q214.5 -83.4 274.5 -144.1Q223.4 -84.7 165.5 -42.7ZM154.5 -41.1Q199.6 31.8 244.7 86.2Q208.4 30.5 165.5 -42.7ZM173.7 -43.8Q238 -85.5 302.4 -146.3Q246.8 -86.5 184.7 -45.1ZM173.7 -43.8Q219.2 33 264.7 90.5Q228 31.9 184.7 -45.1ZM193 -46Q261.1 -86.5 329.2 -146.8Q269.7 -87.3 203.8 -47ZM193 -46Q238.4 34.1 283.8 94.4Q247 33.3 203.8 -47ZM212.3 -47.7Q283.6 -86.5 354.9 -145.5Q292.1 -87.1 222.9 -48.4ZM212.3 -47.7Q257.2 35 302.1 97.6Q265.6 34.5 222.9 -48.4ZM231.6 -48.9Q305.6 -85.6 379.5 -142.8Q313.8 -85.9 242 -49.3ZM231.6 -48.9Q275.6 35.9 319.5 100.3Q283.8 35.6 242 -49.3ZM250.9 -49.5Q326.9 -83.8 402.9 -138.7Q335 -83.9 261.1 -49.7ZM250.9 -49.5Q293.6 36.7 336.2 102.3Q301.7 36.6 261.1 -49.7ZM270.2 -49.7Q347.6 -81.2 424.9 -133.3Q355.5 -81.1 280.2 -49.5ZM270.2 -49.7Q311.3 37.3 352.3 103.7Q319.2 37.4 280.2 -49.5ZM289.5 -49.2Q367.6 -77.9 445.6 -126.9Q375.4 -77.5 299.3 -48.8ZM289.5 -49.2Q328.7 37.8 367.9 104.4Q336.5 38.1 299.3 -48.8ZM308.9 -48.3Q387 -73.9 465 -119.6Q394.5 -73.4 318.3 -47.6ZM308.9 -48.3Q345.9 38.1 383 104.5Q353.5 38.7 318.3 -47.6ZM328.2 -46.8Q405.6 -69.3 483.1 -111.4Q413 -68.6 337.4 -45.9ZM328.2 -46.8Q362.9 38.4 397.7 104Q370.3 39.1 337.4 -45.9ZM347.5 -44.8Q423.7 -64.2 499.8 -102.6Q430.9 -63.3 356.5 -43.7ZM347.5 -44.8Q379.8 38.5 412.2 102.8Q387 39.4 356.5 -43.7ZM366.8 -42.3Q441.1 -58.6 515.3 -93.3Q448.1 -57.5 375.6 -41ZM366.8 -42.3Q396.6 38.6 426.4 101.1Q403.6 39.6 375.6 -41ZM386.1 -39.2Q457.8 -52.6 529.5 -83.5Q464.6 -51.4 394.7 -37.7ZM386.1 -39.2Q413.3 38.5 440.5 98.8Q420.2 39.8 394.7 -37.7ZM405.5 -35.7Q474 -46.2 542.4 -73.4Q480.6 -44.9 413.7 -34ZM405.5 -35.7Q430 38.5 454.6 96Q436.6 39.8 413.7 -34ZM424.8 -31.5Q489.5 -39.5 554.2 -63.1Q495.9 -38 432.8 -29.7ZM424.8 -31.5Q446.7 38.3 468.7 92.6Q453.1 39.8 432.8 -29.7ZM444.1 -26.9Q504.5 -32.5 564.9 -52.6Q510.7 -30.9 451.9 -24.9ZM444.1 -26.9Q463.5 38.2 482.8 88.9Q469.7 39.8 451.9 -24.9ZM463.5 -21.7Q519 -25.3 574.5 -42Q525 -23.6 470.9 -19.6ZM463.5 -21.7Q480.3 38 497.1 84.6Q486.3 39.7 470.9 -19.6ZM482.8 -16Q532.9 -17.8 583.1 -31.4Q538.7 -16 490 -13.8ZM482.8 -16Q497.2 37.8 511.5 79.9Q502.9 39.6 490 -13.8ZM502.1 -9.8Q546.3 -10.2 590.5 -20.8Q551.9 -8.3 509.1 -7.4ZM502.1 -9.8Q514.1 37.6 526.1 74.7Q519.7 39.5 509.1 -7.4ZM521.5 -3Q559.1 -2.3 596.8 -10.3Q564.5 -0.3 528.1 -0.6ZM521.5 -3Q531.2 37.2 540.9 68.8Q536.5 39.2 528.1 -0.6ZM540.8 4.3Q571.1 5.7 601.4 0.2Q576.2 7.7 547.2 6.8ZM540.8 4.3Q548.3 36.6 555.9 61.9Q553.5 38.6 547.2 6.8ZM560.1 12.1Q581.6 13.8 603 10.7Q586.5 15.9 566.3 14.7ZM560.1 12.1Q565.4 34.7 570.8 52.6Q570.4 36.8 566.3 14.7ZM579.4 20.4Q594.9 22.1 610.4 20.5Q599.6 24.3 585.4 23.1ZM579.4 20.4Q583.4 36.5 587.3 49.3Q588.1 38.7 585.4 23.1ZM598.8 29.3Q614.2 31.3 629.6 30Q618.7 33.5 604.4 32ZM598.8 29.3Q602.4 45.5 606 58.3Q606.9 47.6 604.4 32ZM618.1 38.7Q633.4 41.1 648.8 40.1Q637.8 43.2 623.5 41.4ZM618.1 38.7Q621.5 54.9 624.8 67.8Q625.8 57.1 623.5 41.4Z" /></defs></svg>
 
     <div class="tv-rung-ben tv-rung-trai" aria-hidden="true">
-        <svg class="la-sau" data-hang="trai-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
-        <svg class="la-truoc" data-hang="trai-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+        <svg class="la-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false">@Hang("trai-sau")</svg>
+        <svg class="la-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false">@Hang("trai-truoc")</svg>
     </div>
     <div class="tv-rung-ben tv-rung-phai" aria-hidden="true">
-        <svg class="la-sau" data-hang="phai-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
-        <svg class="la-truoc" data-hang="phai-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false"></svg>
+        <svg class="la-sau" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false">@Hang("phai-sau")</svg>
+        <svg class="la-truoc" viewBox="0 0 600 1000" preserveAspectRatio="xMinYMid slice" focusable="false">@Hang("phai-truoc")</svg>
     </div>
 
     <div class="tv-rung-logo" aria-hidden="true">
@@ -26,4 +56,4 @@
         <small>Đang mở đường…</small>
     </div>
 </div>
-<script src="~/js/man-hinh-cho.js" asp-append-version="true"></script>
+<script src="~/js/man-hinh-cho.js" asp-append-version="true" defer></script>

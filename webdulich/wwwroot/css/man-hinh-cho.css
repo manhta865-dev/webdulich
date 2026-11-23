@@ -52,6 +52,9 @@
 .tv-rung-ben .la-sau { fill: var(--rung-sau); }
 .tv-rung-ben .la-truoc { fill: var(--rung-truoc); }
 
+/* Hai bộ tàu lá có sẵn trong HTML: bộ lớn cho màn rộng, bộ nhỏ cho điện thoại */
+.tv-rung-ben .nho { display: none; }
+
 .tv-rung-logo {
     position: absolute;
     top: 50%;
@@ -70,12 +73,23 @@
 .tv-rung-logo strong { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; }
 .tv-rung-logo small { font-size: 0.875rem; opacity: 0.85; }
 
+/* ---------- Lá khép vào lúc vừa hiện (ngắn hơn thời gian che tối thiểu 0,4 giây) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+    .tv-rung-ben svg { animation: tv-la-vao 340ms cubic-bezier(.2, .7, .2, 1) backwards; }
+    .tv-rung-ben .la-sau { animation-duration: 380ms; }
+    .tv-rung-logo { animation: tv-logo-vao 300ms ease 60ms backwards; }
+}
+@keyframes tv-la-vao { from { transform: translateX(-14%) rotate(-5deg); } }
+@keyframes tv-logo-vao { from { opacity: 0; } }
+
 /* ---------- Lá tỏa ra ---------- */
 .tv-rung.mo { pointer-events: none; animation: none; }
 
 .tv-rung.mo .tv-rung-nen { opacity: 0; transition: opacity 450ms ease 120ms; }
 
 /* Lớp trước đi trước, xoay ra ngoài như tàu lá bật lên; lớp sau chậm một nhịp */
+.tv-rung.mo .tv-rung-ben svg,
+.tv-rung.mo .tv-rung-logo { animation: none; }
 .tv-rung.mo .la-truoc {
     transform: translateX(-100%) rotate(-14deg);
     transition: transform 750ms cubic-bezier(.55, 0, .2, 1);
@@ -108,5 +122,7 @@
 
 @media (max-width: 640px) {
     .tv-rung-ben { width: 62vw; }
+    .tv-rung-ben .lon { display: none; }
+    .tv-rung-ben .nho { display: inline; }
     .tv-rung-logo strong { font-size: 1.5rem; }
 }
