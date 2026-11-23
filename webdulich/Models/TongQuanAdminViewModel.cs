@@ -33,6 +33,30 @@ namespace webdulich.Models
         public int DonDaHuy30Ngay { get; set; }
         public int TongDon30Ngay => DonDaThanhToan30Ngay + DonDangKiemTra30Ngay + DonChuaThanhToan30Ngay + DonDaHuy30Ngay;
         public List<TourThieuLichItem> TourThieuLich { get; set; } = new List<TourThieuLichItem>();
+
+        // Tên người đang xem (lời chào đầu trang)
+        public string TenNguoiXem { get; set; } = string.Empty;
+
+        // Lấp đầy chỗ của mọi lịch chưa hủy trong 30 ngày tới (chỗ mở bán theo RB-37, tính, không lưu)
+        public int SoLichTinhLapDay { get; set; }
+        public int TongChoMoBan30Ngay { get; set; }
+        public int TongChoDaDat30Ngay { get; set; }
+        public int PhanTramLapDay => TongChoMoBan30Ngay > 0 ? (int)Math.Round(TongChoDaDat30Ngay * 100m / TongChoMoBan30Ngay) : 0;
+
+        // 10 đơn đặt gần nhất (không có số giấy tờ hay liên hệ của khách)
+        public List<DonGanDayItem> DonGanDay { get; set; } = new List<DonGanDayItem>();
+    }
+
+    public class DonGanDayItem
+    {
+        public int Id { get; set; }
+        public string MaChuyenDi { get; set; } = string.Empty;
+        public string TenTour { get; set; } = string.Empty;
+        public string TenKhach { get; set; } = string.Empty;
+        public bool LaDonNhom { get; set; }
+        public decimal TongTien { get; set; }
+        public string TrangThaiThanhToan { get; set; } = string.Empty;
+        public DateTime NgayDat { get; set; }
     }
 
     public class DonChoXacNhanItem

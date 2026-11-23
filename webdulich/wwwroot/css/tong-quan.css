@@ -1,0 +1,225 @@
+/* Trang Tổng quan của admin (bố cục lấy ý tưởng từ các bảng điều khiển dạng lưới: lời chào, một thẻ nổi,
+   ô số liệu nhỏ, biểu đồ, bảng hoạt động gần đây). Dùng token trong tokens.css, chạy đúng cả giao diện sáng và tối.
+   Chỉ trang Tổng quan nạp file này; các lớp chung (ad-card, ad-table, badge-status...) nằm ở admin.css. */
+
+.tq { max-width: 1240px; }
+
+/* ---------- Lời chào ---------- */
+.tq-chao { margin-bottom: var(--tv-k5); }
+.tq-chao h1 {
+    margin: 0;
+    font-size: var(--tv-cs-tieu-de);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+.tq-chao p { margin: var(--tv-k1) 0 0; color: var(--tv-chu-phu); }
+
+/* ---------- Lưới đầu trang: thẻ nổi | 4 ô nhỏ | biểu đồ ---------- */
+.tq-luoi {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k5);
+}
+
+/* Thẻ nổi: doanh thu tháng */
+.tq-noi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tv-k2);
+    min-height: 100%;
+    padding: var(--tv-k5);
+    border-radius: var(--tv-bo-anh);
+    background: var(--tv-nhan-nen-dam);
+    color: #fff;
+    text-decoration: none;
+}
+.tq-noi:hover, .tq-noi:focus-visible { color: #fff; }
+.tq-noi-dau { display: flex; align-items: center; justify-content: space-between; gap: var(--tv-k3); font-weight: 600; opacity: 0.92; }
+.tq-noi-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--tv-bo-nut);
+    background: rgba(255, 255, 255, 0.16);
+}
+.tq-noi-so {
+    margin-top: var(--tv-k3);
+    font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+.tq-noi-so small { font-size: 0.5em; font-weight: 600; opacity: 0.85; }
+
+.tq-xu-huong {
+    align-self: flex-start;
+    padding: 3px var(--tv-k3);
+    border-radius: var(--tv-bo-nhan);
+    background: rgba(255, 255, 255, 0.16);
+    font-size: var(--tv-cs-nho);
+    font-weight: 600;
+}
+.tq-xu-huong.tang span { color: #A8F0CB; }
+.tq-xu-huong.giam span { color: #FFC2B8; }
+
+.tq-noi-cuoi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--tv-k2) var(--tv-k3);
+    margin-top: auto;
+    padding-top: var(--tv-k4);
+    font-size: var(--tv-cs-nho);
+    opacity: 0.92;
+}
+.tq-noi-xem { display: inline-flex; align-items: center; gap: var(--tv-k1); font-weight: 600; white-space: nowrap; }
+.tq-noi-xem .tv-icon { width: 16px; height: 16px; }
+
+/* Bốn ô số liệu nhỏ */
+.tq-o-luoi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tv-k4); }
+
+.tq-o {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--tv-k4);
+    background: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-khoi);
+    color: var(--tv-chu);
+    text-decoration: none;
+}
+.tq-o:hover { border-color: var(--tv-nhan); color: var(--tv-chu); }
+.tq-o-dau { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--tv-k2); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+.tq-o-dau .tv-icon { flex-shrink: 0; width: 18px; height: 18px; color: var(--tv-nhan-dam); }
+.tq-o strong { margin-top: var(--tv-k2); font-size: var(--tv-cs-lon); font-weight: 700; line-height: 1.2; }
+.tq-o small { font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); }
+
+/* Ô có việc cần làm: viền và chấm màu cảnh báo, không tô cả ô */
+.tq-o.canh-bao { border-color: var(--tv-canh-bao); }
+.tq-o.canh-bao .tv-icon { color: var(--tv-canh-bao); }
+
+/* Biểu đồ trong cột thứ ba */
+.tq-bieu-do { display: flex; flex-direction: column; margin-top: 0; }
+.tq-bieu-do .ad-note { margin-bottom: var(--tv-k2); }
+.tq-bieu-do .ad-chart { margin-top: auto; }
+.tq .ad-bar { fill: var(--tv-chu); opacity: 0.18; }
+.tq .ad-bar.hien-tai { fill: var(--tv-nhan); opacity: 1; }
+.tq-chu-thich { display: inline-flex; align-items: center; gap: var(--tv-k1); font-size: var(--tv-cs-nho); color: var(--tv-chu-phu); white-space: nowrap; }
+.tq-chu-thich i { width: 10px; height: 10px; border-radius: 3px; background: var(--tv-nhan); }
+
+/* ---------- Hàng hai: lấp đầy chỗ | tình trạng đơn ---------- */
+.tq-hang {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: var(--tv-k4);
+    margin-bottom: var(--tv-k5);
+}
+.tq-hang > .ad-card { margin-top: 0; }
+
+.tq-lap-day-so { margin: var(--tv-k3) 0 var(--tv-k2); color: var(--tv-chu-phu); }
+.tq-lap-day-so strong { margin-right: var(--tv-k1); font-size: var(--tv-cs-tieu-de); font-weight: 700; color: var(--tv-chu); }
+
+.tq-thanh {
+    height: 12px;
+    overflow: hidden;
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-xam-nhat);
+}
+.tq-thanh i { display: block; height: 100%; min-width: 4px; border-radius: inherit; background: var(--tv-nhan); transform-origin: left; }
+.tq-thanh.gan-day i { background: var(--tv-canh-bao); }
+
+/* ---------- Đơn gần đây ---------- */
+.tq-don { margin-top: 0; padding-bottom: var(--tv-k3); }
+.tq-don + .ad-two { margin-top: var(--tv-k5); }
+
+.tq-don-dau {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tv-k3);
+    margin-bottom: var(--tv-k4);
+}
+.tq-don-dau h2 { margin: 0; font-size: var(--tv-cs-vua); font-weight: 700; }
+
+.tq-don-loc { display: flex; flex-wrap: wrap; align-items: center; gap: var(--tv-k2); }
+.tq-don-loc .form-control,
+.tq-don-loc .form-select {
+    width: auto;
+    min-height: 40px;
+    padding: 0 var(--tv-k3);
+    background-color: var(--tv-be-mat);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nhan);
+    color: var(--tv-chu);
+    font-family: inherit;
+    font-size: var(--tv-cs-nho);
+}
+.tq-don-loc .form-control { width: 230px; max-width: 100%; }
+.tq-don-loc .form-select { padding-right: var(--tv-k6); }
+.tq-don-loc .form-control:focus,
+.tq-don-loc .form-select:focus { border-color: var(--tv-nhan); box-shadow: 0 0 0 3px var(--tv-nhan-nhat); outline: none; }
+.tq-don-loc .tv-link { margin-left: var(--tv-k2); white-space: nowrap; }
+
+.tq-bang th { background: transparent; }
+.tq-bang td { white-space: nowrap; }
+.tq-bang td.tq-ten-tour { min-width: 160px; white-space: normal; font-weight: 600; }
+.tq-bang .tq-so-tien { text-align: right; font-variant-numeric: tabular-nums; }
+.tq-bang td.tq-so-tien { font-weight: 600; }
+.tq-bang .tq-ngay { color: var(--tv-chu-phu); font-variant-numeric: tabular-nums; }
+.tq-bang td:last-child { text-align: right; }
+
+.tq-nhan-nhom {
+    margin-left: var(--tv-k1);
+    padding: 1px var(--tv-k2);
+    border-radius: var(--tv-bo-nhan);
+    background: var(--tv-nhan-nhat);
+    color: var(--tv-nhan-dam);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.tq-khong-thay { margin: var(--tv-k3) 0 var(--tv-k2); color: var(--tv-chu-phu); font-size: var(--tv-cs-nho); }
+
+/* ---------- Chuyển động ---------- */
+@media (prefers-reduced-motion: no-preference) {
+    /* Các ô trong lưới đầu trang hiện lần lượt; khối cả trang đã có hiệu ứng ở admin.css */
+    .tq-luoi > *, .tq-o-luoi > * { animation: ad-hien 420ms cubic-bezier(.2, .7, .2, 1) backwards; }
+    .tq-luoi > :nth-child(2) { animation-delay: 80ms; }
+    .tq-luoi > :nth-child(3) { animation-delay: 160ms; }
+    .tq-o-luoi > :nth-child(2) { animation-delay: 120ms; }
+    .tq-o-luoi > :nth-child(3) { animation-delay: 170ms; }
+    .tq-o-luoi > :nth-child(4) { animation-delay: 220ms; }
+
+    .tq-noi, .tq-o { transition: border-color var(--tv-nhanh), transform 200ms ease, box-shadow 200ms ease; }
+    .tq-noi:hover, .tq-o:hover { transform: translateY(-3px); box-shadow: var(--tv-bong-noi); }
+    .tq-thanh i { animation: ad-moc-ngang 800ms cubic-bezier(.2, .7, .2, 1) 250ms backwards; }
+}
+
+/* ---------- Màn hình hẹp ---------- */
+@media (max-width: 1180px) {
+    .tq-luoi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tq-bieu-do { grid-column: 1 / -1; }
+}
+
+@media (max-width: 900px) {
+    .tq-hang { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+    .tq-luoi { grid-template-columns: 1fr; }
+    .tq-chao h1 { font-size: var(--tv-cs-lon); }
+    .tq-noi { padding: var(--tv-k4); }
+    .tq-o-luoi { gap: var(--tv-k3); }
+    .tq-o { padding: var(--tv-k3); }
+    .tq-don-loc, .tq-don-loc .form-control { width: 100%; }
+    .tq-don-loc .form-control { flex: 1 1 100%; }
+    .tq-don-loc .form-select { flex: 1 1 auto; }
+}

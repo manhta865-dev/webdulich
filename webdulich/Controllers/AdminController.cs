@@ -1572,12 +1572,36 @@ namespace webdulich.Controllers
                     .ToList()
             };
 
-            // Số chỗ mở bán của các lịch sắp đi để hiện "đã đặt X/Y" (RB-37)
-            var moBan = SucChuaLich.SoChoMoBan(_context, model.LichSapKhoiHanh.Select(l => l.Id));
+            // Số chỗ mở bán (RB-37) của mọi lịch trong 30 ngày tới: dùng cho thanh lấp đầy chung
+            // và cho "đã đặt X/Y" của 5 lịch gần nhất (5 lịch đó nằm trong cùng tập)
+            var dsLich30 = lichSapKhoiHanhQuery.Select(x => new { x.Id, x.SoChoCon }).ToList();
+            var moBan = SucChuaLich.SoChoMoBan(_context, dsLich30.Select(l => l.Id));
             foreach (var l in model.LichSapKhoiHanh)
             {
                 l.SoChoMoBan = moBan.TryGetValue(l.Id, out var mb) ? mb : 0;
             }
+            model.SoLichTinhLapDay = dsLich30.Count;
+            model.TongChoMoBan30Ngay = dsLich30.Sum(l => moBan.TryGetValue(l.Id, out var mb) ? mb : 0);
+            model.TongChoDaDat30Ngay = dsLich30.Sum(l => moBan.TryGetValue(l.Id, out var mb) ? Math.Max(0, mb - l.SoChoCon) : 0);
+
+            // 10 đơn đặt gần nhất, cùng cách tính trạng thái và tiền với trang Đơn đặt tour
+            model.DonGanDay = _context.DatTours.AsNoTracking().ChonDon(_context)
+                .OrderByDescending(x => x.NgayDat)
+                .ThenByDescending(x => x.Id)
+                .Select(x => new DonGanDayItem
+                {
+                    Id = x.Id,
+                    MaChuyenDi = x.MaChuyenDi,
+                    TenTour = x.TenTour,
+                    TenKhach = x.TenKhach,
+                    LaDonNhom = x.LoaiDon == "Nhom",
+                    TongTien = x.TongTien,
+                    TrangThaiThanhToan = x.TrangThaiThanhToan,
+                    NgayDat = x.NgayDat
+                })
+                .Take(10)
+                .ToList();
+            model.TenNguoiXem = HttpContext.Session.GetString("user") ?? string.Empty;
 
             // Chuyến chưa đi xong có người đã được duyệt nghỉ trùng ngày: nhắc admin đổi người (RB-45)
             ViewBag.SoPhanCongCanDoi = XuLyDonNghi.PhanCongCanDoiNguoi(_context).Count;

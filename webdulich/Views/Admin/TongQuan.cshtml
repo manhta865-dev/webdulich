@@ -2,25 +2,41 @@
 
 @{
     ViewData["Title"] = "Tổng quan";
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
 
-    // Biểu đồ cột doanh thu 12 tháng (SVG, không cần thư viện)
-    const int rongSvg = 720, caoSvg = 250, leTrai = 52, day = 205, caoVung = 175;
+    // Lời chào theo giờ Việt Nam
+    var gio = GioVN.BayGio.Hour;
+    var loiChao = gio < 11 ? "Chào buổi sáng" : gio < 13 ? "Chào buổi trưa" : gio < 18 ? "Chào buổi chiều" : "Chào buổi tối";
+
+    // Biểu đồ cột doanh thu 12 tháng (SVG, không cần thư viện); khung hẹp vì nằm trong cột thứ ba
+    const int rongSvg = 440, caoSvg = 232, leTrai = 40, day = 198, caoVung = 168;
     decimal giaTriMax = Model.DoanhThu12Thang.Any() ? Model.DoanhThu12Thang.Max() : 0;
     if (giaTriMax <= 0) { giaTriMax = 1; }
     var buocTrucY = new[] { 0m, 0.5m, 1m };
 
     string RutGon(decimal v) =>
         v >= 1_000_000m ? (v / 1_000_000m).ToString("0.#") + " tr" : v.ToString("N0");
+
+    string LopTrangThai(string tt) => tt switch
+    {
+        TrangThaiThanhToanDon.DaThanhToan => "status-paid",
+        TrangThaiThanhToanDon.DangKiemTra => "status-checking",
+        TrangThaiThanhToanDon.DaHuy => "status-cancelled",
+        _ => "status-unpaid"
+    };
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tong-quan.css" asp-append-version="true" />
 }
 
-<div class="ad-page">
-    <h1 class="visually-hidden">Tổng quan</h1>
-    <p class="ad-lead">Số liệu tính đến hôm nay, @GioVN.HomNay.ToString("dd/MM/yyyy").</p>
+<div class="ad-page tq">
+    <header class="tq-chao">
+        <h1>@loiChao@(string.IsNullOrWhiteSpace(Model.TenNguoiXem) ? "" : ", " + Model.TenNguoiXem)</h1>
+        <p>Số liệu tính đến hôm nay, @GioVN.HomNay.ToString("dd/MM/yyyy"). Bấm vào từng ô để xem chi tiết.</p>
+    </header>
 
     @if (ViewBag.SoPhanCongCanDoi is int soCanDoi && soCanDoi > 0)
     {
@@ -31,103 +47,110 @@
         </div>
     }
 
-    <div class="ad-kpis">
-        <a asp-action="DoanhThu" class="ad-kpi">
-            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
-            <span class="ad-kpi-body">
-                <span class="ad-kpi-label">Doanh thu tháng @Model.Thang</span>
-                <strong>@Model.DoanhThuThang.ToString("N0") VNĐ</strong>
-                <small>@Model.SoDonDaThanhToanThang đơn đã thanh toán</small>
-                @if (Model.PhanTramSoVoiThangTruoc is decimal pt)
-                {
-                    <small class="ad-so-sanh @(pt >= 0 ? "tang" : "giam")">
-                        @(pt >= 0 ? "Tăng" : "Giảm") @Math.Abs(pt).ToString("0.#")% so với tháng @(Model.Thang == 1 ? 12 : Model.Thang - 1)
-                    </small>
-                }
-                else
-                {
-                    <small>Tháng trước chưa có doanh thu</small>
-                }
+    <div class="tq-luoi">
+        @* Thẻ nổi: doanh thu tháng *@
+        <a asp-action="DoanhThu" class="tq-noi">
+            <span class="tq-noi-dau">
+                <span>Doanh thu tháng @Model.Thang</span>
+                <span class="tq-noi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg></span>
+            </span>
+            <strong class="tq-noi-so">@Model.DoanhThuThang.ToString("N0") <small>VNĐ</small></strong>
+            @if (Model.PhanTramSoVoiThangTruoc is decimal pt)
+            {
+                <span class="tq-xu-huong @(pt >= 0 ? "tang" : "giam")">
+                    <span aria-hidden="true">@(pt >= 0 ? "▲" : "▼")</span>
+                    @(pt >= 0 ? "Tăng" : "Giảm") @Math.Abs(pt).ToString("0.#")% so với tháng @(Model.Thang == 1 ? 12 : Model.Thang - 1)
+                </span>
+            }
+            else
+            {
+                <span class="tq-xu-huong">Tháng trước chưa có doanh thu</span>
+            }
+            <span class="tq-noi-cuoi">
+                <span>@Model.SoDonDaThanhToanThang đơn đã thanh toán, tính theo ngày đi</span>
+                <span class="tq-noi-xem">Xem báo cáo <svg class="tv-icon" aria-hidden="true"><use href="#i-arrow" /></svg></span>
             </span>
         </a>
 
-        <a asp-action="DonDatTour" class="ad-kpi@(Model.SoDonChoXacNhan > 0 ? " ad-kpi-canh-bao" : "")">
-            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg></span>
-            <span class="ad-kpi-body">
-                <span class="ad-kpi-label">Đơn chờ xác nhận</span>
+        @* Bốn ô số liệu nhỏ *@
+        <div class="tq-o-luoi">
+            <a asp-action="DonDatTour" class="tq-o@(Model.SoDonChoXacNhan > 0 ? " canh-bao" : "")">
+                <span class="tq-o-dau">
+                    <span>Đơn chờ xác nhận</span>
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                </span>
                 <strong>@Model.SoDonChoXacNhan</strong>
-                <small>Trạng thái "Đang kiểm tra"</small>
-            </span>
-        </a>
+                <small>@(Model.SoDonChoXacNhan > 0 ? "Cần kiểm tra chuyển khoản" : "Không có đơn chờ")</small>
+            </a>
 
-        <a asp-action="QuanLyLichKhoiHanh" class="ad-kpi">
-            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg></span>
-            <span class="ad-kpi-body">
-                <span class="ad-kpi-label">Lịch khởi hành 30 ngày tới</span>
+            <a asp-action="QuanLyLichKhoiHanh" class="tq-o">
+                <span class="tq-o-dau">
+                    <span>Lịch 30 ngày tới</span>
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg>
+                </span>
                 <strong>@Model.SoLichSapKhoiHanh</strong>
                 <small>Không tính lịch đã hủy</small>
-            </span>
-        </a>
+            </a>
 
-        <a asp-action="Index" class="ad-kpi">
-            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg></span>
-            <span class="ad-kpi-body">
-                <span class="ad-kpi-label">Tour hiện có</span>
+            <a asp-action="Index" class="tq-o@(Model.SoTourThieuLich > 0 ? " canh-bao" : "")">
+                <span class="tq-o-dau">
+                    <span>Tour hiện có</span>
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
+                </span>
                 <strong>@Model.SoTour</strong>
-                <small>@Model.SoTourThieuLich tour chưa có lịch sắp tới</small>
-            </span>
-        </a>
+                <small>@Model.SoTourThieuLich tour chưa có lịch</small>
+            </a>
 
-        <a asp-action="TinNhan" class="ad-kpi@(Model.TinNhanChuaDoc > 0 ? " ad-kpi-canh-bao" : "")">
-            <span class="ad-kpi-icon"><svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg></span>
-            <span class="ad-kpi-body">
-                <span class="ad-kpi-label">Tin nhắn chưa đọc</span>
+            <a asp-action="TinNhan" class="tq-o@(Model.TinNhanChuaDoc > 0 ? " canh-bao" : "")">
+                <span class="tq-o-dau">
+                    <span>Tin nhắn chưa đọc</span>
+                    <svg class="tv-icon" aria-hidden="true"><use href="#i-mail" /></svg>
+                </span>
                 <strong>@Model.TinNhanChuaDoc</strong>
                 <small>Từ khách hàng</small>
-            </span>
-        </a>
-    </div>
-
-    <section class="ad-card">
-        <div class="ad-card-head">
-            <h2>Doanh thu năm @Model.Nam</h2>
-            <a asp-action="DoanhThu" class="tv-link tv-link-di">Xem báo cáo</a>
+            </a>
         </div>
-        <p class="ad-note">Tính theo ngày đi của các đơn đã thanh toán.</p>
 
-        <svg class="ad-chart" viewBox="0 0 @rongSvg @caoSvg" role="img" aria-label="Biểu đồ doanh thu 12 tháng năm @Model.Nam">
-            @foreach (var b in buocTrucY)
-            {
-                var y = day - (b * caoVung);
-                <line x1="@leTrai" x2="@(rongSvg - 6)" y1="@y.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" y2="@y.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" class="ad-grid-line" />
-                @Html.Raw($"<text x=\"{leTrai - 8}\" y=\"{(y + 4).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}\" text-anchor=\"end\" class=\"ad-axis\">{RutGon(giaTriMax * b)}</text>")
-            }
+        @* Biểu đồ doanh thu năm *@
+        <section class="ad-card tq-bieu-do">
+            <div class="ad-card-head">
+                <h2>Doanh thu năm @Model.Nam</h2>
+                <span class="tq-chu-thich"><i aria-hidden="true"></i> Tháng @Model.Thang</span>
+            </div>
+            <p class="ad-note">Đơn đã thanh toán, tính theo ngày đi.</p>
 
-            @for (var i = 0; i < 12; i++)
-            {
-                var gt = Model.DoanhThu12Thang.Count > i ? Model.DoanhThu12Thang[i] : 0;
-                var cao = (double)(gt / giaTriMax) * caoVung;
-                var khoang = (rongSvg - leTrai - 6) / 12.0;
-                var rongCot = khoang * 0.56;
-                var x = leTrai + (i * khoang) + ((khoang - rongCot) / 2);
-                var yCot = day - cao;
-                var laThangNay = (i + 1) == Model.Thang;
+            <svg class="ad-chart" viewBox="0 0 @rongSvg @caoSvg" role="img" aria-label="Biểu đồ doanh thu 12 tháng năm @Model.Nam">
+                @foreach (var b in buocTrucY)
+                {
+                    var y = day - (b * caoVung);
+                    <line x1="@leTrai" x2="@(rongSvg - 4)" y1="@y.ToString("0.#", inv)" y2="@y.ToString("0.#", inv)" class="ad-grid-line" />
+                    @Html.Raw($"<text x=\"{leTrai - 6}\" y=\"{(y + 4).ToString("0.#", inv)}\" text-anchor=\"end\" class=\"ad-axis\">{RutGon(giaTriMax * b)}</text>")
+                }
 
-                <g>
-                    <title>Tháng @(i + 1): @gt.ToString("N0") VNĐ</title>
-                    @if (gt > 0)
-                    {
-                        <rect x="@x.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)"
-                              y="@yCot.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)"
-                              width="@rongCot.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)"
-                              height="@cao.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)"
-                              rx="4" class="ad-bar@(laThangNay ? " hien-tai" : "")" />
-                    }
-                    @Html.Raw($"<text x=\"{(x + rongCot / 2).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}\" y=\"{day + 20}\" text-anchor=\"middle\" class=\"ad-axis{(laThangNay ? " hien-tai" : "")}\">T{i + 1}</text>")
-                </g>
-            }
-        </svg>
-    </section>
+                @for (var i = 0; i < 12; i++)
+                {
+                    var gt = Model.DoanhThu12Thang.Count > i ? Model.DoanhThu12Thang[i] : 0;
+                    var cao = (double)(gt / giaTriMax) * caoVung;
+                    var khoang = (rongSvg - leTrai - 4) / 12.0;
+                    var rongCot = khoang * 0.6;
+                    var x = leTrai + (i * khoang) + ((khoang - rongCot) / 2);
+                    var yCot = day - cao;
+                    var laThangNay = (i + 1) == Model.Thang;
+
+                    <g>
+                        <title>Tháng @(i + 1): @gt.ToString("N0") VNĐ</title>
+                        @if (gt > 0)
+                        {
+                            <rect x="@x.ToString("0.#", inv)" y="@yCot.ToString("0.#", inv)"
+                                  width="@rongCot.ToString("0.#", inv)" height="@cao.ToString("0.#", inv)"
+                                  rx="5" class="ad-bar@(laThangNay ? " hien-tai" : "")" />
+                        }
+                        @Html.Raw($"<text x=\"{(x + rongCot / 2).ToString("0.#", inv)}\" y=\"{day + 20}\" text-anchor=\"middle\" class=\"ad-axis{(laThangNay ? " hien-tai" : "")}\">{i + 1}</text>")
+                    </g>
+                }
+            </svg>
+        </section>
+    </div>
 
     @{
         // Thanh chia màu theo trạng thái đơn 30 ngày qua
@@ -140,34 +163,121 @@
             (Ten: "Đã hủy", So: Model.DonDaHuy30Ngay, Lop: "da-huy")
         };
     }
-    <section class="ad-card">
-        <div class="ad-card-head">
-            <h2>Tình trạng đơn 30 ngày qua</h2>
-            <span class="ad-badge">@Model.TongDon30Ngay đơn</span>
-        </div>
-        @if (Model.TongDon30Ngay > 0)
-        {
-            <div class="ad-tt-thanh" role="img" aria-label="@string.Join(", ", dsTrangThai.Select(t => $"{t.Ten} {t.So} đơn"))">
-                @foreach (var t in dsTrangThai.Where(t => t.So > 0))
-                {
-                    <span class="ad-tt-doan @t.Lop" style="flex-grow: @t.So" title="@t.Ten: @t.So đơn"></span>
-                }
+    <div class="tq-hang">
+        <section class="ad-card tq-lap-day">
+            <div class="ad-card-head">
+                <h2>Lấp đầy chỗ 30 ngày tới</h2>
+                <a asp-action="QuanLyLichKhoiHanh" class="tv-link tv-link-di">Quản lý lịch</a>
             </div>
-            <ul class="ad-tt-chu-thich">
-                @foreach (var t in dsTrangThai)
-                {
-                    <li>
-                        <i class="ad-tt-cham @t.Lop" aria-hidden="true"></i>
-                        <span>@t.Ten</span>
-                        <strong>@t.So</strong>
-                        <small>@((t.So * 100m / tong30).ToString("0"))%</small>
-                    </li>
-                }
-            </ul>
+            @if (Model.TongChoMoBan30Ngay > 0)
+            {
+                <p class="tq-lap-day-so"><strong>@Model.PhanTramLapDay%</strong> chỗ đã có người đặt</p>
+                <div class="tq-thanh@(Model.PhanTramLapDay >= 85 ? " gan-day" : "")" role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="@Model.PhanTramLapDay"
+                     aria-label="Lấp đầy chỗ 30 ngày tới">
+                    <i style="width: @Model.PhanTramLapDay%"></i>
+                </div>
+                <p class="ad-note ad-note-cuoi">Đã đặt @Model.TongChoDaDat30Ngay / @Model.TongChoMoBan30Ngay chỗ mở bán trên @Model.SoLichTinhLapDay lịch khởi hành.</p>
+            }
+            else
+            {
+                <div class="tv-empty"><p>Chưa có lịch khởi hành nào trong 30 ngày tới.</p></div>
+            }
+        </section>
+
+        <section class="ad-card">
+            <div class="ad-card-head">
+                <h2>Tình trạng đơn 30 ngày qua</h2>
+                <span class="ad-badge">@Model.TongDon30Ngay đơn</span>
+            </div>
+            @if (Model.TongDon30Ngay > 0)
+            {
+                <div class="ad-tt-thanh" role="img" aria-label="@string.Join(", ", dsTrangThai.Select(t => $"{t.Ten} {t.So} đơn"))">
+                    @foreach (var t in dsTrangThai.Where(t => t.So > 0))
+                    {
+                        <span class="ad-tt-doan @t.Lop" style="flex-grow: @t.So" title="@t.Ten: @t.So đơn"></span>
+                    }
+                </div>
+                <ul class="ad-tt-chu-thich">
+                    @foreach (var t in dsTrangThai)
+                    {
+                        <li>
+                            <i class="ad-tt-cham @t.Lop" aria-hidden="true"></i>
+                            <span>@t.Ten</span>
+                            <strong>@t.So</strong>
+                            <small>@((t.So * 100m / tong30).ToString("0"))%</small>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="tv-empty"><p>Chưa có đơn nào trong 30 ngày qua.</p></div>
+            }
+        </section>
+    </div>
+
+    @* Đơn gần đây: tìm và lọc ngay trên trang, không tải lại *@
+    <section class="ad-card tq-don" data-don-gan-day>
+        <div class="tq-don-dau">
+            <h2>Đơn gần đây</h2>
+            <div class="tq-don-loc">
+                <input type="search" class="form-control" data-tim placeholder="Tìm mã, tour, người đặt"
+                       aria-label="Tìm trong đơn gần đây" />
+                <select class="form-select" data-loc aria-label="Lọc theo trạng thái thanh toán">
+                    <option value="">Mọi trạng thái</option>
+                    <option>@TrangThaiThanhToanDon.DaThanhToan</option>
+                    <option>@TrangThaiThanhToanDon.DangKiemTra</option>
+                    <option>@TrangThaiThanhToanDon.ChuaThanhToan</option>
+                    <option>@TrangThaiThanhToanDon.DaHuy</option>
+                </select>
+                <a asp-action="DonDatTour" class="tv-link tv-link-di">Tất cả đơn</a>
+            </div>
+        </div>
+
+        @if (Model.DonGanDay.Any())
+        {
+            <div class="ad-table-wrap">
+                <table class="ad-table tq-bang">
+                    <thead>
+                        <tr>
+                            <th>Mã chuyến đi</th>
+                            <th>Tour</th>
+                            <th>Người đặt</th>
+                            <th class="tq-so-tien">Số tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày đặt</th>
+                            <th><span class="visually-hidden">Thao tác</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.DonGanDay)
+                        {
+                            <tr data-trang-thai="@d.TrangThaiThanhToan"
+                                data-chu="@($"{d.MaChuyenDi} {d.TenTour} {d.TenKhach}".ToLowerInvariant())">
+                                <td>
+                                    <span class="ad-mono">@(string.IsNullOrEmpty(d.MaChuyenDi) ? "Chưa có mã" : d.MaChuyenDi)</span>
+                                    @if (d.LaDonNhom)
+                                    {
+                                        <span class="tq-nhan-nhom">Nhóm</span>
+                                    }
+                                </td>
+                                <td class="tq-ten-tour">@d.TenTour</td>
+                                <td>@d.TenKhach</td>
+                                <td class="tq-so-tien">@d.TongTien.ToString("N0") VNĐ</td>
+                                <td><span class="badge-status @LopTrangThai(d.TrangThaiThanhToan)">@d.TrangThaiThanhToan</span></td>
+                                <td class="tq-ngay">@d.NgayDat.ToString("dd/MM HH:mm")</td>
+                                <td><a asp-action="SuaDonDatTour" asp-route-id="@d.Id" class="tv-btn tv-btn-vien ad-btn-nho">Xem</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="tq-khong-thay" data-khong-thay hidden>Không có đơn nào khớp. Thử từ khác hoặc chọn "Mọi trạng thái".</p>
         }
         else
         {
-            <div class="tv-empty"><p>Chưa có đơn nào trong 30 ngày qua.</p></div>
+            <div class="tv-empty"><p>Chưa có đơn đặt tour nào.</p></div>
         }
     </section>
 
@@ -271,3 +381,32 @@
         }
     </section>
 </div>
+
+@section Scripts {
+    <script>
+        // Tìm và lọc bảng Đơn gần đây ngay trên trang (10 đơn đã tải sẵn)
+        (function () {
+            const khoi = document.querySelector("[data-don-gan-day]");
+            if (!khoi) return;
+            const oTim = khoi.querySelector("[data-tim]");
+            const oLoc = khoi.querySelector("[data-loc]");
+            const dsDong = Array.from(khoi.querySelectorAll("tbody tr"));
+            const khongThay = khoi.querySelector("[data-khong-thay]");
+
+            function loc() {
+                const tu = (oTim.value || "").trim().toLowerCase();
+                const trangThai = oLoc.value;
+                let soHien = 0;
+                dsDong.forEach(function (dong) {
+                    const hop = (!tu || dong.dataset.chu.includes(tu)) && (!trangThai || dong.dataset.trangThai === trangThai);
+                    dong.hidden = !hop;
+                    if (hop) soHien++;
+                });
+                if (khongThay) khongThay.hidden = soHien > 0;
+            }
+
+            oTim.addEventListener("input", loc);
+            oLoc.addEventListener("change", loc);
+        })();
+    </script>
+}
