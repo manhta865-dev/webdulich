@@ -81,7 +81,7 @@ Widget chat giữ nguyên chức năng, đổi hình thức nút cho đồng b�
 Khung "Trợ lý TravelVN" (22/11/2026, không hiện với admin và nhân viên):
 - Có khóa Gemini: câu hỏi gửi `POST TroLy/Hoi` (chống giả mạo, tối đa 500 ký tự, 20 câu mỗi giờ mỗi phiên, gửi kèm 6 lượt gần nhất). Máy chủ ghép thông tin thật: liên hệ, cách đặt, số giờ giữ chỗ và gia hạn lấy từ cấu hình, cách thanh toán, đặt nhóm, quy định hủy, khuyến mãi đang hiện ở trang chủ, danh sách tour đang bán. Không gửi tài khoản hay đơn của khách. AI trả lời ngắn và tối đa 3 tour, hiện thành liên kết "Xem tour: …"; mã tour lạ bị bỏ.
 - Chưa có khóa, hết lượt, AI lỗi hoặc quá 25 giây: trình duyệt trả lời theo từ khóa như cũ (đã sửa lại câu mẫu cho đúng: đặt nhóm, QR tự xác nhận).
-- Dòng ghi chú dưới ô nhập đổi theo trường hợp: có khóa thì báo câu hỏi gửi tới Google Gemini và nhắc không nhập thông tin cá nhân; chưa có khóa thì báo trả lời theo câu mẫu.
+- Dòng ghi chú dưới ô nhập đổi theo trường hợp: có khóa thì giới thiệu trợ lý AI hỗ trợ những việc gì, nhắc không nhập thông tin cá nhân và mời nhắn admin khi cần thêm (người dùng chọn bỏ câu nhắc tên Google Gemini, 23/11/2026); chưa có khóa thì báo trả lời theo câu mẫu.
 - Nút gợi ý: Tour núi, Ưu đãi, Đặt nhóm, Hủy tour, Hotline. Khung tin nhắn có `aria-live`.
 
 ### Trang chủ
