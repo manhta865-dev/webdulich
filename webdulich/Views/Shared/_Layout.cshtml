@@ -53,6 +53,8 @@
     // Số khoản tiền vào chưa tự khớp và chưa ai xử lý tay (RB-48)
     int soTienVaoCanXuLy = currentRole == "admin" ? ChatDb.GiaoDichNganHangs.Count(x => x.KetQua != KetQuaTienVao.DaKhop && x.NguoiXuLyId == null) : 0;
     string? nhomHienTai = moTour ? "Tour và lịch" : moKinhDoanh ? "Đơn và doanh thu" : moNoiDung ? "Nội dung" : moConNguoi ? "Khách và nhân sự" : null;
+    // Màn hình chờ rừng cây chỉ ở trang của khách; admin và nhân viên làm việc nhiều trang liên tục nên không che
+    bool coManHinhCho = currentRole != "admin" && currentRole != "huongdanvien" && currentRole != "taixe";
 }
 
 <!DOCTYPE html>
@@ -86,13 +88,21 @@
     <link rel="stylesheet" href="~/css/widgets.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/ve.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+    @if (coManHinhCho)
+    {
+        <link rel="stylesheet" href="~/css/man-hinh-cho.css" asp-append-version="true" />
+    }
     @* Chuyển trang mượt cho toàn site (View Transitions): thanh menu đứng yên, nội dung mờ đi rồi hiện lên.
-       Trình duyệt chưa hỗ trợ thì chuyển trang bình thường. Không còn màn hình chờ vì nó làm mỗi lần chuyển trang bị chớp. *@
+       Trình duyệt chưa hỗ trợ thì chuyển trang bình thường. Trang của khách có thêm màn hình chờ rừng cây (_ManHinhCho). *@
     <style>@@view-transition { navigation: auto; }</style>
 </head>
 
 <body>
     <partial name="_Icons" />
+    @if (coManHinhCho)
+    {
+        <partial name="_ManHinhCho" />
+    }
 
     @if (currentRole == "admin")
     {
