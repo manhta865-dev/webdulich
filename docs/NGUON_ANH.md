@@ -17,6 +17,12 @@ Tải ngày 21/11/2026, khổ 1200 × 525 (Unsplash cắt sẵn), dùng ở kh�
 | `ly-do-ban-do.jpg` | Xem trước hành trình trên bản đồ | Tamas Tuzes-Katai | https://unsplash.com/photos/hand-holding-smartphone-with-navigation-map-rEn-AdBr3Ig |
 | `ly-do-lich.jpg` | Chọn ngày theo lịch tháng | Towfiqu barbhuiya | https://unsplash.com/photos/a-calendar-with-red-push-buttons-pinned-to-it-bwOAixLG0uc |
 
+Ảnh nền đầu trang chủ (hiệu ứng gợn nước), tải ngày 23/11/2026 bản rộng 2400px, thu về 2000 × 1333, nén JPEG còn khoảng 226KB. Trang gốc ghi "Free to use under the Unsplash License", không phải Unsplash+. Trang gốc chỉ ghi chụp ở Việt Nam, không ghi địa danh cụ thể, nên chú thích trên web không nêu tên vịnh.
+
+| Tệp (`wwwroot/images/dau-trang/`) | Dùng ở | Tác giả | Trang gốc |
+|---|---|---|---|
+| `vinh-hoang-hon.jpg` | Nền đầu trang chủ (thuyền trên vịnh lúc hoàng hôn) | Duc Nguyen (@thewhatd) | https://unsplash.com/photos/a-group-of-boats-floating-on-top-of-a-body-of-water-xIgu_NOcSDg |
+
 ## Dịch vụ bản đồ dùng ở trang Khám phá 3D
 
 - Chỉ đường từng bước: máy chủ OSRM công khai (router.project-osrm.org), dữ liệu OpenStreetMap. Máy chủ này dành cho thử nghiệm, không cam kết ổn định; khi chạy thật nhiều người nên tự dựng OSRM hoặc dùng dịch vụ trả phí. Ghi nguồn ngay dưới danh sách chỉ đường.

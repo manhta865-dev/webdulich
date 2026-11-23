@@ -57,7 +57,13 @@
 }
 
 @* ===== 1. Đầu trang: vé chính, cuống vé tách được, tour xếp quạt và hàng điểm đến trên một hàng ===== *@
-<section class="tc-dau">
+<section class="tc-dau" id="tcDau">
+    @* Ảnh nền tràn màn hình (Unsplash, nguồn ở docs/NGUON_ANH.md). Máy tính có chuột: rê chuột lên thì mặt nước gợn
+       (wwwroot/js/gon-nuoc.js vẽ lại ảnh lên canvas bằng WebGL). Điện thoại hoặc giảm chuyển động: chỉ ảnh tĩnh. *@
+    <div class="tc-dau-nen" aria-hidden="true">
+        <img src="~/images/dau-trang/vinh-hoang-hon.jpg" alt="" fetchpriority="high" decoding="async" />
+        <canvas class="tc-dau-nuoc"></canvas>
+    </div>
     <div class="tc-trong">
         <div class="tc-dau-hang">
         @* Vé chính và cuống vé là hai mảnh liền nhau; rê chuột (hoặc dùng phím Tab) vào vé thì cuống tách ra như bị xé *@
@@ -550,6 +556,7 @@
 </div>
 
 <script type="module" src="~/js/hero-3d.js" asp-append-version="true"></script>
+<script src="~/js/gon-nuoc.js" asp-append-version="true" defer></script>
 @if (dsVideo.Count > 0)
 {
     <script src="~/js/video-nhe.js" asp-append-version="true"></script>
