@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 namespace webdulich.Models
 {
     // Form admin chính sửa tài khoản (RB-51). Mật khẩu chỉ đổi khi nhập mật khẩu mới.
-    // Vai trò chỉ đổi giữa khách hàng và quản trị viên; hướng dẫn viên, tài xế đổi ở mục Nhân sự (gắn với hồ sơ NhanViens).
+    // Vai trò: khách hàng và quản trị viên đổi qua lại với nhau; nhân viên (gắn hồ sơ NhanViens) chỉ đổi qua lại
+    // hướng dẫn viên và tài xế, khi không còn chuyến chưa đi xong ở vai trò cũ. Nhân viên mới thêm ở mục Nhân sự.
     public class SuaTaiKhoanViewModel
     {
         public int Id { get; set; }

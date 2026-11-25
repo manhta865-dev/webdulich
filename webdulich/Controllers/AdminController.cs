@@ -1306,7 +1306,24 @@ namespace webdulich.Controllers
             return View(model);
         }
 
-        // Cờ hiển thị của form sửa tài khoản: đang sửa chính mình, tài khoản là nhân viên (vai trò khóa)
+        // Số chuyến chưa đi xong (lịch chưa hủy, chưa qua ngày về) mà nhân viên của tài khoản này được phân công ở vai trò cho trước.
+        // Đi xong khi số ngày từ ngày khởi hành tới hôm nay >= số ngày của tour, cùng cách tính với đánh giá (RB-43).
+        private int SoChuyenChuaXongTheoVaiTro(int taiKhoanId, string vaiTro)
+        {
+            var nhanVienId = _context.NhanViens.Where(n => n.TaiKhoanId == taiKhoanId).Select(n => (int?)n.Id).FirstOrDefault();
+            if (!nhanVienId.HasValue)
+            {
+                return 0;
+            }
+            var homNay = GioVN.HomNay;
+            var ds = vaiTro == "huongdanvien"
+                ? _context.PhanCongTours.Where(p => p.HuongDanVienId == nhanVienId.Value)
+                : _context.PhanCongTours.Where(p => p.TaiXeId == nhanVienId.Value);
+            return ds.Count(p => p.LichKhoiHanhTour!.TrangThai != TrangThaiLich.DaHuy
+                && EF.Functions.DateDiffDay(p.LichKhoiHanhTour.NgayKhoiHanh, homNay) < (p.LichKhoiHanhTour.Tour!.SoNgay ?? 1));
+        }
+
+        // Cờ hiển thị của form sửa tài khoản: đang sửa chính mình, tài khoản là nhân viên (chỉ đổi hướng dẫn viên ↔ tài xế)
         private void DienCoSuaTaiKhoan(SuaTaiKhoanViewModel model, TaiKhoan tk)
         {
             model.LaChinhMinh = HttpContext.Session.GetInt32("taiKhoanId") == tk.Id;
@@ -1359,13 +1376,34 @@ namespace webdulich.Controllers
 
             // Khóa an toàn (RB-51):
             // - không tự đổi vai trò của chính mình, không tự bỏ quyền admin chính của mình;
-            // - vai trò hướng dẫn viên, tài xế không đổi ở đây (gắn với hồ sơ nhân sự), và không chọn hai vai trò này ở đây;
+            // - nhân viên chỉ đổi qua lại hướng dẫn viên và tài xế (hồ sơ NhanViens, lương, đơn nghỉ gắn với người đó),
+            //   và chỉ khi không còn chuyến chưa đi xong ở vai trò cũ (nếu không chuyến đó có "tài xế làm hướng dẫn viên");
+            // - khách hàng, quản trị viên chỉ đổi qua lại với nhau (nhân viên mới thêm ở mục Nhân sự);
             // - luôn còn ít nhất một admin chính.
             DienCoSuaTaiKhoan(model, tk);
-            string vaiTroMoi = model.LaChinhMinh || model.LaNhanVien ? tk.VaiTro : model.VaiTro;
-            if (vaiTroMoi is not ("user" or "admin") && !model.LaNhanVien)
+            string vaiTroMoi = model.LaChinhMinh ? tk.VaiTro : model.VaiTro;
+            if (!model.LaChinhMinh)
             {
-                ModelState.AddModelError("VaiTro", "Chỉ chọn Khách hàng hoặc Quản trị viên. Hướng dẫn viên, tài xế thêm ở mục Nhân sự.");
+                if (model.LaNhanVien)
+                {
+                    if (vaiTroMoi is not ("huongdanvien" or "taixe"))
+                    {
+                        ModelState.AddModelError("VaiTro", "Nhân viên chỉ đổi giữa Hướng dẫn viên và Tài xế. Nghỉ làm thì đặt Tạm nghỉ ở mục Nhân sự.");
+                    }
+                    else if (vaiTroMoi != tk.VaiTro)
+                    {
+                        int soChuyen = SoChuyenChuaXongTheoVaiTro(tk.Id, tk.VaiTro);
+                        if (soChuyen > 0)
+                        {
+                            ModelState.AddModelError("VaiTro",
+                                $"Còn {soChuyen} chuyến chưa đi xong với vai trò {VaiTroHienThi.Ten(tk.VaiTro).ToLower()}. Đổi người ở Phân công tour trước.");
+                        }
+                    }
+                }
+                else if (vaiTroMoi is not ("user" or "admin"))
+                {
+                    ModelState.AddModelError("VaiTro", "Chỉ chọn Khách hàng hoặc Quản trị viên. Hướng dẫn viên, tài xế thêm ở mục Nhân sự.");
+                }
             }
 
             var quyenMoi = vaiTroMoi == "admin"

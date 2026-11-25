@@ -48,10 +48,12 @@
             <label asp-for="VaiTro" class="form-label">Vai trò</label>
             @if (Model.LaNhanVien)
             {
-                @* Hướng dẫn viên, tài xế gắn với hồ sơ nhân sự: đổi ở mục Nhân sự *@
-                <input type="hidden" asp-for="VaiTro" />
-                <input class="form-control" value="@webdulich.Models.VaiTroHienThi.Ten(Model.VaiTro)" readonly />
-                <small class="text-muted">Vai trò nhân viên đổi ở mục <a asp-controller="Admin" asp-action="NhanSu" class="tv-link">Nhân sự</a>.</small>
+                @* Nhân viên gắn với hồ sơ nhân sự: chỉ đổi qua lại hướng dẫn viên và tài xế (RB-51) *@
+                <select asp-for="VaiTro" class="form-select">
+                    <option value="huongdanvien">Hướng dẫn viên</option>
+                    <option value="taixe">Tài xế</option>
+                </select>
+                <small class="text-muted">Chỉ đổi được khi người này không còn chuyến chưa đi xong ở vai trò cũ (đổi người ở <a asp-controller="Admin" asp-action="PhanCongTour" class="tv-link">Phân công tour</a> trước). Nghỉ làm thì đặt Tạm nghỉ ở mục <a asp-controller="Admin" asp-action="NhanSu" class="tv-link">Nhân sự</a>.</small>
             }
             else if (Model.LaChinhMinh)
             {
