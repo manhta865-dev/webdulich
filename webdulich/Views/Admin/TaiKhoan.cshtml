@@ -126,6 +126,8 @@
                         </span>
                         <div class="tk-the-nut">
                             <a asp-action="ChiTietTaiKhoan" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho">Chi tiết</a>
+                            <a asp-action="SuaTaiKhoan" asp-route-id="@item.Id" class="tv-btn tv-btn-vien ad-btn-nho"
+                               aria-label="Sửa tài khoản và quyền của @item.HoTen">Sửa</a>
                             @if (!laToi)
                             {
                                 <button type="button" class="tv-btn tv-btn-huy ad-btn-nho btn-xoa" data-id="@item.Id"

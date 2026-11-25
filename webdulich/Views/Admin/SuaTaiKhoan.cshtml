@@ -46,14 +46,50 @@
 
         <div class="mb-3">
             <label asp-for="VaiTro" class="form-label">Vai trò</label>
-            <select asp-for="VaiTro" class="form-select">
-                <option value="user">Khách hàng</option>
-                <option value="admin">Quản trị viên</option>
-                <option value="huongdanvien">Hướng dẫn viên</option>
-                <option value="taixe">Tài xế</option>
-            </select>
+            @if (Model.LaNhanVien)
+            {
+                @* Hướng dẫn viên, tài xế gắn với hồ sơ nhân sự: đổi ở mục Nhân sự *@
+                <input type="hidden" asp-for="VaiTro" />
+                <input class="form-control" value="@webdulich.Models.VaiTroHienThi.Ten(Model.VaiTro)" readonly />
+                <small class="text-muted">Vai trò nhân viên đổi ở mục <a asp-controller="Admin" asp-action="NhanSu" class="tv-link">Nhân sự</a>.</small>
+            }
+            else if (Model.LaChinhMinh)
+            {
+                <input type="hidden" asp-for="VaiTro" />
+                <input class="form-control" value="@webdulich.Models.VaiTroHienThi.Ten(Model.VaiTro)" readonly />
+                <small class="text-muted">Không tự đổi vai trò của chính mình.</small>
+            }
+            else
+            {
+                <select asp-for="VaiTro" class="form-select" id="chonVaiTro">
+                    <option value="user">Khách hàng</option>
+                    <option value="admin">Quản trị viên</option>
+                </select>
+                <small class="text-muted">Hướng dẫn viên, tài xế thêm ở mục Nhân sự.</small>
+            }
             <span asp-validation-for="VaiTro" class="text-danger"></span>
         </div>
+
+        @* Nhóm quyền của quản trị viên (RB-51): menu và trang quản trị chỉ mở theo các nhóm được tick *@
+        <fieldset class="mb-3 ad-quyen" id="khoiQuyen" @(Model.VaiTro == "admin" ? "" : "hidden")>
+            <legend class="form-label">Nhóm quyền quản trị</legend>
+            <p class="ad-note">Trang Tổng quan luôn xem được. Nhóm "Tài khoản và phân quyền" là quyền của admin chính: sửa, xóa tài khoản và cấp quyền.</p>
+            <div class="ad-quyen-luoi">
+                @foreach (var q in webdulich.Models.QuyenAdmin.TatCa)
+                {
+                    var khoa = Model.LaChinhMinh && q.Ma == webdulich.Models.QuyenAdmin.TaiKhoanQuyen;
+                    var daTick = Model.DsQuyen.Contains(q.Ma) || khoa;
+                    <label class="ad-quyen-o@(khoa ? " khoa" : "")">
+                        <input type="checkbox" name="DsQuyen" value="@q.Ma" @(daTick ? "checked" : "") @(khoa ? "disabled" : "") />
+                        <span>
+                            <strong>@q.Ten</strong>
+                            <small>@(khoa ? "Bạn không tự bỏ quyền này của mình." : q.MoTa)</small>
+                        </span>
+                    </label>
+                }
+            </div>
+            <span asp-validation-for="DsQuyen" class="text-danger"></span>
+        </fieldset>
 
         <div class="ad-form-actions ad-form-actions-trai">
             <button type="submit" class="tv-btn tv-btn-chinh">Lưu thay đổi</button>
@@ -65,4 +101,13 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Chọn "Quản trị viên" thì hiện các ô tick nhóm quyền
+        (function () {
+            var chon = document.getElementById("chonVaiTro");
+            var khoi = document.getElementById("khoiQuyen");
+            if (!chon || !khoi) return;
+            chon.addEventListener("change", function () { khoi.hidden = chon.value !== "admin"; });
+        })();
+    </script>
 }

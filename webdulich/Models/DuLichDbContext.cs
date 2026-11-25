@@ -44,6 +44,7 @@ namespace webdulich.Models
         public DbSet<BangLuong> BangLuongs { get; set; }
         public DbSet<NhacThanhToan> NhacThanhToans { get; set; }
         public DbSet<GiaoDichNganHang> GiaoDichNganHangs { get; set; }
+        public DbSet<TaiKhoanQuyen> TaiKhoanQuyens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -287,6 +288,17 @@ namespace webdulich.Models
                 e.HasOne(x => x.LichTrinhTour).WithMany(x => x.DsDiemThamQuan).HasForeignKey(x => x.LichTrinhTourId).OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(x => x.DiemThamQuan).WithMany(x => x.DsLichTrinh).HasForeignKey(x => x.DiemThamQuanId).OnDelete(DeleteBehavior.Restrict);
                 e.ToTable(t => t.HasCheckConstraint("CK_LichTrinhDiem_ThuTu", "[ThuTu] >= 1"));
+            });
+
+            // Phân quyền quản trị theo nhóm chức năng (Mo26, RB-51): bảng nối toàn khóa, mã quyền thuộc danh mục cố định.
+            // Xóa tài khoản thì quyền đi theo (Cascade: dữ liệu con thuần túy, không phải dữ liệu tài chính hay lịch sử)
+            modelBuilder.Entity<TaiKhoanQuyen>(e =>
+            {
+                e.HasKey(x => new { x.TaiKhoanId, x.MaQuyen });
+                e.Property(x => x.MaQuyen).HasMaxLength(30).IsUnicode(false);
+                e.HasOne(x => x.TaiKhoan).WithMany().HasForeignKey(x => x.TaiKhoanId).OnDelete(DeleteBehavior.Cascade);
+                e.ToTable(t => t.HasCheckConstraint("CK_TaiKhoanQuyen_MaQuyen",
+                    "[MaQuyen] IN ('TourLich','DonThanhToan','DoanhThuTienVao','NoiDung','KhachNhanSu','TaiKhoanQuyen')"));
             });
 
             modelBuilder.Entity<LichKhoiHanhTour>()

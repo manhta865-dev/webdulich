@@ -17,7 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 var cheDoSecure = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 
 // Add services
-builder.Services.AddControllersWithViews(o => o.DungTiengViet())
+// KiemTraQuyenAdmin: chặn trang quản trị theo nhóm quyền của tài khoản admin (RB-51)
+builder.Services.AddControllersWithViews(o =>
+    {
+        o.DungTiengViet();
+        o.Filters.Add<webdulich.Services.KiemTraQuyenAdmin>();
+    })
     .AddCookieTempDataProvider(o => o.Cookie.SecurePolicy = cheDoSecure);
 
 // Lax chứ không Strict: mở link mời từ Zalo, Messenger vẫn còn đăng nhập

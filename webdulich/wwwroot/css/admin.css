@@ -400,6 +400,31 @@
    ===================================================================== */
 
 /* ---------- Thông báo ---------- */
+/* Ô tick nhóm quyền ở trang Sửa tài khoản (RB-51) */
+.ad-quyen { padding: 0; border: 0; }
+.ad-quyen .ad-note { margin-top: 0; }
+.ad-quyen-luoi { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--tv-k2); }
+.ad-quyen-o {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--tv-k3);
+    padding: var(--tv-k3);
+    border: 1px solid var(--tv-vien);
+    border-radius: var(--tv-bo-nut);
+    background: var(--tv-be-mat);
+    cursor: pointer;
+}
+.ad-quyen-o:has(input:checked) { border-color: var(--tv-nhan); background: var(--tv-nhan-nhat); }
+.ad-quyen-o input { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--tv-nhan); }
+.ad-quyen-o span { display: flex; flex-direction: column; gap: 2px; }
+.ad-quyen-o small { color: var(--tv-chu-phu); font-size: var(--tv-cs-nho); }
+.ad-quyen-o.khoa { cursor: not-allowed; opacity: 0.85; }
+
+/* Trang báo chưa có quyền (RB-51) */
+.ad-khong-quyen { max-width: 640px; }
+.ad-khong-quyen h1 { margin: 0 0 var(--tv-k2); font-size: var(--tv-cs-lon); font-weight: 700; }
+.ad-khong-quyen p { margin: 0 0 var(--tv-k4); color: var(--tv-chu-phu); }
+
 .ad-alert {
     margin-bottom: var(--tv-k4);
     padding: var(--tv-k3) var(--tv-k4);

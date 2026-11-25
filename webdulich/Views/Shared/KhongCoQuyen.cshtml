@@ -1,0 +1,17 @@
+@* Trang báo khi tài khoản quản trị vào một mục chưa được cấp quyền (Services/KiemTraQuyenAdmin, RB-51) *@
+@{
+    var tenQuyen = ViewData["TenQuyen"] as string ?? "mục này";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="ad-page">
+    <section class="ad-card ad-khong-quyen" role="alert">
+        <h1>Chưa có quyền vào mục này</h1>
+        <p>Tài khoản của bạn chưa được cấp nhóm quyền <strong>@tenQuyen</strong>. Nhờ admin chính cấp thêm ở mục <strong>Tài khoản</strong>, trang sửa tài khoản của bạn.</p>
+        <a asp-controller="Admin" asp-action="TongQuan" class="tv-btn tv-btn-chinh">Về trang tổng quan</a>
+    </section>
+</div>

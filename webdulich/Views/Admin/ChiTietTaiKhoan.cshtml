@@ -40,6 +40,10 @@
         {
             <a asp-controller="TaiKhoan" asp-action="SuaHoSo" class="tv-btn tv-btn-chinh tk-ho-so-nut">Sửa hồ sơ của tôi</a>
         }
+        else
+        {
+            <a asp-controller="Admin" asp-action="SuaTaiKhoan" asp-route-id="@tk.Id" class="tv-btn tv-btn-chinh tk-ho-so-nut">Sửa tài khoản và quyền</a>
+        }
     </section>
 
     <div class="ad-kpis">

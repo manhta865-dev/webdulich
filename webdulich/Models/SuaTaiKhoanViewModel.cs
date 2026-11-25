@@ -2,7 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace webdulich.Models
 {
-    // Form admin sửa tài khoản. Mật khẩu chỉ đổi khi admin nhập mật khẩu mới.
+    // Form admin chính sửa tài khoản (RB-51). Mật khẩu chỉ đổi khi nhập mật khẩu mới.
+    // Vai trò chỉ đổi giữa khách hàng và quản trị viên; hướng dẫn viên, tài xế đổi ở mục Nhân sự (gắn với hồ sơ NhanViens).
     public class SuaTaiKhoanViewModel
     {
         public int Id { get; set; }
@@ -17,5 +18,12 @@ namespace webdulich.Models
         public string? MatKhauMoi { get; set; }
 
         public string VaiTro { get; set; } = "user";
+
+        // Nhóm quyền được tick (chỉ có nghĩa khi vai trò là quản trị viên)
+        public List<string> DsQuyen { get; set; } = new();
+
+        // Máy chủ điền, không nhận từ form
+        public bool LaChinhMinh { get; set; }
+        public bool LaNhanVien { get; set; }
     }
 }

@@ -1275,7 +1275,9 @@ namespace webdulich.Controllers
             return View(m);
         }
 
-        // Đây là tính năng sửa tk người dùng ( chưa sử dụng tới vì mục đích lý do bảo mật và logic của sản phầm nên chức năng này chưa sử dụng đến ) ( để đến khi qua đồ án chuyên ngành có thể sẽ dùng lại )
+        // Sửa tài khoản và cấp nhóm quyền (RB-51). Trước đây trang này bị ẩn vì một admin có thể tự hạ vai trò của mình,
+        // hạ admin cuối cùng hoặc đổi vai trò nhân viên làm lệch hồ sơ nhân sự; nay mở lại kèm các khóa an toàn ở bản POST.
+        // Chỉ tài khoản có quyền "Tài khoản và phân quyền" (admin chính) vào được (bộ lọc KiemTraQuyenAdmin).
         public IActionResult SuaTaiKhoan(int id)
         {
             if (!LaAdmin())
@@ -1291,17 +1293,25 @@ namespace webdulich.Controllers
             }
 
             // Không đưa mật khẩu (kể cả bản băm) ra form
-            return View(new SuaTaiKhoanViewModel
+            var model = new SuaTaiKhoanViewModel
             {
                 Id = tk.Id,
                 HoTen = tk.HoTen,
                 Email = tk.Email,
                 SoDienThoai = tk.SoDienThoai,
-                VaiTro = tk.VaiTro
-            });
+                VaiTro = tk.VaiTro,
+                DsQuyen = _context.TaiKhoanQuyens.Where(q => q.TaiKhoanId == tk.Id).Select(q => q.MaQuyen).ToList()
+            };
+            DienCoSuaTaiKhoan(model, tk);
+            return View(model);
         }
 
-        private static readonly string[] CacVaiTro = { "user", "admin", "huongdanvien", "taixe" };
+        // Cờ hiển thị của form sửa tài khoản: đang sửa chính mình, tài khoản là nhân viên (vai trò khóa)
+        private void DienCoSuaTaiKhoan(SuaTaiKhoanViewModel model, TaiKhoan tk)
+        {
+            model.LaChinhMinh = HttpContext.Session.GetInt32("taiKhoanId") == tk.Id;
+            model.LaNhanVien = tk.VaiTro is "huongdanvien" or "taixe";
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1346,14 +1356,38 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("MatKhauMoi", "Mật khẩu mới cần ít nhất 6 ký tự.");
             }
-            if (!CacVaiTro.Contains(model.VaiTro))
+
+            // Khóa an toàn (RB-51):
+            // - không tự đổi vai trò của chính mình, không tự bỏ quyền admin chính của mình;
+            // - vai trò hướng dẫn viên, tài xế không đổi ở đây (gắn với hồ sơ nhân sự), và không chọn hai vai trò này ở đây;
+            // - luôn còn ít nhất một admin chính.
+            DienCoSuaTaiKhoan(model, tk);
+            string vaiTroMoi = model.LaChinhMinh || model.LaNhanVien ? tk.VaiTro : model.VaiTro;
+            if (vaiTroMoi is not ("user" or "admin") && !model.LaNhanVien)
             {
-                ModelState.AddModelError("VaiTro", "Vai trò không hợp lệ.");
+                ModelState.AddModelError("VaiTro", "Chỉ chọn Khách hàng hoặc Quản trị viên. Hướng dẫn viên, tài xế thêm ở mục Nhân sự.");
+            }
+
+            var quyenMoi = vaiTroMoi == "admin"
+                ? (model.DsQuyen ?? new List<string>()).Where(QuyenAdmin.HopLe).ToHashSet()
+                : new HashSet<string>();
+            if (model.LaChinhMinh && vaiTroMoi == "admin")
+            {
+                quyenMoi.Add(QuyenAdmin.TaiKhoanQuyen);
+            }
+
+            bool dangLaAdminChinh = tk.VaiTro == "admin"
+                && _context.TaiKhoanQuyens.Any(q => q.TaiKhoanId == tk.Id && q.MaQuyen == QuyenAdmin.TaiKhoanQuyen);
+            if (dangLaAdminChinh && !quyenMoi.Contains(QuyenAdmin.TaiKhoanQuyen)
+                && !_context.TaiKhoanQuyens.Any(q => q.TaiKhoanId != tk.Id && q.MaQuyen == QuyenAdmin.TaiKhoanQuyen && q.TaiKhoan!.VaiTro == "admin"))
+            {
+                ModelState.AddModelError("DsQuyen", "Đây là admin chính cuối cùng. Cấp quyền \"Tài khoản và phân quyền\" cho người khác trước.");
             }
 
             if (!ModelState.IsValid)
             {
                 model.MatKhauMoi = null;
+                model.VaiTro = vaiTroMoi;
                 return View(model);
             }
 
@@ -1366,7 +1400,15 @@ namespace webdulich.Controllers
                 // Không cắt dấu cách, cùng cách với đăng ký và đăng nhập
                 tk.MatKhau = BCrypt.Net.BCrypt.HashPassword(model.MatKhauMoi);
             }
-            tk.VaiTro = model.VaiTro;
+            tk.VaiTro = vaiTroMoi;
+
+            // Quyền: bỏ nhóm không còn tick, thêm nhóm mới tick (không phải quản trị viên thì không còn quyền nào); lưu cùng một lần
+            var quyenCu = _context.TaiKhoanQuyens.Where(q => q.TaiKhoanId == tk.Id).ToList();
+            _context.TaiKhoanQuyens.RemoveRange(quyenCu.Where(q => !quyenMoi.Contains(q.MaQuyen)));
+            foreach (var ma in quyenMoi.Where(ma => !quyenCu.Any(q => q.MaQuyen == ma)))
+            {
+                _context.TaiKhoanQuyens.Add(new TaiKhoanQuyen { TaiKhoanId = tk.Id, MaQuyen = ma });
+            }
 
             _context.SaveChanges();
 
@@ -1398,6 +1440,15 @@ namespace webdulich.Controllers
             if (taiKhoanDangNhapId == id)
             {
                 TempData["error"] = "Bạn không thể xóa tài khoản đang đăng nhập!";
+                return RedirectToAction("TaiKhoan");
+            }
+
+            // Luôn còn ít nhất một admin chính (RB-51)
+            if (taiKhoan.VaiTro == "admin"
+                && _context.TaiKhoanQuyens.Any(q => q.TaiKhoanId == id && q.MaQuyen == QuyenAdmin.TaiKhoanQuyen)
+                && !_context.TaiKhoanQuyens.Any(q => q.TaiKhoanId != id && q.MaQuyen == QuyenAdmin.TaiKhoanQuyen && q.TaiKhoan!.VaiTro == "admin"))
+            {
+                TempData["error"] = "Không thể xóa admin chính cuối cùng. Cấp quyền \"Tài khoản và phân quyền\" cho người khác trước.";
                 return RedirectToAction("TaiKhoan");
             }
             // Kiểm tra xem tài khoản này có liên quan đến nhân viên nào trong bảng NhanViens hay không. Nếu có liên quan đến nhân viên nào đó mà nhân viên đó đã được phân công vào lịch tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu chuyển nhân viên sang trạng thái tạm nghỉ thay vì xóa. Nếu không có liên quan đến nhân viên nào hoặc có liên quan nhưng nhân viên đó chưa được phân công vào lịch tour nào thì hệ thống sẽ tiếp tục kiểm tra xem tài khoản đó có liên quan đến đơn đặt tour nào trong bảng DatTours hay không. Nếu có liên quan đến đơn đặt tour nào đó thì hệ thống sẽ không cho phép xóa và hiển thị thông báo lỗi yêu cầu giữ lại tài khoản vì đã có đơn đặt tour liên quan. Nếu không có liên quan đến đơn đặt tour nào thì hệ thống sẽ xóa bản ghi của tài khoản đó khỏi bảng TaiKhoans, đồng thời cũng sẽ xóa tất cả các liên kết và dữ liệu liên quan đến tài khoản đó trong các bảng khác như NhanViens nếu có để đảm bảo tính toàn vẹn dữ liệu. Cuối cùng chuyển hướng admin về trang danh sách tài khoản để thấy rằng tài khoản đã bị xóa hoặc hiển thị thông báo lỗi nếu không thể xóa.

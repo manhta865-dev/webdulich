@@ -1449,6 +1449,24 @@ namespace webdulich.Migrations
                         });
                 });
 
+            modelBuilder.Entity("webdulich.Models.TaiKhoanQuyen", b =>
+                {
+                    b.Property<int>("TaiKhoanId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MaQuyen")
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.HasKey("TaiKhoanId", "MaQuyen");
+
+                    b.ToTable("TaiKhoanQuyens", t =>
+                        {
+                            t.HasCheckConstraint("CK_TaiKhoanQuyen_MaQuyen", "[MaQuyen] IN ('TourLich','DonThanhToan','DoanhThuTienVao','NoiDung','KhachNhanSu','TaiKhoanQuyen')");
+                        });
+                });
+
             modelBuilder.Entity("webdulich.Models.TinNhanLienHe", b =>
                 {
                     b.Property<int>("Id")
@@ -2101,6 +2119,17 @@ namespace webdulich.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PhuongTien");
+                });
+
+            modelBuilder.Entity("webdulich.Models.TaiKhoanQuyen", b =>
+                {
+                    b.HasOne("webdulich.Models.TaiKhoan", "TaiKhoan")
+                        .WithMany()
+                        .HasForeignKey("TaiKhoanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaiKhoan");
                 });
 
             modelBuilder.Entity("webdulich.Models.TinNhanLienHe", b =>

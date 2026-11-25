@@ -53,6 +53,9 @@
     // Số khoản tiền vào chưa tự khớp và chưa ai xử lý tay (RB-48)
     int soTienVaoCanXuLy = currentRole == "admin" ? ChatDb.GiaoDichNganHangs.Count(x => x.KetQua != KetQuaTienVao.DaKhop && x.NguoiXuLyId == null) : 0;
     string? nhomHienTai = moTour ? "Tour và lịch" : moKinhDoanh ? "Đơn và doanh thu" : moNoiDung ? "Nội dung" : moConNguoi ? "Khách và nhân sự" : null;
+    // Nhóm quyền của tài khoản admin đang đăng nhập (RB-51): menu chỉ hiện mục được phép; bộ lọc KiemTraQuyenAdmin chặn khi gõ thẳng đường dẫn
+    var quyenCuaToi = currentRole == "admin" ? QuyenAdmin.CuaToi(Context, ChatDb) : new HashSet<string>();
+    bool CoQuyen(string ma) => quyenCuaToi.Contains(ma);
     // Màn hình chờ rừng cây chỉ ở trang của khách; admin và nhân viên làm việc nhiều trang liên tục nên không che
     bool coManHinhCho = currentRole != "admin" && currentRole != "huongdanvien" && currentRole != "taixe";
 }
@@ -116,47 +119,75 @@
                     <svg class="tv-icon" aria-hidden="true"><use href="#i-grid" /></svg>
                     <span>Tổng quan</span>
                 </a>
-                @* Nhóm xổ xuống dùng thẻ details nên không cần JavaScript. Cùng name: mở nhóm này thì nhóm kia tự đóng. *@
-                <details class="tv-side-nhom" name="menuAdmin" open="@moTour">
-                    <summary>
-                        <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
-                        <span>Tour và lịch</span>
-                    </summary>
-                    <a asp-controller="Admin" asp-action="Index" class="@MucAdmin(mucTour)"><svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg><span>Quản lý tour</span></a>
-                    <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@MucAdmin(mucLichDi)"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Lịch đi</span></a>
-                    <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@MucAdmin(mucLichTrinh)"><svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg><span>Lịch trình</span></a>
-                    <a asp-controller="Admin" asp-action="PhanCongTour" class="@MucAdmin(mucPhanCong)"><svg class="tv-icon" aria-hidden="true"><use href="#i-truck" /></svg><span>Phân công tour</span></a>
-                </details>
-                <details class="tv-side-nhom" name="menuAdmin" open="@moKinhDoanh">
-                    <summary>
-                        <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
-                        <span>Đơn và doanh thu</span>
-                    </summary>
-                    <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg><span>Đơn đặt tour</span></a>
-                    <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)"><svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg><span>Khuyến mãi</span></a>
-                    <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chart" /></svg><span>Doanh thu</span></a>
-                    <a asp-controller="AdminTienVao" asp-action="Index" class="@Active("AdminTienVao")"><svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg><span>Giao dịch ngân hàng</span>@if (soTienVaoCanXuLy > 0) {<b class="tv-side-dem" aria-label="@soTienVaoCanXuLy khoản tiền vào cần xử lý">@soTienVaoCanXuLy</b>}</a>
-                </details>
-                <details class="tv-side-nhom" name="menuAdmin" open="@moNoiDung">
-                    <summary>
-                        <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
-                        <span>Nội dung</span>
-                    </summary>
-                    <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")"><svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg><span>Bài viết</span></a>
-                    <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")"><svg class="tv-icon" aria-hidden="true"><use href="#i-video" /></svg><span>Video</span></a>
-                    <a asp-controller="AdminDanhGia" asp-action="Index" class="@Active("AdminDanhGia")"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Đánh giá tour</span></a>
-                </details>
-                <details class="tv-side-nhom" name="menuAdmin" open="@moConNguoi">
-                    <summary>
-                        <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
-                        <span>Khách và nhân sự</span>
-                    </summary>
-                    <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Tin nhắn</span></a>
-                    <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg><span>Tài khoản</span></a>
-                    <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg><span>Nhân sự</span></a>
-                    <a asp-controller="AdminDonXinNghi" asp-action="Index" class="@Active("AdminDonXinNghi")"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Đơn xin nghỉ</span>@if (soDonNghiCho > 0) {<b class="tv-side-dem" aria-label="@soDonNghiCho đơn chờ duyệt">@soDonNghiCho</b>}</a>
-                    <a asp-controller="AdminLuong" asp-action="Index" class="@Active("AdminLuong")"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg><span>Lương nhân viên</span></a>
-                </details>
+                @* Nhóm xổ xuống dùng thẻ details nên không cần JavaScript. Cùng name: mở nhóm này thì nhóm kia tự đóng.
+                   Mỗi mục chỉ hiện khi tài khoản có nhóm quyền tương ứng (RB-51); nhóm không còn mục nào thì ẩn cả nhóm. *@
+                @if (CoQuyen(QuyenAdmin.TourLich))
+                {
+                    <details class="tv-side-nhom" name="menuAdmin" open="@moTour">
+                        <summary>
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-box" /></svg>
+                            <span>Tour và lịch</span>
+                        </summary>
+                        <a asp-controller="Admin" asp-action="Index" class="@MucAdmin(mucTour)"><svg class="tv-icon" aria-hidden="true"><use href="#i-compass" /></svg><span>Quản lý tour</span></a>
+                        <a asp-controller="Admin" asp-action="QuanLyLichKhoiHanh" class="@MucAdmin(mucLichDi)"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Lịch đi</span></a>
+                        <a asp-controller="Admin" asp-action="QuanLyLichTrinh" class="@MucAdmin(mucLichTrinh)"><svg class="tv-icon" aria-hidden="true"><use href="#i-route" /></svg><span>Lịch trình</span></a>
+                        <a asp-controller="Admin" asp-action="PhanCongTour" class="@MucAdmin(mucPhanCong)"><svg class="tv-icon" aria-hidden="true"><use href="#i-truck" /></svg><span>Phân công tour</span></a>
+                    </details>
+                }
+                @if (CoQuyen(QuyenAdmin.DonThanhToan) || CoQuyen(QuyenAdmin.DoanhThuTienVao))
+                {
+                    <details class="tv-side-nhom" name="menuAdmin" open="@moKinhDoanh">
+                        <summary>
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg>
+                            <span>Đơn và doanh thu</span>
+                        </summary>
+                        @if (CoQuyen(QuyenAdmin.DonThanhToan))
+                        {
+                            <a asp-controller="Admin" asp-action="DonDatTour" class="@MucAdmin(mucDon)"><svg class="tv-icon" aria-hidden="true"><use href="#i-receipt" /></svg><span>Đơn đặt tour</span></a>
+                            <a asp-controller="Admin" asp-action="KhuyenMai" class="@MucAdmin(mucKhuyenMai)"><svg class="tv-icon" aria-hidden="true"><use href="#i-tag" /></svg><span>Khuyến mãi</span></a>
+                        }
+                        @if (CoQuyen(QuyenAdmin.DoanhThuTienVao))
+                        {
+                            <a asp-controller="Admin" asp-action="DoanhThu" class="@MucAdmin(mucDoanhThu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chart" /></svg><span>Doanh thu</span></a>
+                            <a asp-controller="AdminTienVao" asp-action="Index" class="@Active("AdminTienVao")"><svg class="tv-icon" aria-hidden="true"><use href="#i-bank" /></svg><span>Giao dịch ngân hàng</span>@if (soTienVaoCanXuLy > 0) {<b class="tv-side-dem" aria-label="@soTienVaoCanXuLy khoản tiền vào cần xử lý">@soTienVaoCanXuLy</b>}</a>
+                        }
+                    </details>
+                }
+                @if (CoQuyen(QuyenAdmin.NoiDung))
+                {
+                    <details class="tv-side-nhom" name="menuAdmin" open="@moNoiDung">
+                        <summary>
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg>
+                            <span>Nội dung</span>
+                        </summary>
+                        <a asp-controller="AdminBaiViet" asp-action="Index" class="@Active("AdminBaiViet")"><svg class="tv-icon" aria-hidden="true"><use href="#i-article" /></svg><span>Bài viết</span></a>
+                        <a asp-controller="AdminVideo" asp-action="Index" class="@Active("AdminVideo")"><svg class="tv-icon" aria-hidden="true"><use href="#i-video" /></svg><span>Video</span></a>
+                        <a asp-controller="AdminDanhGia" asp-action="Index" class="@Active("AdminDanhGia")"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Đánh giá tour</span></a>
+                    </details>
+                }
+                @if (CoQuyen(QuyenAdmin.KhachNhanSu) || CoQuyen(QuyenAdmin.TaiKhoanQuyen))
+                {
+                    <details class="tv-side-nhom" name="menuAdmin" open="@moConNguoi">
+                        <summary>
+                            <svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg>
+                            <span>Khách và nhân sự</span>
+                        </summary>
+                        @if (CoQuyen(QuyenAdmin.KhachNhanSu))
+                        {
+                            <a asp-controller="Admin" asp-action="TinNhan" class="@MucAdmin(mucTinNhan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-chat" /></svg><span>Tin nhắn</span></a>
+                        }
+                        @if (CoQuyen(QuyenAdmin.TaiKhoanQuyen))
+                        {
+                            <a asp-controller="Admin" asp-action="TaiKhoan" class="@MucAdmin(mucTaiKhoan)"><svg class="tv-icon" aria-hidden="true"><use href="#i-user" /></svg><span>Tài khoản</span></a>
+                        }
+                        @if (CoQuyen(QuyenAdmin.KhachNhanSu))
+                        {
+                            <a asp-controller="Admin" asp-action="NhanSu" class="@MucAdmin(mucNhanSu)"><svg class="tv-icon" aria-hidden="true"><use href="#i-users" /></svg><span>Nhân sự</span></a>
+                            <a asp-controller="AdminDonXinNghi" asp-action="Index" class="@Active("AdminDonXinNghi")"><svg class="tv-icon" aria-hidden="true"><use href="#i-calendar" /></svg><span>Đơn xin nghỉ</span>@if (soDonNghiCho > 0) {<b class="tv-side-dem" aria-label="@soDonNghiCho đơn chờ duyệt">@soDonNghiCho</b>}</a>
+                            <a asp-controller="AdminLuong" asp-action="Index" class="@Active("AdminLuong")"><svg class="tv-icon" aria-hidden="true"><use href="#i-wallet" /></svg><span>Lương nhân viên</span></a>
+                        }
+                    </details>
+                }
             </aside>
             <div class="tv-scrim" id="tvScrim"></div>
 
