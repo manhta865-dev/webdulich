@@ -881,6 +881,13 @@ namespace webdulich.Controllers
                 return RedirectToAction("SuaDonDatTour", new { id = model.Id });
             }
 
+            // Độ dài theo cột CSDL (Mo28): quá dài thì báo lỗi thay vì để SQL Server từ chối (lỗi 500)
+            if (model.TenKhach.Trim().Length > 100 || model.DienThoai.Trim().Length > 20)
+            {
+                TempData["error"] = "Tên người liên hệ tối đa 100 ký tự, số điện thoại tối đa 20 ký tự.";
+                return RedirectToAction("SuaDonDatTour", new { id = model.Id });
+            }
+
             datTour.TenKhach = model.TenKhach.Trim();
             datTour.DienThoai = model.DienThoai.Trim();
             datTour.Email = model.Email?.Trim() ?? string.Empty;

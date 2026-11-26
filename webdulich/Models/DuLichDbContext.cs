@@ -250,6 +250,10 @@ namespace webdulich.Models
             {
                 e.Property(x => x.ViDoXuatPhat).HasPrecision(9, 6);
                 e.Property(x => x.KinhDoXuatPhat).HasPrecision(9, 6);
+                // Mo28: CSDL bắt buộc mô tả và ảnh đại diện. Kiểu C# vẫn là string? để form Thêm/Sửa tour
+                // (chỉ gửi HinhFile, mô tả trống thì code tự điền) không bị coi là thiếu ô bắt buộc.
+                e.Property(x => x.MoTa).IsRequired();
+                e.Property(x => x.HinhAnh).IsRequired();
                 e.ToTable(t => t.HasCheckConstraint("CK_Tours_XuatPhat",
                     "([ViDoXuatPhat] IS NULL AND [KinhDoXuatPhat] IS NULL) OR ([ViDoXuatPhat] IS NOT NULL AND [KinhDoXuatPhat] IS NOT NULL AND [ViDoXuatPhat] BETWEEN 8 AND 24 AND [KinhDoXuatPhat] BETWEEN 102 AND 110)"));
             });

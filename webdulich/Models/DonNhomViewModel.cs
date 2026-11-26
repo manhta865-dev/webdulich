@@ -18,9 +18,11 @@ namespace webdulich.Models
         public bool ToiDi { get; set; } = true;
 
         [Required(ErrorMessage = "Vui lòng nhập tên người liên hệ.")]
+        [StringLength(100, ErrorMessage = "Tên người liên hệ tối đa 100 ký tự.")]
         public string TenKhach { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+        [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
         public string DienThoai { get; set; } = string.Empty;
 
         public string? Email { get; set; }

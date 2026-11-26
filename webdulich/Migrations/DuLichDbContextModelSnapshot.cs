@@ -469,7 +469,8 @@ namespace webdulich.Migrations
 
                     b.Property<string>("DienThoai")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -517,7 +518,8 @@ namespace webdulich.Migrations
 
                     b.Property<string>("TenKhach")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
@@ -1520,6 +1522,7 @@ namespace webdulich.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("HinhAnh")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("KinhDoXuatPhat")
@@ -1527,6 +1530,7 @@ namespace webdulich.Migrations
                         .HasColumnType("decimal(9,6)");
 
                     b.Property<string>("MoTa")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("NgungBan")

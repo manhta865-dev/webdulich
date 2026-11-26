@@ -11,8 +11,10 @@ namespace webdulich.Models
         public int SoTreNho { get; set; }
 
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Vui lòng nhập tên người liên hệ.")]
+        [System.ComponentModel.DataAnnotations.StringLength(100, ErrorMessage = "Tên người liên hệ tối đa 100 ký tự.")]
         public string TenKhach { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+        [System.ComponentModel.DataAnnotations.StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
         public string DienThoai { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? GhiChu { get; set; }

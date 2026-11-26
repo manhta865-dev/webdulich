@@ -12,10 +12,13 @@ namespace webdulich.Models
         public int Id { get; set; }
 
         // Thông tin liên hệ do người đặt nhập cho đơn này (độc lập với hồ sơ tài khoản)
+        // Độ dài theo cột CSDL (Mo28): nvarchar(100), nvarchar(20), bắt buộc
         [Required(ErrorMessage = "Vui lòng nhập tên khách")]
+        [StringLength(100, ErrorMessage = "Tên tối đa 100 ký tự")]
         public string TenKhach { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+        [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự")]
         public string DienThoai { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập email")]

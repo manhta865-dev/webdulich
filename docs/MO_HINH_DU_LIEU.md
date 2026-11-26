@@ -35,7 +35,7 @@ Ký hiệu: PK khóa chính, FK khóa ngoại, UQ duy nhất (với cột cho ph
 | HanGiuCho | datetime? | Hạn giữ chỗ của đơn nhóm (24 giờ, tham số cấu hình) |
 | DaGiaHan | bit | Đơn nhóm đã được gia hạn một lần khi hết hạn (nhắc rồi mới nhả); thêm ở Mo9 |
 | NgayDat | datetime | |
-| TenKhach, DienThoai, Email, DiaChi, GhiChu? | string | Thông tin liên hệ do người đặt nhập độc lập, không suy ra từ `TaiKhoans` |
+| TenKhach, DienThoai, Email, DiaChi, GhiChu? | string | Thông tin liên hệ do người đặt nhập độc lập, không suy ra từ `TaiKhoans`. **Mo28** (26/11/2026): `TenKhach` nvarchar(100), `DienThoai` nvarchar(20), cả hai bắt buộc; mọi form tạo, sửa đơn kiểm độ dài (trước đó CSDL cho rỗng còn code tưởng nvarchar(max), lệch từ đồ án cơ sở) |
 | SoTienGiam | decimal | Snapshot số tiền giảm lúc đặt |
 
 Bỏ: `TourId`, `NgayDi`, `MaKhuyenMai`, `TongTien`, `TongTienTruocGiam`, `SoNguoi`, `PhuongThucThanhToan`, `TrangThaiThanhToan`.
@@ -90,7 +90,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 |---|---|
 | **LichKhoiHanhTour** | `SoDoChoNgoiId` int **NOT NULL** FK → SoDoChoNgoi (Restrict): xe do admin chọn (Mo15). `TrangThai` chỉ còn `MoBan`, `TamNgung`, `DaHuy`. FK tới Tour đổi Cascade thành Restrict. **Giữ `SoChoCon`** (xem RB-12). Cột `SoChoToiDa` thêm ở Mo1, **bỏ ở Mo15** vì suy ra được từ xe và `ChoKhongMoBans` |
 | **ChoKhongMoBans** (mới, Mo14) | `ChoKhongMoBans(LichKhoiHanhTourId, ViTriChoNgoiId)`, PK ghép cả hai cột; FK lịch Cascade, FK vị trí Restrict. Mỗi dòng: chuyến này không bán chỗ này (ghế hướng dẫn viên, ghế hỏng, đi đoàn nhỏ). Bảng chỉ gồm khóa nên đạt BCNF (RB-37) |
-| **Tour** | Thêm `NgungBan` bool. **Mo27** (26/11/2026): xóa hai khóa ngoại trùng tạo tay từ đồ án cơ sở (`FK_Tours_DanhMucs`, `FK_Tours_DiaDiems`, ngày 02/04/2026, không thuộc migration nào); mỗi cột `DanhMucId`, `DiaDiemId`, `PhuongTienId` còn đúng một khóa ngoại do EF quản lý, ràng buộc không đổi. Phát hiện khi đối chiếu ERD (StarUML) với database |
+| **Tour** | Thêm `NgungBan` bool. **Mo27** (26/11/2026): xóa hai khóa ngoại trùng tạo tay từ đồ án cơ sở (`FK_Tours_DanhMucs`, `FK_Tours_DiaDiems`, ngày 02/04/2026, không thuộc migration nào); mỗi cột `DanhMucId`, `DiaDiemId`, `PhuongTienId` còn đúng một khóa ngoại do EF quản lý, ràng buộc không đổi. Phát hiện khi đối chiếu ERD (StarUML) với database. **Mo28** (26/11/2026): `MoTa`, `HinhAnh` bắt buộc trong model cho khớp CSDL (CSDL đã NOT NULL từ trước); kiểu C# vẫn `string?` để form Thêm/Sửa tour không bị coi là thiếu ô, mô tả trống thì code điền "Chưa cập nhật mô tả" |
 | **TaiKhoan** | Tách `TaiKhoanDangNhap` thành `Email` string? UQ và `SoDienThoai` string? UQ, CHECK có ít nhất một |
 | **NhanVien** | Bỏ `HoTen`, `LoaiNhanVien`, `SoDienThoai`. Họ tên và số điện thoại lấy từ `TaiKhoan`, loại nhân viên lấy từ `TaiKhoan.VaiTro` |
 | **KhuyenMai** | Bỏ `SoLuotDaDung` (đếm từ `DatTours` chưa hủy). `TrangThai` chỉ còn `HoatDong`, `TamNgung` |
