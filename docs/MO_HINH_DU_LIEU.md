@@ -90,7 +90,7 @@ CHECK đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị. Chỉ
 |---|---|
 | **LichKhoiHanhTour** | `SoDoChoNgoiId` int **NOT NULL** FK → SoDoChoNgoi (Restrict): xe do admin chọn (Mo15). `TrangThai` chỉ còn `MoBan`, `TamNgung`, `DaHuy`. FK tới Tour đổi Cascade thành Restrict. **Giữ `SoChoCon`** (xem RB-12). Cột `SoChoToiDa` thêm ở Mo1, **bỏ ở Mo15** vì suy ra được từ xe và `ChoKhongMoBans` |
 | **ChoKhongMoBans** (mới, Mo14) | `ChoKhongMoBans(LichKhoiHanhTourId, ViTriChoNgoiId)`, PK ghép cả hai cột; FK lịch Cascade, FK vị trí Restrict. Mỗi dòng: chuyến này không bán chỗ này (ghế hướng dẫn viên, ghế hỏng, đi đoàn nhỏ). Bảng chỉ gồm khóa nên đạt BCNF (RB-37) |
-| **Tour** | Thêm `NgungBan` bool |
+| **Tour** | Thêm `NgungBan` bool. **Mo27** (26/11/2026): xóa hai khóa ngoại trùng tạo tay từ đồ án cơ sở (`FK_Tours_DanhMucs`, `FK_Tours_DiaDiems`, ngày 02/04/2026, không thuộc migration nào); mỗi cột `DanhMucId`, `DiaDiemId`, `PhuongTienId` còn đúng một khóa ngoại do EF quản lý, ràng buộc không đổi. Phát hiện khi đối chiếu ERD (StarUML) với database |
 | **TaiKhoan** | Tách `TaiKhoanDangNhap` thành `Email` string? UQ và `SoDienThoai` string? UQ, CHECK có ít nhất một |
 | **NhanVien** | Bỏ `HoTen`, `LoaiNhanVien`, `SoDienThoai`. Họ tên và số điện thoại lấy từ `TaiKhoan`, loại nhân viên lấy từ `TaiKhoan.VaiTro` |
 | **KhuyenMai** | Bỏ `SoLuotDaDung` (đếm từ `DatTours` chưa hủy). `TrangThai` chỉ còn `HoatDong`, `TamNgung` |
