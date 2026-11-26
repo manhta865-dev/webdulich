@@ -251,6 +251,16 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("", "Số trẻ nhỏ không hợp lệ.");
             }
+
+            // Số điện thoại liên hệ: 10 số, bắt đầu bằng 0 (cùng quy tắc với đặt tại quầy và tài khoản)
+            if (!string.IsNullOrWhiteSpace(model.DienThoai))
+            {
+                model.DienThoai = model.DienThoai.Trim();
+                if (!DinhDanhTaiKhoan.LaSoDienThoai(model.DienThoai))
+                {
+                    ModelState.AddModelError(nameof(model.DienThoai), DinhDanhTaiKhoan.LoiSoDienThoai);
+                }
+            }
             // Lấy danh sách hành khách từ form dựa trên số người đã nhập, kiểm tra tính hợp lệ của thông tin hành khách và thêm lỗi vào ModelState nếu có vấn đề. Nếu có lỗi trong ModelState, trả về lại view với thông tin tour và model để người dùng có thể sửa lỗi. Nếu dữ liệu hợp lệ, lưu thông tin đặt tour vào session để chuẩn bị cho bước thanh toán, bao gồm thông tin khách hàng, số người, ngày đi, thông tin hành khách, và các thông tin liên quan đến tour và lịch khởi hành. Sau đó chuyển hướng đến trang thanh toán
             var danhSachHanhKhach = LayDanhSachHanhKhachTuForm(model.SoNguoi);
 

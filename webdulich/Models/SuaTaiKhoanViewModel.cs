@@ -10,6 +10,7 @@ namespace webdulich.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập họ tên.")]
+        [StringLength(DinhDanhTaiKhoan.DoDaiHoTenToiDa, ErrorMessage = DinhDanhTaiKhoan.LoiHoTenQuaDai)]
         public string HoTen { get; set; } = string.Empty;
 
         public string? Email { get; set; }

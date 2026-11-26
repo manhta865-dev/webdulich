@@ -888,6 +888,13 @@ namespace webdulich.Controllers
                 return RedirectToAction("SuaDonDatTour", new { id = model.Id });
             }
 
+            // Số điện thoại liên hệ: 10 số, bắt đầu bằng 0 (cùng quy tắc với đặt tour và đặt tại quầy)
+            if (!DinhDanhTaiKhoan.LaSoDienThoai(model.DienThoai))
+            {
+                TempData["error"] = DinhDanhTaiKhoan.LoiSoDienThoai;
+                return RedirectToAction("SuaDonDatTour", new { id = model.Id });
+            }
+
             datTour.TenKhach = model.TenKhach.Trim();
             datTour.DienThoai = model.DienThoai.Trim();
             datTour.Email = model.Email?.Trim() ?? string.Empty;
@@ -3391,6 +3398,12 @@ namespace webdulich.Controllers
                 string.IsNullOrWhiteSpace(matKhau))
             {
                 TempData["error"] = "Vui lòng nhập đầy đủ thông tin nhân viên.";
+                return RedirectToAction("NhanSu");
+            }
+
+            if (hoTen.Trim().Length > DinhDanhTaiKhoan.DoDaiHoTenToiDa)
+            {
+                TempData["error"] = DinhDanhTaiKhoan.LoiHoTenQuaDai;
                 return RedirectToAction("NhanSu");
             }
 

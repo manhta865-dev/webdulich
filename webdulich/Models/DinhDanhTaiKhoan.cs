@@ -9,6 +9,12 @@ namespace webdulich.Models
         private static readonly Regex MauEmail = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         private static readonly Regex MauSoDienThoai = new(@"^0\d{9}$");
 
+        // Họ tên tối đa 100 ký tự ở mọi chỗ tạo, sửa tài khoản: đơn cá nhân chép họ tên vào DatTours.TenKhach (nvarchar(100), Mo28),
+        // họ tên dài hơn thì không đặt tour được
+        public const int DoDaiHoTenToiDa = 100;
+        public const string LoiHoTenQuaDai = "Họ tên tối đa 100 ký tự.";
+        public const string LoiSoDienThoai = "Số điện thoại cần đúng 10 số, bắt đầu bằng 0.";
+
         public static bool LaEmail(string? giaTri) =>
             !string.IsNullOrWhiteSpace(giaTri) && MauEmail.IsMatch(giaTri.Trim());
 

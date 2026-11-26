@@ -132,7 +132,7 @@ namespace webdulich.Controllers
             if (m.SoTreNho < 0) ModelState.AddModelError(nameof(m.SoTreNho), "Số trẻ nhỏ không hợp lệ.");
             // Bỏ trống tên, số điện thoại do [Required] trong view model báo; ở đây chỉ kiểm định dạng số
             if (!string.IsNullOrWhiteSpace(m.DienThoai) && !DinhDanhTaiKhoan.LaSoDienThoai(m.DienThoai.Trim()))
-                ModelState.AddModelError(nameof(m.DienThoai), "Số điện thoại cần đúng 10 số, bắt đầu bằng 0.");
+                ModelState.AddModelError(nameof(m.DienThoai), DinhDanhTaiKhoan.LoiSoDienThoai);
             int soNguoi = m.SoNguoiLon + m.SoTreNho;
             if (soNguoi > lich.SoChoCon) ModelState.AddModelError("", $"Lịch chỉ còn {lich.SoChoCon} chỗ.");
 

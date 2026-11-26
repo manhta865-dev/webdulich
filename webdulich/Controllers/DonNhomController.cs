@@ -154,6 +154,15 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("", $"Lịch chỉ còn {lich.SoChoCon} chỗ.");
             }
+            // Số điện thoại liên hệ: 10 số, bắt đầu bằng 0 (cùng quy tắc với đặt tại quầy và tài khoản)
+            if (!string.IsNullOrWhiteSpace(model.DienThoai))
+            {
+                model.DienThoai = model.DienThoai.Trim();
+                if (!DinhDanhTaiKhoan.LaSoDienThoai(model.DienThoai))
+                {
+                    ModelState.AddModelError(nameof(model.DienThoai), DinhDanhTaiKhoan.LoiSoDienThoai);
+                }
+            }
             // Mã khuyến mãi (RB-40): kiểm như đơn cá nhân, tính trước số tiền giảm để hiện ở bước sau
             model.MaKhuyenMai = string.IsNullOrWhiteSpace(model.MaKhuyenMai) ? null : model.MaKhuyenMai.Trim().ToUpper();
             if (model.MaKhuyenMai != null)

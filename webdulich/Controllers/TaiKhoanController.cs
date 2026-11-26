@@ -87,6 +87,10 @@ namespace webdulich.Controllers
             {
                 ModelState.AddModelError("HoTen", "Vui lòng nhập họ tên!");
             }
+            else if (tk.HoTen.Trim().Length > DinhDanhTaiKhoan.DoDaiHoTenToiDa)
+            {
+                ModelState.AddModelError("HoTen", DinhDanhTaiKhoan.LoiHoTenQuaDai);
+            }
             // Nếu chưa nhập email hoặc số điện thoại thì báo lỗi.
             if (string.IsNullOrWhiteSpace(tk.TaiKhoanDangNhap))
             {
@@ -265,9 +269,15 @@ namespace webdulich.Controllers
             if (user == null)
             {
                 // Mật khẩu ngẫu nhiên không ai biết: tài khoản này chỉ vào được bằng Google
+                // Tên Google dài quá 100 ký tự thì cắt bớt (người dùng sửa lại được ở Hồ sơ)
+                var tenGoogle = (ketQua.Principal?.FindFirstValue(ClaimTypes.Name) ?? email).Trim();
+                if (tenGoogle.Length > DinhDanhTaiKhoan.DoDaiHoTenToiDa)
+                {
+                    tenGoogle = tenGoogle[..DinhDanhTaiKhoan.DoDaiHoTenToiDa].TrimEnd();
+                }
                 user = new TaiKhoan
                 {
-                    HoTen = ketQua.Principal?.FindFirstValue(ClaimTypes.Name) ?? email,
+                    HoTen = tenGoogle,
                     Email = email,
                     VaiTro = "user",
                     AnhDaiDien = "",

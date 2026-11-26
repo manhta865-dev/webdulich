@@ -178,7 +178,7 @@ Mã `RB-xx` để khỏi lẫn với R1, R2 của báo cáo đồ án cơ sở (
 | RB-03 | `HanhKhachDatTour`: UQ(`DatTourId`, `TaiKhoanId`) khi `TaiKhoanId` có giá trị |
 | RB-04 | `GiaoDichThanhToan`: đúng một trong `DatTourId`, `HanhKhachDatTourId` có giá trị |
 | RB-05 | Mỗi đơn hoặc ghế tối đa một giao dịch `ThanhCong` |
-| RB-06 | `TaiKhoan`: `Email` và `SoDienThoai` duy nhất, CHECK có ít nhất một |
+| RB-06 | `TaiKhoan`: `Email` và `SoDienThoai` duy nhất, CHECK có ít nhất một. Kiểm ở code (26/11/2026): họ tên tối đa 100 ký tự ở mọi chỗ tạo, sửa tài khoản (đăng ký, Google thì cắt bớt, hồ sơ, admin sửa tài khoản, thêm nhân viên), vì đơn cá nhân chép họ tên vào `DatTours.TenKhach` nvarchar(100); số điện thoại liên hệ của đơn (đặt tour cá nhân, đơn nhóm, đặt tại quầy, admin sửa đơn) đúng 10 số, bắt đầu bằng 0, cùng quy tắc với số điện thoại tài khoản (`DinhDanhTaiKhoan`) |
 | RB-07 | `TaiKhoan.Email` đúng dạng email; `SoDienThoai` đúng 10 số bắt đầu bằng 0 (kiểm trong code, tùy chọn CHECK) |
 | RB-08 | `ChoNgoiChuyenDi`: PK(`LichKhoiHanhTourId`, `ViTriChoNgoiId`) và UQ(`HanhKhachDatTourId`) |
 | RB-09 | `ViTriChoNgoi`: UQ(`SoDoChoNgoiId`, `MaViTri`) và UQ(`SoDoChoNgoiId`, `Hang`, `Cot`) |
